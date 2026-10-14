@@ -318,6 +318,9 @@ audio{width:100%;margin-top:8px}
 
 .typing .tabbar{display:none}
 
+.seg.mini{margin:2px 0 12px}
+.seg.mini button{padding:6px 4px;font-size:13px}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -338,7 +341,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.0.4"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.0.5"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1950,6 +1953,22 @@ ACT["run-exit"] = async () => {
   UI.back();
 };
 function stageEl(){ return $("#stage"); }
+/* 答题方式：自己选麦克风识别还是键盘语音输入，选了会记住 */
+function inputToggleHTML(){
+  if (!SR.ok || MIC.blocked) return "";
+  const mic = S.settings.inputMode === "auto" && !SR.broken;
+  return `<div class="seg mini" role="group" aria-label="答题方式"><button data-act="input-mode" data-v="auto" aria-pressed="${mic}">麦克风识别</button><button data-act="input-mode" data-v="keyboard" aria-pressed="${!mic}">键盘语音输入</button></div>`;
+}
+function srUnbreak(){ if (!SR.broken) return false; SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; saveLocal(); return true; }
+ACT["input-mode"] = el => {
+  const v = el.dataset.v;
+  if (v === "auto"){ S.settings.inputMode = "auto"; if (srUnbreak()) toast("改成麦克风识别了。还是识别不了的话，再切回键盘语音输入"); }
+  else S.settings.inputMode = "keyboard";
+  save(); SR.abort();
+  const s = RUN.stage;
+  if (s instanceof CardStage && (s.phase === "prompt" || s.phase === "retry")) s.render();
+  else if (s instanceof ListenStage && !s.done) s.render();
+};
 
 /* 卡片：反射卡 / 时态快反 / 找错 / 扩句 */
 class CardStage {
@@ -1974,7 +1993,7 @@ class CardStage {
       const mic = SR.usable();
       el.innerHTML = `<div class="card">${this.chips()}${this.promptHTML()}${this.retryHTML()}
         <div class="go-row"><div class="gantry small" id="lamps">${lamps()}</div><span class="num" id="clock">0.0</span></div>
-        <div class="answer-zone">
+        <div class="answer-zone">${inputToggleHTML()}
           ${mic ? `<button class="mic" id="micBtn" data-act="c-mic" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="heard">${this.phase === "retry" ? "按提示改好，再点麦克风说一次" : "灯灭后点麦克风，大声说"}</div>` :
             `<p class="small muted" style="margin:0 0 8px">${MIC.blocked ? "这个版本不能直接用麦克风：点下面的输入框，再点键盘上的麦克风说。" : SR.broken ? "这台手机的自动识别用不了：点下面的输入框，再点键盘上的麦克风说。" : "灯灭后开口说。想让 app 检查，就点输入框，用键盘上的麦克风说。"}</p>`}
           <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done"><button class="btn sm" data-act="c-check">检查</button></div>
@@ -2145,7 +2164,7 @@ class ListenStage {
     if (this.mode === "repeat"){
       if (!this.done){
         const mic = SR.usable();
-        el.innerHTML = `<div class="card">${head}${playRow}<p class="small muted center" style="margin-top:12px">不看文字，把听到的整句说出来</p>
+        el.innerHTML = `<div class="card">${head}${playRow}<p class="small muted center" style="margin-top:12px">不看文字，把听到的整句说出来</p>${inputToggleHTML()}
           ${mic ? `<button class="mic" id="lMic" data-act="l-mic" aria-label="说出来">${ICON.mic}</button><div class="heard" id="heard"></div>` : ""}
           <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocomplete="off" spellcheck="false" enterkeyhint="done"><button class="btn sm" data-act="l-check">检查</button></div>
           <button class="btn ghost block" style="margin-top:6px" data-act="l-giveup">听不出来，看答案</button></div>`;
@@ -2316,7 +2335,7 @@ const CHG = {};
 document.addEventListener("change", e => { const el = e.target.closest("[data-chg]"); if (!el) return; const fn = CHG[el.dataset.chg]; if (fn) try { fn(el, e); } catch (err) { console.error(err); } });
 CHG.set = el => {
   const k = el.dataset.key; let v = el.type === "checkbox" ? el.checked : el.value; if (el.dataset.num) v = +v;
-  S.settings[k] = v; save(); if (k === "theme") applyTheme(); if (el.dataset.rerender) UI.refresh();
+  S.settings[k] = v; save(); if (k === "theme") applyTheme(); if (k === "inputMode" && v === "auto") srUnbreak(); if (el.dataset.rerender) UI.refresh();
 };
 CHG.local = el => { const k = el.dataset.key; let v = el.type === "checkbox" ? el.checked : el.value; if (el.dataset.num) v = +v; L[k] = v; saveLocal(); };
 const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -2902,7 +2921,9 @@ VIEWS.device = {
         <div class="row-gap" style="margin-top:8px"><button class="btn sm" data-act="dv-say" data-lang="zh">试听</button><button class="btn sm" data-act="dv-mark" data-k="zh" data-v="ok">听到了</button><button class="btn sm" data-act="dv-mark" data-k="zh" data-v="no">没声音</button></div></div>
       <div class="panel">${head("自动语音识别","sr")}
         ${SR.broken ? `<p class="note" style="margin-top:6px">这台手机上，Chrome 借用的 Google 语音识别服务没有响应（错误代码 aborted），所以自动识别用不了。录音不受影响，练习已经自动改成键盘语音输入。</p>
-          <p class="small" style="margin-top:8px">可以这样修：</p><ol class="issues small"><li>打开 Play 商店搜“Google”，把 Google 应用更新到最新；如果按钮显示“启用”，就点启用</li><li>设置 → 应用 → 应用管理 → Google → 权限 → 麦克风，改成允许</li><li>重启手机，回来点下面的按钮再试</li></ol>
+          <p class="small" style="margin-top:8px">可以这样修：</p><ol class="issues small"><li>打开 Play 商店搜“Google”，把 Google 应用更新到最新；如果按钮显示“启用”，就点启用</li><li>设置 → 应用 → 应用管理 → Google → 权限 → 麦克风，改成允许</li>
+          <li>还是在 Google 应用的设置页，找“耗电管理”或“电池”，打开“允许后台运行”“允许自动启动”；如果有“允许关联启动”，也打开。一加的省电设置可能会拦住 Chrome 去调用 Google 的语音服务</li>
+          <li>重启手机，先用 Google 的语音演示页测，能出字再回来点下面的按钮</li></ol><p class="small muted" style="margin-top:6px">也可以点最下面的“检查能不能离线识别”：如果能用或能下载，自动识别就不用依赖 Google 应用。修好之前，练习时用键盘语音输入，效果一样。</p>
           <button class="btn sm" style="margin-top:8px" data-act="dv-sr-reset">再试一次自动识别</button>` :
         `<p class="small muted">${SR.ok ? "点测试，然后说：It's a little windy today." : "这个浏览器不支持自动识别，练习时用键盘语音输入就行。"}</p>
         ${SR.ok ? `<button class="btn sm" style="margin-top:8px" data-act="dv-sr">测试</button><div class="heard" id="dvHeard"></div>` : ""}`}<div id="dvLocal" class="small muted"></div></div>
@@ -2917,7 +2938,7 @@ ACT["dv-local"] = () => dvLocal();
 async function dvLocal(){
   const el = $("#dvLocal"); if (!el) return;
   const r = await SR.checkLocal(); if (!el.isConnected) return;
-  if (r === "available") el.innerHTML = "离线识别：已就绪，没网也能自动识别。";
+  if (r === "available"){ const was = srUnbreak(); el.innerHTML = "离线识别：已就绪，没网也能自动识别。" + (was ? "回到上面点“测试”试试。" : ""); if (was) setTimeout(() => UI.render(), 1200); }
   else if (r === "downloadable") el.innerHTML = `离线识别：可以下载。<button class="btn sm" style="margin-left:6px" data-act="dv-install">下载离线识别</button>`;
   else if (r === "downloading") el.innerHTML = "离线识别：正在下载……";
   else if (r === "unavailable") el.innerHTML = "这台设备不支持离线识别，没网时用键盘语音输入。";
@@ -2937,7 +2958,7 @@ ACT["dv-sr"] = async el => {
   saveLocal(); if (r.broke) UI.render();
 };
 ACT["dv-sr-reset"] = () => { SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; delete L.device.sr; saveLocal(); UI.render(); toast("可以再点“测试”了"); };
-ACT["dv-install"] = async () => { const el = $("#dvLocal"); if (el) el.textContent = "正在下载……"; const ok = await SR.installLocal(); if (el && el.isConnected) el.textContent = ok ? "离线识别：已就绪。" : "下载没成功，联网后再试。"; };
+ACT["dv-install"] = async () => { const el = $("#dvLocal"); if (el) el.textContent = "正在下载……"; const ok = await SR.installLocal(); if (ok) srUnbreak(); if (el && el.isConnected) el.textContent = ok ? "离线识别：已就绪，回到上面点“测试”试试。" : "下载没成功，联网后再试。"; };
 ACT["dv-rec"] = async el => {
   el.disabled = true; const box = $("#dvAudio");
   try { await Rec.start(null); } catch (e) { el.disabled = false; L.device.rec = "no"; saveLocal(); if (box) box.innerHTML = `<p class="note">${MIC.blocked ? "这个版本不能录音，和手机设置无关；离线版可以。" : e && e.name === "NotAllowedError" ? "麦克风被拒绝了：在 Chrome 的网站设置里给这个页面开麦克风。" : "这台设备不能录音。"}</p>`; UI.render(); return; }
