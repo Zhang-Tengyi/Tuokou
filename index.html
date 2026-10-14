@@ -338,7 +338,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.0.3"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.0.4"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1435,9 +1435,9 @@ const TTS = {
 /* ---------- 语音识别 ---------- */
 const SR = {
   Ctor: window.SpeechRecognition || window.webkitSpeechRecognition || null,
-  cur: null, local: false, netFail: false,
+  cur: null, local: false, netFail: false, broken: false, fails: 0,
   get ok(){ return !!this.Ctor; },
-  usable(){ return this.ok && !MIC.blocked && S.settings.inputMode === "auto" && !(this.netFail && !this.local && !navigator.onLine); },
+  usable(){ return this.ok && !MIC.blocked && !this.broken && S.settings.inputMode === "auto" && !(this.netFail && !this.local && !navigator.onLine); },
   async checkLocal(){
     const C = window.SpeechRecognition || this.Ctor;
     if (!C || typeof C.available !== "function") return "none";
@@ -1448,7 +1448,7 @@ const SR = {
     if (!C || typeof C.install !== "function") return false;
     try { const ok = await C.install({langs:["en-US"], processLocally:true}); if (ok){ this.local = true; L.device = L.device || {}; L.device.local = "available"; saveLocal(); } return ok; } catch (e) { return false; }
   },
-  abort(){ if (this.cur){ try { this.cur.abort(); } catch (e) {} this.cur = null; } },
+  abort(){ if (this.cur){ this.cur._ours = true; try { this.cur.abort(); } catch (e) {} this.cur = null; } },
   listen(o){
     o = o || {};
     this.abort(); TTS.cancel();
@@ -1469,17 +1469,25 @@ const SR = {
         if (fins.length > 1){ const longest = fins.reduce((a, b) => b.length > a.length ? b : a); if (fins.every(f => longest.toLowerCase().includes(f.toLowerCase()))) finals = longest; }
         o.onInterim && o.onInterim((finals + " " + interim).trim());
       };
-      r.onerror = e => { err = e.error || "error"; if (err === "network") this.netFail = true; MIC.note(err); };
-      const finish = () => { if (ended) return; ended = true; clearTimeout(guard); if (this.cur === r) this.cur = null; res({text:(finals || interim).trim(), error:err, startMs: tStart ? tStart - t0 : 0}); };
+      r.onerror = e => { err = e.error || "error"; if (err === "network") this.netFail = true; if (err === "aborted" && r._ours) err = null; else MIC.note(err); };
+      const finish = () => { if (ended) return; ended = true; clearTimeout(guard); if (this.cur === r) this.cur = null; const text = (finals || interim).trim();
+        /* 不是我们自己取消的 aborted：手机的识别服务拒绝了。用了本机识别就先关掉重试一次；连续两次就改用键盘语音输入 */
+        if (err === "aborted" && !text){
+          if (r.processLocally && !o._retry){ this.local = false; L.device = L.device || {}; L.device.local = "failed"; saveLocal(); res(this.listen(Object.assign({}, o, {_retry:true}))); return; }
+          this.fails++;
+          if (this.fails >= 2){ this.broken = true; L.device = L.device || {}; L.device.srBroken = true; L.device.sr = "no"; saveLocal(); }
+        } else if (text) this.fails = 0;
+        res({text, error:err, startMs: tStart ? tStart - t0 : 0, broke: this.broken}); };
       r.onend = finish;
       const guard = setTimeout(() => { try { r.stop(); } catch (e) {} setTimeout(finish, 600); }, o.maxMs || 12000);
       try { r.start(); } catch (e) { err = "start"; finish(); }
     });
   },
-  stop(){ if (this.cur) try { this.cur.stop(); } catch (e) {} }
+  stop(){ if (this.cur){ this.cur._ours = true; try { this.cur.stop(); } catch (e) {} } }
 };
 function srErrorText(err){
   if (MIC.blocked) return "这个版本用不了麦克风，和你的手机设置无关。点输入框，用键盘上的麦克风说";
+  if (err === "aborted") return SR.broken ? "这台手机的自动识别用不了，已改用键盘语音输入" : "识别服务没响应，再点一次试试";
   return ({ "not-allowed":"麦克风被拒绝了：在 Chrome 的网站设置里给这个页面开麦克风，或改用键盘语音输入",
     "service-not-allowed":"这个页面不能用自动识别，改用键盘语音输入",
     "network":"现在没网，自动识别用不了。用输入框里的键盘语音输入，或直接看答案",
@@ -1968,7 +1976,7 @@ class CardStage {
         <div class="go-row"><div class="gantry small" id="lamps">${lamps()}</div><span class="num" id="clock">0.0</span></div>
         <div class="answer-zone">
           ${mic ? `<button class="mic" id="micBtn" data-act="c-mic" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="heard">${this.phase === "retry" ? "按提示改好，再点麦克风说一次" : "灯灭后点麦克风，大声说"}</div>` :
-            `<p class="small muted" style="margin:0 0 8px">${MIC.blocked ? "这个版本不能直接用麦克风：点下面的输入框，再点键盘上的麦克风说。" : "灯灭后开口说。想让 app 检查，就点输入框，用键盘上的麦克风说。"}</p>`}
+            `<p class="small muted" style="margin:0 0 8px">${MIC.blocked ? "这个版本不能直接用麦克风：点下面的输入框，再点键盘上的麦克风说。" : SR.broken ? "这台手机的自动识别用不了：点下面的输入框，再点键盘上的麦克风说。" : "灯灭后开口说。想让 app 检查，就点输入框，用键盘上的麦克风说。"}</p>`}
           <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done"><button class="btn sm" data-act="c-check">检查</button></div>
           ${mic ? "" : `<p class="small muted" style="margin-top:6px">说完停 2 秒会自动检查。</p>`}
           <button class="btn ghost block" style="margin-top:6px" data-act="c-reveal">${this.phase === "retry" ? "直接看答案" : "我说完了，看答案"}</button>
@@ -2015,6 +2023,7 @@ class CardStage {
     const r = await SR.listen({onInterim: t => { if (heard && heard.isConnected) heard.textContent = t || "在听……"; }});
     this.live = false; if (!this.alive || (this.phase !== "prompt" && this.phase !== "retry")) return;
     btn && btn.classList.remove("live");
+    if (r.broke && !r.text){ toast("这台手机的自动识别用不了，已改用键盘语音输入"); this.render(); return; }
     if (r.error && !r.text){ if (heard) heard.textContent = srErrorText(r.error); if (r.error === "network" || r.error === "not-allowed") { const ty = $("#typed"); ty && ty.focus(); } return; }
     if (!r.text){ if (heard) heard.textContent = "没听清，再点一次"; return; }
     this.finish(r.text);
@@ -2103,6 +2112,7 @@ ACT["c-drill-mic"] = async el => {
   const r = await SR.listen({onInterim: t => { if (heard && heard.isConnected) heard.textContent = t; }});
   el.classList.remove("live");
   if (!s.alive) return;
+  if (r.broke && !r.text){ s.render(); return; }
   if (!r.text){ if (heard) heard.textContent = r.error ? srErrorText(r.error) : "没听清，再来"; return; }
   const cmp = K.compareSaid(s.card.en, s.card.alt, r.text);
   if (cmp.level !== "off" && cmp.score >= 0.85){ s.drill = Math.min(3, s.drill + 1); Snd.good(); vib(12); s.render(); }
@@ -2181,6 +2191,7 @@ class ListenStage {
     const b = $("#lMic"), h = $("#heard"); this.live = true; b && b.classList.add("live"); if (h) h.textContent = "在听……";
     const r = await SR.listen({onInterim: t => { if (h && h.isConnected) h.textContent = t; }});
     this.live = false; if (!this.alive || this.done) return; b && b.classList.remove("live");
+    if (r.broke && !r.text){ toast("这台手机的自动识别用不了，已改用键盘语音输入"); this.render(); return; }
     if (!r.text){ if (h) h.textContent = r.error ? srErrorText(r.error) : "没听清，再点一次"; return; }
     this.repeatCheck(r.text);
   }
@@ -2770,7 +2781,7 @@ VIEWS.me = {
     return `<div class="wrap"><div class="top"><h2 style="font-size:26px">我的</h2></div>
       <div class="sec-title">练习</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>每天最多几道新题</span><select data-chg="set" data-key="newPerDay" data-num="1">${[6,12,20].map(n => `<option value="${n}" ${s.newPerDay === n ? "selected" : ""}>${n} 道</option>`).join("")}</select></label>
-        <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${SR.ok ? "" : "（这个浏览器不支持）"}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
+        <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${!SR.ok ? "（这个浏览器不支持）" : SR.broken ? "（这台手机现在用不了）" : ""}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
         <div style="margin-top:8px">${swRow("lights","起步灯：灯灭再开口")}${swRow("autoSpeak","看答案时自动朗读")}${swRow("sound","提示音")}${swRow("vibrate","振动")}${swRow("cheat","来电模拟可以看小抄")}</div></div>
       <div class="sec-title">朗读</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>英文语音</span><select data-chg="local" data-key="enVoice">${opt(enV, L.enVoice)}</select></label>
@@ -2889,8 +2900,12 @@ VIEWS.device = {
         ${d.en === "no" ? `<p class="note">在手机设置里搜“文字转语音”，首选引擎选 Google 的语音服务，再下载“英语（美国）”的语音数据。</p>` : ""}</div>
       <div class="panel">${head("中文朗读（耳机模式用）","zh")}<p class="small muted">${TTS.hasZh() ? `找到 ${TTS.list("zh").length} 个中文语音` : "没找到中文语音"}</p>
         <div class="row-gap" style="margin-top:8px"><button class="btn sm" data-act="dv-say" data-lang="zh">试听</button><button class="btn sm" data-act="dv-mark" data-k="zh" data-v="ok">听到了</button><button class="btn sm" data-act="dv-mark" data-k="zh" data-v="no">没声音</button></div></div>
-      <div class="panel">${head("自动语音识别","sr")}<p class="small muted">${SR.ok ? "点测试，然后说：It's a little windy today." : "这个浏览器不支持自动识别，练习时用键盘语音输入就行。"}</p>
-        ${SR.ok ? `<button class="btn sm" style="margin-top:8px" data-act="dv-sr">测试</button><div class="heard" id="dvHeard"></div>` : ""}<div id="dvLocal" class="small muted"></div></div>
+      <div class="panel">${head("自动语音识别","sr")}
+        ${SR.broken ? `<p class="note" style="margin-top:6px">这台手机上，Chrome 借用的 Google 语音识别服务没有响应（错误代码 aborted），所以自动识别用不了。录音不受影响，练习已经自动改成键盘语音输入。</p>
+          <p class="small" style="margin-top:8px">可以这样修：</p><ol class="issues small"><li>打开 Play 商店搜“Google”，把 Google 应用更新到最新；如果按钮显示“启用”，就点启用</li><li>设置 → 应用 → 应用管理 → Google → 权限 → 麦克风，改成允许</li><li>重启手机，回来点下面的按钮再试</li></ol>
+          <button class="btn sm" style="margin-top:8px" data-act="dv-sr-reset">再试一次自动识别</button>` :
+        `<p class="small muted">${SR.ok ? "点测试，然后说：It's a little windy today." : "这个浏览器不支持自动识别，练习时用键盘语音输入就行。"}</p>
+        ${SR.ok ? `<button class="btn sm" style="margin-top:8px" data-act="dv-sr">测试</button><div class="heard" id="dvHeard"></div>` : ""}`}<div id="dvLocal" class="small muted"></div></div>
       <div class="panel">${head("录音","rec")}<button class="btn sm" style="margin-top:8px" data-act="dv-rec">录 3 秒试试</button><div id="dvAudio"></div></div>
       <div class="panel"><h3>键盘语音输入（没网时用）</h3><p class="small" style="margin-top:6px">在任意输入框里点键盘上的麦克风就能说。想没网也能用：打开 Gboard 设置，进“语音输入”，打开离线识别并下载“英语（美国）”。不同手机的菜单名字可能略有不同。</p>
         <input type="text" class="en" placeholder="点这里，用键盘的麦克风说一句" style="margin-top:10px" aria-label="试试键盘语音输入"></div>
@@ -2919,8 +2934,9 @@ ACT["dv-sr"] = async el => {
   L.device = L.device || {};
   if (r.text){ L.device.sr = "ok"; if (h) h.textContent = "识别到：" + r.text; }
   else { L.device.sr = r.error === "network" ? "net" : "no"; if (h) h.textContent = srErrorText(r.error || "no-speech"); }
-  saveLocal();
+  saveLocal(); if (r.broke) UI.render();
 };
+ACT["dv-sr-reset"] = () => { SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; delete L.device.sr; saveLocal(); UI.render(); toast("可以再点“测试”了"); };
 ACT["dv-install"] = async () => { const el = $("#dvLocal"); if (el) el.textContent = "正在下载……"; const ok = await SR.installLocal(); if (el && el.isConnected) el.textContent = ok ? "离线识别：已就绪。" : "下载没成功，联网后再试。"; };
 ACT["dv-rec"] = async el => {
   el.disabled = true; const box = $("#dvAudio");
@@ -3039,7 +3055,7 @@ ACT["ob-skip"] = () => { obSave(); UI.tab("home"); };
 /* ---------- 启动 ---------- */
 function boot(){
   UI.root = $("#app");
-  applyTheme(); TTS.init(); MIC.init();
+  applyTheme(); TTS.init(); MIC.init(); if (L.device && L.device.srBroken) SR.broken = true;
   UI.stack = [{name: S.settings.onboarded ? "home" : "onboard", params:{}}];
   try { history.replaceState({d:1}, ""); } catch (e) {}
   UI.render();
