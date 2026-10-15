@@ -356,7 +356,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.4.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.5.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1072,7 +1072,50 @@ const D_CARDS = [
   ["d129","pron","我问了一个问题。","I asked a question.","asked 读 askt，结尾两个辅音，中间不要加元音"],
   ["d130","pron","这个二十块钱。","It costs twenty dollars.","costs 结尾 sts 三个辅音：先慢慢说 cost-s"],
   ["d131","pron","测试很顺利。","The tests went well.","tests 结尾 sts；well 的 l 要发出来"],
-  ["d132","pron","我用的是七号铁。","I used a seven iron.","used a 连成 use-da；seven iron 连成 se-ve-niron"]
+  ["d132","pron","我用的是七号铁。","I used a seven iron.","used a 连成 use-da；seven iron 连成 se-ve-niron"],
+  // 固定说法：美国人几乎只这么说；还有几处按中文习惯说会出错的地方
+  ["d133","fixed","服务员说 Enjoy your meal!，你回：","Thanks! // Thank you!","别说 You too，服务员不吃饭；说错了也没事，美国人自己也常顺嘴说错"],
+  ["d134","fixed","收银员说 Have a good one!，你回：","Thanks, you too! // You too!","这里说 you too 就对了"],
+  ["d135","fixed","店员问 Do you need a bag?，你不需要：","No, I'm good, thanks. // I'm all set, thanks. // No thanks.","I'm good 在这里是“不用了”，不是“我很好”"],
+  ["d136","fixed","店员问 Can I help you find anything?，你只是随便看看：","I'm just looking, thanks. // Just looking, thanks.",""],
+  ["d137","fixed","店员问 Is that everything?，你说就这些：","That's it, thanks. // That's all, thanks. // Yep, that's it.",""],
+  ["d138","fixed","把东西递给别人时说：","Here you go. // Here you are.","美国人最常说 Here you go"],
+  ["d139","fixed","在门口让别人先走：","After you. // Go ahead.",""],
+  ["d140","fixed","别人打喷嚏，你说：","Bless you.","几乎只有这一种说法"],
+  ["d141","fixed","别人跟你说 Thank you，你回：","No problem. // You're welcome. // Of course. // Sure.","日常最常用 No problem；You're welcome 稍正式"],
+  ["d142","fixed","别人为一件小事跟你说 Sorry，你回：","No worries. // It's okay. // No problem.","No worries 最常见"],
+  ["d143","fixed","自己犯了个小错（比如拿错东西）：","My bad. // Sorry, my mistake.","My bad 用在朋友、同事之间"],
+  ["d144","fixed","同事随口问 How's it going?，你回：","Pretty good. How about you? // Good, how are you? // Not bad, you?","不用真的讲你今天怎么样，回一句再反问就行"],
+  ["d145","fixed","朋友问 What's up?，你回：","Not much. What's up with you? // Not much, you?","What's up 不是真的在问问题"],
+  ["d146","fixed","别人说 Have a good weekend!，你回：","Thanks, you too! // You too!",""],
+  ["d147","fixed","第一次见面说：","Nice to meet you. // It's nice to meet you.",""],
+  ["d148","fixed","对方说 Nice to meet you，你回：","Nice to meet you too. // You too.",""],
+  ["d149","fixed","跟同事、店员道别：","Have a good one! // Have a good day!","美国人说 Have a good one 特别多"],
+  ["d150","fixed","跟同事说明天见：","See you tomorrow. // See you later. // See you.",""],
+  ["d151","fixed","走到同事桌前，想问个问题：","Hey, do you have a minute? // Sorry to bother you, do you have a sec? // Got a sec?","比 Can I ask you a question? 更自然"],
+  ["d152","fixed","提前跟同事打个招呼：会议改到三点了。","Just a heads-up, the meeting moved to three. // Heads-up, the meeting got moved to three.","heads-up = 提前告诉你一声"],
+  ["d153","fixed","别人提醒了你一件事，你说谢谢提醒：","Thanks for the heads-up.","几乎固定这么说"],
+  ["d154","fixed","告诉对方有进展会通知他：","I'll keep you posted. // I'll let you know.",""],
+  ["d155","fixed","告诉对方不着急：","No rush. // Take your time. // No hurry.",""],
+  ["d156","fixed","表示“我也是”：","Same here. // Me too.",""],
+  ["d157","fixed","表示完全同意：","Exactly. // Totally. // For sure.","比 Yes, I agree with you 自然得多"],
+  ["d158","fixed","电话里对方信号不好：","Sorry, you're breaking up. // Sorry, you cut out for a second.",""],
+  ["d159","fixed","电话里说待会儿打回去：","Can I call you back? // I'll call you back in a few minutes.",""],
+  ["d160","fixed","有人打电话找你，你说“我就是”：","Speaking. // Yes, this is him. // That's me.","Speaking 最常用"],
+  ["d161","fixed","点餐时说要一杯中杯冰咖啡：","Can I get a medium iced coffee? // I'll have a medium iced coffee.","点餐说 Can I get 或 I'll have，不说 I want"],
+  ["d162","fixed","在店里问洗手间在哪：","Where's the restroom? // Do you have a restroom?","公共场所说 restroom，不说 toilet"],
+  ["d163","fixed","别人说 Good luck with your interview!，你回：","Thanks, I appreciate it! // Thank you!",""],
+  ["d164","fixed","夸同事做得好：","Nice job! // Great job! // Good work!",""],
+  ["d165","fixed","别人夸你，你回：","Thanks, I appreciate it. // Thank you!","不要说 No, no, I'm not good（中式谦虚），美国人夸你，说谢谢就好"],
+  ["d166","fixed","别人的事没成，你安慰一句：","Sorry to hear that. // That's too bad. I'm sorry to hear that.",""],
+  ["d167","fixed","委婉推掉邀请：","I'd love to, but I can't make it this time. // I wish I could, but I can't make it.","can't make it = 去不了"],
+  ["d168","fixed","痛快答应邀请：","I'd love to! // Count me in! // Sounds great!",""],
+  ["d169","fixed","好久没见的朋友，问他最近怎么样：","How have you been? // How've you been?","好久没见时用；不说 How are you recently"],
+  ["d170","fixed","打电话聊完了，礼貌地结束：","I'll let you go. Talk to you later! // Okay, I'll let you go.","I'll let you go = 不耽误你了，电话收尾的固定说法"],
+  ["d171","fixed","别人问 Do you mind if I sit here?，你同意：","Not at all, go ahead. // No, go ahead.","Do you mind 是问“你介意吗”，同意要说 No 或 Not at all"],
+  ["d172","fixed","别人问 You don't like coffee?，你确实不喜欢：","No, I don't.","英语按事实回答：不喜欢就说 No（中文是“对，不喜欢”）"],
+  ["d173","fixed","别人问 Aren't you coming?，你要去：","Yes, I am. // Yeah, I'm coming.","要去就说 Yes，和问题里的 not 无关"],
+  ["d174","fixed","别人问 Is it okay if I open the window?，你同意：","Sure, go ahead. // Yeah, of course.",""]
 ];
 const DL_CARDS = [
   ["dl01","cs","What can I get for you?","想要点什么"],
@@ -1094,7 +1137,28 @@ const DL_CARDS = [
   ["dl17","cs","First month's rent and the deposit are due at signing.","签约时要付第一个月房租和押金"],
   ["dl18","cs","Can I get your date of birth?","能告诉我你的出生日期吗"],
   ["dl19","cs","Do you want to take it for a spin?","要不要开出去试试（试驾）"],
-  ["dl20","cs","Do you want to add roadside assistance?","要不要加道路救援"]
+  ["dl20","cs","Do you want to add roadside assistance?","要不要加道路救援"],
+  // 生活和上班时会听到的固定说法
+  ["dl21","cs","Do you need a bag?","要袋子吗"],
+  ["dl22","cs","Is that everything for you today?","今天就这些吗"],
+  ["dl23","cs","Debit or credit?","用借记卡还是信用卡"],
+  ["dl24","cs","Do you have a rewards card with us?","你有我们的会员卡吗"],
+  ["dl25","cs","Can I see your ID, please?","请出示一下证件"],
+  ["dl26","cs","Sorry, we're all out of that.","不好意思，那个卖完了"],
+  ["dl27","cs","It'll be ready in about ten minutes.","大概十分钟好"],
+  ["dl28","cs","Number twenty-three, your order's ready!","二十三号，你的餐好了"],
+  ["dl29","cs","Excuse me, mind if I squeeze by?","不好意思，借过一下"],
+  ["dl30","cs","Is anyone sitting here?","这里有人坐吗"],
+  ["dl31","cs","Take it easy!","回头见，放轻松"],
+  ["dl32","cs","Hang on a sec.","等一下"],
+  ["dl33","cs","Just a heads-up, the meeting got pushed to three.","提前说一声，会议推到三点了"],
+  ["dl34","cs","Can you send me a calendar invite?","你能给我发个日历邀请吗"],
+  ["dl35","cs","Let's touch base tomorrow.","我们明天再碰一下"],
+  ["dl36","cs","Got a sec?","有空吗（一小会儿）"],
+  ["dl37","cs","What's the ETA on that?","那个大概什么时候好"],
+  ["dl38","cs","Sorry, you're breaking up.","不好意思，你那边信号断断续续的"],
+  ["dl39","cs","I'll let you go. Talk soon!","不耽误你了，回头聊"],
+  ["dl40","cs","Are you all set?","你都弄好了吗（不需要别的了吧）"]
 ];
 // 情景对话：对方一句，你回一句
 const DIALOGS = [
@@ -1172,6 +1236,7 @@ const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, J
 "use strict";
 
 const TAGS = {
+  fixed:{label:"固定说法",w:1.0},
   vocab:{label:"单词",w:1.0},
   be:{label:"be 动词",w:1.0}, tense:{label:"时态",w:1.0}, order:{label:"语序",w:.9}, pair:{label:"成对词",w:.9},
   to:{label:"多余的 to",w:.8}, plural:{label:"复数 -s",w:.8}, agree:{label:"主谓一致",w:.7}, question:{label:"提问",w:.7},
@@ -1703,7 +1768,7 @@ function tagAgg(tags, todayS, fromBack, toBack){
 
 /* ---------- 组一轮练习 ---------- */
 const SESSION_CFG = {quick:{warm:0,core:8,lis:0,iv:0,maxE:1,maxW:2}, std:{warm:4,core:16,lis:3,iv:1,maxE:2,maxW:3}, deep:{warm:5,core:30,lis:6,iv:2,maxE:3,maxW:4},
-  free:{warm:0,core:15,lis:0,iv:0,maxE:3,maxW:5}, listen:{warm:0,core:0,lis:8,iv:0,maxE:0,maxW:0}};
+  free:{warm:0,core:15,lis:0,iv:0,maxE:3,maxW:5}, listen:{warm:0,core:0,lis:8,iv:0,maxE:0,maxW:0}, words:{warm:0,core:10,lis:0,iv:0,maxE:0,maxW:3}};
 function buildSession(kind, ctx){
   const cfg = ctx.cfg || SESSION_CFG[kind] || SESSION_CFG.std;
   const {cat, prog, todayN} = ctx; const rnd = ctx.rnd || Math.random;
@@ -2396,6 +2461,17 @@ function planLine(){
   const p = S.settings.planWhen;
   return p ? `<div class="meta">你的计划：${esc(p)}，就打开脱口练一会儿</div>` : `<div class="meta"><button class="btn sm ghost" style="padding-left:0;min-height:32px" data-act="nav" data-v="plan">定一个固定的练习时间</button></div>`;
 }
+/* 单词：首页单独一个入口，不用改首页的题库也能练（面试这周首页选的是面试题库，单词不会出现） */
+function wordStats(){
+  const tn = dnum(today()); const ws = CAT.cards.filter(c => c.t === "w");
+  const learned = ws.filter(c => S.cards[c.id]); const due = learned.filter(c => S.cards[c.id].due <= tn);
+  return {total:ws.length, learned:learned.length, due:due.length};
+}
+function wordsTile(){
+  const w = wordStats(); if (!w.total) return "";
+  return `<button class="mod" data-act="words-go">${ICON.bolt}<b>单词</b><span>${w.learned ? `已学 ${w.learned} 个，该复习 ${w.due} 个` : `${w.total} 个，每次学 2–3 个`}</span></button>`;
+}
+ACT["words-go"] = () => startSession("words", {filter: c => c.t === "w"}, "单词");
 function todayLine(){
   const h = (S.hist || {})[today()] || []; const n = new Set(h.map(e => e.id)).size;
   return n ? `<div class="meta"><button class="btn sm ghost" style="padding-left:0;min-height:32px" data-act="nav" data-v="today">今天练了 ${n} 句，看看练了什么</button></div>` : "";
@@ -2425,7 +2501,7 @@ VIEWS.home = {
       ${iv != null ? `<div class="countdown"><span class="num">${iv}</span><span>${iv === 0 ? "今天就是面试，稳住，先说结论" : "天后面试"}</span></div>` : ""}
       <button class="feature" data-act="nav" data-v="callsetup">${ICON.phone}<div><b>来电模拟</b><span>面试官念题、你开口答，屏幕上不显示问题，和电话面试一样</span></div></button>
       <div class="mods">
-        ${mod("hands","head","耳机模式","走路、坐车时听着练")}
+        ${mod("hands","head","耳机模式","走路、坐车时听着练")}${wordsTile()}
         <button class="mod" data-act="listen-go">${ICON.ear}<b>听力快练</b><span>听懂面试官的问法</span></button>
         ${mod("free","bolt","反射训练","按类型挑着练")}
         ${mod("dialogs","chat","情景对话","点餐、闲聊、打电话办事")}
@@ -3272,10 +3348,25 @@ function callReviewHTML(){
 
 /* ---------- 耳机模式 ---------- */
 const HF = {st:null};
-function handsList(){
+/* 耳机模式听哪些：跟首页题库一样 / 今天练过的 / 学过的单词 / 某一个题库 */
+function hfSources(){
+  const out = [["deck", "跟首页选的题库一样"], ["today", "今天练过的（没说出来的先放）"]];
+  if (CAT.cards.some(c => c.t === "w" && S.cards[c.id])) out.push(["w", "只听学过的单词"]);
+  for (const d of deckList()) if (d.id !== "all") out.push(["d:" + d.id, "只听：" + d.label]);
+  return out;
+}
+function handsList(src){
+  src = src || L.hfSrc || "deck";
+  if (!hfSources().some(x => x[0] === src)) src = "deck";
+  const ok = c => (c.t === "r" || c.t === "t" || c.t === "w") && c.zh && c.en;
+  if (src === "today"){
+    const h = (S.hist || {})[today()] || []; const rank = {again:2, hard:1, good:0}; const worst = {};
+    for (const e of h) if (!worst[e.id] || rank[e.r] > rank[worst[e.id]]) worst[e.id] = e.r;
+    return Object.keys(worst).map(id => CAT.byId[id]).filter(c => c && ok(c)).sort((a, b) => rank[worst[b.id]] - rank[worst[a.id]]).slice(0, 40);
+  }
   const tn = dnum(today());
-  const dp = deckPred(curDeck());
-  const pool = CAT.cards.filter(c => (c.t === "r" || c.t === "t" || c.t === "w") && c.zh && c.en && dp(c));
+  const dp = src === "w" ? (c => c.t === "w" && !!S.cards[c.id]) : src.startsWith("d:") ? deckPred(src.slice(2)) : deckPred(curDeck());
+  const pool = CAT.cards.filter(c => ok(c) && dp(c));
   const p = c => S.cards[c.id];
   /* 优先放该复习的；其余按“耳机里多久没听过”排，不会每次都是同一批 */
   const seenAt = c => ((L.hfSeen || {})[c.id] || 0);
@@ -3298,7 +3389,8 @@ VIEWS.hands = {
         <button class="icon-btn" data-act="hf-prev" aria-label="上一句">${ICON.chev}</button>
         <button class="play" data-act="hf-toggle" id="hfToggle" aria-label="开始">${ICON.play}</button>
         <button class="icon-btn" data-act="hf-next" aria-label="下一句">${ICON.next}</button></div>
-      <div class="panel" style="margin-top:22px"><div class="small muted">每句的思考时间</div>
+      <div class="panel" style="margin-top:22px"><label class="fld" style="margin-top:0"><span>听哪些</span><select data-chg="hfsrc">${hfSources().map(([v, l]) => `<option value="${esc(v)}" ${(L.hfSrc || "deck") === v ? "selected" : ""}>${esc(l)}（${handsList(v).length} 句）</option>`).join("")}</select></label>
+        <div class="small muted" style="margin-top:10px">每句的思考时间</div>
         <div class="seg">${[3,4,5,7].map(s => `<button data-act="hf-think" data-v="${s}" aria-pressed="${L.thinkSec===s}">${s} 秒</button>`).join("")}</div>
         <p class="small muted">${TTS.ok ? (TTS.hasZh() ? "" : "这台设备没有中文朗读：中文只显示在屏幕上，开始时会响一声。") : "这台设备不能朗读，耳机模式用不了，可以用反射训练。"}屏幕会保持常亮，锁屏后会停下。这里的练习不改变复习安排，但计入练习时间。</p></div></div>`;
   },
@@ -4046,6 +4138,8 @@ async function cleanAudio(){
     }
   } catch (e) {}
 }
+
+CHG.hfsrc = el => { L.hfSrc = el.value; saveLocal(); if (HF.st){ if (HF.st.playing) hfPlay(false); HF.st.list = handsList(); HF.st.i = 0; hfShow(); } };
 
 /* ---------- 今天练过的 ---------- */
 VIEWS.today = {
