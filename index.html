@@ -336,6 +336,11 @@ audio{width:100%;margin-top:8px}
 .say-b{gap:4px}
 .say-b svg{width:16px;height:16px}
 
+.sl{color:var(--muted);font-weight:400;margin:0 2px}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent,#2563eb);text-decoration:underline;cursor:pointer;font:inherit}
+.quiet-sw{margin-top:10px}
+.quiet-sw span{font-size:13.5px}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -356,7 +361,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.5.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.6.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -378,7 +383,7 @@ const R_CARDS = [
   ["r012","be","我对机器人很感兴趣。","I'm really interested in robotics. // I'm very interested in robotics.","人感兴趣用 interested（-ed）"],
   ["r013","be","我不是专家。","I'm not an expert.",""],
   ["r014","be","这正对我胃口。","That's right up my alley.","right up my alley：正好是我喜欢、擅长的"],
-  ["r015","be","这很正常。","It's normal. // That's normal.",""],
+  ["r015","be","这很正常。","That's totally normal. // That's normal.",""],
   ["r016","be","那真厉害。","That's really impressive.",""],
   ["r017","be","这有点难说。","It's hard to say.",""],
   ["r018","be","这是个很好的机会。","It's a great opportunity. // It's a good opportunity.",""],
@@ -403,7 +408,7 @@ const R_CARDS = [
   ["r035","tense","我爸带我去的。","My dad took me. // My dad took me there.","take → took"],
   ["r036","tense","我四年级开始打高尔夫。","I started playing golf in fourth grade.",""],
   ["r037","tense","我就是这么开始接触的。","That's how I got into it.",""],
-  ["r038","tense","我朋友提过一点。","My friend mentioned it a little.",""],
+  ["r038","tense","我朋友提过一点。","My friend told me a little about it.",""],
   ["r039","tense","我还没玩。","I haven't played it yet.","完成时：have + 过去分词"],
   ["r040","tense","我在美国两年了。","I've been in the US for two years. // I've been here for two years.","从过去持续到现在：现在完成时"],
   ["r041","tense","我还在找工作。","I'm still looking for a job.","正在进行：am doing"],
@@ -430,7 +435,7 @@ const R_CARDS = [
   // 成对词
   ["r061","pair","虽然我看 F1，但不是特别关注。","I watch F1, but I don't follow it closely. // Although I watch F1, I don't follow it closely.","although 和 but 只留一个"],
   ["r062","pair","因为在找工作，所以我每天都在投简历。","I'm job hunting, so I send out applications every day. // I'm looking for a job, so I send out applications every day.","because 和 so 只留一个；口语里只用 so 最简单"],
-  ["r063","pair","虽然只是小雨，你还是会淋湿。","It's only a light rain, but you'll still get wet. // It's just a drizzle, but you'll still get wet.",""],
+  ["r063","pair","虽然只是小雨，你还是会淋湿。","It's just a light rain, but you'll still get wet. // It's just drizzling, but you'll still get wet.",""],
   ["r064","pair","虽然我在这儿两年了，但英语进步不大。","I've been here for two years, but my English hasn't improved much.",""],
   ["r065","pair","因为我学的是机械工程，所以我对机器人很感兴趣。","I studied Mechanical Engineering, so I'm really into robotics.",""],
   ["r066","pair","虽然我行业经验不多，但我做过很多项目。","I don't have much industry experience yet, but I've worked on a lot of projects.","面试里很容易说成 although...but"],
@@ -466,7 +471,7 @@ const R_CARDS = [
   // 介词
   ["r089","prep","我在家。","I'm at home.","在家：at home"],
   ["r090","prep","我在 MC 球场打球。","I play at the MC golf course.","具体地点用 at"],
-  ["r091","prep","我在找工作。","I'm searching for jobs. // I'm looking for jobs.","search for / look for"],
+  ["r091","prep","我在找工作。","I'm looking for a job. // I'm searching for jobs.","search for / look for"],
   ["r092","prep","两脚与肩同宽。","Keep your feet shoulder-width apart.",""],
   ["r093","prep","我的周末和工作日一样。","My weekends are the same as my workdays.","the same as"],
   ["r094","prep","这对我来说是噩梦。","It's a nightmare for me.",""],
@@ -483,7 +488,7 @@ const R_CARDS = [
   ["r103","colloc","它在打折。","It's on sale.",""],
   ["r104","colloc","巧的是，我也是 PC 玩家。","Funny enough, I'm a PC gamer too.","肯定句用 too；either 只用于否定句"],
   ["r105","colloc","它得一遍又一遍地打到完全相同的位置。","It needs to hit the exact same spot over and over.",""],
-  ["r106","colloc","我最近没什么动力。","I don't have much motivation lately.","动力：motivation"],
+  ["r106","colloc","我最近没什么动力。","I haven't had much motivation lately.","动力：motivation"],
   ["r107","colloc","很难让自己出门。","It's hard to get myself outdoors.",""],
   ["r108","colloc","我最近有点低落。","I've been in a bit of a funk lately.",""],
   ["r109","colloc","我有点上瘾了。","I'm kind of addicted to it.",""],
@@ -565,7 +570,7 @@ const R_CARDS = [
   ["r175","pron","我们做了三版样机。","We built three prototypes.","PRO-to-types，重音在开头"],
   ["r176","pron","我们每周迭代一次设计。","We iterated on the design every week.","I-te-ra-ted，重音在开头"],
   ["r177","pron","这个机械臂的负载是五公斤。","The arm has a payload of five kilograms.","PAY-load"],
-  ["r178","pron","我在找适合我的岗位。","I'm looking for roles that fit me.","roles 不是 rules：o 要把嘴收圆"],
+  ["r178","pron","我在找适合我的岗位。","I'm looking for roles that are a good fit for me.","roles 不是 rules：o 要把嘴收圆"],
   ["r179","pron","我和朋友打高尔夫。","I play golf with my friends.","上次被识别成 I put it off：play 拉长，golf 的 l 要发出来"],
   ["r180","pron","协作机器人可以安全地在人旁边工作。","Cobots can work safely next to people.","CO-bots"],
   ["r181","pron","伺服电机连着一个减速器。","The servo motor is connected to a gearbox.","SER-vo"],
@@ -630,7 +635,7 @@ const F_CARDS = [
   ["f18","question","Are you came here for study?","Did you come here for school?","过去的事用 Did you + 动词原形"],
   ["f19","eding","Golf is a really excited but tired sport.","Golf is a really exciting but tiring sport.","事物让人感到…用 -ing"],
   ["f20","to","I will continue play it.","I'll keep playing it.","keep + -ing"],
-  ["f21","modal","I might can improve my English.","I could improve my English. // I might be able to improve my English.","两个情态动词不能连用"],
+  ["f21","modal","I might can improve my English.","I might be able to improve my English. // I could improve my English.","两个情态动词不能连用"],
   ["f22","compare","It's the most longest game I played.","It's the longest game I've played.","most 和 -est 二选一"],
   ["f23","prep","It was a nightmare to me.","It was a nightmare for me.",""],
   ["f24","article","I visited the MIT.","I visited MIT.","专有名词一般不加 the"],
@@ -646,7 +651,7 @@ const F_CARDS = [
   ["f34","tense","When I was a kid, my dad take me to his boss's place.","When I was a kid, my dad took me to his boss's place.","take → took"],
   ["f35","prep","I'm searching the job.","I'm searching for jobs.","search for"],
   ["f36","tense","I usually will watch some video.","I usually watch videos.","习惯不用 will；videos"],
-  ["f37","be","I like the song which really popular.","I like songs that are really popular.","从句里也要有 be"],
+  ["f37","be","I like the song which really popular.","I like really popular songs.","从句里也要有 be"],
   ["f38","tense","My major is ME.","My major was Mechanical Engineering.","毕业后用过去式；ME 写全称"],
   ["f39","colloc","We went to the whale.","We went whale watching.",""],
   ["f40","colloc","I bought it half mouth ago.","I bought it two weeks ago.","month 拼写；半个月 → two weeks"],
@@ -857,23 +862,29 @@ const TIPS = [
 
 // 其他正确说法（id → 多个说法用 // 分隔）。专门练语法的卡，只收保留了那个语法点的说法
 const ALT_EXTRA = {
+  r183:"Embodied AI is a really hot topic right now.",
+  r178:"I'm looking for roles that fit my background. // I'm looking for roles that fit me.",
+  r097:"I'm job hunting these days.",
+  r091:"I'm looking for jobs. // I'm job hunting.",
+  r073:"This is the first I've heard of it.",
+  r063:"It's only a light rain, but you'll still get wet. // It's just a drizzle, but you'll still get wet.",
   r001:"It's very cold. // It's so cold.", r002:"I'm so tired. // I'm very tired.", r003:"I'm a bit nervous. // I'm kind of nervous.",
   r004:"It's a bit windy today. // It's kind of windy today. // It's a little windy.", r005:"This is my first time here.", r006:"That's really cool!",
   r007:"It's a lot harder than I expected. // It's way harder than I expected. // It's much harder than I thought.",
-  r008:"I'm not that familiar with soccer.", r009:"It's such a nice day.", r011:"I'm a bit rusty.", r012:"I'm really into robotics.",
-  r015:"That's totally normal. // It's totally normal.", r016:"That's so impressive. // That's very impressive.", r017:"That's hard to say.",
+  r008:"I'm not that familiar with soccer. // I don't really know much about soccer.", r009:"It's such a nice day.", r011:"I'm a bit rusty.", r012:"I'm really into robotics.",
+  r015:"It's normal. // It's totally normal.", r016:"That's so impressive. // That's very impressive.", r017:"That's hard to say.",
   r018:"That's a great opportunity.", r019:"I'm really interested in this role. // I'm very interested in this role.",
   r020:"It's nice to talk to you. // It's good to talk with you.", r022:"I'm pretty familiar with CAD.", r023:"I'm open to relocation. // I'm open to moving.",
   r025:"That's awesome.", r026:"It's a bit chilly today. // It's a little cold today.", r028:"It's hard.",
   r029:"It's around fifty degrees outside. // It's about fifty degrees out.",
   r034:"I studied Mechanical Engineering for my master's. // I did a master's in Mechanical Engineering.",
   r036:"I started playing golf when I was in fourth grade. // I began playing golf in fourth grade.",
-  r037:"That's how I started. // That's how I got started.", r038:"My friend mentioned it a bit. // My friend told me a little about it.",
+  r037:"That's how I started. // That's how I got started.", r038:"My friend mentioned it a little. // My friend mentioned it a bit.",
   r039:"I haven't tried it yet.", r041:"I'm still job hunting. // I'm still searching for a job.", r042:"I usually go for walks on weekends.",
   r046:"I've been applying for all kinds of engineering roles. // I've been applying to all kinds of engineering jobs.",
   r050:"Germany lost to Paraguay in a penalty shootout.", r053:"I learned a lot from that. // I learned so much from it.",
   r054:"I was working on a robot arm project.", r058:"I've been kind of lazy and busy lately. // I've been a bit lazy and busy lately.",
-  r062:"I'm job hunting, so I send out resumes every day. // I'm looking for a job, so I'm sending out applications every day.",
+  r062:"I'm job hunting, so I send out resumes every day. // I'm looking for a job, so I'm sending out applications every day. // I'm looking for a job, so I'm applying to jobs every day.",
   r064:"I've been here for two years, but my English hasn't gotten much better.",
   r065:"I studied Mechanical Engineering, so I'm really interested in robotics.",
   r066:"I don't have a lot of industry experience yet, but I've worked on a lot of projects.",
@@ -888,7 +899,7 @@ const ALT_EXTRA = {
   r102:"I bought it a couple of weeks ago.", r103:"It's on sale right now.",
   r104:"Funnily enough, I'm a PC gamer too. // Funny enough, I'm also a PC gamer.",
   r105:"It has to hit the exact same spot over and over. // It needs to hit the exact same spot again and again.",
-  r106:"I haven't had much motivation lately. // I don't have much motivation these days.", r107:"It's hard to get myself outside.",
+  r106:"I don't have much motivation these days. // I haven't been very motivated lately. // I don't have much motivation lately.", r107:"It's hard to get myself outside.",
   r108:"I've been in a funk lately.", r109:"I'm a little addicted to it. // I'm kind of hooked on it.", r110:"It's not really for me.",
   r111:"I want to get back into it.", r112:"I haven't touched it in ages.", r113:"I'll try it. // I'll give it a shot.",
   r115:"It feels weird at first.", r116:"You'll get used to it.",
@@ -932,8 +943,8 @@ const ALT_EXTRA = {
   t22:"I've gone there three times.", t24:"I've been living in the US for two years.", t26:"I'm learning Python now.",
   t27:"I learned a lot from the project.", t28:"I led a four-person team last semester.", t29:"I've been using SolidWorks for three years.",
   f01:"That's so cool!", f05:"I usually take a walk.", f07:"I've already finished my master's degree. // I already finished my master's.",
-  f09:"I came here in 2024 and went back once.", f20:"I'll continue playing it. // I'll keep playing.", f25:"I'm also a PC gamer.",
-  f26:"The weather is so cold these days.", f37:"I like really popular songs.", f38:"I majored in Mechanical Engineering.",
+  f09:"I came here in 2024 and went back once. // I came here in 2024, and I've been back home once.", f20:"I'll continue playing it. // I'll keep playing.", f25:"I'm also a PC gamer.",
+  f26:"The weather is so cold these days.", f37:"I like songs that are really popular.", f38:"I majored in Mechanical Engineering.",
   f40:"I bought it a couple of weeks ago.", f42:"Wow, that's so impressive.", f43:"So you started a YouTube channel?",
   f44:"I first played this game when I was in elementary school.", f45:"I usually just watch on race day."
 };
@@ -1208,7 +1219,7 @@ const DIALOGS = [
     {say:"This one has about thirty thousand miles. Want to take it for a test drive?",zh:"这辆大约三万英里。要不要试驾？",reply:["Sure, I'd love to.","Yes, I'd like to test drive it."]},
     {say:"So, what do you think?",zh:"觉得怎么样？",reply:["I like it. What's your best price?","It drives well. How much is it?"]},
     {say:"We could do eighteen nine for you.",zh:"给你 18,900。",reply:["Are there any other fees on top of that?","Does that include all the fees?"]},
-    {say:"Just tax, title, and registration.",zh:"只有税、产权和上牌的费用。",reply:["Okay. Can I get that in writing?","Got it. I'd like to compare a few quotes first."]}]},
+    {say:"Just tax, title, and registration.",zh:"只有税、产权和上牌的费用。",reply:["Okay. Can I get that in writing?","Got it. I want to look around a bit before I decide."]}]},
   {id:"g08",title:"车险报价电话",zh:"要报价、车型、驾龄、免赔额、发邮件",who:"Insurance agent",turns:[
     {say:"Thanks for calling. Are you looking for a new auto insurance quote?",zh:"您好，是想要新的车险报价吗？",reply:["Yes, I'd like to get a quote for car insurance."]},
     {say:"Sure. What's the year, make, and model of the car?",zh:"车是哪年的、什么牌子、什么型号？",reply:["It's a 2021 Toyota Camry.","It's a 2021 Honda Civic."],tip:"换成你的车"},
@@ -1563,6 +1574,49 @@ function speakEN(text){
   s = s.replace(/\b\d+\b/g, m => numWords(+m));
   return s.replace(/\s{2,}/g, " ");
 }
+/* 按意群断句：停在逗号、句号这些地方，停在 so / but / because 这类词前面，
+   长句再停在介词短语前面；一块里面不停（研究：停在从句边界，听的人更好懂；停在从句中间反而更难懂） */
+const TG_CLAUSE = new Set(["but","so","because","when","if","while","although","though","since","until","unless","where","which","who"]);
+const TG_PREP = new Set(["in","at","on","for","with","from","about","during","after","before","into","through","by","like"]);
+function thoughtGroups(text){
+  const s = String(text || "").trim(); if (!s) return [];
+  const parts = s.match(/[^,;:.!?—–]+[,;:.!?—–]*["”’)]?\s*/g) || [s];
+  const out = [];
+  for (const part of parts){
+    const p = part.trim(); if (!p) continue;
+    const words = p.split(/\s+/);
+    if (words.length <= 5){ out.push(p); continue; }
+    let cur = [];
+    for (let i = 0; i < words.length; i++){
+      const w = words[i].toLowerCase().replace(/[^a-z]/g, ""); const rest = words.length - i;
+      const nx = (words[i + 1] || "").toLowerCase().replace(/[^a-z']/g, "");
+      const newClause = /^(i|we|he|she|they|it|you|there|i'm|i've|i'll|i'd|we're|we've|it's|that's|he's|she's|they're|they've)$/.test(nx);
+      const prevW = (cur[cur.length - 1] || "").toLowerCase().replace(/[^a-z]/g, "");
+      const afterPrep = /^(within|of|to|than|in|at|on|for|with|from|about|by|into|like|around|over|under|the|a|an|my|your|our|their|his|her|its)$/.test(prevW);
+      const aboutNum = w === "about" && /^(\d|one|two|three|four|five|six|seven|eight|nine|ten|a|an|half|twenty|thirty|forty|fifty|hundred)/.test(nx);
+      const brk = !afterPrep && !aboutNum && cur.length >= 2 && rest >= 2 && (TG_CLAUSE.has(w) || (TG_PREP.has(w) && cur.length >= 3) || ((w === "and" || w === "or") && (newClause || cur.length >= 6)));
+      if (brk){ out.push(cur.join(" ")); cur = []; }
+      cur.push(words[i]);
+    }
+    if (cur.length) out.push(cur.join(" "));
+  }
+  const merged = [];
+  for (const c of out){ if (merged.length && c.split(/\s+/).length < 2) merged[merged.length - 1] += " " + c; else merged.push(c); }
+  if (merged.length > 1 && merged[0].split(/\s+/).length < 2){ merged[1] = merged[0] + " " + merged[1]; merged.shift(); }
+  return merged;
+}
+/* 每句挑一条最相关的发音提示（重音、语调、断句、词尾辅音、难发的音） */
+function pronTip(text){
+  const s = String(text || "").trim(); const words = s.split(/\s+/).filter(Boolean);
+  if (/\?\s*$/.test(s) && /^(do|does|did|is|are|was|were|can|could|would|will|have|has|should|may|am)\b/i.test(s)) return "一般疑问句：句尾音调往上扬 ↗";
+  if (/\?\s*$/.test(s) && /^(what|where|when|who|why|how|which)\b/i.test(s)) return "特殊疑问句：句尾音调往下降 ↘，不要上扬";
+  if (/\bcan't\b/i.test(s)) return "can't 要重读、拉长；can 在句子里一般轻读成 kən";
+  if (/\b\w+(sts|sks|xt|ked|ped|sed|ched|shed|nds|lds|nts)\b/i.test(s)) return "词尾辅音要发出来，但中间别加“特、斯”这样的元音";
+  if (words.length >= 9) return "长句按意群断开（打开“断句”能看到斜杠），每一块一口气说完，块和块之间才停";
+  if (/\b(th(?!e\b)[a-z]*)\b/i.test(s)) return "th：舌尖轻轻放在上下牙之间送气，不要发成 s、z 或 d";
+  if (/v/i.test(s)) return "v：上齿轻碰下唇再出声；w 要先把嘴唇撮圆";
+  return "重要的词（名词、动词、形容词）拉长、音调起伏；a、the、to、of 轻轻带过";
+}
 /* 口语里该查的错：去掉标点、大小写、拼写这类只跟书写有关的 */
 function speechFlags(text){ return checkWriting(text).filter(i => i.tag !== "书写" && i.tag !== "拼写"); }
 
@@ -1815,7 +1869,7 @@ function buildSession(kind, ctx){
   const lisPool = [...lis.filter(isDue), ...(ctx.mode==="interview" ? lis.filter(c=>isNew(c)&&c.grp==="iv") : []), ...lis.filter(isNew), ...shuffle(lis.filter(c=>!isNew(c)&&!isDue(c)), rnd)];
   const L = take(lisPool, cfg.lis, false);
   const items = [...warm.map(c=>({k:"card",id:c.id})), ...main.map(c=>({k:"card",id:c.id})), ...L.map(c=>({k:"listen",id:c.id}))];
-  for (const q of pickQuestions(ctx, cfg.iv)) items.push({k:"iv", qid:q.id});
+  for (const q of pickQuestions(ctx, ctx.quiet ? 0 : cfg.iv)) items.push({k:"iv", qid:q.id});
   return items;
 }
 function diversify(list){
@@ -1845,7 +1899,7 @@ function pickQuestions(ctx, n){
 }
 
 const CORE = {TAGS,TYPE_LABEL,TENSE_NOTE,tagKey,dstr,dnum,nstr,splitAlts,shuffle,hash,buildCatalog,INTERVALS,MASTERED_BOX,srsRate,
-  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
+  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,thoughtGroups,pronTip,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
   buildSession,diversify,interleave,pickQuestions,IRR,SESSION_CFG};
 
 
@@ -1875,7 +1929,7 @@ const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
   settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
   cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
-const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false});
+const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false, slashes:false, quiet:false, resume:null});
 function mergeInto(d, o){
   for (const k of Object.keys(o||{})){
     const a = d[k], b = o[k];
@@ -2034,7 +2088,7 @@ const SR = {
   Ctor: window.SpeechRecognition || window.webkitSpeechRecognition || null,
   cur: null, local: false, netFail: false, broken: false, fails: 0,
   get ok(){ return !!this.Ctor; },
-  usable(){ return this.ok && !MIC.blocked && !this.broken && S.settings.inputMode === "auto" && !(this.netFail && !this.local && !navigator.onLine); },
+  usable(){ return !L.quiet && this.ok && !MIC.blocked && !this.broken && S.settings.inputMode === "auto" && !(this.netFail && !this.local && !navigator.onLine); },
   async checkLocal(){
     const C = window.SpeechRecognition || this.Ctor;
     if (!C || typeof C.available !== "function") return "none";
@@ -2161,13 +2215,13 @@ const Wake = {
 };
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && Wake.want) Wake.on();
-  if (document.visibilityState === "hidden") save(true);
+  if (document.visibilityState === "hidden"){ save(true); try { if (typeof saveResume === "function") saveResume(); } catch (e) {} }
   try { if (typeof RUN !== "undefined" && RUN && RUN.stage){ const st = RUN.stage; if (document.visibilityState === "hidden" && st.onHide) st.onHide(); if (document.visibilityState === "visible" && st.onShow) st.onShow(); } } catch (e) {}
 });
 const Snd = {
   ctx:null,
   beep(f, d, type, vol){
-    if (!S.settings.sound) return;
+    if (!S.settings.sound || L.quiet) return;
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       this.ctx = this.ctx || new AC();
@@ -2440,7 +2494,7 @@ document.addEventListener("input", () => Act.poke());
 ACT.nav = el => UI.nav(el.dataset.v, Object.assign({}, el.dataset));
 ACT.tab = el => UI.tab(el.dataset.v);
 ACT.back = () => UI.back();
-ACT.say = el => TTS.speak(el.dataset.text, {lang: el.dataset.lang || "en", rate: el.dataset.slow ? 0.75 : 1});
+ACT.say = el => { if ((el.dataset.lang || "en") === "zh") { chunkTok++; TTS.speak(el.dataset.text, {lang:"zh"}); return; } sayTxt(el.dataset.text, !!el.dataset.slow); };
 ACT["ai-stop"] = () => AI.stop();
 
 /* ---------- 首页 ---------- */
@@ -2488,7 +2542,7 @@ VIEWS.home = {
     const mod = (v, icon, t, d) => `<button class="mod" data-act="nav" data-v="${v}">${ICON[icon]}<b>${t}</b><span>${d}</span></button>`;
     return `<div class="wrap">
       <div class="top"><div class="wordmark">脱口</div><div class="streak"><span class="num">${st.streak}</span><span class="lbl">天<br>连续</span></div></div>
-      ${installBanner()}${typeof micBanner === "function" ? micBanner() : ""}${STORAGE_OK ? "" : `<div class="banner"><span>存储空间不够，进度没存上。先备份，再清理旧录音。</span><button class="btn sm primary" data-act="nav" data-v="storage">去看看</button></div>`}${typeof ttsBanner === "function" ? ttsBanner() : ""}${typeof backupBanner === "function" ? backupBanner() : ""}${typeof pendingBanner === "function" ? pendingBanner() : ""}
+      ${installBanner()}${typeof micBanner === "function" ? micBanner() : ""}${resumeBanner()}${STORAGE_OK ? "" : `<div class="banner"><span>存储空间不够，进度没存上。先备份，再清理旧录音。</span><button class="btn sm primary" data-act="nav" data-v="storage">去看看</button></div>`}${typeof ttsBanner === "function" ? ttsBanner() : ""}${typeof backupBanner === "function" ? backupBanner() : ""}${typeof pendingBanner === "function" ? pendingBanner() : ""}
       <section class="hero">
         <div class="gantry" id="homeLights">${lamps()}</div>
         <h2>开始今天的练习</h2>
@@ -2496,6 +2550,7 @@ VIEWS.home = {
         <div class="meta">${line}</div>
         <div class="seg" role="group" aria-label="练习时长">${seg}</div>
         <button class="btn primary big block" data-act="start">开始</button>
+        <label class="switch quiet-sw"><span>现在不方便出声（打字回答、关提示音，跳过要开口的题）</span><input type="checkbox" data-chg="local" data-key="quiet" ${L.quiet ? "checked" : ""}></label>
         <div class="meta">到期复习 ${c.due} 题，今天还有 ${c.newLeft} 道新题</div>${focusLine()}${planLine()}${todayLine()}
       </section>
       ${iv != null ? `<div class="countdown"><span class="num">${iv}</span><span>${iv === 0 ? "今天就是面试，稳住，先说结论" : "天后面试"}</span></div>` : ""}
@@ -2529,11 +2584,12 @@ function sessionCtx(extra){
     acc:K.tagAgg(S.tags, today(), 0, 14), mode:interviewMode(), questions:deckQuestions(curDeck()), filter:deckPred(curDeck()), answers:S.answers}, extra || {});
 }
 function startSession(kind, extra, title, replace){
-  const items = K.buildSession(kind, sessionCtx(extra));
+  const items = K.buildSession(kind, sessionCtx(Object.assign({quiet: !!L.quiet}, extra || {})));
   if (!items.length){ toast("这一类现在没有要练的题"); return; }
   RUN.items = items; RUN.i = 0; RUN.title = title || "今天的练习"; RUN.kind = kind;
   RUN.res = {good:0, hard:0, again:0, pb:0, ms:[], listenOk:0, listenN:0, iv:0}; RUN.t0 = Date.now(); RUN.weak = {}; RUN.retries = {};
-  const mins = {quick:3.5, std:10.5, deep:20.5}[kind]; RUN.limitMs = mins ? mins * 60000 : 0; RUN.timeUp = false; RUN.rest = [];
+  const mins = {quick:3.5, std:10.5, deep:20.5}[kind]; RUN.limitMs = mins ? mins * 60000 : 0; RUN.timeUp = false; RUN.rest = []; RUN.exited = false;
+  L.resume = null; saveLocal();
   if (replace) UI.replace("run"); else UI.nav("run");
 }
 
@@ -2596,7 +2652,24 @@ function nextItem(){
   showItem();
 }
 ACT["run-rest"] = () => { if (!RUN.rest || !RUN.rest.length) return; RUN.items = RUN.rest; RUN.rest = []; RUN.i = 0; RUN.limitMs = 0; RUN.timeUp = false; showItem(); };
+/* 练到一半：退出或切走时记下没练完的题，回到首页可以接着练（今天之内有效） */
+function saveResume(){
+  try {
+    const top = UI.top && UI.top(); if (!top || top.name !== "run" || !RUN.items || RUN.kind === "solo" || RUN.i >= RUN.items.length) return;
+    L.resume = {kind:RUN.kind, title:RUN.title, items:RUN.items.slice(RUN.i), retries:RUN.retries || {}, day:today(), savedAt:Date.now()}; saveLocal();
+  } catch (e) {}
+}
+function resumeInfo(){ const r = L.resume; if (!r || r.day !== today() || !r.items) return null; const items = r.items.filter(x => x.k === "iv" ? !!QBY[x.qid] : !!CAT.byId[x.id]); return items.length ? Object.assign({}, r, {items}) : null; }
+function resumeBanner(){ const r = resumeInfo(); if (!r) return ""; return `<div class="banner"><span>上次的“${esc(r.title || "练习")}”还剩 ${r.items.length} 题</span><span class="row-gap"><button class="btn sm primary" data-act="resume-go">接着练</button><button class="btn sm ghost" data-act="resume-drop">不用了</button></span></div>`; }
+ACT["resume-go"] = () => {
+  const r = resumeInfo(); if (!r){ L.resume = null; saveLocal(); UI.render(); return; }
+  RUN.items = r.items; RUN.i = 0; RUN.kind = r.kind; RUN.title = (r.title || "练习") + "（接着练）"; RUN.retries = r.retries || {};
+  RUN.res = {good:0, hard:0, again:0, pb:0, ms:[], listenOk:0, listenN:0, iv:0}; RUN.t0 = Date.now(); RUN.weak = {}; RUN.limitMs = 0; RUN.timeUp = false; RUN.rest = []; RUN.exited = false;
+  L.resume = null; saveLocal(); UI.nav("run");
+};
+ACT["resume-drop"] = () => { L.resume = null; saveLocal(); UI.render(); };
 ACT["run-exit"] = async () => {
+  saveResume(); RUN.exited = true;
   const done = RUN.i;
   if (RUN.kind !== "solo" && done > 0 && RUN.i < RUN.items.length){ RUN.items = RUN.items.slice(0, RUN.i); showItem(); return; }
   UI.back();
@@ -2649,9 +2722,10 @@ class CardStage {
         <div class="answer-zone">${inputToggleHTML()}
           ${mic ? `<button class="mic" id="micBtn" data-act="c-mic" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="heard">${this.phase === "retry" ? "按提示改好，再点麦克风说一次" : "灯灭后点麦克风，大声说"}</div>` :
             `<p class="small muted" style="margin:0 0 8px">${MIC.blocked ? "这个版本不能直接用麦克风：点下面的输入框，再点键盘上的麦克风说。" : SR.broken ? "这台手机的自动识别用不了：点下面的输入框，再点键盘上的麦克风说。" : "灯灭后开口说。想让 app 检查，就点输入框，用键盘上的麦克风说。"}</p>`}
-          <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done"><button class="btn sm" data-act="c-check">检查</button></div>
+          <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocapitalize="sentences" enterkeyhint="done"><button class="btn sm" data-act="c-check">检查</button></div>
           ${mic ? "" : `<p class="small muted" style="margin-top:6px">说完停 2 秒会自动检查。</p>`}
-          ${Rec.ok ? `<button class="btn sm ghost" style="margin-top:6px" data-act="c-rec">录下来，跟标准读音对比</button>` : ""}
+          ${Rec.ok && !L.quiet ? `<button class="btn sm ghost" style="margin-top:6px" data-act="c-rec">录下来，跟标准读音对比</button>` : ""}
+          ${L.quiet ? `<p class="small muted" style="margin-top:6px">不方便出声：打字回答，同时在心里默念或做口型。研究发现打字、做口型都比只在心里想记得牢，但比不上说出声，方便时再开口练。</p>` : ""}
           ${navigator.onLine === false ? `<p class="small muted" style="margin-top:6px">现在没网：键盘的语音输入可能用不了。可以点“录下来对比”，或者大声说完直接看答案。</p>` : ""}
           <button class="btn ghost block" style="margin-top:6px" data-act="c-reveal">${this.phase === "retry" ? "直接看答案" : "我说完了，看答案"}</button>
         </div></div>`;
@@ -2678,14 +2752,16 @@ class CardStage {
       el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">${this.leech ? "分块练" : "跟着说 3 遍"}</span></div>
         <p class="muted small">${this.leech ? `这句错过 ${lapses} 次了，换个练法：一块一块加长，最后说整句。` : "先听慢速、再听正常速度跟着说，最后不听自己说。"}想不起来就点一下句子，偷看两秒。</p>
         <p style="margin-top:10px;font-weight:600">${this.drill < n ? `${this.drill + 1}/${n}　${esc(cur.label)}` : "练完了"}</p>
-        <div class="en blur" id="drillText" data-act="c-peek" style="margin-top:8px">${esc(cur.text)}</div>
-        <div class="row-gap" style="margin-top:10px">${sayBtns(cur.text)}</div>
+        <div class="en blur" id="drillText" data-act="c-peek" style="margin-top:8px">${esc(L.slashes ? K.thoughtGroups(cur.text).join(" / ") : cur.text)}</div>
+        <div class="row-gap" style="margin-top:10px">${sayBtns(cur.text)}${slashBtn()}</div>
+        <p class="small" style="margin-top:8px">发音提示：${esc(K.pronTip(cur.text))}　<button class="linkbtn small" data-act="nav" data-v="tips">更多说话技巧</button></p>
+        ${L.quiet ? `<p class="small muted">不方便出声：跟着默念或做口型，比只在心里想记得牢。</p>` : ""}
         <div class="dots">${steps.map((_, i) => `<i class="${i < this.drill ? "on" : ""}"></i>`).join("")}</div>
         ${SR.usable() && this.drill < n ? `<button class="mic" data-act="c-drill-mic" aria-label="说一遍">${ICON.mic}</button><div class="heard" id="heard">说一遍，说对了自动打勾</div>` : ""}
         ${this.drill < n ? `<button class="btn block" data-act="c-drill-tick">我说了一遍</button>` : `<button class="btn primary block big" data-act="c-drill-done">继续，这一轮还会再考你</button>`}
         ${this.leech ? `<button class="btn ghost block" style="margin-top:6px" data-act="c-leech-claude">让 Claude 给个更好记的说法</button>` : ""}
       </div>`;
-      if (this.drill < n && cur.play && this.drillPlayed !== this.drill){ this.drillPlayed = this.drill; setTimeout(() => { if (this.alive && this.phase === "drill") TTS.speak(cur.text, {rate: cur.play === "slow" ? 0.75 : 1}); }, 250); }
+      if (this.drill < n && cur.play && this.drillPlayed !== this.drill){ this.drillPlayed = this.drill; setTimeout(() => { if (this.alive && this.phase === "drill") sayTxt(cur.text, cur.play === "slow"); }, 250); }
     }
   }
   drillSteps(){
@@ -2775,7 +2851,7 @@ class CardStage {
       }
     } else if (timeChip) h += `<div class="verdict" style="color:var(--muted)">对照一下，你说对了吗？${timeChip}</div>`;
     if (c.t === "w" && this.freeUse) h += `<p class="small muted" style="margin-top:6px">参考例句：</p>`;
-    h += `<div class="say-line"><div class="en">${wordsHTML(t.en, c.t === "w" ? c.word : null)}</div><div class="say-btns">${sayBtns(t.en)}</div></div><p class="small muted" style="margin-top:2px">点单词可以听读音、查意思</p>`;
+    h += `<div class="say-line"><div class="en">${wordsHTML(t.en, c.t === "w" ? c.word : null)}</div><div class="say-btns">${sayBtns(t.en)}</div></div><div class="row-gap" style="margin-top:4px;align-items:center"><span class="small muted">点单词可以听读音、查意思</span>${slashBtn()}</div><p class="small" style="margin-top:4px">发音提示：${esc(K.pronTip(t.en))}　<button class="linkbtn small" data-act="nav" data-v="tips">更多</button></p>`;
     if (c.t === "w") h += `<p style="margin-top:6px">单词：<span class="w key en" style="font-size:18px" data-act="word" data-w="${esc(c.word)}">${esc(c.word)}</span>　${esc(c.mean)}</p>`;
     if (this.recUrl) h += `<div class="small muted" style="margin-top:8px">你的录音：先听自己的，再点喇叭听标准读音，对比哪里不一样</div><audio controls src="${this.recUrl}"></audio>`;
     const mine = (["r","t","f"].includes(c.t) && S.myAlts[c.id]) || [];
@@ -2813,11 +2889,20 @@ class CardStage {
 function sayBtns(text){ return `<button class="btn sm ghost say-b" data-act="say" data-text="${esc(text)}">${ICON.speak}原速</button><button class="btn sm ghost say-b" data-act="say" data-slow="1" data-text="${esc(text)}">${ICON.speak}慢速</button>`; }
 /* 英文句子里的每个词都能点：听读音、查意思 */
 function wordsHTML(text, key){
-  const s = String(text || ""); let out = "", last = 0;
+  let s = String(text || ""); if (L.slashes && /\s/.test(s)) s = K.thoughtGroups(s).join(" / "); let out = "", last = 0;
   const keys = key ? K.tokens(key).filter(k => k.length >= 3 && !["the","and","for","you","are","out"].includes(k)) : [];
   s.replace(/[A-Za-z][A-Za-z'’-]*/g, (m, i) => { const isKey = keys.some(k => K.wordsMatch(k, m.toLowerCase())); out += esc(s.slice(last, i)) + `<span class="w${isKey ? " key" : ""}" data-act="word" data-w="${esc(m)}">${esc(m)}</span>`; last = i + m.length; return m; });
-  return out + esc(s.slice(last));
+  return (out + esc(s.slice(last))).replace(/ \/ /g, ' <span class="sl">/</span> ');
 }
+/* 断句开着时，慢速一块一块读，块之间停一下，方便一块一块跟 */
+let chunkTok = 0;
+async function speakChunks(text, rate){
+  const tok = ++chunkTok; const ch = K.thoughtGroups(text);
+  for (const c of ch){ if (tok !== chunkTok) return; await TTS.speak(c, {rate: rate || 0.8}); if (tok !== chunkTok) return; await new Promise(r => setTimeout(r, 380)); }
+}
+function sayTxt(text, slow){ chunkTok++; if (slow && L.slashes && /\s/.test(text)) return speakChunks(text, 0.8); return TTS.speak(text, {rate: slow ? 0.75 : 1}); }
+ACT["slash-toggle"] = () => { L.slashes = !L.slashes; saveLocal(); const s = RUN && RUN.stage; if (s && s.render) s.render(); else UI.render(); toast(L.slashes ? "断句打开了：斜杠处停一下" : "断句关掉了"); };
+function slashBtn(){ return `<button class="btn sm ghost" data-act="slash-toggle" aria-pressed="${L.slashes ? "true" : "false"}">${L.slashes ? "断句：开" : "断句：关"}</button>`; }
 ACT.word = el => {
   const w = String(el.dataset.w || "").replace(/[’']s$/, "").replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g, ""); if (!w) return;
   TTS.speak(w, {rate:0.9});
@@ -2950,7 +3035,7 @@ class ListenStage {
   constructor(card){
     this.card = card; this.alive = true; this.plays = 0; this.slow = false; this.done = false;
     if (!card) return;
-    this.mode = TTS.ok && S.cards[card.id] ? "repeat" : "meaning"; this.voice = TTS.mixVoice();
+    this.mode = TTS.ok && S.cards[card.id] && !L.quiet ? "repeat" : "meaning"; this.voice = TTS.mixVoice();
     const pool = K.shuffle(CAT.cards.filter(c => c.t === "l" && c.id !== card.id && c.grp === card.grp)).slice(0, 3);
     this.opts = K.shuffle([card, ...pool]);
   }
@@ -2967,7 +3052,7 @@ class ListenStage {
         const mic = SR.usable();
         el.innerHTML = `<div class="card">${head}${playRow}<p class="small muted center" style="margin-top:12px">不看文字，把听到的整句说出来</p>${inputToggleHTML()}
           ${mic ? `<button class="mic" id="lMic" data-act="l-mic" aria-label="说出来">${ICON.mic}</button><div class="heard" id="heard"></div>` : ""}
-          <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocomplete="off" spellcheck="false" enterkeyhint="done"><button class="btn sm" data-act="l-check">检查</button></div>
+          <div class="or"><input type="text" class="en" id="typed" placeholder="${L.quiet ? "打字回答，同时在心里默念或做口型" : mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" enterkeyhint="done"><button class="btn sm" data-act="l-check">检查</button></div>
           <button class="btn ghost block" style="margin-top:6px" data-act="l-giveup">听不出来，看答案</button></div>`;
         const ty = $("#typed");
         if (ty){
@@ -3104,6 +3189,7 @@ ACT["iv-done"] = () => RUN.stage instanceof IvStage && RUN.stage.done();
 /* 总结 */
 function showSummary(){
   const el = stageEl(); if (!el) return;
+  if (!RUN.exited && L.resume){ L.resume = null; saveLocal(); }
   const r = RUN.res; const n = r.good + r.hard + r.again;
   const mins = Math.max(1, Math.round((Date.now() - RUN.t0) / 60000));
   const st = K.computeStreak(S.days, today());
@@ -3674,13 +3760,14 @@ VIEWS.me = {
         <label class="fld"><span>英文语速</span><input type="range" min="0.7" max="1.2" step="0.05" value="${L.rate}" data-chg="local" data-key="rate" data-num="1"></label>
         <label class="fld"><span>中文语音（耳机模式用）</span><select data-chg="local" data-key="zhVoice">${opt(zhV, L.zhVoice)}</select></label>
         <button class="btn sm" style="margin-top:8px" data-act="say" data-lang="zh" data-text="我已经毕业了。">试听中文</button>
-        <div style="margin-top:10px"><label class="switch"><span>听力题换着用不同的声音</span><input type="checkbox" data-chg="local" data-key="voiceMix" ${L.voiceMix ? "checked" : ""}></label>
+        <div style="margin-top:10px"><label class="switch"><span>句子按意群显示斜杠（断句），慢速时一块一块读</span><input type="checkbox" data-chg="local" data-key="slashes" ${L.slashes ? "checked" : ""}></label>
+        <label class="switch"><span>听力题换着用不同的声音</span><input type="checkbox" data-chg="local" data-key="voiceMix" ${L.voiceMix ? "checked" : ""}></label>
         <label class="switch"><span>也用英式、澳式等其他口音</span><input type="checkbox" data-chg="local" data-key="accentMix" ${L.accentMix ? "checked" : ""}></label></div>
         <p class="small muted" style="margin-top:6px">这台手机现在能用 ${TTS.list("en").length} 个英文声音。想要更多男声、女声：在手机设置里搜“文字转语音”，进入 Google 语音服务的设置，安装语音数据，选“英语（美国）”，在里面挑声音。</p>
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="sec-title">内容和数据</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("pending","待确认的说法", ((S.pending || []).length) + " 句")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
+        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("pending","待确认的说法", ((S.pending || []).length) + " 句")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("tips","说话技巧","重音、语调、断句、连读、难发的音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
         ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
         ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
@@ -4140,6 +4227,27 @@ async function cleanAudio(){
 }
 
 CHG.hfsrc = el => { L.hfSrc = el.value; saveLocal(); if (HF.st){ if (HF.st.playing) hfPlay(false); HF.st.list = handsList(); HF.st.i = 0; hfShow(); } };
+
+/* ---------- 说话技巧：只放对“听懂你”影响最大的几条，每条配例句 ---------- */
+const SPEAK_TIPS = [
+  {h:"先抓三件事：重音、语调、断句", p:"研究发现，听的人觉得最影响理解的，是单词重音、句子重音和语调。发音不完美没关系，这三样对了，对方就容易听懂。", ex:[]},
+  {h:"重音：拉长、音调起伏，不是喊大声", p:"中文母语者强调一个词时，常用“更大声”；美国人是把这个词拉长，音调先抬起来再落下。一句话里，名词、动词、形容词、否定词重；其余的轻。", ex:["I just finished my master's in mechanical engineering."]},
+  {h:"轻读：小词又轻又短", p:"a、the、to、for、of、and、can 在句子里读得很轻，元音含糊成“呃”。每个字都读得一样重，听起来就像机器人。", ex:["I want to grab a cup of coffee.", "I can do it."]},
+  {h:"语调：落在整句上", p:"中文每个字有声调；英语的音高变化是落在整句上的。陈述句和 what、where、how 开头的问句，句尾往下降；能用 yes / no 回答的问句，句尾往上扬。", ex:["Where do you work?", "Do you work here?"]},
+  {h:"断句：在意群之间停", p:"停在逗号、so / but / because 前面、长句里的介词短语前面；一个意群里面不要停。停对了地方，美国人会觉得你说得更流利、更好懂。打开“断句”就能看到斜杠。", ex:["I just finished my master's in mechanical engineering at Northeastern.", "I'm job hunting, so I send out applications every day."]},
+  {h:"连读：词和词连成一串", p:"前一个词的结尾辅音，接后一个词的开头元音，连起来读。一个词一个词地往外蹦，听起来会很生硬。", ex:["Check it out.", "Pick it up."]},
+  {h:"词尾辅音：要发出来，不加元音", p:"中文音节很少以辅音结尾，所以很容易把 -t、-d、-s、-ks、-sts 吞掉，或者在后面加个“特、斯”。要发出来，但要短、要干净。", ex:["I asked a question.", "It costs twenty dollars."]},
+  {h:"几个难发的音", p:"th：舌尖轻放在上下牙之间送气。v：上齿轻碰下唇再出声。r：舌尖不碰上颚，嘴唇稍微撮圆。l：舌尖顶住上牙后面。thin 和 thing、sheep 和 ship（ee 嘴角向两边拉开，读得长；i 放松，读得短）、cat 的 a 嘴要张大。", ex:["Thank you for thinking of me.", "I live in a very busy area."]},
+  {h:"关于“肌肉、舌位、胸腔发声”", p:"网上很多“美式发音要用胸腔、舌头往后缩”的说法，研究证据很有限。与其琢磨肌肉怎么用力，不如照着上面几条：先听慢速、再跟正常速度，录下来和标准读音对比。", ex:[]}
+];
+VIEWS.tips = {
+  tab:"me",
+  render(){
+    return `<div class="wrap">${backBtn()}<h2>说话技巧</h2><p class="muted small" style="margin:6px 0 4px">练的时候，每句话下面也会提示一条最相关的。</p>
+      ${SPEAK_TIPS.map(t => `<div class="panel"><h3>${esc(t.h)}</h3><p class="small" style="margin-top:6px;line-height:1.7">${esc(t.p)}</p>${t.ex.map(e => `<div class="say-line" style="margin-top:8px"><div class="en sm">${wordsHTML(e)}</div><div class="say-btns">${sayBtns(e)}</div></div>`).join("")}</div>`).join("")}
+      <div class="row-gap">${slashBtn()}</div></div>`;
+  }
+};
 
 /* ---------- 今天练过的 ---------- */
 VIEWS.today = {
