@@ -332,6 +332,10 @@ audio{width:100%;margin-top:8px}
 .say-btns{display:flex;flex-direction:column;gap:6px;align-items:center;flex:none}
 .slow-btn{min-height:30px;padding:4px 8px;font-size:12.5px}
 
+.w.key{font-weight:700;border-bottom:2px solid var(--amber,#d97706)}
+.say-b{gap:4px}
+.say-b svg{width:16px;height:16px}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -352,7 +356,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.3.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.4.1"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1168,6 +1172,7 @@ const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, J
 "use strict";
 
 const TAGS = {
+  vocab:{label:"单词",w:1.0},
   be:{label:"be 动词",w:1.0}, tense:{label:"时态",w:1.0}, order:{label:"语序",w:.9}, pair:{label:"成对词",w:.9},
   to:{label:"多余的 to",w:.8}, plural:{label:"复数 -s",w:.8}, agree:{label:"主谓一致",w:.7}, question:{label:"提问",w:.7},
   rescue:{label:"救急句",w:.8}, interview:{label:"面试语块",w:.8}, modal:{label:"情态动词",w:.6}, eding:{label:"-ed / -ing",w:.6},
@@ -1187,7 +1192,7 @@ function tagKey(s){
   s = String(s||"").trim(); if (!s) return "other";
   return TAG_ALIAS[s] || TAG_ALIAS[s.replace(/\s+/g,"")] || TAG_ALIAS[s.toLowerCase()] || "other";
 }
-const TYPE_LABEL = {r:"反射卡",t:"时态快反",f:"找错",e:"扩句",l:"听力"};
+const TYPE_LABEL = {r:"反射卡",t:"时态快反",f:"找错",e:"扩句",l:"听力",w:"单词"};
 const TENSE_NOTE = {
   past:"已经结束的某一次 → 过去式",
   perf:"从过去到现在、经历、次数 → 现在完成时 have done",
@@ -1369,11 +1374,24 @@ function sayVariants(ut){
   }
   return out;
 }
+/* 比较用的词：数字统一成英文读法（220 = two hundred twenty，H-1B = H1B = h one b），
+   "a hundred" = "one hundred"，数字中间的 and 不算；只用于比较，不影响卡片 ID */
+function cmpTok(s, user){
+  const t = tokens(String(speakEN(s || "")).replace(/\ba (hundred|thousand|million)\b/gi, "one $1"), user);
+  return t.filter((w, i) => !(w === "and" && CMP_NUMS.has(t[i-1]) && CMP_NUMS.has(t[i+1])));
+}
+/* 连写和分开写算一样：data sheet = datasheet，e verify = everify */
+function mergeTo(a, ref){
+  const set = new Set(ref); const out = [];
+  for (let i = 0; i < a.length; i++){ if (i + 1 < a.length && !set.has(a[i]) && set.has(a[i] + a[i+1])){ out.push(a[i] + a[i+1]); i++; } else out.push(a[i]); }
+  return out;
+}
 function compareSaid(target, alts, said){
-  const uts = sayVariants(tokens(said, true));
+  const u0 = cmpTok(said, true);
   let best = null;
   for (const c of [target].concat(alts||[])){
-    const tt = tokens(c, false);
+    let tt = cmpTok(c, false); const ub = mergeTo(u0, tt); tt = mergeTo(tt, ub);
+    const uts = sayVariants(ub);
     for (const ut of uts){
       const tries = [[ut, false]];
       for (let k = 1; k <= ut.length - 2; k++){ const suf = ut.slice(k); if (suf.length < Math.max(2, Math.ceil(tt.length * 0.6))) break; tries.push([suf, true]); }
@@ -1425,17 +1443,17 @@ function stemSet(w){
   const out = new Set([w]); const add = x => { if (x && x.length >= 3) out.add(x); };
   if (IRRB[w]) out.add(IRRB[w]); if (SYN[w]) out.add(SYN[w]);
   if (w.endsWith("ies") || w.endsWith("ied")) add(w.slice(0,-3) + "y");
-  for (const suf of ["ing","ed","es","s","d"]) if (w.endsWith(suf)){ const b = w.slice(0, -suf.length); add(b); if (/(.)\1$/.test(b)) add(b.slice(0,-1)); if (SYN[b]) out.add(SYN[b]); }
+  for (const suf of ["ing","ed","es","s","d"]) if (w.endsWith(suf)){ const b = w.slice(0, -suf.length); add(b); if (/(.)\1$/.test(b)) add(b.slice(0,-1)); if ((suf === "ing" || suf === "ed") && b.length >= 3) add(b + "e"); if (SYN[b]) out.add(SYN[b]); }
   return out;
 }
 function contentWords(s, user){ return tokens(s, user).filter(w => !STOPW.has(w) || (w === "just" && false)); }
 function wordsMatch(a, b){ const A = stemSet(a), B = stemSet(b); for (const x of A) if (B.has(x)) return true; return false; }
 function meaningCheck(target, alts, said){
-  const raw = tokens(said, true);
+  const raw0 = cmpTok(said, true); let raw = raw0;
   const u = raw.filter(w => !STOPW.has(w)).concat(raw.includes("just") ? ["just"] : []);
   let best = {coverage:0, missing:[], n:0};
   for (const c of [target].concat(alts || [])){
-    const rt = tokens(c, false); const t = rt.filter(w => !STOPW.has(w));
+    let rt = cmpTok(c, false); raw = mergeTo(raw0, rt); rt = mergeTo(rt, raw); const t = rt.filter(w => !STOPW.has(w));
     if (!t.length) continue;
     const used = new Set(); const missing = [];
     for (const w of t){ const j = u.findIndex((x, k) => !used.has(k) && wordsMatch(w, x)); if (j >= 0) used.add(j); else missing.push(w); }
@@ -1446,6 +1464,39 @@ function meaningCheck(target, alts, said){
   const negOk = [target].concat(alts || []).some(c => neg(tokens(c)) === neg(raw));
   best.ok = best.n >= 2 && best.coverage >= 0.8 && negOk;
   return best;
+}
+/* 有没有用上要练的词（词组按顺序找，中间可以隔别的词；took/take、words/word 都算） */
+function hasWord(said, word){
+  const w = cmpTok(word, false), u = mergeTo(cmpTok(said, true), w); if (!w.length) return true;
+  let j = 0;
+  for (const x of w){ let found = false; while (j < u.length){ if (wordsMatch(x, u[j++])){ found = true; break; } } if (!found) return false; }
+  return true;
+}
+/* 英文朗读前，把数字和带数字的缩写换成英文读法（不然有的手机会读成“两千零二十四”“F 一”） */
+const N_ONES = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+const N_TENS = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+const CMP_NUMS = new Set(N_ONES.concat(N_TENS.filter(Boolean), ["hundred","thousand","million","billion"]));
+function n999(n){ const out = []; if (n >= 100){ out.push(N_ONES[Math.floor(n / 100)] + " hundred"); n %= 100; } if (n >= 20) out.push(N_TENS[Math.floor(n / 10)] + (n % 10 ? "-" + N_ONES[n % 10] : "")); else if (n > 0 || !out.length) out.push(N_ONES[n]); return out.join(" "); }
+function numWords(n){ n = Math.floor(Math.abs(n)); if (n < 1000) return n999(n); const out = []; for (const [v, w] of [[1e9,"billion"],[1e6,"million"],[1e3,"thousand"]]) if (n >= v){ out.push(n999(Math.floor(n / v)) + " " + w); n %= v; } if (n) out.push(n999(n)); return out.join(" "); }
+function yearWords(y){ if (y >= 2000 && y <= 2009) return "two thousand" + (y % 10 ? " " + N_ONES[y % 10] : ""); const hi = Math.floor(y / 100), lo = y % 100; return n999(hi) + " " + (lo === 0 ? "hundred" : lo < 10 ? "oh " + N_ONES[lo] : n999(lo)); }
+function ordWords(n){ const w = numWords(n); const last = w.match(/([a-z]+)$/)[1]; const irr = {one:"first", two:"second", three:"third", five:"fifth", eight:"eighth", nine:"ninth", twelve:"twelfth"}; return w.slice(0, -last.length) + (irr[last] || (last.endsWith("y") ? last.slice(0, -1) + "ieth" : last + "th")); }
+function decWords(s){ const [a, b] = s.split("."); return numWords(+a) + " point " + b.split("").map(d => N_ONES[+d]).join(" "); }
+function speakEN(text){
+  let s = String(text || "");
+  s = s.replace(/\b401\s*\(?k\)?/gi, "four-oh-one-k").replace(/\b8051\b/g, "eighty fifty-one").replace(/\bSpO2\b/g, "S P O two").replace(/\be\.g\.\s*/gi, "for example, ").replace(/\bi\.e\.\s*/gi, "that is, ").replace(/\bvs\.?(?=\s)/gi, "versus").replace(/\s&\s/g, " and ").replace(/°F\b/g, " degrees Fahrenheit").replace(/°C\b/g, " degrees Celsius");
+  s = s.replace(/\b\d+(?:\.\d+){2,}\b/g, m => m.split(".").map(x => numWords(+x)).join(" dot "));
+  s = s.replace(/([\d%KkMm])\s*[–—]\s*(\$?\d)/g, "$1 to $2").replace(/(\d)-(\d)/g, "$1 to $2");
+  s = s.replace(/\$(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?([KkMm])?\b/g, (m, a, c, u) => numWords(+a.replace(/,/g, "")) + (u ? (/k/i.test(u) ? " thousand" : " million") : "") + " dollars" + (c ? " and " + numWords(+c) + " cents" : ""));
+  s = s.replace(/\b(\d{1,2}):(\d{2})\b/g, (m, h, mi) => numWords(+h) + (mi === "00" ? " o'clock" : +mi < 10 ? " oh " + N_ONES[+mi] : " " + numWords(+mi)));
+  s = s.replace(/(\d+(?:\.\d+)?)\s*%/g, (m, n) => (n.includes(".") ? decWords(n) : numWords(+n)) + " percent");
+  s = s.replace(/\b(\d+)(st|nd|rd|th)\b/gi, (m, n) => ordWords(+n));
+  s = s.replace(/\b([A-Za-z]+)-?(\d+)([A-Za-z]*)\b/g, (m, a, d, b) => a + " " + numWords(+d) + (b ? " " + b : ""));
+  s = s.replace(/\b(\d+(?:\.\d+)?)([A-Za-z]+)\b/g, (m, n, b) => (n.includes(".") ? decWords(n) : numWords(+n)) + (/^k$/i.test(b) ? " thousand" : " " + b));
+  s = s.replace(/\b\d+\.\d+\b/g, m => decWords(m));
+  s = s.replace(/\b(1[89]\d{2}|20\d{2})\b/g, m => yearWords(+m));
+  s = s.replace(/\b\d{1,3}(?:,\d{3})+\b/g, m => numWords(+m.replace(/,/g, "")));
+  s = s.replace(/\b\d+\b/g, m => numWords(+m));
+  return s.replace(/\s{2,}/g, " ");
 }
 /* 口语里该查的错：去掉标点、大小写、拼写这类只跟书写有关的 */
 function speechFlags(text){ return checkWriting(text).filter(i => i.tag !== "书写" && i.tag !== "拼写"); }
@@ -1486,7 +1537,7 @@ function chunkSentence(en){
 
 /* ---------- 导入码 ---------- */
 function parseImport(text){
-  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], meta:{date:"", who:[]}, bad:[]};
+  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], meta:{date:"", who:[], replace:[]}, bad:[]};
   const ROLE = {"开场":"first","核心":"core","初筛":"screen","提问":"ask","first":"first","core":"core","screen":"screen","ask":"ask"};
   let deck = "我的卡片";
   String(text||"").split(/\r?\n/).forEach((line, i) => {
@@ -1494,10 +1545,11 @@ function parseImport(text){
     if (!s || s.startsWith("#")) return;
     const p = s.split(/\s*[|｜]\s*/);
     const kind = p[0];
-    if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); return; }
+    if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); if (p[2] && /替换|replace/i.test(p[2]) && !res.meta.replace.includes(deck)) res.meta.replace.push(deck); return; }
     if (kind==="面试日期" && /^\d{4}-\d{2}-\d{2}$/.test(p[1]||"")){ res.meta.date = p[1]; return; }
     if (kind==="面试官" && p[1]){ res.meta.who.push({deck, name:p[1], company:p[2]||""}); return; }
     if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
+    else if ((kind==="词"||kind==="W") && p[1] && p[2] && p[3]){ const a = splitAlts(p[3]); res.cards.push({t:"w", word:p[1].trim(), mean:p[2].trim(), en:a[0], alt:a.slice(1), zh:(p[4]||"").trim(), tag:"vocab", note:p[5]||"", deck}); }
     else if ((kind==="改"||kind==="F") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"f", wrong:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
     else if ((kind==="听"||kind==="L") && p[1] && p[2]){ res.cards.push({t:"l", grp:"cs", en:p[1], zh:p[2], tag:"listen", deck}); }
     else if ((kind==="问"||kind==="Q") && p[1] && p[2]){
@@ -1650,8 +1702,8 @@ function tagAgg(tags, todayS, fromBack, toBack){
 }
 
 /* ---------- 组一轮练习 ---------- */
-const SESSION_CFG = {quick:{warm:0,core:8,lis:0,iv:0,maxE:1}, std:{warm:4,core:16,lis:3,iv:1,maxE:2}, deep:{warm:5,core:30,lis:6,iv:2,maxE:3},
-  free:{warm:0,core:15,lis:0,iv:0,maxE:3}, listen:{warm:0,core:0,lis:8,iv:0,maxE:0}};
+const SESSION_CFG = {quick:{warm:0,core:8,lis:0,iv:0,maxE:1,maxW:2}, std:{warm:4,core:16,lis:3,iv:1,maxE:2,maxW:3}, deep:{warm:5,core:30,lis:6,iv:2,maxE:3,maxW:4},
+  free:{warm:0,core:15,lis:0,iv:0,maxE:3,maxW:5}, listen:{warm:0,core:0,lis:8,iv:0,maxE:0,maxW:0}};
 function buildSession(kind, ctx){
   const cfg = ctx.cfg || SESSION_CFG[kind] || SESSION_CFG.std;
   const {cat, prog, todayN} = ctx; const rnd = ctx.rnd || Math.random;
@@ -1668,14 +1720,15 @@ function buildSession(kind, ctx){
     const a = acc[tag]; const r = a && a[0] >= 5 ? a[1]/a[0] : 0.65;
     return w * (1.25 - r);
   };
-  const picked = new Set(); let newLeft = Math.max(0, (ctx.newLimit||12) - (ctx.newUsed||0)); let eCount = 0;
+  const picked = new Set(); let newLeft = Math.max(0, (ctx.newLimit||12) - (ctx.newUsed||0)); let eCount = 0; let wNew = 0;
   const take = (arr, k, countNew) => {
     const out = [];
     for (const c of arr){
       if (out.length >= k) break;
       if (picked.has(c.id)) continue;
       if (c.t === "e" && eCount >= cfg.maxE) continue;
-      if (isNew(c) && countNew){ if (newLeft <= 0) continue; newLeft--; }
+      if (c.t === "w" && isNew(c) && countNew && wNew >= (cfg.maxW == null ? 3 : cfg.maxW)) continue;
+      if (isNew(c) && countNew){ if (newLeft <= 0) continue; newLeft--; if (c.t === "w") wNew++; }
       picked.add(c.id); if (c.t==="e") eCount++; out.push(c);
     }
     return out;
@@ -1727,7 +1780,7 @@ function pickQuestions(ctx, n){
 }
 
 const CORE = {TAGS,TYPE_LABEL,TENSE_NOTE,tagKey,dstr,dnum,nstr,splitAlts,shuffle,hash,buildCatalog,INTERVALS,MASTERED_BOX,srsRate,
-  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
+  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
   buildSession,diversify,interleave,pickQuestions,IRR,SESSION_CFG};
 
 
@@ -1757,7 +1810,7 @@ const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
   settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
   cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
-const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false});
+const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false});
 function mergeInto(d, o){
   for (const k of Object.keys(o||{})){
     const a = d[k], b = o[k];
@@ -1774,7 +1827,7 @@ let saveTimer = null;
 function save(now){
   S.updatedAt = Date.now();
   clearTimeout(saveTimer);
-  const doit = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); localStorage.setItem(LKEY, JSON.stringify(L)); } catch (e) { STORAGE_OK = false; } Cloud.schedule(); };
+  const doit = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); localStorage.setItem(LKEY, JSON.stringify(L)); STORAGE_OK = true; } catch (e) { STORAGE_OK = false; if (!save.warned){ save.warned = true; setTimeout(() => { try { toast("存储空间不够，进度没存上。先去“我的 → 备份”导出，再到“我的 → 存储空间”清理旧录音"); } catch (x) {} }, 0); } } Cloud.schedule(); };
   if (now) doit(); else saveTimer = setTimeout(doit, 400);
 }
 function saveLocal(){ try { localStorage.setItem(LKEY, JSON.stringify(L)); } catch (e) {} }
@@ -1782,7 +1835,7 @@ function pruneOld(){
   const n = dnum(dstr());
   for (const d of Object.keys(S.tags)) if (n - dnum(d) > 120) delete S.tags[d];
   if (S.hist) for (const d of Object.keys(S.hist)) if (n - dnum(d) > 14) delete S.hist[d];
-  if (S.journal.length > 60) S.journal = S.journal.slice(-60);
+  if (S.journal.length > 60){ for (const e of S.journal.slice(0, -60)) if (e.rec) IDB.del(e.rec); S.journal = S.journal.slice(-60); }
   if (S.calls.length > 40) S.calls = S.calls.slice(-40);
 }
 pruneOld();
@@ -1895,7 +1948,7 @@ const TTS = {
     return new Promise(res => {
       if (!this.ok || !text){ res(false); return; }
       this.cancel(); pauseAllAudio();
-      const u = new SpeechSynthesisUtterance(lang === "zh" ? zhSpeakable(text) : text);
+      const u = new SpeechSynthesisUtterance(lang === "zh" ? text : (o && o.raw ? text : K.speakEN(text)));
       const v = o.voice || this.voice(lang);
       u.lang = lang === "zh" ? "zh-CN" : "en-US";
       if (v){ try { u.voice = v; u.lang = v.lang; } catch (e) {} }
@@ -2029,6 +2082,8 @@ const IDB = {
     });
   },
   async put(k, v){ try { const db = await this.open(); await new Promise((res, rej) => { const tx = db.transaction("audio","readwrite"); tx.objectStore("audio").put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); } catch (e) { this.mem.set(k, v); } },
+  async del(k){ this.mem.delete(k); try { const db = await this.open(); await new Promise((res, rej) => { const tx = db.transaction("audio","readwrite"); tx.objectStore("audio").delete(k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); } catch (e) {} },
+  async keys(){ try { const db = await this.open(); return await new Promise((res, rej) => { const q = db.transaction("audio").objectStore("audio").getAllKeys(); q.onsuccess = () => res((q.result || []).map(String)); q.onerror = () => rej(q.error); }); } catch (e) { return Array.from(this.mem.keys()); } },
   async get(k){ try { const db = await this.open(); return await new Promise((res, rej) => { const q = db.transaction("audio").objectStore("audio").get(k); q.onsuccess = () => res(q.result || this.mem.get(k) || null); q.onerror = () => rej(q.error); }); } catch (e) { return this.mem.get(k) || null; } },
   async del(k){ this.mem.delete(k); try { const db = await this.open(); db.transaction("audio","readwrite").objectStore("audio").delete(k); } catch (e) {} }
 };
@@ -2042,6 +2097,7 @@ const Wake = {
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && Wake.want) Wake.on();
   if (document.visibilityState === "hidden") save(true);
+  try { if (typeof RUN !== "undefined" && RUN && RUN.stage){ const st = RUN.stage; if (document.visibilityState === "hidden" && st.onHide) st.onHide(); if (document.visibilityState === "visible" && st.onShow) st.onShow(); } } catch (e) {}
 });
 const Snd = {
   ctx:null,
@@ -2064,9 +2120,6 @@ const Snd = {
   ring(){ [0, 160].forEach(d => setTimeout(() => { this.beep(1318, 0.12, "sine", 0.05); this.beep(1046, 0.12, "sine", 0.04); }, d)); }
 };
 /* 中文朗读里夹着的 F1、STM32、H-1B 这类词，数字按英文读（不然会读成“F 一”） */
-const EN_NUM = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty"];
-function enNum(d){ const n = +d; if (n <= 20) return EN_NUM[n]; if (n < 100){ const t = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"][Math.floor(n / 10)]; return n % 10 ? t + " " + EN_NUM[n % 10] : t; } return String(d).split("").map(x => EN_NUM[+x]).join(" "); }
-function zhSpeakable(s){ return String(s).replace(/([A-Za-z]+)[- ]?(\d+)([A-Za-z]*)/g, (m, a, d, b) => `${a} ${enNum(d)}${b ? " " + b : ""} `); }
 /* 录音只能同时放一个：再点同一个是暂停，点别的会先停掉前一个 */
 const Player = {
   a:null, key:null, url:null, btn:null,
@@ -2078,6 +2131,7 @@ const Player = {
     this.a.onended = () => this.label("播放");
     pauseAllAudio(this.a); TTS.cancel(); this.a.play().catch(() => toast("播放不了")); this.label("暂停");
   },
+  async restart(key, getBlob, btn){ if (this.key === key && this.a){ if (btn) this.btn = btn; pauseAllAudio(this.a); TTS.cancel(); this.a.currentTime = 0; this.a.play().catch(() => {}); this.label("暂停"); return; } await this.toggle(key, getBlob, btn); },
   label(t){ if (this.btn && this.btn.isConnected) this.btn.textContent = t; },
   pause(){ if (this.a) this.a.pause(); this.label("播放"); },
   stop(){ if (this.a) this.a.pause(); if (this.url) URL.revokeObjectURL(this.url); this.label("播放"); this.a = null; this.key = null; this.url = null; this.btn = null; }
@@ -2358,7 +2412,7 @@ VIEWS.home = {
     const mod = (v, icon, t, d) => `<button class="mod" data-act="nav" data-v="${v}">${ICON[icon]}<b>${t}</b><span>${d}</span></button>`;
     return `<div class="wrap">
       <div class="top"><div class="wordmark">脱口</div><div class="streak"><span class="num">${st.streak}</span><span class="lbl">天<br>连续</span></div></div>
-      ${installBanner()}${typeof micBanner === "function" ? micBanner() : ""}${typeof backupBanner === "function" ? backupBanner() : ""}${typeof pendingBanner === "function" ? pendingBanner() : ""}
+      ${installBanner()}${typeof micBanner === "function" ? micBanner() : ""}${STORAGE_OK ? "" : `<div class="banner"><span>存储空间不够，进度没存上。先备份，再清理旧录音。</span><button class="btn sm primary" data-act="nav" data-v="storage">去看看</button></div>`}${typeof ttsBanner === "function" ? ttsBanner() : ""}${typeof backupBanner === "function" ? backupBanner() : ""}${typeof pendingBanner === "function" ? pendingBanner() : ""}
       <section class="hero">
         <div class="gantry" id="homeLights">${lamps()}</div>
         <h2>开始今天的练习</h2>
@@ -2449,7 +2503,8 @@ function showItem(){
   if (tr) tr.style.width = Math.round(RUN.i / Math.max(1, RUN.items.length) * 100) + "%";
   if (cn) cn.textContent = it ? `${RUN.i+1}/${RUN.items.length}` : "";
   if (!it){ RUN.stage = null; showSummary(); return; }
-  RUN.stage = it.k === "listen" ? new ListenStage(CAT.byId[it.id]) : it.k === "iv" ? new IvStage(QBY[it.qid], {inRun:!it.solo}) : new CardStage(CAT.byId[it.id], it.retry);
+  const wc = it.k === "card" ? CAT.byId[it.id] : null;
+  RUN.stage = it.k === "listen" ? new ListenStage(CAT.byId[it.id]) : it.k === "iv" ? new IvStage(QBY[it.qid], {inRun:!it.solo}) : (wc && wc.t === "w" && !S.cards[wc.id] && !it.introDone) ? new WordStage(wc, it) : new CardStage(CAT.byId[it.id], it.retry);
   if (!RUN.stage.card && !RUN.stage.q){ nextItem(); return; }
   RUN.stage.show();
 }
@@ -2458,7 +2513,7 @@ function nextItem(){
   RUN.i++;
   if (RUN.limitMs && !RUN.timeUp && Date.now() - RUN.t0 > RUN.limitMs && RUN.i < RUN.items.length){
     /* 时间到：不再上新题；刚才没说出来的句子和面试题留着练完 */
-    const keep = x => x.retry || x.k === "iv"; const later = RUN.items.slice(RUN.i);
+    const keep = x => x.retry || x.k === "iv" || x.introDone; const later = RUN.items.slice(RUN.i);
     RUN.rest = later.filter(x => !keep(x)); RUN.items = RUN.items.slice(0, RUN.i).concat(later.filter(keep)); RUN.timeUp = true;
     if (RUN.i < RUN.items.length) toast("时间到了：把刚才没说出来的再练一遍，就结束");
   }
@@ -2493,13 +2548,16 @@ ACT["input-mode"] = el => {
 class CardStage {
   constructor(card, retry){ this.card = card; this.retry = !!retry; this.step = 0; this.phase = "prompt"; this.drill = 0; this.alive = true; this.tries = 0; }
   get isE(){ return this.card.t === "e"; }
+  onHide(){ if (this.t0 && (this.phase === "prompt" || this.phase === "retry")) this.hiddenAt = performance.now(); }
+  onShow(){ if (this.hiddenAt){ if (this.t0) this.t0 += performance.now() - this.hiddenAt; this.hiddenAt = 0; } }
   target(){ return this.isE ? this.card.steps[this.step] : this.card; }
   leave(){ this.alive = false; clearInterval(this.clock); SR.abort(); if (this.recOn){ Rec.cancel(); this.recOn = false; } if (this.recUrl){ URL.revokeObjectURL(this.recUrl); this.recUrl = null; } }
-  show(){ if (this.recUrl){ URL.revokeObjectURL(this.recUrl); this.recUrl = null; } this.phase = "prompt"; this.said = ""; this.cmp = null; this.ms = 0; this.tries = 0; this.firstCmp = null; this.mean = null; this.flags = []; this.mine = false; this.misrec = false; this.render(); }
-  chips(){ const c = this.card; return `<div class="kind"><span class="chip k">${TYPE_LABEL[c.t]}</span><span class="chip">${esc((TAGS[c.tag]||TAGS.other).label)}</span>${this.retry ? '<span class="chip">再来一次</span>' : ""}${c.custom ? '<span class="chip">我导入的</span>' : ""}</div>`; }
+  show(){ if (this.freeUse === undefined){ const pc = S.cards[this.card.id]; this.freeUse = this.card.t === "w" && !!pc && (pc.box || 0) >= 2 && !this.retry && Math.random() < 0.4; } if (this.recUrl){ URL.revokeObjectURL(this.recUrl); this.recUrl = null; } this.phase = "prompt"; this.said = ""; this.cmp = null; this.ms = 0; this.tries = 0; this.firstCmp = null; this.mean = null; this.flags = []; this.mine = false; this.misrec = false; this.render(); }
+  chips(){ const c = this.card; return `<div class="kind"><span class="chip k">${TYPE_LABEL[c.t]}</span>${c.t === "w" ? "" : `<span class="chip">${esc((TAGS[c.tag]||TAGS.other).label)}</span>`}${this.retry ? '<span class="chip">再来一次</span>' : ""}${c.custom ? '<span class="chip">我导入的</span>' : ""}</div>`; }
   promptHTML(){
     const c = this.card;
     if (c.t === "r") return `<div class="zh">${esc(c.zh)}</div>`;
+    if (c.t === "w") return this.freeUse ? `<p class="small muted">用这个词说一句你自己的话：</p><div class="zh">${esc(c.mean)}</div><p class="small muted" style="margin-top:8px">说说你的生活、找工作、打球，什么都行。</p>` : `<div class="zh">${esc(c.zh)}</div><div class="parts" style="margin-top:10px"><span class="chip cue">要用上：${esc(c.mean)}</span></div>`;
     if (c.t === "t") return `<div class="verb">${esc(c.verb)}</div><div class="parts">${c.subj ? `<span class="chip">${esc(c.subj)}</span>` : ""}${c.obj ? `<span class="chip">${esc(c.obj)}</span>` : ""}<span class="chip cue">${esc(c.cue)}</span></div><p class="small muted" style="margin-top:10px">用 ${esc(c.verb)} 说一句完整的话</p>`;
     if (c.t === "f") return `<p class="small muted">你以前写过：</p><div class="wrong">${esc(c.wrong)}</div><p class="small muted" style="margin-top:8px">说出正确的版本</p>`;
     const done = c.steps.slice(0, this.step).map(s => `<div class="step-done">✓ ${esc(s.en)}</div>`).join("");
@@ -2585,12 +2643,18 @@ class CardStage {
     this.ms = this.elapsed(); clearInterval(this.clock);
     this.said = said || (this.phase === "retry" ? this.firstSaid || "" : "");
     const t = this.target();
-    const cmp = this.said ? K.compareSaid(t.en, t.alt, this.said) : null;
+    let cmp = this.said ? K.compareSaid(t.en, t.alt, this.said) : null;
+    const c0 = this.card; let wHint = null;
+    if (c0.t === "w" && this.said){
+      const has = K.hasWord(this.said, c0.word);
+      if (this.freeUse){ const fl = K.speechFlags(this.said); cmp = {exact: has && !fl.length, level: has ? (fl.length ? "close" : "exact") : "off", ops:[], notes: has ? [] : [{msg:"这句没用上要练的词"}], score: has ? 1 : 0, free:true}; if (!has) wHint = `要用上“${c0.mean}”这个词，它以 ${c0.word[0]} 开头`; }
+      else if (!has && cmp){ cmp = Object.assign({}, cmp, {exact:false, level: cmp.level === "exact" ? "close" : cmp.level, notes:[{msg:`这句要用上：${c0.word}`}].concat(cmp.notes || [])}); wHint = `这句要用上“${c0.mean}”这个词，它以 ${c0.word[0]} 开头`; }
+    }
     this.mean = null; this.flags = [];
-    if (cmp && !cmp.exact){ const m = K.meaningCheck(t.en, t.alt, this.said); this.flags = K.speechFlags(this.said); if (m.ok) this.mean = m; }
+    if (cmp && !cmp.exact){ this.flags = K.speechFlags(this.said); if (!cmp.free && !wHint){ const m = K.meaningCheck(t.en, t.alt, this.said); if (m.ok) this.mean = m; } }
     if (cmp && !cmp.exact && this.phase === "prompt" && !this.tries){
-      const hints = this.mean ? this.flags.map(f => f.msg).slice(0, 3) : K.hintNotes(cmp.ops);
-      if (hints.length){ this.tries = 1; this.hints = hints; this.hintMode = this.mean ? "flags" : "diff"; this.firstSaid = this.said; this.firstCmp = cmp; Snd.bad(); vib([25,30,25]); this.phase = "retry"; this.render(); return; }
+      const hints = wHint ? [wHint] : (this.mean || cmp.free) ? this.flags.map(f => f.msg).slice(0, 3) : K.hintNotes(cmp.ops);
+      if (hints.length){ this.tries = 1; this.hints = hints; this.hintMode = (this.mean || cmp.free) && !wHint ? "flags" : "diff"; this.firstSaid = this.said; this.firstCmp = cmp; Snd.bad(); vib([25,30,25]); this.phase = "retry"; this.render(); return; }
     }
     this.cmp = cmp || (this.phase === "retry" ? this.firstCmp : null);
     if (cmp){ if (cmp.exact){ Snd.good(); vib(15); } else if (this.mean && !this.flags.length){ Snd.good(); } else if (cmp.level === "off"){ Snd.bad(); vib([30,40,30]); } }
@@ -2603,6 +2667,7 @@ class CardStage {
   suggest(){
     if (!this.cmp) return "";
     if (this.misrec) return "hard";
+    if (this.cmp.free) return this.cmp.exact ? "good" : this.cmp.level === "close" ? "hard" : "again";
     if (this.cmp.exact && this.cmp.restart) return "hard";
     if (this.mean && !this.cmp.exact) return this.flags.length ? "again" : "hard";
     if (this.tries) return this.cmp.exact ? "hard" : "again";
@@ -2611,11 +2676,11 @@ class CardStage {
   }
   revealHTML(){
     const c = this.card, t = this.target(), cmp = this.cmp;
-    let h = `<div class="small muted">${c.t === "r" ? esc(c.zh) : c.t === "t" ? esc(c.zh) : c.t === "f" ? `<s>${esc(c.wrong)}</s>` : esc(t.add + "：" + t.hint)}</div><div class="reveal">`;
+    let h = `<div class="small muted">${c.t === "w" ? esc(this.freeUse ? "用这个词自己说一句：" + c.mean : c.zh) : c.t === "r" ? esc(c.zh) : c.t === "t" ? esc(c.zh) : c.t === "f" ? `<s>${esc(c.wrong)}</s>` : esc(t.add + "：" + t.hint)}</div><div class="reveal">`;
     const timeChip = this.ms ? `<span class="time-chip num" id="timeChip">${fmt1(this.ms)} 秒</span>` : "";
     if (cmp){
       const meaning = this.mean && !cmp.exact;
-      const lab = this.misrec ? "按你说对算（识别有误）" : this.mine && cmp.exact ? "按你的说法算对" : meaning ? (this.flags.length ? "意思对上了，有几处可能有问题" : "意思对上了，说法和参考不一样") : {exact:"完全正确", close:"差一点", off:"和参考说法差别比较大"}[cmp.level];
+      const lab = this.misrec ? "按你说对算（识别有误）" : this.mine && cmp.exact ? "按你的说法算对" : cmp.free ? (cmp.exact ? "用上了，规则没查出问题" : cmp.level === "close" ? "用上了，有几处可能有问题" : "这句没用上要练的词") : meaning ? (this.flags.length ? "意思对上了，有几处可能有问题" : "意思对上了，说法和参考不一样") : {exact:"完全正确", close:"差一点", off:"和参考说法差别比较大"}[cmp.level];
       h += `<div class="verdict ${meaning ? (this.flags.length ? "close" : "meaning") : cmp.level}">${lab}${this.tries ? "" : timeChip}</div>`;
       if (this.said) h += `<p class="small muted" style="margin:-4px 0 10px">${this.misrec ? "识别成了" : "你说的"}：<span class="en" style="font-size:16px">${esc(this.said)}</span></p>`;
       if (cmp.restart && !this.misrec) h += `<p class="small muted" style="margin:-6px 0 10px">前面重说的部分没算，按后面那句判断。</p>`;
@@ -2633,7 +2698,9 @@ class CardStage {
         h += mineRow;
       }
     } else if (timeChip) h += `<div class="verdict" style="color:var(--muted)">对照一下，你说对了吗？${timeChip}</div>`;
-    h += `<div class="say-line"><div class="en">${wordsHTML(t.en)}</div><div class="say-btns">${sayBtns(t.en)}</div></div><p class="small muted" style="margin-top:2px">点单词可以听读音、查意思</p>`;
+    if (c.t === "w" && this.freeUse) h += `<p class="small muted" style="margin-top:6px">参考例句：</p>`;
+    h += `<div class="say-line"><div class="en">${wordsHTML(t.en, c.t === "w" ? c.word : null)}</div><div class="say-btns">${sayBtns(t.en)}</div></div><p class="small muted" style="margin-top:2px">点单词可以听读音、查意思</p>`;
+    if (c.t === "w") h += `<p style="margin-top:6px">单词：<span class="w key en" style="font-size:18px" data-act="word" data-w="${esc(c.word)}">${esc(c.word)}</span>　${esc(c.mean)}</p>`;
     if (this.recUrl) h += `<div class="small muted" style="margin-top:8px">你的录音：先听自己的，再点喇叭听标准读音，对比哪里不一样</div><audio controls src="${this.recUrl}"></audio>`;
     const mine = (["r","t","f"].includes(c.t) && S.myAlts[c.id]) || [];
     const others = (t.alt || []).filter(a => !mine.includes(a));
@@ -2667,11 +2734,12 @@ class CardStage {
   }
 }
 /* 朗读按钮：正常速度 + 慢速 */
-function sayBtns(text){ return `<button class="icon-btn" data-act="say" data-text="${esc(text)}" aria-label="正常速度朗读">${ICON.speak}</button><button class="btn sm ghost slow-btn" data-act="say" data-slow="1" data-text="${esc(text)}">慢速</button>`; }
+function sayBtns(text){ return `<button class="btn sm ghost say-b" data-act="say" data-text="${esc(text)}">${ICON.speak}原速</button><button class="btn sm ghost say-b" data-act="say" data-slow="1" data-text="${esc(text)}">${ICON.speak}慢速</button>`; }
 /* 英文句子里的每个词都能点：听读音、查意思 */
-function wordsHTML(text){
+function wordsHTML(text, key){
   const s = String(text || ""); let out = "", last = 0;
-  s.replace(/[A-Za-z][A-Za-z'’-]*/g, (m, i) => { out += esc(s.slice(last, i)) + `<span class="w" data-act="word" data-w="${esc(m)}">${esc(m)}</span>`; last = i + m.length; return m; });
+  const keys = key ? K.tokens(key).filter(k => k.length >= 3 && !["the","and","for","you","are","out"].includes(k)) : [];
+  s.replace(/[A-Za-z][A-Za-z'’-]*/g, (m, i) => { const isKey = keys.some(k => K.wordsMatch(k, m.toLowerCase())); out += esc(s.slice(last, i)) + `<span class="w${isKey ? " key" : ""}" data-act="word" data-w="${esc(m)}">${esc(m)}</span>`; last = i + m.length; return m; });
   return out + esc(s.slice(last));
 }
 ACT.word = el => {
@@ -2688,6 +2756,33 @@ ACT.word = el => {
   });
   document.body.appendChild(bg);
 };
+/* 小弹窗：几个选项选一个 */
+function choose(title, bodyHTML, opts){
+  return new Promise(res => {
+    const bg = document.createElement("div"); bg.className = "sheet-bg";
+    bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><h3>${esc(title)}</h3>${bodyHTML ? `<div class="small" style="margin-top:6px;line-height:1.7">${bodyHTML}</div>` : ""}<div style="display:grid;gap:8px;margin-top:14px">${opts.map(([k, l], i) => `<button class="btn ${i === 0 ? "primary" : ""}" data-x="${esc(k)}">${esc(l)}</button>`).join("")}</div></div>`;
+    bg.addEventListener("click", e => { const b = e.target.closest("[data-x]"); if (e.target === bg){ bg.remove(); res(null); return; } if (!b) return; bg.remove(); res(b.dataset.x); });
+    document.body.appendChild(bg);
+  });
+}
+/* 新词：先看、先听、跟着读；过几题再考（马上考只是短时记忆） */
+class WordStage {
+  constructor(card, item){ this.card = card; this.item = item; this.alive = true; }
+  leave(){ this.alive = false; TTS.cancel(); }
+  show(){ this.render(); const c = this.card; if (TTS.ok && S.settings.autoSpeak !== false) TTS.speak(c.word, {rate:0.85}).then(() => { if (this.alive) TTS.speak(c.en); }); }
+  render(){
+    const el = stageEl(); if (!el || !this.alive) return; const c = this.card;
+    el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">新词</span>${c.custom ? '<span class="chip">我导入的</span>' : ""}</div>
+      <div class="say-line"><div class="en" style="font-size:32px">${esc(c.word)}</div><div class="say-btns">${sayBtns(c.word)}</div></div>
+      <p style="font-size:18px;margin:4px 0 14px">${esc(c.mean)}</p>
+      <div class="say-line"><div class="en">${wordsHTML(c.en, c.word)}</div><div class="say-btns">${sayBtns(c.en)}</div></div>
+      <p class="small muted" style="margin-top:4px">${esc(c.zh)}</p>
+      ${c.note ? `<p class="small" style="margin-top:8px">${esc(c.note)}</p>` : ""}
+      <p class="small muted" style="margin-top:12px">跟着读两遍例句。过几题会考你：看中文，说出这句英文。</p>
+      <button class="btn primary block big" style="margin-top:10px" data-act="w-ok">读过了，过几题考我</button></div>`;
+  }
+}
+ACT["w-ok"] = () => { const s = RUN.stage; if (!(s instanceof WordStage)) return; RUN.items.splice(Math.min(RUN.items.length, RUN.i + 4), 0, {k:"card", id:s.card.id, introDone:true}); nextItem(); };
 function diffHTML(ops){
   return ops.map(o => {
     if (o.op === "eq") return esc(o.b);
@@ -2746,7 +2841,7 @@ ACT["c-mine"] = async () => {
 ACT["c-ask"] = () => {
   const s = RUN.stage; if (!(s instanceof CardStage) || !s.said) return; const c = s.card; const t = s.target();
   S.pending = S.pending || [];
-  if (!S.pending.some(p => p.cid === c.id && p.said === s.said)) S.pending.push({cid:c.id, zh: c.t === "f" ? "改错：" + c.wrong : c.t === "e" ? t.add + "：" + t.hint : (c.zh || ""), ref:t.en, said:s.said, ts:Date.now()});
+  if (!S.pending.some(p => p.cid === c.id && p.said === s.said)) S.pending.push({cid:c.id, zh: c.t === "w" && s.freeUse ? "用“" + c.mean + "”（" + c.word + "）自己说一句" : c.t === "f" ? "改错：" + c.wrong : c.t === "e" ? t.add + "：" + t.hint : (c.zh || ""), ref:t.en, said:s.said, ts:Date.now()});
   if (S.pending.length > 60) S.pending = S.pending.slice(-60);
   save(); toast(`存好了（共 ${S.pending.length} 句）。联网后在“我的 → 待确认的说法”一起发给 Claude`);
 };
@@ -3180,11 +3275,13 @@ const HF = {st:null};
 function handsList(){
   const tn = dnum(today());
   const dp = deckPred(curDeck());
-  const pool = CAT.cards.filter(c => (c.t === "r" || c.t === "t") && c.zh && c.en && dp(c));
+  const pool = CAT.cards.filter(c => (c.t === "r" || c.t === "t" || c.t === "w") && c.zh && c.en && dp(c));
   const p = c => S.cards[c.id];
-  const due = pool.filter(c => p(c) && p(c).due <= tn).sort((a, b) => p(a).due - p(b).due);
-  const learning = pool.filter(c => p(c) && p(c).due > tn && p(c).box < K.MASTERED_BOX).sort((a, b) => p(a).due - p(b).due);
-  let fresh = pool.filter(c => !p(c));
+  /* 优先放该复习的；其余按“耳机里多久没听过”排，不会每次都是同一批 */
+  const seenAt = c => ((L.hfSeen || {})[c.id] || 0);
+  const due = pool.filter(c => p(c) && p(c).due <= tn).sort((a, b) => p(a).due - p(b).due || seenAt(a) - seenAt(b));
+  const learning = pool.filter(c => p(c) && p(c).due > tn && p(c).box < K.MASTERED_BOX).sort((a, b) => seenAt(a) - seenAt(b) || p(a).due - p(b).due);
+  let fresh = pool.filter(c => !p(c) && c.t !== "w").sort((a, b) => seenAt(a) - seenAt(b));
   if (interviewMode() === "interview") fresh = fresh.filter(c => ["interview","rescue"].includes(c.tag)).concat(fresh.filter(c => !["interview","rescue"].includes(c.tag)));
   const out = [], seen = new Set();
   for (const c of [...due, ...learning, ...K.diversify(fresh)]){ if (out.length >= 40) break; if (!seen.has(c.id)){ seen.add(c.id); out.push(c); } }
@@ -3216,6 +3313,7 @@ function hfShow(){
   const st = HF.st; if (!st) return; const c = st.list[st.i];
   const zh = $("#hfZh"), en = $("#hfEn"), tr = $("#hfTrack"), cn = $("#hfCount");
   if (zh) zh.textContent = c ? c.zh : "没有可以练的句子";
+  if (c){ L.hfSeen = L.hfSeen || {}; L.hfSeen[c.id] = Date.now(); const ks = Object.keys(L.hfSeen); if (ks.length > 500) ks.sort((a, b) => L.hfSeen[a] - L.hfSeen[b]).slice(0, ks.length - 500).forEach(k => delete L.hfSeen[k]); saveLocal(); }
   if (en) en.textContent = "";
   if (tr) tr.style.width = Math.round(st.i / Math.max(1, st.list.length) * 100) + "%";
   if (cn) cn.textContent = c ? `${st.i+1}/${st.list.length}` : "";
@@ -3273,10 +3371,11 @@ VIEWS.journal = {
         <button class="btn primary big block" id="jRec" data-act="j-rec">${ICON.mic}开始录音</button><div id="jAudio">${J.url ? `<audio controls src="${J.url}"></audio>` : ""}</div></div>`}
       <div class="panel"><label class="fld" style="margin-top:0"><span>用键盘语音输入再说一遍，或者打字（可选，用来检查）</span>
         <textarea class="en" id="jText" placeholder="Today I...">${esc(L.jDraft || "")}</textarea></label>
+        ${jWordsHTML()}
         <div class="row-gap" style="margin-top:10px"><button class="btn" data-act="j-check">检查过去式</button><button class="btn has-ai-only" data-act="j-ai">AI 标错</button><button class="btn" data-act="j-copy">复制给 Claude</button></div>
         <div id="jOut"></div></div>
       <button class="btn primary block" style="margin-top:12px" data-act="j-save">保存今天的日记</button>
-      ${recent.length ? `<div class="sec-title">以前的日记</div><div class="list">${recent.map(e => `<div class="li"><div class="grow"><b>${esc(e.date)}</b><span>${esc((e.text || "只有录音").slice(0, 80))}</span></div>${e.rec ? `<button class="btn sm" data-act="j-play" data-v="${esc(e.rec)}">播放</button>` : ""}</div>`).join("")}</div>` : ""}
+      ${recent.length ? `<div class="sec-title">以前的日记</div><div class="list">${recent.map(e => `<div class="li"><div class="grow"><b>${esc(e.date)}</b><span>${esc((e.text || "只有录音").slice(0, 80))}</span></div>${e.rec ? `<div class="row-gap" style="flex:none"><button class="btn sm" data-act="j-play" data-v="${esc(e.rec)}">播放</button><button class="btn sm ghost" data-act="j-restart" data-v="${esc(e.rec)}">从头放</button></div>` : ""}</div>`).join("")}</div>` : ""}
     </div>`;
   },
   mount(){ Act.start(); const ta = $("#jText"); ta && ta.addEventListener("input", () => { L.jDraft = ta.value; saveLocal(); }); },
@@ -3310,6 +3409,7 @@ ACT["j-save"] = async () => {
   toast("保存好了"); UI.render();
 };
 ACT["j-play"] = el => Player.toggle(el.dataset.v, () => IDB.get(el.dataset.v), el);
+ACT["j-restart"] = el => Player.restart(el.dataset.v, () => IDB.get(el.dataset.v), el.parentElement.querySelector('[data-act="j-play"]'));
 
 /* ---------- 写作自查 ---------- */
 VIEWS.write = {
@@ -3478,6 +3578,7 @@ VIEWS.me = {
       <div class="sec-title">朗读</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>英文语音</span><select data-chg="local" data-key="enVoice">${opt(enV, L.enVoice)}</select></label>
         <button class="btn sm" style="margin-top:8px" data-act="say" data-text="Hi, thanks for taking the time to talk today.">试听英文</button>
+        <button class="btn sm" style="margin-top:8px" data-act="tts-check">检查英文朗读</button>
         <label class="fld"><span>英文语速</span><input type="range" min="0.7" max="1.2" step="0.05" value="${L.rate}" data-chg="local" data-key="rate" data-num="1"></label>
         <label class="fld"><span>中文语音（耳机模式用）</span><select data-chg="local" data-key="zhVoice">${opt(zhV, L.zhVoice)}</select></label>
         <button class="btn sm" style="margin-top:8px" data-act="say" data-lang="zh" data-text="我已经毕业了。">试听中文</button>
@@ -3487,7 +3588,7 @@ VIEWS.me = {
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="sec-title">内容和数据</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("pending","待确认的说法", ((S.pending || []).length) + " 句")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
+        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("pending","待确认的说法", ((S.pending || []).length) + " 句")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
         ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
         ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
@@ -3546,14 +3647,20 @@ ACT["imp-preview"] = () => {
     ${decks.length ? `<li>题库：${decks.map(esc).join("，")}</li>` : ""}
     <li>卡片 ${r.cards.length} 张（反射卡 ${by("r")}，找错 ${by("f")}，听力 ${by("l")}）${dup ? `，其中 ${dup} 张已经有了，会更新` : ""}</li>
     ${r.questions.length ? `<li>面试题 ${r.questions.length} 道，追问 ${r.follow.length} 个</li>` : ""}${r.alts.length ? `<li>确认算对的说法 ${r.alts.length} 条</li>` : ""}
-    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>
+    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
     ${r.meta.date ? `<li>面试日期：${esc(r.meta.date)}</li>` : ""}${who ? `<li>面试官：${esc(who.name)}${who.company ? "，" + esc(who.company) : ""}</li>` : ""}
     ${r.bad.length ? `<li>看不懂、会跳过的：第 ${r.bad.join("、")} 行</li>` : ""}</ul>
     ${n ? `<button class="btn primary block" style="margin-top:12px" data-act="imp-apply">确认导入</button>` : `<p class="note">没有能导入的内容，检查一下格式。</p>`}</div>`;
 };
 ACT["imp-apply"] = () => {
   const r = IMP; if (!r) return;
-  for (const c of r.cards){ const i = S.custom.findIndex(x => x.id === c.id); const clean = {id:c.id, t:c.t, tag:c.tag, en:c.en, alt:c.alt || [], note:c.note || "", zh:c.zh || "", wrong:c.wrong || "", grp:c.grp || "", deck:c.deck || "我的卡片"}; if (i >= 0) S.custom[i] = clean; else S.custom.push(clean); }
+  for (const d of (r.meta.replace || [])){
+    const keepC = new Set(r.cards.filter(c => c.deck === d).map(c => c.id)), keepQ = new Set(r.questions.filter(q => q.deck === d).map(q => q.id));
+    for (const c of S.custom) if (c.deck === d && !keepC.has(c.id)){ delete S.cards[c.id]; delete S.best[c.id]; }
+    S.custom = S.custom.filter(c => c.deck !== d || keepC.has(c.id));
+    S.customQ = (S.customQ || []).filter(q => q.deck !== d || keepQ.has(q.id));
+  }
+  for (const c of r.cards){ const i = S.custom.findIndex(x => x.id === c.id); const clean = {id:c.id, t:c.t, tag:c.tag, en:c.en, alt:c.alt || [], note:c.note || "", zh:c.zh || "", wrong:c.wrong || "", grp:c.grp || "", word:c.word || "", mean:c.mean || "", deck:c.deck || "我的卡片"}; if (i >= 0) S.custom[i] = clean; else S.custom.push(clean); }
   S.customQ = S.customQ || [];
   for (const q of r.questions){ const i = S.customQ.findIndex(x => x.id === q.id); const clean = {id:q.id, deck:q.deck, grp:"custom", role:q.role, v:q.v, zh:q.zh, sec:q.sec, tip:q.tip, tpl:"", follow: i >= 0 ? (S.customQ[i].follow || []) : []}; if (i >= 0) S.customQ[i] = clean; else S.customQ.push(clean); }
   rebuildQ();
@@ -3872,6 +3979,74 @@ ACT["pend-copy"] = () => {
   sendToClaude(`下面是我在脱口里说的句子，参考说法只是其中一种。请逐条判断我的说法对不对：语法、意思、自然不自然，错在哪里。\n最后给我导入码：说对的写“也对 | 编号 | 我的说法”；说错的写“改 | 我的原句 | 正确说法 | 类型 | 提示”。\n\n${body}`);
 };
 
+/* ---------- 英文朗读检查：有的手机用中文语音读英文，跟着练会学成中式发音 ---------- */
+function ttsBanner(){
+  const noEn = TTS.ok && TTS.voices && TTS.voices.length > 0 && TTS.list("en").length === 0;
+  if (!L.ttsCN && !noEn) return "";
+  return `<div class="banner"><span>英文朗读可能在用中文语音（会把 2024 读成“两千零二十四”）。跟着它练会学成中式发音，建议先改一下。</span><button class="btn sm primary" data-act="tts-fix">怎么改</button></div>`;
+}
+function showTtsFix(){
+  return choose("英文在用中文语音读", "跟着中文语音练英文，会学成中式发音。建议这样改：<br>① 手机设置里搜“文字转语音”（也可能叫“文本转语音输出”）。<br>② “首选引擎”选“Google 语音服务”。没有的话，到应用商店装“Speech Services by Google”。<br>③ 点它旁边的齿轮 → 安装语音数据 → 英语（美国），下载好。<br>④ 回到脱口：我的 → 朗读 → 英文语音，选 English (United States)，再点“检查英文朗读”。", [["ok", "知道了"]]);
+}
+ACT["tts-fix"] = () => showTtsFix();
+ACT["tts-check"] = async () => {
+  if (!TTS.ok){ toast("这台设备没有朗读功能"); return; }
+  TTS.speak("I came here in 2024. Do you watch F1?", {raw:true});
+  const k = await choose("刚才的数字是怎么读的？", "仔细听 2024 和 F1 这两处。", [["ok", "英文：twenty twenty-four、F one"], ["bad", "中文：两千零二十四、F 一"], ["re", "再听一遍"]]);
+  if (k === "re"){ ACT["tts-check"](); return; }
+  if (k === "ok"){ L.ttsCN = false; saveLocal(); toast("英文朗读正常"); UI.render(); return; }
+  if (k === "bad"){ L.ttsCN = true; saveLocal(); UI.render(); showTtsFix(); }
+};
+/* 日记里提示最近学的词：自己用一次，是记单词最有效的办法之一 */
+function jWordsHTML(){
+  const tn = dnum(today());
+  const ws = CAT.cards.filter(c => c.t === "w" && S.cards[c.id] && tn - (S.cards[c.id].last || 0) <= 7).slice(0, 6);
+  if (!ws.length) return "";
+  return `<div class="small muted" style="margin-top:10px">试着在日记里用上最近学的词：</div><div class="row-gap" style="margin-top:6px">${ws.map(c => `<button class="chip" data-act="j-ins" data-v="${esc(c.word)}">${esc(c.word)}（${esc(c.mean)}）</button>`).join("")}</div>`;
+}
+
+/* ---------- 存储空间 ---------- */
+const mb = n => (Math.max(0, n || 0) / 1048576).toFixed(1) + " MB";
+VIEWS.storage = {
+  tab:"me",
+  render(){
+    return `<div class="wrap">${backBtn()}<h2>存储空间</h2><div class="panel" id="stInfo">正在计算……</div>
+      <div class="panel"><h3>日记录音</h3><p class="small muted" style="margin:4px 0 10px">日记最多保留最近 60 篇。删录音不会删日记文字。</p><button class="btn block" data-act="st-clean30">删掉 30 天前的日记录音</button></div>
+      <p class="small muted">进度和卡片都存在这台手机的浏览器里。换手机或清浏览器数据之前，先到“我的 → 备份”导出。</p></div>`;
+  },
+  async mount(){
+    let html = "";
+    try {
+      const est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
+      const keys = await IDB.keys(); const jn = keys.filter(k => k.startsWith("jr:")).length, iv = keys.filter(k => k.startsWith("iv:")).length;
+      const ls = ((localStorage.getItem(KEY) || "").length + (localStorage.getItem(LKEY) || "").length) * 2;
+      const pers = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null;
+      html = `${est ? `<p>一共用了 <b>${mb(est.usage)}</b></p>` : ""}<p class="small" style="margin-top:6px">练习进度和卡片：约 ${mb(ls)}　日记录音 ${jn} 条　面试回答录音 ${iv} 条</p>
+        ${pers === true ? `<p class="small muted" style="margin-top:6px">已设为长期保存：手机空间紧张时，浏览器不会自动清掉这些数据。</p>` : pers === false ? `<p class="small muted" style="margin-top:6px">浏览器还没把这些数据设为长期保存，空间特别紧张时有可能被清掉，记得偶尔备份。</p>` : ""}`;
+    } catch (e) { html = "暂时算不出来。"; }
+    const el = $("#stInfo"); if (el) el.innerHTML = html;
+  }
+};
+ACT["st-clean30"] = async () => {
+  const cut = Date.now() - 30 * 864e5;
+  const old = S.journal.filter(e => e.rec && (Date.parse(e.date) || 0) < cut);
+  if (!old.length){ toast("没有 30 天前的录音"); return; }
+  if (!await sheet(`删掉 ${old.length} 条旧录音？`, "日记文字会保留，只删录音。", "删掉", true)) return;
+  for (const e of old){ await IDB.del(e.rec); e.rec = null; }
+  save(true); toast("删好了"); UI.render();
+};
+/* 启动后清理：已经没有日记或面试题对应的录音（以前删日记、删题库时留下的） */
+async function cleanAudio(){
+  try {
+    const keys = await IDB.keys(); const jr = new Set(S.journal.map(e => e.rec).filter(Boolean));
+    const qids = new Set(Object.keys(typeof QBY === "object" && QBY ? QBY : {}));
+    for (const k of keys){
+      if (k.startsWith("jr:") && !jr.has(k)) await IDB.del(k);
+      else if (k.startsWith("iv:") && qids.size > 20 && !qids.has(k.slice(3))) await IDB.del(k);
+    }
+  } catch (e) {}
+}
+
 /* ---------- 今天练过的 ---------- */
 VIEWS.today = {
   tab:"progress",
@@ -3943,6 +4118,7 @@ function boot(){
   if (BUILD.pwa && "serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) navigator.serviceWorker.register("./sw.js").catch(() => {});
   if (BUILD.pwa && "serviceWorker" in navigator){ let had = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange", () => { if (had) toast("已更新到新版本，下次打开生效"); had = true; }); }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  setTimeout(cleanAudio, 4000);
   let day = today();
   setInterval(() => { if (today() !== day){ day = today(); const t = UI.top(); if (t && t.name === "home") UI.refresh(); } }, 60000);
 }
