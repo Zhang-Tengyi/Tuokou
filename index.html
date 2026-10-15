@@ -346,6 +346,13 @@ audio{width:100%;margin-top:8px}
 
 .dchip{display:inline-block;font-style:normal;font-weight:500;font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 8px;margin-left:6px;vertical-align:2px;white-space:nowrap}
 
+.rd-list{margin-top:6px}
+.rd-s{padding:8px 10px;border-radius:10px;margin:4px 0;line-height:1.6;cursor:pointer;transition:background .2s}
+.rd-s.cur{background:var(--amber-soft);font-weight:600}
+.rd-s.done{color:var(--muted)}
+.rd-hide .rd-s{filter:blur(6px)}
+.rd-hide .rd-s.cur{filter:blur(4px)}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -366,7 +373,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.8.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.9.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1311,7 +1318,9 @@ const DIALOGS = [
     {say:"Cool. See you Saturday!",zh:"好，周六见！",reply:["See you then!","Sounds good. See you Saturday!"]}]}
 ];
 
-const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS};
+/* 通用面试题的参考回答：美国人在这种场合最自然的说法 */
+const REF = {"Q1": "Sure. I recently finished my master's in mechanical engineering, and my undergrad was in mechatronics, so I work across the mechanical, electrical, and software sides of a system. I did two internships on vacuum coating systems, where I wrote PLC and communication code and helped with on-site commissioning. In a robotics lab, I designed hardware for robots, like cable routing and electronics mounts. Now I'm looking for a hands-on role where I can design, build, and test real systems.", "Q2": "Sure. One project I'm proud of is a cable routing redesign for a robot that can crawl and fly. When it switches modes, the knee rotates 90 degrees, and the cables kept wearing out and popping out. I designed a U-shaped channel in SolidWorks and 3D printed it. The channel opens outward, so the cables get pressed against the wall instead of popping out. After that, the problem stopped, and the lab kept using the design.", "Q3": "During an internship, I helped commission a vacuum coating system at a customer's site. The link between the PLC and the power supply kept failing. We checked it one layer at a time: the wiring, then the protocol, then the firmware. I found that the response frames didn't match, and the vendor confirmed it was a firmware bug. After the fix, the system met all the operation requirements. What I took away is to find the right layer first, and bring clear evidence before you go to a vendor.", "Q4": "During an internship, another engineer designed the HMI screens, and I knew the PLC variables really well, so we tested the screens together. When a screen was linked to the wrong variable, I fixed it, and then we checked it again together. It worked well because we split the work by what each of us knew best.", "Q5": "For my undergrad thesis, I built a jet-propulsion robot inspired by razor clams. My first plan was to use electromagnets to open and close the shell. When I tested them on a bench, they only worked within about two millimeters, so they couldn't move the shell. I switched to a motor that drives a permanent-magnet rotor, and later to a spring mechanism. What I learned is to test the risky part on a bench early, before I build the whole system.", "Q6": "I'm interested in this role because it's really hands-on. I'd get to design, build, and test real hardware, which is exactly what I enjoyed most in the lab and in my internships. And I'd love to learn from a team that builds real products.", "Q7": "I'd say my biggest strength is that I'm hands-on across mechanical, electrical, and software. I can design a part, wire it up, write the control code, and test it. One thing I'm working on is explaining technical details in a short, clear way. So now I start with the result, and then give one or two key details.", "Q8": "Yes, thank you. What qualities make someone really successful on your team? And what would I be working on in the first few months?", "Q9": "I'm on F-1 OPT right now, so I'm authorized to work. I'm also eligible for the STEM OPT extension, and down the road, I will need H-1B sponsorship.", "Q10": "Yes. I'm on F-1 OPT, so I'm authorized to work in the US right now.", "Q11": "I'm flexible, and I'd like to learn more about the role first. Could you share the range for this position?", "Q12": "I can start soon after an offer. I'd just need a little time to relocate if the job isn't nearby.", "Q13": "Yes, I'm open to relocating, and I'm happy to work onsite."};
+const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS, REF};
 
 
 /* 脱口 · 核心逻辑（不碰 DOM，可在 Node 里测试） */
@@ -1730,6 +1739,11 @@ function thoughtGroups(text){
   }
   return out.filter(Boolean).map(x => x.replace(/\u2024/g, "."));
 }
+/* 分句：3.3、0.2 这样的小数不当句号 */
+function splitSentences(text){
+  const s = String(text || "").replace(/\s+/g, " ").trim(); if (!s) return [];
+  return s.replace(/(\d)\.(\d)/g, "$1\u2024$2").split(/(?<=[.!?]["”’)]?)\s+/).map(x => x.replace(/\u2024/g, ".").trim()).filter(x => x.length > 1);
+}
 /* 每句挑一条最相关的发音提示（重音、语调、断句、词尾辅音、难发的音） */
 function pronTip(text){
   const s = String(text || "").trim(); const words = s.split(/\s+/).filter(Boolean);
@@ -2024,7 +2038,7 @@ function pickQuestions(ctx, n){
 }
 
 const CORE = {TAGS,TYPE_LABEL,TENSE_NOTE,tagKey,dstr,dnum,nstr,splitAlts,shuffle,hash,buildCatalog,INTERVALS,MASTERED_BOX,srsRate,
-  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,thoughtGroups,pronTip,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
+  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,thoughtGroups,pronTip,splitSentences,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
   buildSession,diversify,interleave,pickQuestions,IRR,SESSION_CFG};
 
 
@@ -2053,8 +2067,8 @@ const KEY = "tuokou.v1", LKEY = "tuokou.local";
 const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
   settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", autoCheck:"smart", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
-  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
-const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false, slashes:false, quiet:false, quietSound:false, resume:null});
+  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
+const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false, slashes:false, quiet:false, quietSound:false, resume:null, rdMode:"line", rdSlow:false, rdHide:false});
 function mergeInto(d, o){
   for (const k of Object.keys(o||{})){
     const a = d[k], b = o[k];
@@ -2112,6 +2126,8 @@ function deckSelectHTML(){
   const d = curDeck();
   return `<label class="deck-pick"><span class="small muted">练哪个题库</span><select data-chg="deck" aria-label="选择题库">${deckList().map(x => `<option value="${esc(x.id)}" ${x.id === d ? "selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>`;
 }
+/* 参考回答：导入的（Claude 给的）优先，没有就用自带的 */
+function refFor(q){ if (!q) return ""; return ((S.refAns || {})[q.id] || (CONTENT.REF || {})[q.id] || "").trim(); }
 function ans(qid){ return S.answers[qid] || (S.answers[qid] = {text:"", keys:[], practiced:0}); }
 function applyTheme(){ const t = S.settings.theme; if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); }
 
@@ -2415,7 +2431,7 @@ const Cloud = {
     if (!this.db) return;
     const base = "data/users/" + this.uid + "/";
     const parts = {
-      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, answers:S.answers, newToday:S.newToday},
+      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, answers:S.answers, newToday:S.newToday},
       stats:{updatedAt:S.updatedAt, days:S.days, tags:S.tags, calls:S.calls},
       journal:{updatedAt:S.updatedAt, journal:S.journal}
     };
@@ -3283,8 +3299,10 @@ class IvStage {
         ${this.url ? `<audio controls src="${this.url}"></audio>` : ""}
         <h3 style="margin-top:16px">${this.url ? "听回放，对照检查" : "回想一下，对照检查"}</h3>
         <div style="margin-top:6px">${checks.map((c,i) => `<label class="check"><input type="checkbox" data-i="${i}"><span>${c}</span></label>`).join("")}</div><p class="small muted" style="margin-top:6px">没打勾的会变成下一轮的重点。</p>
-        ${a && a.text ? `<details style="margin-top:10px"><summary>我写好的回答</summary><div class="en sm" style="margin-top:6px">${esc(a.text)}</div></details>` :
-          `<div class="note">${esc(q.tip)}</div>${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div></details>` : ""}`}
+        ${(() => { const ref = refFor(q); const mine = a && a.text ? a.text.trim() : "";
+          return (ref ? `<details style="margin-top:10px" open><summary>参考回答（对照你刚才说的）</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
+            + (mine && mine !== ref ? `<details style="margin-top:10px"><summary>我写好的回答</summary><div class="en sm" style="margin-top:6px">${esc(mine)}</div></details>` : "")
+            + (!ref && !mine ? `<div class="note">${esc(q.tip)}</div>${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div></details>` : ""}` : ""); })()}
         <div class="row-gap" style="margin-top:16px">${nextT ? `<button class="btn" data-act="iv-redo">再答一次，压到 ${nextT} 秒</button>` : ""}<button class="btn primary" data-act="iv-done">完成</button></div></div>`;
     }
   }
@@ -3608,6 +3626,7 @@ function callReviewHTML(){
       <div class="en sm" style="margin-top:6px">${wordsHTML(s.say)}</div><div class="small muted">${esc(s.zh)}</div>
       ${r && r.url ? `<audio controls src="${r.url}"></audio>` : `<p class="small muted" style="margin-top:6px">没有录音</p>`}
       ${s.hint ? `<details style="margin-top:8px" ${s.kind === "f" ? "open" : ""}><summary>参考说法</summary><div class="en sm" style="margin-top:6px">${esc(s.hint)}</div></details>` : ""}
+      ${s.kind === "q" && refFor(QBY[s.qid]) ? `<details style="margin-top:8px"><summary>参考回答</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(refFor(QBY[s.qid]))}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${s.qid}" data-src="ref">跟读参考回答</button></details>` : ""}
       ${s.kind === "q" ? `<div class="row-gap" style="margin-top:10px"><button class="btn sm" data-act="nav" data-v="ivedit" data-q="${s.qid}">写这题的回答</button><button class="btn sm" data-act="iv-solo" data-q="${s.qid}">单题重练</button></div>` : ""}
     </div>`;
   }).join("");
@@ -3833,7 +3852,7 @@ ACT["iv-copyall"] = () => {
 let IVE_DIRTY = false;
 function iveSave(qid, quiet){
   const ta = $("#ansText"), kk = $("#ansKeys"); if (!ta) return;
-  const a = ans(qid); a.text = ta.value; a.keys = (kk ? kk.value : "").split(/\n/).map(x => x.trim()).filter(Boolean); a.updated = Date.now();
+  const a = ans(qid); a.text = ta.value; if ((a.text || "").trim() !== refFor(QBY[qid] || {id:qid})) a.fromRef = false; a.keys = (kk ? kk.value : "").split(/\n/).map(x => x.trim()).filter(Boolean); a.updated = Date.now();
   save(); IVE_DIRTY = false; if (!quiet) toast("保存好了");
 }
 VIEWS.ivedit = {
@@ -3843,13 +3862,19 @@ VIEWS.ivedit = {
     return `<div class="wrap">${backBtn()}<div class="small muted">${q.id}　${esc(ROLE_LABEL[qRole(q)] || "")}${q.deck ? "　" + esc(q.deck) : ""}</div><h2 style="margin-top:2px">${esc(q.zh)}</h2>
       <div class="panel" style="margin-top:14px"><div class="small muted">面试官可能这样问，点喇叭听</div>
         ${q.v.map(v => `<div class="say-line" style="margin-top:10px"><div class="en sm">${wordsHTML(v)}</div><div class="say-btns">${sayBtns(v)}</div></div>`).join("")}</div>
+      ${(() => { const ref = refFor(q); const mine = (a.text || "").trim();
+        return ref ? `<div class="panel"><div class="row-gap" style="justify-content:space-between;align-items:baseline"><h3>参考回答</h3><span class="small muted">这种场合美国人最自然的说法</span></div>
+          <div class="en sm" style="margin-top:8px;line-height:1.7">${wordsHTML(ref)}</div>
+          <div class="row-gap" style="margin-top:10px"><button class="btn primary sm" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button>${mine && mine !== ref ? `<button class="btn sm" data-act="ive-useref" data-q="${q.id}">用它替换我的回答</button>` : ""}</div>
+          ${mine && mine !== ref ? `<p class="small muted" style="margin-top:8px">你的回答和参考回答不一样：对照着看，把参考回答里更自然的说法放进你的回答。用自己的话说，比背别人的稿子在面试里更自然。</p>` : ""}</div>`
+          : `<div class="panel"><p class="small muted" style="margin:0">这题还没有参考回答。写好你的版本，点“复制给 Claude”，我帮你改成自然的说法，再给你导入码。</p></div>`; })()}
       ${(q.follow || []).length ? `<div class="panel"><div class="small muted">面试官可能接着追问（技术面试会一层一层往下问）</div>${q.follow.map(f => { const fa = (S.followAns || {})[q.id + "|" + f]; return `<div class="say-line" style="margin-top:10px"><div class="en sm">${wordsHTML(f)}</div><div class="say-btns">${sayBtns(f)}</div></div>${fa ? `<details style="margin-top:4px"><summary class="small">参考回答</summary><div class="say-line" style="margin-top:6px"><div class="en sm">${wordsHTML(fa)}</div><div class="say-btns">${sayBtns(fa)}</div></div></details>` : ""}`; }).join("")}</div>` : ""}
       <div class="panel"><div class="note" style="margin-top:0">${esc(q.tip)}</div>
         ${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div><button class="btn sm" style="margin-top:8px" data-act="ive-tpl" data-q="${q.id}">放进回答框</button></details>` : ""}</div>
       <label class="fld"><span>我的回答（英文）</span><textarea class="en" id="ansText" style="min-height:220px">${esc(a.text || "")}</textarea></label>
       <div class="small muted" id="ansCount" style="margin-top:6px"></div>
       <label class="fld"><span>要点小抄：一行一个，来电模拟里能看</span><textarea id="ansKeys" style="min-height:90px">${esc((a.keys || []).join("\n"))}</textarea></label>
-      <div class="row-gap" style="margin-top:12px"><button class="btn primary" data-act="ive-save" data-q="${q.id}">保存</button><button class="btn" data-act="iv-solo" data-q="${q.id}">单题彩排</button><button class="btn" data-act="ive-shadow">跟读我的回答</button>
+      <div class="row-gap" style="margin-top:12px"><button class="btn primary" data-act="ive-save" data-q="${q.id}">保存</button><button class="btn" data-act="iv-solo" data-q="${q.id}">单题彩排</button><button class="btn" data-act="nav" data-v="reader" data-q="${q.id}" data-src="mine">跟读我的回答</button>
         <button class="btn has-ai-only" data-act="ive-ai" data-q="${q.id}">AI 标错</button><button class="btn" data-act="ive-copy" data-q="${q.id}">复制给 Claude</button></div>
       <div id="shadowBox" class="panel hide" style="margin-top:12px"></div><div id="iveOut"></div>
       <div class="panel" style="margin-top:14px"><h3>写完自查</h3><ul class="issues"><li>第一句直接回答问题</li><li>讲经历用过去式，多用 I，少用 we</li><li>有一个具体例子或数字</li><li>没有 although…but、because…so</li></ul>
@@ -3884,6 +3909,61 @@ const SH = {
   stop(){ const was = this.on; this.on = false; this.tok++; if (was){ TTS.cancel(); Wake.off(); Act.stop(); } const b = $('[data-act="ive-shadow"]'); if (b) b.textContent = "跟读我的回答"; const box = $("#shadowBox"); if (box) box.classList.add("hide"); }
 };
 ACT["ive-shadow"] = () => { if (SH.on){ SH.stop(); return; } if (!TTS.ok){ toast("这台设备不能朗读"); return; } const t = (($("#ansText")||{}).value || "").trim(); if (!t){ toast("先写好回答"); return; } SH.start(t); };
+ACT["ive-useref"] = async el => {
+  const q = QBY[el.dataset.q]; const ta = $("#ansText"); const ref = refFor(q); if (!q || !ta || !ref) return;
+  if (!await sheet("用参考回答替换你的回答？", "你现在框里的回答会被换掉。想保留的话，先把要留的句子复制出来。", "替换", true)) return;
+  ta.value = ref; ta.dispatchEvent(new Event("input")); iveSave(q.id, true); ans(q.id).fromRef = true; save(); toast("换好了");
+};
+/* ---------- 跟读：一句一句（听一句，停下来跟着说），或连贯跟读（一直放，同步跟着说） ---------- */
+const RD = {on:false, tok:0, i:0, sents:[]};
+function rdMark(i, phase){
+  $$(".rd-s").forEach((e, k) => { e.classList.toggle("cur", k === i); e.classList.toggle("done", k < i); });
+  const cur = $$(".rd-s")[i]; if (cur && cur.scrollIntoView) cur.scrollIntoView({block:"center", behavior:"smooth"});
+  const st = $("#rdStatus"); if (st) st.textContent = `${i + 1}/${RD.sents.length}　` + (phase === "you" ? "轮到你：跟着说一遍" : (L.rdMode === "flow" ? "跟着一起说，不用等" : "先听"));
+}
+function rdUI(finished){
+  const b = $("#rdPlay"); if (b) b.textContent = RD.on ? "停止" : finished ? "再来一遍" : "开始";
+  if (finished){ $$(".rd-s").forEach(e => e.classList.remove("cur")); const st = $("#rdStatus"); if (st) st.textContent = L.rdMode === "flow" ? "跟完了。顺了就去“单题彩排”，不看稿用自己的话说一遍。" : "跟完了。熟了就换“连贯跟读”，跟着节奏和连读一起说。"; }
+}
+async function rdPlay(from){
+  if (!TTS.ok){ toast("这台设备不能朗读"); return; }
+  const tok = ++RD.tok; RD.on = true; Wake.on(); Act.start(true); rdUI();
+  for (let i = from || 0; i < RD.sents.length; i++){
+    if (tok !== RD.tok) return; RD.i = i; rdMark(i, "say");
+    await TTS.speak(RD.sents[i], {rate: L.rdSlow ? 0.75 : 0.95});
+    if (tok !== RD.tok) return;
+    if ((L.rdMode || "line") === "line"){ rdMark(i, "you"); const w = RD.sents[i].split(/\s+/).length; await sleep(Math.max(1800, w * (L.rdSlow ? 620 : 500) + 700)); }
+    else await sleep(160);
+  }
+  if (tok === RD.tok){ RD.on = false; Wake.off(); Act.stop(); RD.i = 0; rdUI(true); }
+}
+function rdStop(){ const was = RD.on; RD.on = false; RD.tok++; TTS.cancel(); if (was){ Wake.off(); Act.stop(); } rdUI(); }
+VIEWS.reader = {
+  tab:"iv", noRefresh:true,
+  render(p){
+    const q = QBY[p.q]; const src = p.src === "mine" ? "mine" : "ref";
+    const text = !q ? "" : src === "mine" ? (ans(q.id).text || "") : refFor(q);
+    RD.sents = K.splitSentences(text).reduce((out, x) => { if (out.length && out[out.length - 1].split(/\s+/).length < 3) out[out.length - 1] += " " + x; else out.push(x); return out; }, []); RD.i = 0; RD.on = false;
+    const mode = L.rdMode || "line"; const show = s => esc(L.slashes ? K.thoughtGroups(s).join(" / ") : s);
+    return `<div class="wrap">${backBtn()}<h2>跟读</h2>${q ? `<p class="small muted" style="margin-top:2px">${esc(q.zh)}</p>` : ""}
+      ${q ? `<div class="seg" style="margin-top:10px">${[["ref","参考回答"],["mine","我的回答"]].map(([k, l]) => `<button data-act="rd-src" data-q="${q.id}" data-v="${k}" aria-pressed="${src === k}">${l}</button>`).join("")}</div>` : ""}
+      <div class="seg" style="margin-top:8px">${[["line","一句一句"],["flow","连贯跟读"]].map(([k, l]) => `<button data-act="rd-mode" data-v="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}</div>
+      <p class="small muted" style="margin-top:6px">${mode === "line" ? "听一句，停下来你跟着说一遍。适合新的回答：先把句子记住。" : "一直放，你同步跟着说，像影子一样。适合已经熟的回答：练节奏和连读。"}</p>
+      <label class="switch" style="margin-top:6px"><span>慢速</span><input type="checkbox" data-chg="rdopt" data-key="rdSlow" ${L.rdSlow ? "checked" : ""}></label>
+      <label class="switch"><span>隐藏文字，只听着跟（熟了再开）</span><input type="checkbox" data-chg="rdopt" data-key="rdHide" ${L.rdHide ? "checked" : ""}></label>
+      <p class="small" id="rdStatus" style="margin-top:8px">${RD.sents.length ? "点“开始”。点任意一句，从那句开始。" : (src === "mine" ? "你还没写这题的回答。" : "这题还没有参考回答。")}</p>
+      <div class="rd-list${L.rdHide ? " rd-hide" : ""}">${RD.sents.map((s, i) => `<div class="rd-s en sm" data-act="rd-from" data-i="${i}">${show(s)}</div>`).join("")}</div>
+      <div class="row-gap" style="margin-top:14px;justify-content:center"><button class="btn primary big" style="min-width:160px" data-act="rd-play" id="rdPlay" ${RD.sents.length ? "" : "disabled"}>开始</button></div>
+      ${q ? `<button class="btn block" style="margin-top:12px" data-act="iv-solo" data-q="${q.id}">跟熟了：去单题彩排，不看稿说一遍</button>` : ""}
+      <p class="small muted" style="margin-top:10px">顺序：先“一句一句”跟两遍，把句子记住；再“连贯跟读”；最后去单题彩排，用自己的话说。面试时不要背稿，记住结构和关键句就行。</p></div>`;
+  },
+  leave(){ rdStop(); }
+};
+ACT["rd-play"] = () => { if (RD.on) rdStop(); else rdPlay(RD.i || 0); };
+ACT["rd-from"] = el => { rdStop(); RD.i = +el.dataset.i || 0; rdPlay(RD.i); };
+ACT["rd-mode"] = el => { L.rdMode = el.dataset.v; saveLocal(); const t = UI.top(); UI.replace("reader", t ? t.params : {}); };
+ACT["rd-src"] = el => { UI.replace("reader", {q: el.dataset.q, src: el.dataset.v}); };
+CHG.rdopt = el => { L[el.dataset.key] = el.checked; saveLocal(); if (el.dataset.key === "rdHide"){ const l = $(".rd-list"); if (l) l.classList.toggle("rd-hide", el.checked); } };
 ACT["ive-tpl"] = el => { const q = QBY[el.dataset.q]; const ta = $("#ansText"); if (!q || !ta) return; ta.value = ta.value.trim() ? ta.value.trim() + "\n\n" + q.tpl : q.tpl; ta.dispatchEvent(new Event("input")); ta.focus(); };
 ACT["ive-ai"] = el => { const q = QBY[el.dataset.q]; AI.review("电话面试的回答", ($("#ansText")||{}).value || "", `面试问题：${q.v[0]}（${q.zh}）。目标长度 ${q.sec} 秒左右。`, $("#iveOut")); };
 ACT["ive-copy"] = el => { const q = QBY[el.dataset.q]; const t = ($("#ansText")||{}).value || ""; if (!t.trim()){ toast("先写一点回答"); return; } sendToClaude(claudePrompt("电话面试回答", t, `面试问题：${q.v[0]}（${q.zh}）。改完后请给我导入码：答 | ${q.id} | 完整回答`)); };
@@ -4040,7 +4120,9 @@ ACT["imp-apply"] = () => {
   rebuildQ();
   S.followAns = S.followAns || {};
   for (const f of r.follow){ const q = S.customQ.find(x => x.id === f.qid); if (q && !q.follow.includes(f.text)) q.follow.push(f.text); if (f.ans) S.followAns[f.qid + "|" + f.text] = f.ans; }
-  for (const a of r.answers){ const x = ans(a.qid); x.text = a.text; x.updated = Date.now(); }
+  S.refAns = S.refAns || {};
+  for (const a of r.answers){ const prev = (S.refAns[a.qid] || "").trim(); S.refAns[a.qid] = a.text; const x = ans(a.qid); const mine = (x.text || "").trim();
+    if (!mine || mine === prev || x.fromRef){ x.text = a.text; x.fromRef = true; x.updated = Date.now(); } }
   for (const k of r.keys){ const x = ans(k.qid); x.keys = k.keys; }
   S.myAlts = S.myAlts || {}; for (const a of r.alts){ S.myAlts[a.id] = Array.from(new Set([...(S.myAlts[a.id] || []), a.text])).slice(-6); }
   if (r.alts.length && S.pending && S.pending.length){ const ok = new Set(r.alts.map(a => a.id + "|" + K.tokens(a.text).join(" "))); S.pending = S.pending.filter(p => !ok.has(p.cid + "|" + K.tokens(p.said).join(" "))); }
@@ -4430,7 +4512,7 @@ const SPEAK_TIPS = [
   {h:"重音：拉长、音调起伏，不是喊大声", p:"中文母语者强调一个词时，常用“更大声”；美国人是把这个词拉长，音调先抬起来再落下。一句话里，名词、动词、形容词、否定词重；其余的轻。", ex:["I just finished my master's in mechanical engineering."]},
   {h:"轻读：小词又轻又短", p:"a、the、to、for、of、and、can 在句子里读得很轻，元音含糊成“呃”。每个字都读得一样重，听起来就像机器人。", ex:["I want to grab a cup of coffee.", "I can do it."]},
   {h:"语调：落在整句上", p:"中文每个字有声调；英语的音高变化是落在整句上的。陈述句和 what、where、how 开头的问句，句尾往下降；能用 yes / no 回答的问句，句尾往上扬。", ex:["Where do you work?", "Do you work here?"]},
-  {h:"断句：在意群之间停", p:"停在逗号、so / but / because 前面、长句里的介词短语前面；一个意群里面不要停。停对了地方，美国人会觉得你说得更流利、更好懂。打开“断句”就能看到斜杠。", ex:["I just finished my master's in mechanical engineering at Northeastern.", "I'm job hunting, so I send out applications every day."]},
+  {h:"断句：在意群之间停", p:"停在逗号、so / but / because 前面、长句里的介词短语前面；一个意群里面不要停。停对了地方，美国人会觉得你说得更流利、更好懂。打开“断句”就能看到斜杠。", ex:["I just finished my master's in mechanical engineering, and I'm looking for a hands-on role.", "I'm job hunting, so I send out applications every day."]},
   {h:"连读：词和词连成一串", p:"前一个词的结尾辅音，接后一个词的开头元音，连起来读。一个词一个词地往外蹦，听起来会很生硬。", ex:["Check it out.", "Pick it up."]},
   {h:"词尾辅音：要发出来，不加元音", p:"中文音节很少以辅音结尾，所以很容易把 -t、-d、-s、-ks、-sts 吞掉，或者在后面加个“特、斯”。要发出来，但要短、要干净。", ex:["I asked a question.", "It costs twenty dollars."]},
   {h:"几个难发的音", p:"th：舌尖轻放在上下牙之间送气。v：上齿轻碰下唇再出声。r：舌尖不碰上颚，嘴唇稍微撮圆。l：舌尖顶住上牙后面。thin 和 thing、sheep 和 ship（ee 嘴角向两边拉开，读得长；i 放松，读得短）、cat 的 a 嘴要张大。", ex:["Thank you for thinking of me.", "I live in a very busy area."]},
