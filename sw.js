@@ -1,5 +1,5 @@
 /* 脱口离线缓存 */
-const VERSION = "1.0.5";
+const VERSION = "1.1.0";
 const CACHE = "tuokou-" + VERSION;
 const FONTS = "tuokou-fonts";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];

@@ -321,6 +321,10 @@ audio{width:100%;margin-top:8px}
 .seg.mini{margin:2px 0 12px}
 .seg.mini button{padding:6px 4px;font-size:13px}
 
+.deck-pick{display:flex;align-items:center;gap:10px;margin:12px 0 0}
+.deck-pick select{flex:1;width:auto;padding:9px 10px;font-size:15px}
+.mods > :last-child:nth-child(odd){grid-column:span 2}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -341,7 +345,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.0.5"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.1.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -839,7 +843,301 @@ const TIPS = [
   "说错的句子，不看稿说 3 遍再往下走。"
 ];
 
-const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS};
+
+// 其他正确说法（id → 多个说法用 // 分隔）。专门练语法的卡，只收保留了那个语法点的说法
+const ALT_EXTRA = {
+  r001:"It's very cold. // It's so cold.", r002:"I'm so tired. // I'm very tired.", r003:"I'm a bit nervous. // I'm kind of nervous.",
+  r004:"It's a bit windy today. // It's kind of windy today. // It's a little windy.", r005:"This is my first time here.", r006:"That's really cool!",
+  r007:"It's a lot harder than I expected. // It's way harder than I expected. // It's much harder than I thought.",
+  r008:"I'm not that familiar with soccer.", r009:"It's such a nice day.", r011:"I'm a bit rusty.", r012:"I'm really into robotics.",
+  r015:"That's totally normal. // It's totally normal.", r016:"That's so impressive. // That's very impressive.", r017:"That's hard to say.",
+  r018:"That's a great opportunity.", r019:"I'm really interested in this role. // I'm very interested in this role.",
+  r020:"It's nice to talk to you. // It's good to talk with you.", r022:"I'm pretty familiar with CAD.", r023:"I'm open to relocation. // I'm open to moving.",
+  r025:"That's awesome.", r026:"It's a bit chilly today. // It's a little cold today.", r028:"It's hard.",
+  r029:"It's around fifty degrees outside. // It's about fifty degrees out.",
+  r034:"I studied Mechanical Engineering for my master's. // I did a master's in Mechanical Engineering.",
+  r036:"I started playing golf when I was in fourth grade. // I began playing golf in fourth grade.",
+  r037:"That's how I started. // That's how I got started.", r038:"My friend mentioned it a bit. // My friend told me a little about it.",
+  r039:"I haven't tried it yet.", r041:"I'm still job hunting. // I'm still searching for a job.", r042:"I usually go for walks on weekends.",
+  r046:"I've been applying for all kinds of engineering roles. // I've been applying to all kinds of engineering jobs.",
+  r050:"Germany lost to Paraguay in a penalty shootout.", r053:"I learned a lot from that. // I learned so much from it.",
+  r054:"I was working on a robot arm project.", r058:"I've been kind of lazy and busy lately. // I've been a bit lazy and busy lately.",
+  r062:"I'm job hunting, so I send out resumes every day. // I'm looking for a job, so I'm sending out applications every day.",
+  r064:"I've been here for two years, but my English hasn't gotten much better.",
+  r065:"I studied Mechanical Engineering, so I'm really interested in robotics.",
+  r066:"I don't have a lot of industry experience yet, but I've worked on a lot of projects.",
+  r067:"It was really cold, so I stayed home. // It was too cold, so I stayed at home.", r068:"It's difficult, but it's really interesting.",
+  r069:"Honestly, I usually just lie around and play on my phone.", r071:"I spent two weeks getting ready for the interview.",
+  r072:"I just went along and practiced with him.", r076:"I like all sorts of games. // I like all types of games.",
+  r077:"I hit the same spot every single time.", r081:"I have a couple of questions. // I have some questions.",
+  r084:"I usually just watch on race day.", r087:"I usually use SolidWorks to design parts.",
+  r088:"I spent all afternoon testing the prototype in the lab.", r093:"My weekends are just like my workdays. // My weekends are the same as my weekdays.",
+  r094:"That's a nightmare for me.", r095:"It's sort of like YouTube. // It's a bit like YouTube.", r096:"We went last summer.",
+  r098:"It's drizzling out. // It's drizzling.", r099:"I want to take a walk. // I'd like to go for a walk.", r100:"I hang out with friends on weekends.",
+  r102:"I bought it a couple of weeks ago.", r103:"It's on sale right now.",
+  r104:"Funnily enough, I'm a PC gamer too. // Funny enough, I'm also a PC gamer.",
+  r105:"It has to hit the exact same spot over and over. // It needs to hit the exact same spot again and again.",
+  r106:"I haven't had much motivation lately. // I don't have much motivation these days.", r107:"It's hard to get myself outside.",
+  r108:"I've been in a funk lately.", r109:"I'm a little addicted to it. // I'm kind of hooked on it.", r110:"It's not really for me.",
+  r111:"I want to get back into it.", r112:"I haven't touched it in ages.", r113:"I'll try it. // I'll give it a shot.",
+  r115:"It feels weird at first.", r116:"You'll get used to it.",
+  r117:"Sorry, I didn't catch that. Can you say that again? // Sorry, I didn't hear that. Could you say that again? // Sorry, I didn't catch that. Could you repeat that? // Sorry, could you say that again? // Sorry, I didn't hear that clearly. Can you say that again? // Sorry, I didn't hear that clearly. Could you say that again?",
+  r118:"Just to make sure, are you asking about my master's project? // Just to be sure, you're asking about my master's project, right?",
+  r119:"That's a great question. Let me think for a second. // Good question. Let me think for a second. // That's a good question. Let me think about that for a second.",
+  r120:"Sorry, let me try that again. // Sorry, let me rephrase that.",
+  r121:"I don't know the exact word, but it's like the part that grabs things.",
+  r122:"Sorry, you cut out. Could you say that again? // Sorry, you broke up for a second. Could you say that again?",
+  r123:"Could you speak a little more slowly? // Could you say that a bit more slowly?", r124:"Let me think of an example. // Let me think of a good example for that.",
+  r125:"Do you mean the design part or the test part? // Are you asking about the design part or the testing part?",
+  r126:"Does that make sense to you?", r127:"Can you hear me? // Can you hear me all right?", r128:"How should I put this? // How do I say this?",
+  r129:"I just graduated with a master's in Mechanical Engineering. // I recently got my master's in Mechanical Engineering.",
+  r130:"During my master's, I did a robotics project.",
+  r131:"I'm looking for a role where I can work on real hardware. // I'm looking for positions where I can work on real hardware.",
+  r132:"My job was to improve the design. // My task was to make the design better.", r133:"So I redesigned the joint.",
+  r134:"As a result, it was much more reliable. // As a result, it became a lot more reliable.",
+  r135:"What I learned was to test early. // What I learned from that was to test things early.",
+  r137:"The main reason is I love hands-on work. // The main reason is that I love working with my hands.",
+  r139:"I really enjoyed learning about the team. // I really enjoyed hearing more about the team.",
+  r140:"What are the next steps? // What's the next step in the process?",
+  r141:"What does a typical day look like for this role? // What's a typical day like in this role?",
+  r142:"What are the biggest challenges the team is facing now? // What's the biggest challenge the team is facing right now?",
+  r143:"One thing I'm working on is my English speaking. // Something I'm working on is my spoken English.",
+  r144:"I like solving problems. // I really enjoy solving problems.",
+  r145:"I'm looking forward to hearing from you. // I look forward to hearing back from you.",
+  r146:"Yes, now is a good time. Thanks for calling. // Yes, it's a good time. Thank you for calling.",
+  r147:"Do you want to grab a bucket? // Want to get a bucket?", r148:"Good swing!", r149:"Are you warming up right now?", r150:"Which club is that?",
+  r152:"Are you building the hardware yourselves?",
+  r153:"How far along are you? Do you have a prototype? // How far along are you guys? Do you have a prototype yet?",
+  r154:"What's been the hardest part? // What has been the hardest part so far?",
+  r155:"How do you usually relax on weekends? // What do you usually do to unwind on weekends?", r156:"What made you come here?",
+  r157:"What kind of games do you play?", r158:"I'd love to hear more.", r159:"That must have been amazing. // That must've been awesome.",
+  r160:"My friend mentioned it a little, but I'd love to hear more.",
+  r161:"What's your lab used for? // What do you guys use the lab for?", r162:"Did you come here to study?", r163:"So you started a YouTube channel?",
+  r164:"How long have you worked here?", r165:"What do you like best about working here? // What's your favorite part about working here?",
+  r166:"How many people are on the team? // How big is your team?", r167:"You're from Texas, aren't you?", r168:"Do you follow F1?",
+  t02:"I already designed the first version.", t03:"I'm designing a new part now.", t07:"I've tested it three times already.",
+  t10:"I usually apply to jobs in the morning.", t13:"I'm working on my interview answers right now. // I'm preparing my interview answers.",
+  t14:"I've been practicing my spoken English.", t16:"I've built three prototypes so far.", t19:"I have never played this game.",
+  t22:"I've gone there three times.", t24:"I've been living in the US for two years.", t26:"I'm learning Python now.",
+  t27:"I learned a lot from the project.", t28:"I led a four-person team last semester.", t29:"I've been using SolidWorks for three years.",
+  f01:"That's so cool!", f05:"I usually take a walk.", f07:"I've already finished my master's degree. // I already finished my master's.",
+  f09:"I came here in 2024 and went back once.", f20:"I'll continue playing it. // I'll keep playing.", f25:"I'm also a PC gamer.",
+  f26:"The weather is so cold these days.", f37:"I like really popular songs.", f38:"I majored in Mechanical Engineering.",
+  f40:"I bought it a couple of weeks ago.", f42:"Wow, that's so impressive.", f43:"So you started a YouTube channel?",
+  f44:"I first played this game when I was in elementary school.", f45:"I usually just watch on race day."
+};
+
+// 日常生活题库（内置，不含个人信息）：闲聊、搭话、点餐、朋友聊天、职场、办事、写消息
+const D_CARDS = [
+  ["d001","smalltalk","你周末过得怎么样？","How was your weekend? // How did your weekend go?",""],
+  ["d002","smalltalk","还不错，挺放松的。你呢？","It was good, pretty relaxing. How about you? // It was pretty relaxing. What about you?","回答后反问一句，话题就接下去了"],
+  ["d003","smalltalk","我周六去练习场打了会儿球。","I went to the driving range on Saturday. // I hit some balls at the driving range on Saturday.",""],
+  ["d004","smalltalk","今天天气真好，对吧？","It's a beautiful day, isn't it? // Nice weather today, right?","陈述句加 isn't it / right，最自然的开场"],
+  ["d005","smalltalk","最近忙吗？","Have you been busy lately? // Been busy lately?",""],
+  ["d006","smalltalk","一直挺忙的，不过还好。","It's been pretty busy, but it's not bad. // It's been busy, but I'm doing okay.",""],
+  ["d007","smalltalk","这个周末有什么计划吗？","Do you have any plans for the weekend? // Any plans for the weekend?",""],
+  ["d008","smalltalk","还没定，可能就在家休息。","Not yet. I'll probably just relax at home. // Nothing yet. I'll probably just stay home and relax.",""],
+  ["d009","smalltalk","你在这儿住多久了？","How long have you lived here? // How long have you been living here?","从过去到现在：have lived"],
+  ["d010","smalltalk","我刚搬来不久。","I just moved here recently. // I moved here not too long ago.",""],
+  ["d011","smalltalk","附近有什么好吃的推荐吗？","Do you know any good places to eat around here? // Can you recommend any good restaurants nearby?",""],
+  ["d012","smalltalk","时间过得真快。","Time flies.",""],
+  ["d013","smalltalk","终于周五了！","Finally, it's Friday! // Thank God it's Friday!",""],
+  ["d014","smalltalk","好久不见！最近怎么样？","Long time no see! How have you been?","How have you been：问一段时间以来的近况"],
+  ["d015","smalltalk","挺好的，就是有点忙。","Pretty good, just a little busy. // I'm good, just a bit busy.",""],
+  ["d016","smalltalk","很高兴认识你。","Nice to meet you. // It's nice to meet you. // Great to meet you.",""],
+  ["d017","starter","不好意思，这里有人坐吗？","Excuse me, is this seat taken? // Is anyone sitting here?",""],
+  ["d018","starter","你也是来练球的吗？","Are you here to practice too?",""],
+  ["d019","starter","你打球多久了？","How long have you been playing? // How long have you been playing golf?",""],
+  ["d020","starter","刚才那杆挥得真漂亮。","That was a great swing. // Nice swing!",""],
+  ["d021","starter","你用的是什么球杆？","What clubs are you using? // What clubs do you play?",""],
+  ["d022","starter","我刚来这边，还不认识什么人。","I'm new here, so I don't know many people yet.",""],
+  ["d023","starter","你是做什么工作的？","What do you do for work? // What do you do?",""],
+  ["d024","starter","我是机械工程师，现在在找工作。","I'm a mechanical engineer, and I'm looking for a job right now. // I'm a mechanical engineer, and I'm job hunting right now.",""],
+  ["d025","starter","你是本地人吗？","Are you from around here? // Are you from here?",""],
+  ["d026","starter","你那个在哪儿买的？看起来不错。","Where did you get that? It looks great.",""],
+  ["d027","starter","你以前来过这家吗？","Have you been here before?",""],
+  ["d028","starter","这个活动挺有意思的，你觉得呢？","This event is pretty interesting. What do you think?",""],
+  ["d029","starter","你是怎么知道这个活动的？","How did you hear about this event?",""],
+  ["d030","starter","可以加你 LinkedIn 吗？","Can I add you on LinkedIn? // Do you mind if I connect with you on LinkedIn?",""],
+  ["d031","starter","跟你聊天很开心。","It was great talking to you. // It was nice chatting with you.",""],
+  ["d032","food","两位，有位子吗？","Table for two, please. // Do you have a table for two?",""],
+  ["d033","food","能先看一下菜单吗？","Can we see the menu, please? // Could we get the menus?",""],
+  ["d034","food","我还需要几分钟。","I need a few more minutes. // Can I have a few more minutes?",""],
+  ["d035","food","你有什么推荐吗？","What do you recommend? // What would you recommend?",""],
+  ["d036","food","我要这个汉堡，配薯条。","I'll have this burger with fries. // Can I get this burger with fries?","点餐最常用：I'll have… / Can I get…"],
+  ["d037","food","牛排要七分熟。","I'd like my steak medium well. // Medium well, please.",""],
+  ["d038","food","不要洋葱，谢谢。","No onions, please. // Can I get it without onions?",""],
+  ["d039","food","这个辣吗？","Is this spicy?",""],
+  ["d040","food","我要一杯中杯冰拿铁。","Can I get a medium iced latte? // I'd like a medium iced latte, please.",""],
+  ["d041","food","在这儿吃。","For here, please. // For here.",""],
+  ["d042","food","带走。","To go, please. // To go.",""],
+  ["d043","food","能给我一杯水吗？","Could I get a glass of water? // Can I have some water, please?",""],
+  ["d044","food","可以打包吗？","Can I get a box for this? // Could I get a to-go box?",""],
+  ["d045","food","买单，谢谢。","Can we get the check, please? // Could we have the check?","美国说 check，不说 bill"],
+  ["d046","food","我们分开付。","Can we split the check? // Could we pay separately?",""],
+  ["d047","food","可以刷卡吗？","Can I pay by card? // Do you take cards?",""],
+  ["d048","food","这里小费一般给多少？","How much should I tip here? // What's a normal tip here?",""],
+  ["d049","food","这个太好吃了。","This is really good. // This is so good.",""],
+  ["d050","food","我对花生过敏。","I'm allergic to peanuts.",""],
+  ["d051","food","能换成沙拉吗？","Can I get a salad instead? // Can I substitute a salad?",""],
+  ["d052","friends","这周末要不要一起去打球？","Do you want to play golf this weekend? // Want to go golfing this weekend?",""],
+  ["d053","friends","周六下午怎么样？","How about Saturday afternoon? // Does Saturday afternoon work?",""],
+  ["d054","friends","我可能会晚到十分钟。","I might be ten minutes late. // I'll probably be ten minutes late.",""],
+  ["d055","friends","我到了，你在哪儿？","I'm here. Where are you?",""],
+  ["d056","friends","太巧了！","What a coincidence!",""],
+  ["d057","friends","真的假的？","Are you serious? // Really?",""],
+  ["d058","friends","我完全同意。","I totally agree. // I completely agree.",""],
+  ["d059","friends","我不太确定。","I'm not so sure. // I'm not really sure.",""],
+  ["d060","friends","听起来不错！","Sounds good! // That sounds great!",""],
+  ["d061","friends","下次吧。","Maybe next time.",""],
+  ["d062","friends","我今天有点累，先回去了。","I'm a little tired today, so I'm going to head home. // I'm kind of tired, so I'm going to head out.",""],
+  ["d063","friends","到家给我发个消息。","Text me when you get home.",""],
+  ["d064","friends","你最近在忙什么？","What have you been up to lately? // What have you been up to?",""],
+  ["d065","friends","恭喜你！","Congratulations! // Congrats!",""],
+  ["d066","friends","别担心，没事的。","Don't worry, it's fine. // Don't worry about it.",""],
+  ["d067","friends","我请客。","It's on me. // My treat.",""],
+  ["d068","friends","下次我请。","Next one's on me. // I'll get the next one.",""],
+  ["d069","office","我能问个问题吗？","Can I ask a quick question? // Can I ask you something?",""],
+  ["d070","office","你说的是什么意思？","What do you mean by that? // Could you explain what you mean?",""],
+  ["d071","office","我确认一下，你的意思是我们先测试，对吗？","Just to make sure I understand, you mean we should test it first, right?",""],
+  ["d072","office","我补充一点。","Can I add something? // I'd like to add one thing.",""],
+  ["d073","office","我这边进展顺利。","Things are going well on my end. // It's going well on my side.",""],
+  ["d074","office","我今天下班前发给你。","I'll send it to you by the end of the day. // I'll send it to you before the end of the day.",""],
+  ["d075","office","能帮我看一下这个吗？","Could you take a look at this for me? // Can you take a look at this?",""],
+  ["d076","office","不好意思，我没跟上，能再讲一下吗？","Sorry, I didn't follow. Could you go over that again? // Sorry, I lost you there. Could you explain that again?",""],
+  ["d077","office","我还在调试这个问题。","I'm still debugging this issue. // I'm still working on this problem.",""],
+  ["d078","office","我周五之前能做完。","I can get it done by Friday. // I can finish it by Friday.",""],
+  ["d079","office","我需要多一点时间。","I need a little more time. // I'll need a bit more time.",""],
+  ["d080","office","要不要一起吃午饭？","Do you want to grab lunch? // Want to grab lunch together?",""],
+  ["d081","office","你周末做了什么？","What did you do over the weekend? // Did you do anything fun this weekend?",""],
+  ["d082","office","谢谢你的帮助。","Thanks for your help. // Thank you for helping me.",""],
+  ["d083","office","我们约个时间聊一下吧。","Let's find a time to talk. // Let's set up a time to chat.",""],
+  ["d084","office","这个交给我。","I'll take care of it. // I'm on it.",""],
+  ["d085","office","我测完了，结果在这儿。","I ran the test, and here are the results. // I tested it, and here are the results.",""],
+  ["d086","office","我觉得我们可以先做个样件试试。","I think we could build a quick prototype first. // Maybe we could try a quick prototype first.",""],
+  ["d087","errand","你好，我打电话是想问那套公寓还在租吗？","Hi, I'm calling about the apartment. Is it still available? // Hi, I'm calling to see if the apartment is still available.",""],
+  ["d088","errand","月租多少？包括水电吗？","How much is the rent? Are utilities included? // What's the monthly rent? Does it include utilities?","水电煤：utilities"],
+  ["d089","errand","我什么时候可以来看房？","When can I come see the place? // When could I schedule a viewing?",""],
+  ["d090","errand","押金是多少？","How much is the security deposit? // What's the deposit?",""],
+  ["d091","errand","租期最短多久？","What's the minimum lease? // How long is the lease?",""],
+  ["d092","errand","有停车位吗？","Is there parking? // Is parking included?",""],
+  ["d093","errand","我想开一个支票账户。","I'd like to open a checking account.",""],
+  ["d094","errand","需要带什么材料？","What documents do I need to bring? // What do I need to bring?",""],
+  ["d095","errand","有月费吗？","Is there a monthly fee? // Are there any monthly fees?",""],
+  ["d096","errand","我的卡用不了了。","My card isn't working.",""],
+  ["d097","errand","我想试驾一下这辆车。","I'd like to test drive this car. // Can I take this car for a test drive?",""],
+  ["d098","errand","这辆车最低多少钱？","What's your best price on this car? // What's the lowest you can go?",""],
+  ["d099","errand","还有其他费用吗？","Are there any other fees? // Are there any extra fees?",""],
+  ["d100","errand","我想先比较几家的报价。","I want to compare a few quotes first. // I'd like to compare a few offers first.",""],
+  ["d101","errand","我想问一下车险报价。","I'd like to get a quote for car insurance. // Can I get an auto insurance quote?",""],
+  ["d102","errand","免赔额是多少？","What's the deductible?",""],
+  ["d103","errand","每个月保费多少？","How much is the monthly premium? // What would my monthly premium be?",""],
+  ["d104","errand","我想预约看医生。","I'd like to make an appointment with a doctor. // I need to schedule a doctor's appointment.",""],
+  ["d105","errand","最早什么时候可以？","What's the earliest available time? // When's the earliest you have?",""],
+  ["d106","errand","我需要改一下预约时间。","I need to reschedule my appointment.",""],
+  ["d107","errand","能把详细信息发邮件给我吗？","Could you email me the details? // Can you send me the details by email?",""],
+  ["d108","errand","我把名字拼给你。","Let me spell my name for you.",""],
+  ["d109","msg","你好，我看到你们团队在招工程师。","Hi, I saw that your team is hiring an engineer. // Hi, I saw your team is hiring for an engineering role.",""],
+  ["d110","msg","我对这个职位很感兴趣，想多了解一下。","I'm very interested in this role and would love to learn more.",""],
+  ["d111","msg","方便的话，可以聊十五分钟吗？","Would you be open to a fifteen-minute call? // Would you have time for a quick fifteen-minute call?",""],
+  ["d112","msg","附上我的简历，供你参考。","I've attached my resume for your reference. // My resume is attached for your reference.",""],
+  ["d113","msg","谢谢你今天抽时间和我聊。","Thanks for taking the time to speak with me today. // Thank you for taking the time to talk with me today.","面试后感谢信的第一句"],
+  ["d114","msg","我想跟进一下我的申请。","I wanted to follow up on my application. // I'm following up on my application.",""],
+  ["d115","msg","请问我的申请有什么进展吗？","Is there any update on my application? // Could you let me know where things are in the process?",""],
+  ["d116","msg","再次感谢！","Thanks again!",""]
+];
+const DL_CARDS = [
+  ["dl01","cs","What can I get for you?","想要点什么"],
+  ["dl02","cs","For here or to go?","在这儿吃还是带走"],
+  ["dl03","cs","Can I get a name for the order?","订单写什么名字"],
+  ["dl04","cs","Are you ready to order?","可以点单了吗"],
+  ["dl05","cs","How's everything tasting?","吃得怎么样"],
+  ["dl06","cs","Can I get you anything else?","还需要别的吗"],
+  ["dl07","cs","Would you like a receipt?","要小票吗"],
+  ["dl08","cs","Your total is twenty dollars.","一共 20 美元"],
+  ["dl09","cs","We'll text you when your table is ready.","有位子了会发短信通知你"],
+  ["dl10","cs","How's it going?","最近怎么样（打招呼）"],
+  ["dl11","cs","What are you up to this weekend?","你这周末干嘛"],
+  ["dl12","cs","I'm gonna grab a coffee. Want anything?","我去买杯咖啡，你要什么吗"],
+  ["dl13","cs","Let's circle back on that later.","这个之后再说"],
+  ["dl14","cs","Can you loop me in on that?","这件事也让我知道一下（抄送我）"],
+  ["dl15","cs","I'll ping you later.","我待会儿给你发消息"],
+  ["dl16","cs","The unit comes with one parking spot.","这套房带一个车位"],
+  ["dl17","cs","First month's rent and the deposit are due at signing.","签约时要付第一个月房租和押金"],
+  ["dl18","cs","Can I get your date of birth?","能告诉我你的出生日期吗"],
+  ["dl19","cs","Do you want to take it for a spin?","要不要开出去试试（试驾）"],
+  ["dl20","cs","Do you want to add roadside assistance?","要不要加道路救援"]
+];
+// 情景对话：对方一句，你回一句
+const DIALOGS = [
+  {id:"g01",title:"咖啡店点单",zh:"大小、牛奶、外带、名字、付款",who:"Barista",turns:[
+    {say:"Hi! What can I get for you?",zh:"你好，想要点什么？",reply:["Can I get a medium iced latte, please?","I'd like a medium iced latte."]},
+    {say:"Sure. What kind of milk? We have whole, oat, and almond.",zh:"要什么奶？有全脂、燕麦和杏仁奶。",reply:["Oat milk, please.","Whole milk is fine."]},
+    {say:"Is that for here or to go?",zh:"在这儿喝还是带走？",reply:["To go, please.","For here, thanks."]},
+    {say:"Can I get a name for the order?",zh:"订单写什么名字？",reply:["Sure, it's Sam.","It's Sam, S-A-M."],tip:"换成你自己的名字；名字不好拼就拼一下"},
+    {say:"Your total is six seventy-five.",zh:"一共 6.75 美元。",reply:["Can I pay by card?","Here you go."]},
+    {say:"Sure, go ahead and tap.",zh:"可以，直接拍卡吧。",reply:["Thanks!","Thank you. Have a good one!"]}]},
+  {id:"g02",title:"餐厅吃饭",zh:"几位、饮料、点餐、几分熟、买单",who:"Server",turns:[
+    {say:"Hi there! How many?",zh:"你好，几位？",reply:["Just two, please.","Table for two, please."]},
+    {say:"Great, right this way. Can I get you started with something to drink?",zh:"这边请。先来点喝的吗？",reply:["Just water for now, thanks.","Could I get an iced tea?"]},
+    {say:"Are you ready to order, or do you need a few more minutes?",zh:"可以点了吗，还是再看看？",reply:["Yes, I'll have the burger with fries.","I need a few more minutes."]},
+    {say:"How would you like your burger cooked?",zh:"汉堡要几分熟？",reply:["Medium, please.","Medium well, please."]},
+    {say:"How's everything tasting?",zh:"吃得怎么样？",reply:["It's great, thanks.","Really good, thank you."]},
+    {say:"Can I get you anything else?",zh:"还需要别的吗？",reply:["Just the check, please.","No, I think we're good. Can we get the check?"]},
+    {say:"Will this be together or separate?",zh:"一起付还是分开付？",reply:["Separate, please.","Together is fine."]}]},
+  {id:"g03",title:"新同事闲聊",zh:"自我介绍、适应得怎样、爱好、约打球",who:"Coworker",turns:[
+    {say:"Hey, you must be the new engineer. I'm Jake.",zh:"嘿，你就是新来的工程师吧，我叫 Jake。",reply:["Hi Jake, nice to meet you. I just started this week."]},
+    {say:"Welcome! How are you liking it so far?",zh:"欢迎！目前感觉怎么样？",reply:["So far so good. Everyone's been really nice.","I like it so far. There's a lot to learn."]},
+    {say:"Where did you move from?",zh:"你从哪儿搬过来的？",reply:["I moved here from the East Coast.","I moved from out of state."]},
+    {say:"Nice. Do you do anything for fun outside of work?",zh:"工作之外有什么爱好吗？",reply:["I play golf. How about you?","I'm really into golf and PC games."]},
+    {say:"No way, I golf too! We should hit the range sometime.",zh:"真的？我也打！哪天一起去练习场吧。",reply:["That sounds great. Just let me know when.","I'd love that. Are you free this weekend?"]},
+    {say:"Definitely. Anyway, let me know if you need anything.",zh:"一定。有什么需要随时找我。",reply:["Thanks, I really appreciate it.","Thanks, that's really nice of you."]}]},
+  {id:"g04",title:"开会提问",zh:"提问、确认时间、找对的人、答应跟进",who:"Manager",turns:[
+    {say:"Okay, that's the plan for the test rig. Any questions so far?",zh:"测试台的计划就这样。目前有问题吗？",reply:["Yes, quick question. When do we need the first prototype?","Can I ask a quick question?"]},
+    {say:"We're aiming for the end of the month.",zh:"我们的目标是月底。",reply:["Got it. Who should I talk to about the sensors?","Okay, that makes sense."]},
+    {say:"That would be Maria. She owns the data acquisition setup.",zh:"找 Maria，数据采集那套是她负责的。",reply:["Great, I'll reach out to her today.","Thanks. I'll set up a time with her."]},
+    {say:"Sounds good. Can you send a quick update by Friday?",zh:"周五前能发个简短的进展吗？",reply:["Sure, I'll send it by Friday.","No problem. I'll send an update by Friday."]},
+    {say:"Anything else before we wrap up?",zh:"结束前还有别的吗？",reply:["No, that's all for now. Thanks.","Just one thing. Could you share the slides?"]}]},
+  {id:"g05",title:"打电话问租房",zh:"还在不在、房租、水电、车位、约看房",who:"Leasing agent",turns:[
+    {say:"Thanks for calling Oak Park Apartments. How can I help you?",zh:"这里是 Oak Park 公寓，有什么可以帮您？",reply:["Hi, I'm calling about the one-bedroom. Is it still available?"]},
+    {say:"Yes, it is. It's two thousand four hundred a month.",zh:"还在。每月 2400。",reply:["Are utilities included?","Okay. Does that include utilities?"]},
+    {say:"Water and trash are included, but electricity isn't.",zh:"包水和垃圾费，不包电。",reply:["Got it. Is there parking?","Okay. Is parking included?"]},
+    {say:"Yes, one parking spot comes with the unit.",zh:"带一个车位。",reply:["Great. When can I come see it?","Perfect. Could I schedule a viewing?"]},
+    {say:"We have openings Thursday afternoon or Saturday morning.",zh:"周四下午或者周六上午可以。",reply:["Saturday morning works for me.","Thursday afternoon would be great."]},
+    {say:"Perfect. Can I get your name and phone number?",zh:"能留一下名字和电话吗？",reply:["Sure. My name is Sam. Let me spell it for you.","Sure. It's Sam, S-A-M."],tip:"换成你自己的名字和电话"}]},
+  {id:"g06",title:"银行开户",zh:"开户、证件、地址证明、月费、借记卡",who:"Banker",turns:[
+    {say:"Hi, what brings you in today?",zh:"您好，今天来办什么业务？",reply:["I'd like to open a checking account."]},
+    {say:"Sure. Do you have a photo ID with you?",zh:"带了有照片的证件吗？",reply:["Yes, here's my passport."]},
+    {say:"Great. And do you have proof of address, like a lease or a utility bill?",zh:"有地址证明吗，比如租约或水电账单？",reply:["Yes, here's my lease.","I have my lease on my phone. Is that okay?"]},
+    {say:"This account has a twelve-dollar monthly fee, but we waive it if you set up direct deposit.",zh:"这个账户每月 12 美元，设置工资直接存入就免。",reply:["Okay. Can I set up direct deposit later?","Got it. How do I set up direct deposit?"]},
+    {say:"Of course. Would you like a debit card with that?",zh:"需要办一张借记卡吗？",reply:["Yes, please.","Yes, that would be great."]}]},
+  {id:"g07",title:"车行看车",zh:"说需求、试驾、问价、问其他费用",who:"Salesperson",turns:[
+    {say:"Hi there! Are you looking for anything in particular?",zh:"你好，有想看的车吗？",reply:["Yes, I'm looking for a used sedan, something reliable.","I'm just looking for now, thanks."]},
+    {say:"This one has about thirty thousand miles. Want to take it for a test drive?",zh:"这辆大约三万英里。要不要试驾？",reply:["Sure, I'd love to.","Yes, I'd like to test drive it."]},
+    {say:"So, what do you think?",zh:"觉得怎么样？",reply:["I like it. What's your best price?","It drives well. How much is it?"]},
+    {say:"We could do eighteen nine for you.",zh:"给你 18,900。",reply:["Are there any other fees on top of that?","Does that include all the fees?"]},
+    {say:"Just tax, title, and registration.",zh:"只有税、产权和上牌的费用。",reply:["Okay. Can I get that in writing?","Got it. I'd like to compare a few quotes first."]}]},
+  {id:"g08",title:"车险报价电话",zh:"要报价、车型、驾龄、免赔额、发邮件",who:"Insurance agent",turns:[
+    {say:"Thanks for calling. Are you looking for a new auto insurance quote?",zh:"您好，是想要新的车险报价吗？",reply:["Yes, I'd like to get a quote for car insurance."]},
+    {say:"Sure. What's the year, make, and model of the car?",zh:"车是哪年的、什么牌子、什么型号？",reply:["It's a 2021 Toyota Camry.","It's a 2021 Honda Civic."],tip:"换成你的车"},
+    {say:"And how long have you been driving?",zh:"您开车多久了？",reply:["About five years.","I've been driving for about five years."],tip:"换成你的真实驾龄"},
+    {say:"Okay. With this coverage, your premium would be about a hundred forty a month.",zh:"这个保障的话，保费大约每月 140。",reply:["What's the deductible?","Okay. What's the deductible on that?"]},
+    {say:"It's five hundred dollars.",zh:"500 美元。",reply:["Could you email me the quote? I'd like to compare a few options.","Got it. Can you send me the details by email?"]}]},
+  {id:"g09",title:"练习场搭话",zh:"夸一句、聊球龄、给建议",who:"Golfer",turns:[
+    {say:"Nice shot! What club was that?",zh:"好球！刚才用的几号杆？",reply:["Thanks! That was my seven iron.","Thanks, that was a seven iron."]},
+    {say:"How long have you been playing?",zh:"你打多久了？",reply:["Since I was a kid.","A long time. I started when I was a kid."]},
+    {say:"You've got a really smooth swing.",zh:"你挥杆很顺。",reply:["Thanks! I used to play competitively.","Thank you! I've had a lot of practice."]},
+    {say:"I keep slicing my driver. Any tips?",zh:"我开球老是右曲，有什么建议吗？",reply:["Try a slightly stronger grip, and swing more from the inside.","Maybe check your grip first. Here, let me show you."]},
+    {say:"That actually helped. Thanks, man!",zh:"真的有用，谢了！",reply:["No problem. Have a good session!","Anytime. Good luck out there!"]}]},
+  {id:"g10",title:"约朋友吃饭",zh:"有没有空、几点、带什么、停车",who:"Friend",turns:[
+    {say:"Hey! Are you free this Saturday?",zh:"嘿，这周六有空吗？",reply:["I think so. What's up?","Yeah, I'm free. What's the plan?"]},
+    {say:"A few of us are trying a new ramen place downtown.",zh:"我们几个想去市中心一家新开的拉面店。",reply:["Sounds great! What time?","Oh nice, I'm in. What time?"]},
+    {say:"Around seven? We can meet there.",zh:"七点左右？直接在那儿见。",reply:["Seven works for me.","Perfect. Should I bring anything?"]},
+    {say:"Nope, just bring yourself. Oh, and parking is kind of tough there.",zh:"不用带什么。对了，那边不太好停车。",reply:["Good to know. I'll take the train.","Thanks for the heads-up. I'll get there early."]},
+    {say:"Cool. See you Saturday!",zh:"好，周六见！",reply:["See you then!","Sounds good. See you Saturday!"]}]}
+];
+
+const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS};
 
 
 /* 脱口 · 核心逻辑（不碰 DOM，可在 Node 里测试） */
@@ -850,14 +1148,17 @@ const TAGS = {
   to:{label:"多余的 to",w:.8}, plural:{label:"复数 -s",w:.8}, agree:{label:"主谓一致",w:.7}, question:{label:"提问",w:.7},
   rescue:{label:"救急句",w:.8}, interview:{label:"面试语块",w:.8}, modal:{label:"情态动词",w:.6}, eding:{label:"-ed / -ing",w:.6},
   compare:{label:"比较级",w:.4}, article:{label:"冠词",w:.4}, prep:{label:"介词",w:.5}, colloc:{label:"地道说法",w:.6},
-  chat:{label:"聊天",w:.5}, listen:{label:"听力",w:.8}, pron:{label:"发音",w:.7}, other:{label:"其他",w:.5}
+  chat:{label:"聊天",w:.5}, listen:{label:"听力",w:.8}, pron:{label:"发音",w:.7},
+  smalltalk:{label:"闲聊",w:.6}, starter:{label:"搭话",w:.6}, food:{label:"点餐",w:.6}, friends:{label:"朋友聊天",w:.6},
+  office:{label:"职场",w:.7}, errand:{label:"办事",w:.6}, msg:{label:"写消息",w:.5}, tech:{label:"专业词",w:.7}, other:{label:"其他",w:.5}
 };
 const TAG_ALIAS = {};
 for (const [k,v] of Object.entries(TAGS)) { TAG_ALIAS[k]=k; TAG_ALIAS[v.label]=k; TAG_ALIAS[v.label.replace(/\s+/g,"")]=k; }
 Object.assign(TAG_ALIAS, {"be":"be","be动词":"be","时态":"tense","成对":"pair","成对词":"pair","to":"to","多余to":"to","复数":"plural",
   "语序":"order","介词":"prep","搭配":"colloc","地道":"colloc","地道说法":"colloc","救急":"rescue","救急句":"rescue","面试":"interview",
   "聊天":"chat","提问":"question","问句":"question","主谓一致":"agree","情态":"modal","情态动词":"modal","冠词":"article",
-  "比较级":"compare","-ed/-ing":"eding","ed/ing":"eding","听力":"listen","发音":"pron","重音":"pron","其他":"other"});
+  "比较级":"compare","-ed/-ing":"eding","ed/ing":"eding","听力":"listen","发音":"pron","重音":"pron","闲聊":"smalltalk","small talk":"smalltalk","搭话":"starter","点餐":"food","吃饭":"food","朋友聊天":"friends",
+  "朋友":"friends","职场":"office","办事":"errand","写消息":"msg","专业词":"tech","专业":"tech","其他":"other"});
 function tagKey(s){
   s = String(s||"").trim(); if (!s) return "other";
   return TAG_ALIAS[s] || TAG_ALIAS[s.replace(/\s+/g,"")] || TAG_ALIAS[s.toLowerCase()] || "other";
@@ -883,7 +1184,7 @@ function shuffle(a, rnd){ rnd = rnd || Math.random; a = a.slice(); for (let i=a.
 function hash(s){ let h=2166136261>>>0; for (let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h.toString(36); }
 
 /* ---------- 题库 ---------- */
-function buildCatalog(C, custom){
+function buildCatalog(C, custom, myAlts){
   const cards = [];
   for (const [id,tag,zh,en,note] of C.R_CARDS){ const a=splitAlts(en); cards.push({id,t:"r",tag,zh,en:a[0],alt:a.slice(1),note}); }
   for (const [id,verb,subj,obj,cue,k,zh,en] of C.T_CARDS){ const a=splitAlts(en); cards.push({id,t:"t",tag:"tense",verb,subj,obj,cue,k,zh,en:a[0],alt:a.slice(1),note:TENSE_NOTE[k]||""}); }
@@ -893,7 +1194,20 @@ function buildCatalog(C, custom){
     cards.push({id:e.id,t:"e",tag:e.tag,base:e.base,steps,en:steps[steps.length-1].en,alt:steps[steps.length-1].alt,note:"先说“I + 动词”，细节一块一块往后加。"});
   }
   for (const [id,grp,en,zh] of C.L_CARDS) cards.push({id,t:"l",tag:"listen",grp,en,zh});
-  for (const c of (custom||[])) cards.push(Object.assign({}, c, {custom:true}));
+  for (const c of cards) c.deck = "core";
+  for (const [id,tag,zh,en,note] of (C.D_CARDS||[])){ const a=splitAlts(en); cards.push({id,t:"r",tag,zh,en:a[0],alt:a.slice(1),note,deck:"daily"}); }
+  for (const [id,grp,en,zh] of (C.DL_CARDS||[])) cards.push({id,t:"l",tag:"listen",grp,en,zh,deck:"daily"});
+  for (const c of (custom||[])) cards.push(Object.assign({}, c, {custom:true, deck:c.deck || "我的卡片"}));
+  /* 其他正确说法：内置补充 + 你自己点“我的说法也对”加的 */
+  const extra = C.ALT_EXTRA || {}; myAlts = myAlts || {};
+  for (const c of cards){
+    const add = splitAlts(extra[c.id] || "").concat(myAlts[c.id] || []);
+    if (!add.length) continue;
+    const seen = new Set([c.en].concat(c.alt || []).map(x => tokens(x).join(" ")));
+    const fresh = add.filter(x => { const k = tokens(x).join(" "); if (!k || seen.has(k)) return false; seen.add(k); return true; });
+    c.alt = (c.alt || []).concat(fresh);
+    if (c.t === "e" && c.steps){ const last = c.steps[c.steps.length-1]; last.alt = (last.alt || []).concat(fresh); }
+  }
   const byId = {}; for (const c of cards) byId[c.id] = c;
   return {cards, byId};
 }
@@ -918,13 +1232,16 @@ const CONTR = {"i'm":"i am","i've":"i have","i'll":"i will","i'd":"i would","you
   "weren't":"were not","don't":"do not","doesn't":"does not","didn't":"did not","haven't":"have not","hasn't":"has not",
   "hadn't":"had not","won't":"will not","wouldn't":"would not","can't":"can not","cannot":"can not","couldn't":"could not",
   "shouldn't":"should not","who's":"who is","how's":"how is","where's":"where is","gonna":"going to","wanna":"want to",
-  "kinda":"kind of","gotta":"got to","think's":"think is","everything's":"everything is"};
+  "kinda":"kind of","gotta":"got to","think's":"think is","everything's":"everything is",
+  "must've":"must have","should've":"should have","could've":"could have","would've":"would have","might've":"might have","what've":"what have"};
 const ORD = {"1st":"first","2nd":"second","3rd":"third","4th":"fourth","5th":"fifth","6th":"sixth","7th":"seventh","8th":"eighth","9th":"ninth","10th":"tenth"};
 const NUMW = {0:"zero",1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",9:"nine",10:"ten",11:"eleven",12:"twelve",
   13:"thirteen",14:"fourteen",15:"fifteen",16:"sixteen",17:"seventeen",18:"eighteen",19:"nineteen",20:"twenty",30:"thirty",
   40:"forty",50:"fifty",60:"sixty",70:"seventy",80:"eighty",90:"ninety"};
 const FILLER = new Set(["um","uh","erm","er","hmm","mm","ah","uhm"]);
 const BE = new Set(["am","is","are","was","were","be","been"]);
+const AUX = new Set(["do","does","did","is","are","was","were","have","has","had","could","would","should","can","will"]);
+const WEAKW = new Set(["a","an","the","to","of","for","at","in","on","and","it"]);
 
 function tokens(s, isUser){
   s = String(s||"").toLowerCase().replace(/[’‘`´]/g,"'").replace(/%/g," percent ").replace(/&/g," and ").replace(/(\d),(\d{3})/g,"$1$2");
@@ -997,15 +1314,48 @@ function classifySub(a, b){ // a = 参考答案里的词，b = 你说的词
   if (Math.abs(a.length-b.length)<=2 && a[0]===b[0] && lev(a,b)<=2) return "pron";
   return "word";
 }
+/* 时间词放句首、句尾都对；开头的 So / Well / Yeah 这类口头词不算错 */
+const LEAD = new Set(["so","well","yeah","yes","ok","oh","alright","and","like"]);
+const TIME_UNITS = new Set(["week","month","year","semester","summer","weekend","night","spring","fall","winter","morning","afternoon","evening","time","day"]);
+const NUM_WORDS = new Set(Object.values(NUMW).concat(["a","few","several"]));
+function timeLen(t, i){
+  const a = t[i], b = t[i+1], c = t[i+2];
+  if (!a) return 0;
+  if (["yesterday","today","tonight","lately","recently","now","usually"].includes(a)) return 1;
+  if (a === "right" && b === "now") return 2;
+  if (a === "these" && b === "days") return 2;
+  if (["last","this","every","next"].includes(a) && TIME_UNITS.has(b)) return 2;
+  if (a === "at" && b === "night") return 2;
+  if (a === "in" && b && /^\d{4}$/.test(b)) return 2;
+  if (a === "on" && b && /^(saturdays|sundays|mondays|fridays|weekends|weekdays)$/.test(b)) return 2;
+  if (a === "during" && b === "my" && c) return 3;
+  if (a === "in" && (b === "fourth" || b === "elementary") && c) return 3;
+  if (a === "when" && b === "i" && c === "was"){ if (t[i+3] === "a" && t[i+4] === "kid") return 5; if (t[i+3] === "in" && t[i+4] === "elementary" && t[i+5] === "school") return 6; }
+  if (NUM_WORDS.has(a) && b && c === "ago") return 3;
+  if (a === "a" && b === "couple" && c === "of" && t[i+4] === "ago") return 5;
+  return 0;
+}
+function sayVariants(ut){
+  const out = [ut];
+  let s = 0; while (s < 2 && s < ut.length - 1 && LEAD.has(ut[s])) s++;
+  const base = s ? ut.slice(s) : ut; if (s) out.push(base);
+  for (const u of (s ? [ut, base] : [ut])){
+    const k = timeLen(u, 0); if (k && k < u.length) out.push(u.slice(k).concat(u.slice(0, k)));
+    for (let j = Math.max(1, u.length - 6); j < u.length; j++){ const kk = timeLen(u, j); if (kk && j + kk === u.length){ out.push(u.slice(j).concat(u.slice(0, j))); break; } }
+  }
+  return out;
+}
 function compareSaid(target, alts, said){
-  const ut = tokens(said, true);
+  const uts = sayVariants(tokens(said, true));
   let best = null;
   for (const c of [target].concat(alts||[])){
     const tt = tokens(c, false);
-    const {ops, lcs} = lcsOps(tt, ut);
-    const denom = Math.max(tt.length, ut.length);
-    const score = denom ? lcs/denom : 1;
-    if (!best || score > best.score) best = {text:c, ops, score};
+    for (const ut of uts){
+      const {ops, lcs} = lcsOps(tt, ut);
+      const denom = Math.max(tt.length, ut.length);
+      const score = denom ? lcs/denom : 1;
+      if (!best || score > best.score + 1e-9) best = {text:c, ops, score};
+    }
   }
   best.exact = best.score === 1;
   best.level = best.exact ? "exact" : best.score >= 0.8 ? "close" : "off";
@@ -1013,9 +1363,11 @@ function compareSaid(target, alts, said){
   return best;
 }
 function feedbackNotes(ops){
-  const notes = [];
+  const notes = []; let prevA = "";
   for (const o of ops){
+    if (o.op === "eq"){ prevA = o.a; continue; }
     if (o.op === "sub"){
+      prevA = o.a;
       const k = classifySub(o.a, o.b);
       if (k === "past") notes.push({k:"tense", msg:`用过去式：${o.b} → ${o.a}`});
       else if (k === "s") notes.push({k:"plural", msg:`注意词尾 -s：${o.b} → ${o.a}`});
@@ -1024,7 +1376,10 @@ function feedbackNotes(ops){
       else if (k === "pron") notes.push({k:"pron", msg:`听起来像 ${o.b}，目标是 ${o.a}，可能是发音`});
       else notes.push({k:"word", msg:`这里是 ${o.a}（你说的是 ${o.b}）`});
     } else if (o.op === "del"){
-      notes.push(BE.has(o.a) ? {k:"be", msg:`漏了 be 动词：${o.a}`} : {k:"miss", msg:`漏了：${o.a}`});
+      notes.push(BE.has(o.a) ? {k:"be", msg:`漏了 be 动词：${o.a}`} :
+        (o.a === "not" && AUX.has(prevA)) ? {k:"miss", msg:"漏了 not：如果你说的是 didn't 这类缩写，结尾的 n't 可能读得太轻"} :
+        WEAKW.has(o.a) ? {k:"miss", msg:`漏了 ${o.a}：这类小词容易读得太轻，或者漏说`} : {k:"miss", msg:`漏了：${o.a}`});
+      prevA = o.a;
     } else if (o.op === "ins"){
       notes.push(o.b === "to" ? {k:"to", msg:"多了一个 to"} : {k:"extra", msg:`多了：${o.b}`});
     }
@@ -1042,7 +1397,8 @@ function hintNotes(ops){
         k === "perf" ? `这里要用完成时 have，不是 ${o.b}` : k === "pron" ? `${o.b} 可能没说清楚，注意发音` : `${o.b} 这个词不对`);
       prev = o.b;
     } else if (o.op === "del"){
-      out.push(BE.has(o.a) ? (prev ? `${prev} 后面漏了 be 动词` : "开头漏了 be 动词") : (prev ? `${prev} 后面漏了一个词` : "开头漏了一个词"));
+      out.push(BE.has(o.a) ? (prev ? `${prev} 后面漏了 be 动词` : "开头漏了 be 动词") :
+        (o.a === "not" && AUX.has(prev)) ? `${prev} 后面漏了 not（缩写的 n't 可能读得太轻）` : (prev ? `${prev} 后面漏了一个词` : "开头漏了一个词"));
     } else if (o.op === "ins"){
       out.push(o.b === "to" ? "多了一个 to" : `${o.b} 是多出来的`);
     }
@@ -1050,30 +1406,45 @@ function hintNotes(ops){
   return [...new Set(out)].slice(0, 3);
 }
 
+/* 顽固句分块练：按标点或连接词切成 2–3 块，一块一块加长 */
+const BOUND = new Set(["and","but","so","because","that","to","with","at","in","on","for","when","where","during","about","from","by","since","as","after","before"]);
+function chunkSentence(en){
+  en = String(en || "").trim();
+  const parts = en.split(/(?<=[,.;?!])\s+/).filter(Boolean);
+  for (let i = 0; i < parts.length - 1; i++){ if (parts[i].split(/\s+/).length < 2){ parts.splice(i, 2, parts[i] + " " + parts[i+1]); i--; } }
+  if (parts.length >= 2){ while (parts.length > 3){ const i = parts.length - 2; parts.splice(i, 2, parts[i] + " " + parts[i+1]); } return parts; }
+  const w = en.split(/\s+/);
+  if (w.length <= 6) return [en];
+  const mid = Math.floor(w.length / 2); let best = mid, bd = 99;
+  for (let i = 2; i < w.length - 2; i++){ if (BOUND.has(w[i].toLowerCase().replace(/[^a-z']/g, "")) && Math.abs(i - mid) < bd){ bd = Math.abs(i - mid); best = i; } }
+  return [w.slice(0, best).join(" "), w.slice(best).join(" ")];
+}
+
 /* ---------- 导入码 ---------- */
 function parseImport(text){
-  const res = {cards:[], answers:[], keys:[], bad:[]};
-  const lines = String(text||"").split(/\r?\n/);
-  lines.forEach((line, i) => {
+  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], meta:{date:"", who:[]}, bad:[]};
+  const ROLE = {"开场":"first","核心":"core","初筛":"screen","提问":"ask","first":"first","core":"core","screen":"screen","ask":"ask"};
+  let deck = "我的卡片";
+  String(text||"").split(/\r?\n/).forEach((line, i) => {
     const s = line.trim();
     if (!s || s.startsWith("#")) return;
     const p = s.split(/\s*[|｜]\s*/);
     const kind = p[0];
-    if ((kind==="卡"||kind==="R") && p[1] && p[2]){
-      const a = splitAlts(p[2]);
-      res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||""});
-    } else if ((kind==="改"||kind==="F") && p[1] && p[2]){
-      const a = splitAlts(p[2]);
-      res.cards.push({t:"f", wrong:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||""});
-    } else if ((kind==="听"||kind==="L") && p[1] && p[2]){
-      res.cards.push({t:"l", grp:"cs", en:p[1], zh:p[2], tag:"listen"});
-    } else if ((kind==="答"||kind==="A") && p[1] && p[2]){
-      res.answers.push({qid:p[1].toUpperCase(), text:p.slice(2).join(" | ")});
-    } else if ((kind==="要点"||kind==="K") && p[1] && p[2]){
-      res.keys.push({qid:p[1].toUpperCase(), keys:p.slice(2).join("；").split(/[；;、\n]/).map(x=>x.trim()).filter(Boolean)});
-    } else {
-      res.bad.push(i+1);
+    if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); return; }
+    if (kind==="面试日期" && /^\d{4}-\d{2}-\d{2}$/.test(p[1]||"")){ res.meta.date = p[1]; return; }
+    if (kind==="面试官" && p[1]){ res.meta.who.push({deck, name:p[1], company:p[2]||""}); return; }
+    if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
+    else if ((kind==="改"||kind==="F") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"f", wrong:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
+    else if ((kind==="听"||kind==="L") && p[1] && p[2]){ res.cards.push({t:"l", grp:"cs", en:p[1], zh:p[2], tag:"listen", deck}); }
+    else if ((kind==="问"||kind==="Q") && p[1] && p[2]){
+      const id = p[1].toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+      if (!id || /^Q\d+$/.test(id)){ res.bad.push(i+1); return; }
+      res.questions.push({id, deck, v:splitAlts(p[2]), zh:p[3]||"", sec:Math.max(10, Math.min(180, parseInt(p[4],10) || 60)), role:ROLE[(p[5]||"").trim()] || "core", tip:p.slice(6).join(" | ")});
     }
+    else if ((kind==="追问"||kind==="FU") && p[1] && p[2]){ res.follow.push({qid:p[1].toUpperCase(), text:p.slice(2).join(" | ")}); }
+    else if ((kind==="答"||kind==="A") && p[1] && p[2]){ res.answers.push({qid:p[1].toUpperCase(), text:p.slice(2).join(" | ")}); }
+    else if ((kind==="要点"||kind==="K") && p[1] && p[2]){ res.keys.push({qid:p[1].toUpperCase(), keys:p.slice(2).join("；").split(/[；;、\n]/).map(x=>x.trim()).filter(Boolean)}); }
+    else res.bad.push(i+1);
   });
   for (const c of res.cards) c.id = "c" + hash(c.t + "|" + tokens(c.en).join(" "));
   return res;
@@ -1217,7 +1588,7 @@ function buildSession(kind, ctx){
   const {cat, prog, todayN} = ctx; const rnd = ctx.rnd || Math.random;
   const filter = ctx.filter || (()=>true);
   const core = cat.cards.filter(c=>c.t!=="l" && filter(c));
-  const lis = cat.cards.filter(c=>c.t==="l");
+  const lis = cat.cards.filter(c=>c.t==="l" && filter(c));
   const isDue = c => !!prog[c.id] && prog[c.id].due <= todayN;
   const isNew = c => !prog[c.id];
   const acc = ctx.acc || {};
@@ -1282,12 +1653,12 @@ function pickQuestions(ctx, n){
   const qs = ctx.questions || []; const ans = ctx.answers || {};
   const pri = {Q1:3,Q2:2.5,Q6:2,Q3:1.5,Q8:1.2};
   const rnd = ctx.rnd || Math.random;
-  return qs.map(q=>({q, s:(pri[q.id]||1)/(1+((ans[q.id]&&ans[q.id].practiced)||0)) + rnd()*0.3 + (q.grp==="core"?0.3:0)}))
+  return qs.map(q=>({q, s:((q.role==="first"?3:q.role==="ask"?1.2:pri[q.id])||1)/(1+((ans[q.id]&&ans[q.id].practiced)||0)) + rnd()*0.3 + ((q.grp==="core"||q.role==="core"||q.role==="first")?0.3:0)}))
     .sort((a,b)=>b.s-a.s).slice(0,n).map(x=>x.q);
 }
 
 const CORE = {TAGS,TYPE_LABEL,TENSE_NOTE,tagKey,dstr,dnum,nstr,splitAlts,shuffle,hash,buildCatalog,INTERVALS,MASTERED_BOX,srsRate,
-  tokens,lcsOps,compareSaid,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
+  tokens,lcsOps,compareSaid,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
   buildSession,diversify,interleave,pickQuestions,IRR,SESSION_CFG};
 
 
@@ -1315,8 +1686,8 @@ const MIC = {
 const KEY = "tuokou.v1", LKEY = "tuokou.local";
 const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
   settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", vibrate:true, sound:true, lights:true, autoSpeak:true,
-    theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:""},
-  cards:{}, best:{}, custom:[], answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
+    theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core"},
+  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
 const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:""});
 function mergeInto(d, o){
   for (const k of Object.keys(o||{})){
@@ -1345,9 +1716,35 @@ function pruneOld(){
   if (S.calls.length > 40) S.calls = S.calls.slice(-40);
 }
 pruneOld();
-let CAT = K.buildCatalog(CONTENT, S.custom);
-function rebuildCatalog(){ CAT = K.buildCatalog(CONTENT, S.custom); }
-const QBY = {}; for (const q of CONTENT.QUESTIONS) QBY[q.id] = q;
+let CAT = K.buildCatalog(CONTENT, S.custom, S.myAlts);
+function rebuildCatalog(){ CAT = K.buildCatalog(CONTENT, S.custom, S.myAlts); }
+const QBY = {};
+function rebuildQ(){ for (const k of Object.keys(QBY)) delete QBY[k]; for (const q of CONTENT.QUESTIONS) QBY[q.id] = q; for (const q of (S.customQ || [])) QBY[q.id] = q; }
+rebuildQ();
+function allQuestions(){ return CONTENT.QUESTIONS.concat(S.customQ || []); }
+/* ---------- 题库：通用 / 日常生活 / 你导入的 ---------- */
+function deckList(){
+  const names = Array.from(new Set((S.custom || []).map(c => c.deck || "我的卡片").concat((S.customQ || []).map(q => q.deck)).filter(Boolean)));
+  return [{id:"all", label:"全部题库"}, {id:"core", label:"通用（诊断报告）"}, {id:"daily", label:"日常生活"}].concat(names.map(n => ({id:"u:" + n, label:n})));
+}
+function curDeck(){ const d = S.settings.deck || "all"; return deckList().some(x => x.id === d) ? d : "all"; }
+function deckPred(id){
+  if (!id || id === "all") return () => true;
+  if (id === "core") return c => (c.deck || "core") === "core";
+  if (id === "daily") return c => c.deck === "daily";
+  const n = id.slice(2); return c => !!c.custom && (c.deck || "我的卡片") === n;
+}
+function deckQuestions(id){
+  const cq = S.customQ || [];
+  if (!id || id === "all") return CONTENT.QUESTIONS.concat(cq);
+  if (id === "core") return CONTENT.QUESTIONS;
+  if (id === "daily") return [];
+  const n = id.slice(2); return cq.filter(q => q.deck === n);
+}
+function deckSelectHTML(){
+  const d = curDeck();
+  return `<label class="deck-pick"><span class="small muted">练哪个题库</span><select data-chg="deck" aria-label="选择题库">${deckList().map(x => `<option value="${esc(x.id)}" ${x.id === d ? "selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>`;
+}
 function ans(qid){ return S.answers[qid] || (S.answers[qid] = {text:"", keys:[], practiced:0}); }
 function applyTheme(){ const t = S.settings.theme; if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); }
 
@@ -1605,7 +2002,7 @@ const Cloud = {
       snaps.forEach(s => { if (s && s.exists){ const d = s.data(); if (d) Object.assign(remote, JSON.parse(JSON.stringify(d))); } });
       this.on = true;
       if (remote.v === 1 && remote.updatedAt && remote.updatedAt > (S.updatedAt || 0)){
-        S = mergeInto(DEF(), remote); rebuildCatalog(); applyTheme(); save(true); UI.refresh(); toast("已从云端读取你的进度");
+        S = mergeInto(DEF(), remote); rebuildCatalog(); rebuildQ(); applyTheme(); save(true); UI.refresh(); toast("已从云端读取你的进度");
       } else this.push();
     } catch (e) { console.warn("cloud init", e); }
   },
@@ -1614,7 +2011,7 @@ const Cloud = {
     if (!this.db) return;
     const base = "data/users/" + this.uid + "/";
     const parts = {
-      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, answers:S.answers, newToday:S.newToday},
+      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, answers:S.answers, newToday:S.newToday},
       stats:{updatedAt:S.updatedAt, days:S.days, tags:S.tags, calls:S.calls},
       journal:{updatedAt:S.updatedAt, journal:S.journal}
     };
@@ -1766,7 +2163,8 @@ const ICON = {
   play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>',
   pause:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></svg>',
   next:SV('<path d="M6 5l9 7-9 7z"/><path d="M19 5v14"/>'),
-  chev:SV('<path d="M15 5l-7 7 7 7"/>')
+  chev:SV('<path d="M15 5l-7 7 7 7"/>'),
+  chat:SV('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/>')
 };
 
 /* 脱口 · 导航、首页、练习流程 */
@@ -1829,9 +2227,10 @@ ACT["ai-stop"] = () => AI.stop();
 /* ---------- 首页 ---------- */
 function counts(){
   const tn = dnum(today()); let due = 0;
-  for (const c of CAT.cards){ const p = S.cards[c.id]; if (p && p.due <= tn) due++; }
+  const pred = deckPred(curDeck());
+  for (const c of CAT.cards){ if (!pred(c)) continue; const p = S.cards[c.id]; if (p && p.due <= tn) due++; }
   const left = Math.max(0, S.settings.newPerDay - newUsedToday());
-  const fresh = CAT.cards.filter(c => c.t !== "l" && !S.cards[c.id]).length;
+  const fresh = CAT.cards.filter(c => c.t !== "l" && !S.cards[c.id] && pred(c)).length;
   return {due, newLeft: Math.min(left, fresh)};
 }
 function focusLine(){
@@ -1859,6 +2258,7 @@ VIEWS.home = {
       <section class="hero">
         <div class="gantry" id="homeLights">${lamps()}</div>
         <h2>开始今天的练习</h2>
+        ${deckSelectHTML()}
         <div class="meta">${line}</div>
         <div class="seg" role="group" aria-label="练习时长">${seg}</div>
         <button class="btn primary big block" data-act="start">开始</button>
@@ -1870,6 +2270,7 @@ VIEWS.home = {
         ${mod("hands","head","耳机模式","走路、坐车时听着练")}
         <button class="mod" data-act="listen-go">${ICON.ear}<b>听力快练</b><span>听懂面试官的问法</span></button>
         ${mod("free","bolt","反射训练","按类型挑着练")}
+        ${mod("dialogs","chat","情景对话","点餐、闲聊、打电话办事")}
         ${mod("journal","mic","语音日记","睡前 1 分钟")}
         ${mod("write","pen","写作自查","求职邮件、感谢信")}
         ${mod("import","imp","导入新内容","把 Claude 的导入码贴进来")}
@@ -1891,13 +2292,13 @@ ACT.start = async el => {
 };
 function sessionCtx(extra){
   return Object.assign({cat:CAT, prog:S.cards, todayN:dnum(today()), newLimit:S.settings.newPerDay, newUsed:newUsedToday(),
-    acc:K.tagAgg(S.tags, today(), 0, 14), mode:interviewMode(), questions:CONTENT.QUESTIONS, answers:S.answers}, extra || {});
+    acc:K.tagAgg(S.tags, today(), 0, 14), mode:interviewMode(), questions:deckQuestions(curDeck()), filter:deckPred(curDeck()), answers:S.answers}, extra || {});
 }
 function startSession(kind, extra, title, replace){
   const items = K.buildSession(kind, sessionCtx(extra));
   if (!items.length){ toast("这一类现在没有要练的题"); return; }
   RUN.items = items; RUN.i = 0; RUN.title = title || "今天的练习"; RUN.kind = kind;
-  RUN.res = {good:0, hard:0, again:0, pb:0, ms:[], listenOk:0, listenN:0, iv:0}; RUN.t0 = Date.now(); RUN.weak = {};
+  RUN.res = {good:0, hard:0, again:0, pb:0, ms:[], listenOk:0, listenN:0, iv:0}; RUN.t0 = Date.now(); RUN.weak = {}; RUN.retries = {};
   if (replace) UI.replace("run"); else UI.nav("run");
 }
 
@@ -1914,14 +2315,15 @@ VIEWS.free = {
   render(){
     const opts = freeOpts();
     FREE_OPTS = opts;
-    const rows = opts.map(([k,l,f]) => { const n = CAT.cards.filter(c => c.t !== "l" && f(c)).length; return n ? `<button class="li" data-act="free-go" data-v="${k}"><div class="grow"><b>${l}</b></div><span class="end">${n} 题</span></button>` : ""; }).join("");
+    const dp = deckPred(curDeck());
+    const rows = opts.map(([k,l,f]) => { const n = CAT.cards.filter(c => c.t !== "l" && dp(c) && f(c)).length; return n ? `<button class="li" data-act="free-go" data-v="${k}"><div class="grow"><b>${l}</b></div><span class="end">${n} 题</span></button>` : ""; }).join("");
     return `<div class="wrap"><div class="subhead"><button class="back" data-act="back">${ICON.chev}返回</button></div>
-      <h2>反射训练</h2><p class="muted small" style="margin:6px 0 14px">按类型挑着练。结果一样计入复习安排。</p><div class="list">${rows}</div></div>`;
+      <h2>反射训练</h2><p class="muted small" style="margin:6px 0 4px">按类型挑着练。结果一样计入复习安排。</p>${deckSelectHTML()}<div class="list" style="margin-top:14px">${rows || `<div class="li"><span class="small muted">这个题库里还没有能练的卡片</span></div>`}</div></div>`;
   }
 };
 let FREE_OPTS = [];
-ACT["free-go"] = el => { const o = freeOpts().find(x => x[0] === el.dataset.v); if (!o) return; const f = o[2];
-  startSession("free", {filter:f, fillAhead:true, newLimit: ["due","hard"].includes(el.dataset.v) ? 0 : Math.max(S.settings.newPerDay, 15), newUsed:0}, o[1]); };
+ACT["free-go"] = el => { const o = freeOpts().find(x => x[0] === el.dataset.v); if (!o) return; const f = o[2]; const dp = deckPred(curDeck());
+  startSession("free", {filter: c => dp(c) && f(c), fillAhead:true, newLimit: ["due","hard"].includes(el.dataset.v) ? 0 : Math.max(S.settings.newPerDay, 15), newUsed:0}, o[1]); };
 ACT["listen-go"] = () => startSession("listen", {}, "听力快练");
 
 /* ---------- 练习流程 ---------- */
@@ -1968,6 +2370,7 @@ ACT["input-mode"] = el => {
   const s = RUN.stage;
   if (s instanceof CardStage && (s.phase === "prompt" || s.phase === "retry")) s.render();
   else if (s instanceof ListenStage && !s.done) s.render();
+  else if (typeof DG !== "undefined" && DG.st && DG.st.phase === "listen") dgRender();
 };
 
 /* 卡片：反射卡 / 时态快反 / 找错 / 扩句 */
@@ -2018,15 +2421,22 @@ class CardStage {
       el.innerHTML = `<div class="card">${this.chips()}${this.revealHTML()}</div>`;
       if (S.settings.autoSpeak) TTS.speak(this.target().en);
     } else if (this.phase === "drill"){
-      const t = this.card.en;
-      el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">说 3 遍</span></div>
-        <p class="muted small">不看答案，大声说 3 遍。想不起来就点一下句子，偷看两秒。</p>
-        <div class="en blur" id="drillText" data-act="c-peek" style="margin-top:12px">${esc(t)}</div>
-        <div class="dots">${[0,1,2].map(i => `<i class="${i < this.drill ? "on" : ""}"></i>`).join("")}</div>
-        ${SR.usable() && this.drill < 3 ? `<button class="mic" data-act="c-drill-mic" aria-label="说一遍">${ICON.mic}</button><div class="heard" id="heard">说一遍，说对了自动打勾</div>` : ""}
-        ${this.drill < 3 ? `<button class="btn block" data-act="c-drill-tick">我说了一遍</button>` : `<button class="btn primary block big" data-act="c-drill-done">继续，等会儿再考你一次</button>`}
+      const steps = this.drillSteps(); const n = steps.length; const cur = steps[Math.min(this.drill, n - 1)];
+      const p = S.cards[this.card.id]; const lapses = (p && p.lapses) || 0;
+      el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">${this.leech ? "分块练" : "说 3 遍"}</span></div>
+        <p class="muted small">${this.leech ? `这句错过 ${lapses} 次了，换个练法：一块一块加长，最后说整句。想不起来就点一下句子，偷看两秒。` : "不看答案，大声说 3 遍。想不起来就点一下句子，偷看两秒。"}</p>
+        <div class="en blur" id="drillText" data-act="c-peek" style="margin-top:12px">${esc(cur)}</div>
+        <div class="dots">${steps.map((_, i) => `<i class="${i < this.drill ? "on" : ""}"></i>`).join("")}</div>
+        ${SR.usable() && this.drill < n ? `<button class="mic" data-act="c-drill-mic" aria-label="说一遍">${ICON.mic}</button><div class="heard" id="heard">说一遍，说对了自动打勾</div>` : ""}
+        ${this.drill < n ? `<button class="btn block" data-act="c-drill-tick">我说了一遍</button>` : `<button class="btn primary block big" data-act="c-drill-done">继续，这一轮还会再考你</button>`}
+        ${this.leech ? `<button class="btn ghost block" style="margin-top:6px" data-act="c-leech-claude">让 Claude 给个更好记的说法</button>` : ""}
       </div>`;
     }
+  }
+  drillSteps(){
+    const t = this.card.en; if (!this.leech) return [t, t, t];
+    const ch = K.chunkSentence(t); if (ch.length < 2) return [t, t, t];
+    return ch.map((_, i) => ch.slice(0, i + 1).join(" "));
   }
   startClock(){
     this.t0 = performance.now(); const ck = $("#clock");
@@ -2049,7 +2459,7 @@ class CardStage {
   }
   finish(said){
     this.ms = this.elapsed(); clearInterval(this.clock);
-    this.said = said || "";
+    this.said = said || (this.phase === "retry" ? this.firstSaid || "" : "");
     const t = this.target();
     const cmp = this.said ? K.compareSaid(t.en, t.alt, this.said) : null;
     if (cmp && !cmp.exact && this.phase === "prompt" && !this.tries){
@@ -2062,7 +2472,7 @@ class CardStage {
   }
   retryHTML(){
     if (this.phase !== "retry") return "";
-    return `<div class="panel" style="margin-top:14px;background:var(--amber-soft);border-color:transparent"><b>差一点。按提示自己改，再说一次</b><ul class="fb" style="margin:6px 0 4px">${this.hints.map(h => `<li>${esc(h)}</li>`).join("")}</ul><p class="small muted">你刚才说的：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p></div>`;
+    return `<div class="panel" style="margin-top:14px;background:var(--amber-soft);border-color:transparent"><b>差一点。按提示自己改，再说一次</b><ul class="fb" style="margin:6px 0 4px">${this.hints.map(h => `<li>${esc(h)}</li>`).join("")}</ul><p class="small muted">你刚才说的：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p><p class="small muted" style="margin-top:4px">觉得自己说的也对？点“直接看答案”，再点“我的说法也对”。</p></div>`;
   }
   suggest(){
     if (!this.cmp) return "";
@@ -2075,16 +2485,21 @@ class CardStage {
     let h = `<div class="small muted">${c.t === "r" ? esc(c.zh) : c.t === "t" ? esc(c.zh) : c.t === "f" ? `<s>${esc(c.wrong)}</s>` : esc(t.add + "：" + t.hint)}</div><div class="reveal">`;
     const timeChip = this.ms ? `<span class="time-chip num" id="timeChip">${fmt1(this.ms)} 秒</span>` : "";
     if (cmp){
-      const lab = {exact:"完全正确", close:"差一点", off:"和参考答案差得比较多"}[cmp.level];
+      const lab = this.mine && cmp.exact ? "按你的说法算对" : {exact:"完全正确", close:"差一点", off:"和参考说法差别比较大"}[cmp.level];
       h += `<div class="verdict ${cmp.level}">${lab}${this.tries ? "" : timeChip}</div>`;
-      if (this.tries && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">按提示自己改对了。改过一次的句子会早一点再出现。</p>`;
+      if (this.mine && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">你的说法记下了，以后这样说也算对。</p>`;
+      else if (this.tries && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">按提示自己改对了。改过一次的句子会早一点再出现。</p>`;
       if (!cmp.exact){
         h += `<div class="diff">${diffHTML(cmp.ops)}</div>`;
         if (cmp.notes.length) h += `<ul class="fb">${cmp.notes.map(n => `<li>${esc(n.msg)}</li>`).join("")}</ul>`;
+        if (["r","t","f"].includes(c.t) && this.said) h += `<div class="row-gap" style="margin:-2px 0 12px"><span class="small muted">意思对、语法也对？</span><button class="btn sm" data-act="c-mine">我的说法也对</button></div>`;
       }
     } else if (timeChip) h += `<div class="verdict" style="color:var(--muted)">对照一下，你说对了吗？${timeChip}</div>`;
     h += `<div class="say-line"><div class="en">${esc(t.en)}</div><button class="icon-btn" data-act="c-speak" aria-label="朗读">${ICON.speak}</button></div>`;
-    if (t.alt && t.alt.length) h += `<div class="alts">也可以说：${t.alt.map(a => `<div class="en">${esc(a)}</div>`).join("")}</div>`;
+    const mine = (["r","t","f"].includes(c.t) && S.myAlts[c.id]) || [];
+    const others = (t.alt || []).filter(a => !mine.includes(a));
+    if (others.length) h += `<div class="alts">也可以说：${others.slice(0, 4).map(a => `<div class="en">${esc(a)}</div>`).join("")}</div>`;
+    if (mine.length) h += `<div class="alts">你加的说法：${mine.map((a, i) => `<div class="say-line"><div class="en" style="font-size:16px">${esc(a)}</div><button class="btn sm ghost" data-act="alt-del" data-i="${i}">删除</button></div>`).join("")}</div>`;
     if (c.t === "t") h += `<div class="note">${esc(c.note)}</div>`;
     else if (c.note && (!this.isE || this.step === c.steps.length-1)) h += `<div class="note">${esc(c.note)}</div>`;
     if (this.isE && this.step < c.steps.length - 1){
@@ -2093,7 +2508,7 @@ class CardStage {
     } else {
       const sg = this.suggest();
       h += `<div class="rate">
-        <button class="again ${sg==="again"?"sug":""}" data-act="c-rate" data-v="again">没说出来<small>明天再练</small></button>
+        <button class="again ${sg==="again"?"sug":""}" data-act="c-rate" data-v="again">没说出来<small>这一轮还会再来</small></button>
         <button class="hard ${sg==="hard"?"sug":""}" data-act="c-rate" data-v="hard">卡了一下<small>过几天再练</small></button>
         <button class="good ${sg==="good"?"sug":""}" data-act="c-rate" data-v="good">秒出<small>隔久一点</small></button></div>`;
     }
@@ -2105,7 +2520,10 @@ class CardStage {
     if (!this.retry && r === "again") RUN.weak[this.card.tag] = (RUN.weak[this.card.tag]||0) + 1;
     if (res.pb){ RUN.res.pb++; Snd.pb(); vib([15,40,15]); const tc = $("#timeChip"); if (tc){ tc.classList.add("pb"); tc.textContent = fmt1(this.ms) + " 秒，最快一次"; } }
     else if (r === "good"){ Snd.good(); vib(15); }
-    if (r === "again" && !this.retry){ this.phase = "drill"; this.drill = 0; this.render(); return; }
+    if (r === "again" && (!this.retry || ((RUN.retries || {})[this.card.id] || 0) < 4)){
+      const p = S.cards[this.card.id]; this.leech = !!(p && (p.lapses || 0) >= 3);
+      this.phase = "drill"; this.drill = 0; this.render(); return;
+    }
     setTimeout(() => { if (this.alive) nextItem(); }, res.pb ? 650 : 120);
   }
 }
@@ -2124,7 +2542,7 @@ ACT["c-speak"] = () => { const s = RUN.stage; s && TTS.speak(s.target().en); };
 ACT["c-rate"] = el => { const s = RUN.stage; if (s instanceof CardStage && s.phase === "reveal") s.rate(el.dataset.v); };
 ACT["c-next-step"] = () => { const s = RUN.stage; if (!(s instanceof CardStage)) return; s.step++; s.show(); };
 ACT["c-peek"] = el => { el.classList.add("peek"); setTimeout(() => el.classList.remove("peek"), 2000); };
-ACT["c-drill-tick"] = () => { const s = RUN.stage; if (!(s instanceof CardStage)) return; s.drill = Math.min(3, s.drill + 1); vib(10); s.render(); };
+ACT["c-drill-tick"] = () => { const s = RUN.stage; if (!(s instanceof CardStage)) return; s.drill = Math.min(s.drillSteps().length, s.drill + 1); vib(10); s.render(); };
 ACT["c-drill-mic"] = async el => {
   const s = RUN.stage; if (!(s instanceof CardStage)) return;
   const heard = $("#heard"); el.classList.add("live"); if (heard) heard.textContent = "在听……";
@@ -2133,15 +2551,41 @@ ACT["c-drill-mic"] = async el => {
   if (!s.alive) return;
   if (r.broke && !r.text){ s.render(); return; }
   if (!r.text){ if (heard) heard.textContent = r.error ? srErrorText(r.error) : "没听清，再来"; return; }
-  const cmp = K.compareSaid(s.card.en, s.card.alt, r.text);
-  if (cmp.level !== "off" && cmp.score >= 0.85){ s.drill = Math.min(3, s.drill + 1); Snd.good(); vib(12); s.render(); }
+  const steps = s.drillSteps(); const cur = steps[Math.min(s.drill, steps.length - 1)];
+  const cmp = K.compareSaid(cur, cur === s.card.en ? s.card.alt : [], r.text);
+  if (cmp.level !== "off" && cmp.score >= 0.85){ s.drill = Math.min(steps.length, s.drill + 1); Snd.good(); vib(12); s.render(); }
   else if (heard) heard.textContent = "还差一点：" + r.text;
 };
+/* 没说出来的句子：这一轮再出现两次（隔 3 题、隔 9 题左右），再错就再来一次 */
 ACT["c-drill-done"] = () => {
   const s = RUN.stage; if (!(s instanceof CardStage)) return;
-  const at = Math.min(RUN.items.length, RUN.i + 4);
-  RUN.items.splice(at, 0, {k:"card", id:s.card.id, retry:true});
+  RUN.retries = RUN.retries || {}; const done = RUN.retries[s.card.id] || 0;
+  const gaps = done === 0 ? [8, 3] : [4];
+  for (const g of gaps) RUN.items.splice(Math.min(RUN.items.length, RUN.i + g), 0, {k:"card", id:s.card.id, retry:true});
+  RUN.retries[s.card.id] = done + gaps.length;
   nextItem();
+};
+ACT["c-leech-claude"] = () => {
+  const s = RUN.stage; if (!(s instanceof CardStage)) return; const c = s.card;
+  sendToClaude(`这句英文我总是记不住：${c.en}（${c.zh || c.wrong || ""}）。请帮我想一个更短或更好记的说法，或者拆成两句，再给我脱口的导入码（格式：卡 | 中文 | 英文 | 类型 | 提示）。`);
+};
+/* 我的说法也对：把你的说法加进这张卡的正确答案 */
+ACT["c-mine"] = async () => {
+  const s = RUN.stage; if (!(s instanceof CardStage) || s.phase !== "reveal" || !s.said) return;
+  const c = s.card; const said = s.said.trim();
+  if (c.t === "f" && K.tokens(said).join(" ") === K.tokens(c.wrong).join(" ")){ toast("这就是原来那句错句，不能算对"); return; }
+  const iss = K.checkWriting(said).filter(i => i.tag !== "书写");
+  if (iss.length && !await sheet("这句可能有问题", iss[0].msg + "。还要算对吗？", "算对", false)) return;
+  S.myAlts[c.id] = Array.from(new Set([...(S.myAlts[c.id] || []), said])).slice(-6);
+  rebuildCatalog(); save();
+  s.card = CAT.byId[c.id] || c; s.mine = true;
+  const t = s.target(); s.cmp = K.compareSaid(t.en, t.alt, said);
+  s.render(); toast("记下了，以后这样说也算对");
+};
+ACT["alt-del"] = el => {
+  const s = RUN.stage; if (!(s instanceof CardStage)) return; const id = s.card.id; const list = S.myAlts[id] || [];
+  list.splice(+el.dataset.i, 1); if (!list.length) delete S.myAlts[id];
+  rebuildCatalog(); save(); s.card = CAT.byId[id] || s.card; s.render();
 };
 
 /* 听力：新句子先选意思，复习时听后复述 */
@@ -2337,6 +2781,8 @@ CHG.set = el => {
   const k = el.dataset.key; let v = el.type === "checkbox" ? el.checked : el.value; if (el.dataset.num) v = +v;
   S.settings[k] = v; save(); if (k === "theme") applyTheme(); if (k === "inputMode" && v === "auto") srUnbreak(); if (el.dataset.rerender) UI.refresh();
 };
+CHG.deck = el => { S.settings.deck = el.value; save(); UI.refresh(); };
+CHG.callDeck = el => { S.settings.callDeck = el.value; save(); };
 CHG.local = el => { const k = el.dataset.key; let v = el.type === "checkbox" ? el.checked : el.value; if (el.dataset.num) v = +v; L[k] = v; saveLocal(); };
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const backBtn = () => `<div class="subhead"><button class="back" data-act="back">${ICON.chev}返回</button></div>`;
@@ -2354,6 +2800,7 @@ VIEWS.callsetup = {
     const n = S.settings.callQs || 3;
     return `<div class="wrap">${backBtn()}<h2>来电模拟</h2>
       <p class="muted small" style="margin:6px 0 14px">“面试官”会打来电话，用英文念问题，屏幕上不显示文字。你开口回答，app 录音，挂断后一起复盘。</p>
+      ${callSetHTML()}
       <div class="panel"><div class="small muted">问几道题</div>
         <div class="seg">${[3,5].map(k => `<button data-act="cs-n" data-v="${k}" aria-pressed="${n===k}">${k} 道，约 ${k===3?6:10} 分钟</button>`).join("")}</div>
         <label class="switch"><span>小抄模式：答题时可以看我的要点</span><input type="checkbox" data-chg="set" data-key="cheat" ${S.settings.cheat ? "checked" : ""}></label></div>
@@ -2366,7 +2813,39 @@ VIEWS.callsetup = {
 ACT["cs-n"] = el => { S.settings.callQs = +el.dataset.v; save(); $$(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === el.dataset.v)); };
 ACT["cs-go"] = () => { if (CV.st && CV.st.recs) Object.values(CV.st.recs).forEach(r => { if (r && r.url) URL.revokeObjectURL(r.url); }); CV.st = null; const t = UI.top(); if (t && t.name === "call") UI.replace("call"); else UI.nav("call"); };
 const CV = {st:null};
+function callSets(){
+  const out = [{id:"core", label:"通用面试题"}]; const groups = {};
+  for (const q of (S.customQ || [])) groups[q.deck] = (groups[q.deck] || 0) + 1;
+  for (const [name, n] of Object.entries(groups)) if (n >= 3) out.push({id:"u:" + name, label:name});
+  return out;
+}
+function callSetHTML(){
+  const sets = callSets(); if (sets.length < 2) return "";
+  const cd = sets.some(s => s.id === S.settings.callDeck) ? S.settings.callDeck : "core";
+  return `<div class="panel"><label class="fld" style="margin-top:0"><span>题目来自</span><select data-chg="callDeck">${sets.map(s => `<option value="${esc(s.id)}" ${s.id === cd ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label></div>`;
+}
+/* 用你导入的题库打电话：面试官名字和公司也用你的 */
+function buildDeckCall(n, qs, deck){
+  const C = CONTENT.CALL; const meta = (S.deckMeta || {})[deck] || {};
+  const name = meta.name ? meta.name.split(/\s+/)[0] : pick(C.names);
+  const open = meta.company ? `Hi, this is ${name} from ${meta.company}. Is now still a good time to talk?` : pick(C.open).replace("{n}", name);
+  const segs = [{kind:"open", say:open, zh:"开场：确认现在方便通话", hint:C.openReply}];
+  const used = q => (S.answers[q.id] && S.answers[q.id].practiced) || 0;
+  const first = qs.find(q => q.role === "first") || qs[0];
+  const ask = qs.find(q => q.role === "ask");
+  const core = K.shuffle(qs.filter(q => q !== first && q !== ask && q.role !== "screen")).sort((a, b) => used(a) - used(b));
+  const screen = K.shuffle(qs.filter(q => q.role === "screen"));
+  const order = [first, ...core.slice(0, n >= 5 ? 2 : 1), ...screen.slice(0, n >= 5 ? 2 : 1), ask || QBY.Q8];
+  order.forEach((q, i) => {
+    segs.push({kind:"q", qid:q.id, say:(i === 0 ? pick(C.start) : pick(C.next)) + " " + pick(q.v), zh:q.zh});
+    if (q.role === "core" && q.follow && q.follow.length && Math.random() < 0.5) segs.push({kind:"f", qid:q.id, say:pick(q.follow), zh:"追问"});
+  });
+  segs.push({kind:"close", say:C.qReply + " " + C.close, zh:"回应你的问题，然后结束通话", hint:C.closeReply});
+  return {name, segs};
+}
 function buildCall(n){
+  const cd = S.settings.callDeck;
+  if (cd && cd.startsWith("u:") && callSets().some(s => s.id === cd)){ const deck = cd.slice(2); return buildDeckCall(n, (S.customQ || []).filter(q => q.deck === deck), deck); }
   const C = CONTENT.CALL; const name = pick(C.names);
   const segs = [{kind:"open", say:pick(C.open).replace("{n}", name), zh:"开场：确认现在方便通话", hint:C.openReply}];
   const used = q => (S.answers[q.id] && S.answers[q.id].practiced) || 0;
@@ -2513,7 +2992,8 @@ function callReviewHTML(){
 const HF = {st:null};
 function handsList(){
   const tn = dnum(today());
-  const pool = CAT.cards.filter(c => (c.t === "r" || c.t === "t") && c.zh && c.en);
+  const dp = deckPred(curDeck());
+  const pool = CAT.cards.filter(c => (c.t === "r" || c.t === "t") && c.zh && c.en && dp(c));
   const p = c => S.cards[c.id];
   const due = pool.filter(c => p(c) && p(c).due <= tn).sort((a, b) => p(a).due - p(b).due);
   const learning = pool.filter(c => p(c) && p(c).due > tn && p(c).box < K.MASTERED_BOX).sort((a, b) => p(a).due - p(b).due);
@@ -2669,21 +3149,25 @@ VIEWS.iv = {
   tab:"iv",
   render(){
     const row = q => { const a = S.answers[q.id] || {}; return `<button class="li" data-act="nav" data-v="ivedit" data-q="${q.id}"><div class="grow"><b>${esc(q.zh)}</b><span class="en" style="font-size:14.5px">${esc(q.v[0])}</span></div><span class="end">${written(q) ? "已写" : "未写"}${a.practiced ? `<br>练过 ${a.practiced} 次` : ""}</span></button>`; };
+    const all = allQuestions();
     const core = CONTENT.QUESTIONS.filter(q => q.grp === "core"), scr = CONTENT.QUESTIONS.filter(q => q.grp === "screen");
-    const nW = CONTENT.QUESTIONS.filter(written).length; const left = ivDaysLeft();
-    return `<div class="wrap"><div class="top"><h2 style="font-size:26px">面试准备</h2><span class="muted small">已写 ${nW}/${CONTENT.QUESTIONS.length}</span></div>
+    const groups = {}; for (const q of (S.customQ || [])) (groups[q.deck] = groups[q.deck] || []).push(q);
+    const custom = Object.entries(groups).map(([name, qs]) => `<div class="sec-title">${esc(name)}</div><div class="list">${qs.map(row).join("")}</div>`).join("");
+    const nW = all.filter(written).length; const left = ivDaysLeft();
+    return `<div class="wrap"><div class="top"><h2 style="font-size:26px">面试准备</h2><span class="muted small">已写 ${nW}/${all.length}</span></div>
       <div class="panel"><label class="fld" style="margin-top:0"><span>电话面试日期</span><input type="date" data-chg="set" data-key="interviewDate" data-rerender="1" value="${esc(S.settings.interviewDate)}"></label>
         <p class="small muted" style="margin-top:8px">${left != null ? `还有 ${left} 天。面试前 3 周内，每天的练习会多放面试内容。` : "设好日期后，面试前 3 周内每天的练习会多放面试内容。"}</p></div>
       <div class="spacer"></div>
       <button class="feature" data-act="nav" data-v="callsetup">${ICON.phone}<div><b>来电模拟</b><span>开场、提问、追问、结尾，一整通电话</span></div></button>
-      <div class="sec-title">核心问题，每题 60–90 秒</div><div class="list">${core.map(row).join("")}</div>
-      <div class="sec-title">电话初筛常问，一两句话说清</div><div class="list">${scr.map(row).join("")}</div>
+      ${custom}
+      <div class="sec-title">通用：核心问题，每题 60–90 秒</div><div class="list">${core.map(row).join("")}</div>
+      <div class="sec-title">通用：电话初筛常问，一两句话说清</div><div class="list">${scr.map(row).join("")}</div>
       <button class="btn block" style="margin-top:16px" data-act="iv-copyall">把写好的回答一起复制给 Claude</button>
-      <p class="small muted" style="margin-top:10px">Claude 改好后，让它给你导入码（答 | Q1 | 回答），贴进“导入新内容”，回答就会更新到这里。</p></div>`;
+      <p class="small muted" style="margin-top:10px">Claude 改好后，让它给你导入码，贴进“导入新内容”，回答就会更新到这里。</p></div>`;
   }
 };
 ACT["iv-copyall"] = () => {
-  const qs = CONTENT.QUESTIONS.filter(written);
+  const qs = allQuestions().filter(written);
   if (!qs.length){ toast("还没有写好的回答"); return; }
   const body = qs.map(q => `${q.id}：${q.v[0]}（${q.zh}）\n${S.answers[q.id].text.trim()}`).join("\n\n");
   sendToClaude(`这是我准备的电话面试回答。请逐题只标出错误、给提示，不要直接改写；我改完后再请你给参考改法，并给我导入码（格式：答 | Q1 | 完整回答）。\n\n${body}`);
@@ -2774,7 +3258,7 @@ VIEWS.progress = {
       return `<div class="bar"><span class="small">${esc((TAGS[r.t]||TAGS.other).label)}</span><div class="t"><i style="width:${Math.round(r.acc*100)}%"></i></div><span class="v">${Math.round(r.acc*100)}% ${tr}</span></div>`; }).join("") : `<p class="small muted">练几天以后，这里会显示每类错误的正确率和变化。</p>`;
     const avgMs = (a, b) => { let s = 0, n = 0; for (let d = tn - b + 1; d <= tn - a; d++){ const x = S.days[nstr(d)]; if (x && x.mn){ s += x.ms; n += x.mn; } } return n ? s / n : 0; };
     const thisW = avgMs(0, 7), lastW = avgMs(7, 14);
-    const nW = CONTENT.QUESTIONS.filter(written).length; const calls = S.calls.length;
+    const nW = allQuestions().filter(written).length; const calls = S.calls.length;
     const hardN = CAT.cards.filter(c => S.cards[c.id] && (S.cards[c.id].lapses||0) >= 2).length;
     const reps = calls ? (S.calls.reduce((a, c) => a + (c.rep || 0), 0) / calls).toFixed(1) : null;
     return `<div class="wrap"><div class="top"><h2 style="font-size:26px">进度</h2></div>
@@ -2785,7 +3269,7 @@ VIEWS.progress = {
       <div class="panel"><h3>每类正确率</h3><p class="small muted">最近 7 天，后面的数字是和更早相比的变化</p><div class="bars" style="margin-top:6px">${bars}</div></div>
       <div class="panel"><h3>题库</h3><p style="margin-top:6px">已掌握 ${mastered}，学习中 ${learning}，还没练 ${fresh}</p><p class="small muted">连续答对、间隔拉到 15 天以上算已掌握。</p>
         ${hardN ? `<p style="margin-top:10px">顽固错误 ${hardN} 句：错过 2 次以上</p><button class="btn sm" style="margin-top:6px" data-act="free-go" data-v="hard">专门练这些</button>` : ""}</div>
-      <div class="panel"><h3>面试</h3><p style="margin-top:6px">写好回答 ${nW}/${CONTENT.QUESTIONS.length}，来电模拟 ${calls} 次${reps != null ? `，平均每通让对方重复 ${reps} 次` : ""}</p></div></div>`;
+      <div class="panel"><h3>面试</h3><p style="margin-top:6px">写好回答 ${nW}/${allQuestions().length}，来电模拟 ${calls} 次${reps != null ? `，平均每通让对方重复 ${reps} 次` : ""}</p></div></div>`;
   }
 };
 
@@ -2811,7 +3295,7 @@ VIEWS.me = {
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="sec-title">内容和数据</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的卡片", S.custom.length + " 张")}
+        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
         ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
         ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
@@ -2822,7 +3306,7 @@ VIEWS.me = {
 ACT.reset = async () => {
   if (!await sheet("清空所有进度？", "复习记录、面试回答、日记和导入的卡片都会删掉，没法撤销。需要的话先去备份。", "清空", true)) return;
   const keep = Object.assign({}, S.settings); S = DEF(); S.settings = Object.assign(S.settings, keep, {interviewDate:keep.interviewDate});
-  rebuildCatalog(); save(true); toast("清空了"); UI.tab("home");
+  rebuildCatalog(); rebuildQ(); save(true); toast("清空了"); UI.tab("home");
 };
 
 /* ---------- 导入 ---------- */
@@ -2831,51 +3315,96 @@ VIEWS.import = {
   tab:"me", noRefresh:true,
   render(){
     return `<div class="wrap">${backBtn()}<h2>导入新内容</h2>
-      <p class="muted small" style="margin:6px 0 14px">和 Claude 练完后，让它给你一段“导入码”，整段贴进来。新卡片会进入每天的复习。</p>
+      <p class="muted small" style="margin:6px 0 14px">把 Claude 给的导入码整段贴进来，或者直接选导入码文件。带“题库”行的内容会单独放进一个题库，首页可以选着练。</p>
+      <label class="btn block" style="margin-bottom:10px">${ICON.imp}从文件导入<input type="file" id="impFile" accept=".txt,.md,text/plain" class="hide"></label>
       <textarea id="impText" style="min-height:160px" placeholder="卡 | 中文 | English | 类型 | 提示"></textarea>
       <button class="btn primary block" style="margin-top:10px" data-act="imp-preview">预览</button><div id="impOut"></div>
       <details class="panel" style="margin-top:14px"><summary>导入码长什么样</summary><div class="small" style="margin-top:8px;line-height:1.9">每行一条，用 | 隔开：<br>
-        <code>卡 | 我最近一直在准备面试。 | I've been preparing for interviews. | 时态 | 最近一直：have been doing</code><br>
-        <code>改 | I'm already graduated. | I've already graduated. | 时态</code><br><code>听 | Could you elaborate on that? | 能展开讲讲吗</code><br>
-        <code>答 | Q1 | 你的完整回答</code><br><code>要点 | Q1 | 硕士；机械臂项目；想做硬件</code><br>
-        英文有几种说法时用 // 隔开。类型可以写：be 动词、时态、成对词、多余的 to、复数、语序、介词、地道说法、救急句、面试语块、聊天、提问。</div></details></div>`;
+        <code>题库 | 某公司面试</code>（下面的内容都放进这个题库）<br>
+        <code>卡 | 中文 | English | 类型 | 提示</code><br><code>改 | 错句 | 正确句 | 类型</code><br><code>听 | English | 中文意思</code><br>
+        <code>问 | A01 | English question // 另一种问法 | 中文 | 秒数 | 开场/核心/初筛/提问 | 提示</code><br>
+        <code>答 | A01 | 完整回答</code><br><code>要点 | A01 | 要点一；要点二</code><br><code>追问 | A01 | Follow-up question?</code><br>
+        <code>面试日期 | 2026-10-22</code><br><code>面试官 | 名字 | 公司</code><br>英文有几种说法时用 // 隔开。</div></details></div>`;
+  },
+  mount(){
+    const f = $("#impFile");
+    f && f.addEventListener("change", () => {
+      const file = f.files && f.files[0]; if (!file) return;
+      const rd = new FileReader();
+      rd.onload = () => { const ta = $("#impText"); if (ta){ ta.value = String(rd.result || ""); ACT["imp-preview"](); } };
+      rd.onerror = () => toast("文件读不出来，换成复制粘贴试试");
+      rd.readAsText(file);
+    });
   }
 };
 ACT["imp-preview"] = () => {
-  const t = ($("#impText")||{}).value || ""; if (!t.trim()){ toast("先把导入码贴进来"); return; }
+  const t = ($("#impText")||{}).value || ""; if (!t.trim()){ toast("先把导入码贴进来，或者选文件"); return; }
   const r = K.parseImport(t);
-  r.answers = r.answers.filter(a => { if (QBY[a.qid]) return true; r.bad.push("答 " + a.qid); return false; });
-  r.keys = r.keys.filter(a => { if (QBY[a.qid]) return true; r.bad.push("要点 " + a.qid); return false; });
+  const known = new Set(Object.keys(QBY).concat(r.questions.map(q => q.id)));
+  r.answers = r.answers.filter(a => { if (known.has(a.qid)) return true; r.bad.push("答 " + a.qid); return false; });
+  r.keys = r.keys.filter(a => { if (known.has(a.qid)) return true; r.bad.push("要点 " + a.qid); return false; });
+  r.follow = r.follow.filter(a => { if (known.has(a.qid)) return true; r.bad.push("追问 " + a.qid); return false; });
   IMP = r;
   const by = t => r.cards.filter(c => c.t === t).length; const dup = r.cards.filter(c => S.custom.some(x => x.id === c.id)).length;
-  const n = r.cards.length + r.answers.length + r.keys.length;
+  const decks = Array.from(new Set(r.cards.map(c => c.deck).concat(r.questions.map(q => q.deck))));
+  const n = r.cards.length + r.answers.length + r.keys.length + r.questions.length;
+  const who = r.meta.who[0];
   $("#impOut").innerHTML = `<div class="panel" style="margin-top:12px"><h3>读到了</h3><ul class="issues">
+    ${decks.length ? `<li>题库：${decks.map(esc).join("，")}</li>` : ""}
     <li>卡片 ${r.cards.length} 张（反射卡 ${by("r")}，找错 ${by("f")}，听力 ${by("l")}）${dup ? `，其中 ${dup} 张已经有了，会更新` : ""}</li>
-    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${r.bad.length ? `<li>看不懂、会跳过的：第 ${r.bad.join("、")} 行</li>` : ""}</ul>
-    ${r.cards.slice(0, 5).map(c => `<div class="en sm" style="margin-top:6px">${esc(c.en)}</div>`).join("")}
+    ${r.questions.length ? `<li>面试题 ${r.questions.length} 道，追问 ${r.follow.length} 个</li>` : ""}
+    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>
+    ${r.meta.date ? `<li>面试日期：${esc(r.meta.date)}</li>` : ""}${who ? `<li>面试官：${esc(who.name)}${who.company ? "，" + esc(who.company) : ""}</li>` : ""}
+    ${r.bad.length ? `<li>看不懂、会跳过的：第 ${r.bad.join("、")} 行</li>` : ""}</ul>
     ${n ? `<button class="btn primary block" style="margin-top:12px" data-act="imp-apply">确认导入</button>` : `<p class="note">没有能导入的内容，检查一下格式。</p>`}</div>`;
 };
 ACT["imp-apply"] = () => {
   const r = IMP; if (!r) return;
-  for (const c of r.cards){ const i = S.custom.findIndex(x => x.id === c.id); const clean = {id:c.id, t:c.t, tag:c.tag, en:c.en, alt:c.alt || [], note:c.note || "", zh:c.zh || "", wrong:c.wrong || "", grp:c.grp || ""}; if (i >= 0) S.custom[i] = clean; else S.custom.push(clean); }
+  for (const c of r.cards){ const i = S.custom.findIndex(x => x.id === c.id); const clean = {id:c.id, t:c.t, tag:c.tag, en:c.en, alt:c.alt || [], note:c.note || "", zh:c.zh || "", wrong:c.wrong || "", grp:c.grp || "", deck:c.deck || "我的卡片"}; if (i >= 0) S.custom[i] = clean; else S.custom.push(clean); }
+  S.customQ = S.customQ || [];
+  for (const q of r.questions){ const i = S.customQ.findIndex(x => x.id === q.id); const clean = {id:q.id, deck:q.deck, grp:"custom", role:q.role, v:q.v, zh:q.zh, sec:q.sec, tip:q.tip, tpl:"", follow: i >= 0 ? (S.customQ[i].follow || []) : []}; if (i >= 0) S.customQ[i] = clean; else S.customQ.push(clean); }
+  rebuildQ();
+  for (const f of r.follow){ const q = S.customQ.find(x => x.id === f.qid); if (q && !q.follow.includes(f.text)) q.follow.push(f.text); }
   for (const a of r.answers){ const x = ans(a.qid); x.text = a.text; x.updated = Date.now(); }
   for (const k of r.keys){ const x = ans(k.qid); x.keys = k.keys; }
+  if (r.meta.date) S.settings.interviewDate = r.meta.date;
+  S.deckMeta = S.deckMeta || {}; for (const w of r.meta.who) S.deckMeta[w.deck] = {name:w.name, company:w.company};
+  if (r.questions.length) S.settings.callDeck = "u:" + r.questions[0].deck;
   rebuildCatalog(); save(true); IMP = null;
-  toast(`导入好了：卡片 ${r.cards.length}，回答 ${r.answers.length}`); UI.back();
+  const dk = Array.from(new Set(r.cards.map(c => c.deck).concat(r.questions.map(q => q.deck))))[0];
+  toast(`导入好了：卡片 ${r.cards.length}，面试题 ${r.questions.length}` + (dk ? `。首页可以选“${dk}”单独练` : "")); UI.back();
 };
 VIEWS.custom = {
   tab:"me",
   render(){
-    const rows = S.custom.slice().reverse().map(c => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(c.en)}</b><span>${esc(c.t === "f" ? c.wrong : c.zh)}，${esc((TAGS[c.tag]||TAGS.other).label)}</span></div><button class="btn sm" data-act="cu-del" data-v="${esc(c.id)}">删除</button></div>`).join("");
-    return `<div class="wrap">${backBtn()}<h2>我导入的卡片</h2>
-      ${S.custom.length ? `<p class="muted small" style="margin:6px 0 14px">${S.custom.length} 张，和内置卡片一起复习。</p><div class="list">${rows}</div>` :
-        `<p class="muted" style="margin:10px 0 14px">还没有导入过。和 Claude 练完后，让它给你一段导入码。</p><button class="btn primary" data-act="nav" data-v="import">去导入</button>`}</div>`;
+    const groups = {}; for (const c of S.custom) (groups[c.deck || "我的卡片"] = groups[c.deck || "我的卡片"] || []).push(c);
+    for (const q of (S.customQ || [])) if (!groups[q.deck]) groups[q.deck] = [];
+    const names = Object.keys(groups);
+    const body = names.map(name => {
+      const cs = groups[name]; const qn = (S.customQ || []).filter(q => q.deck === name).length;
+      return `<div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>${esc(name)}：${cs.length} 张卡${qn ? `，${qn} 道面试题` : ""}</span><button class="btn sm danger" data-act="deck-del" data-v="${esc(name)}">删除这个题库</button></div>
+        <div class="list">${cs.slice().reverse().slice(0, 60).map(c => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(c.en)}</b><span>${esc(c.t === "f" ? c.wrong : c.zh)}，${esc((TAGS[c.tag]||TAGS.other).label)}</span></div><button class="btn sm" data-act="cu-del" data-v="${esc(c.id)}">删除</button></div>`).join("")}${cs.length > 60 ? `<div class="li"><span class="small muted">还有 ${cs.length - 60} 张没列出来</span></div>` : ""}</div>`;
+    }).join("");
+    return `<div class="wrap">${backBtn()}<h2>我导入的内容</h2>
+      ${names.length ? body : `<p class="muted" style="margin:10px 0 14px">还没有导入过。和 Claude 练完后，让它给你一段导入码。</p><button class="btn primary" data-act="nav" data-v="import">去导入</button>`}</div>`;
   }
 };
 ACT["cu-del"] = async el => {
   if (!await sheet("删除这张卡片？", "它的复习记录也会一起删掉。", "删除", true)) return;
   const id = el.dataset.v; S.custom = S.custom.filter(c => c.id !== id); delete S.cards[id]; delete S.best[id];
   rebuildCatalog(); save(); UI.render();
+};
+ACT["deck-del"] = async el => {
+  const name = el.dataset.v;
+  if (!await sheet(`删除“${name}”？`, "这个题库的卡片、面试题和对应的回答都会删掉，复习记录也一起删。", "删除", true)) return;
+  const ids = new Set(S.custom.filter(c => (c.deck || "我的卡片") === name).map(c => c.id));
+  S.custom = S.custom.filter(c => !ids.has(c.id)); ids.forEach(id => { delete S.cards[id]; delete S.best[id]; });
+  const qids = (S.customQ || []).filter(q => q.deck === name).map(q => q.id);
+  S.customQ = (S.customQ || []).filter(q => q.deck !== name); qids.forEach(id => delete S.answers[id]);
+  if (S.deckMeta) delete S.deckMeta[name];
+  if (S.settings.deck === "u:" + name) S.settings.deck = "all";
+  if (S.settings.callDeck === "u:" + name) S.settings.callDeck = "core";
+  rebuildQ(); rebuildCatalog(); save(true); toast("删掉了"); UI.render();
 };
 
 /* ---------- 备份 ---------- */
@@ -2899,7 +3428,7 @@ ACT["bk-restore"] = async () => {
   try { o = JSON.parse(t.trim()); } catch (e) {}
   if (!o || o.v !== 1 || !o.settings){ toast("这不是脱口的备份，检查一下是不是完整复制了"); return; }
   if (!await sheet("用这份备份覆盖？", "这台设备上现在的进度会被替换。", "覆盖", true)) return;
-  S = mergeInto(DEF(), o); rebuildCatalog(); applyTheme(); save(true); toast("恢复好了"); UI.tab("home");
+  S = mergeInto(DEF(), o); rebuildCatalog(); rebuildQ(); applyTheme(); save(true); toast("恢复好了"); UI.tab("home");
 };
 
 /* ---------- 设备检测 ---------- */
@@ -3001,6 +3530,9 @@ VIEWS.about = {
         <li><b>三个按钮决定下次什么时候再见。</b>没说出来，明天再练；卡了一下，过几天；秒出，隔得更久。会的越来越少出现，不会的很快回来。</li>
         <li><b>说错了先自己改。</b>差一点时，app 先只给提示，让你再说一次，再给答案。自己改出来的记得更牢。</li>
         <li><b>复习听力时听后复述。</b>新句子先选意思；复习时不看文字整句说出来，练的是把连读的声音听成一个个词。</li>
+        <li><b>题库可以选。</b>首页“练哪个题库”可以只练通用、日常生活，或者你导入的题库，比如某家公司的面试准备。来电模拟也能选用哪套面试题。</li>
+        <li><b>记不住很正常。</b>没说出来的句子，这一轮还会再出现两次，明天再来；错 3 次以上会换成分块练。先试着回想、想不起来再看答案，这个过程本身就在帮你记。</li>
+        <li><b>说法不止一种。</b>你的说法意思对、语法也对，就点“我的说法也对”，以后这样说也算对。</li>
         <li><b>说错了，说 3 遍再走。</b>这是你报告里验证过的“改错后巩固法”，这一轮结束前还会再考你一次。</li>
         <li><b>按弱项出题。</b>每道题都标了错误类型，哪类正确率低就多出哪类。面试前 3 周会多放面试内容。</li>
         <li><b>内容会长大。</b>和 Claude 练完，让它给你导入码，新句子就进了每天的复习。</li></ul></div>
@@ -3032,6 +3564,92 @@ document.addEventListener("focusin", e => {
   }
 });
 document.addEventListener("focusout", () => { setTimeout(() => { const a = document.activeElement; if (!a || !/^(INPUT|TEXTAREA)$/.test(a.tagName)) document.body.classList.remove("typing"); }, 300); });
+
+/* ---------- 情景对话：对方说一句，你回一句 ---------- */
+const DG = {st:null};
+VIEWS.dialogs = {
+  tab:"home",
+  render(){
+    const done = S.dlgDone || {};
+    return `<div class="wrap">${backBtn()}<h2>情景对话</h2>
+      <p class="muted small" style="margin:6px 0 14px">对方先说一句（先只听，不看文字），你开口回答，再看可以怎么回。不打分，练的是听懂、接得上话。</p>
+      <div class="list">${CONTENT.DIALOGS.map(d => `<button class="li" data-act="nav" data-v="dialog" data-id="${d.id}"><div class="grow"><b>${esc(d.title)}</b><span>${esc(d.zh)}</span></div><span class="end">${d.turns.length} 句${done[d.id] ? `<br>练过 ${done[d.id]} 次` : ""}</span></button>`).join("")}</div></div>`;
+  }
+};
+VIEWS.dialog = {
+  full:true, noRefresh:true,
+  render(){ return `<div class="wrap"><div class="runbar"><button class="back" data-act="back" aria-label="退出">✕</button><div class="track"><i id="dgTrack"></i></div><span class="num" id="dgCount"></span></div><div id="stage"></div></div>`; },
+  mount(p){ const d = CONTENT.DIALOGS.find(x => x.id === p.id) || CONTENT.DIALOGS[0]; DG.st = {d, i:0, phase:"listen", show:false, plays:0}; Act.start(); dgRender(); setTimeout(() => dgPlay(false), 300); },
+  leave(){ DG.st = null; }
+};
+function dgRender(){
+  const st = DG.st; const el = $("#stage"); if (!st || !el) return;
+  const d = st.d; const t = d.turns[st.i];
+  const tr = $("#dgTrack"), cn = $("#dgCount");
+  if (tr) tr.style.width = Math.round(st.i / d.turns.length * 100) + "%";
+  if (cn) cn.textContent = `${Math.min(st.i + 1, d.turns.length)}/${d.turns.length}`;
+  if (!t){
+    el.innerHTML = `<div class="card center"><h2>${esc(d.title)}练完了</h2><p class="muted" style="margin-top:8px">再来一遍会更顺。第二遍试着不看文字，每句都换个说法。</p>
+      <div class="row-gap" style="justify-content:center;margin-top:16px"><button class="btn" data-act="dg-restart">再来一遍</button><button class="btn primary" data-act="back">完成</button></div></div>`;
+    return;
+  }
+  const mic = SR.usable();
+  const said = st.phase === "reply";
+  el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">${esc(d.who)}</span><span class="chip">${esc(d.title)}</span></div>
+    <div class="listen-hero"><button class="play" data-act="dg-play" aria-label="再听一遍">${ICON.speak}</button></div>
+    <div class="row-gap" style="justify-content:center"><button class="btn sm" data-act="dg-repeat">Sorry, could you say that again?</button><button class="btn sm ghost" data-act="dg-show">${st.show ? "隐藏文字" : "看文字"}</button></div>
+    ${st.show || said || !TTS.ok ? `<div style="margin-top:12px"><div class="en sm">${esc(t.say)}</div><div class="small muted">${esc(t.zh)}</div></div>` : ""}
+    ${!said ? `<div class="answer-zone">${inputToggleHTML()}
+        ${mic ? `<button class="mic" id="dgMic" data-act="dg-mic" aria-label="回答">${ICON.mic}</button><div class="heard" id="heard">听完开口回答</div>` : `<p class="small muted" style="margin:0 0 8px">听完开口回答。想让 app 对照一下，就点输入框，用键盘的麦克风说。</p>`}
+        <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocomplete="off" spellcheck="false" enterkeyhint="done"><button class="btn sm" data-act="dg-check">对照</button></div>
+        <button class="btn ghost block" style="margin-top:6px" data-act="dg-done">我说完了，看看可以怎么回</button></div>` :
+      `<div class="reveal">${st.verdict ? `<div class="verdict ${st.verdict.cls}">${esc(st.verdict.msg)}</div>` : ""}${st.said ? `<p class="small muted">你说的：<span class="en" style="font-size:15px">${esc(st.said)}</span></p>` : ""}
+        <div class="small muted" style="margin-top:8px">可以这样回：</div>
+        ${t.reply.map((r, k) => `<div class="say-line" style="margin-top:6px"><div class="en sm">${esc(r)}</div><button class="icon-btn" data-act="dg-say" data-k="${k}" aria-label="朗读">${ICON.speak}</button></div>`).join("")}
+        ${t.tip ? `<div class="note">${esc(t.tip)}</div>` : ""}
+        <button class="btn primary block big" style="margin-top:14px" data-act="dg-next">${st.i === d.turns.length - 1 ? "完成这段对话" : "下一句"}</button></div>`}
+  </div>`;
+  const ty = $("#typed");
+  if (ty){
+    ty.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); ACT["dg-check"](); } });
+    let last = 0, dict = false, tm = null;
+    ty.addEventListener("input", () => { const v = ty.value; if (v.length - last >= 4) dict = true; last = v.length; clearTimeout(tm);
+      if (dict && v.trim().split(/\s+/).length >= 2) tm = setTimeout(() => { if (DG.st === st && st.phase === "listen" && ty.value.trim()) dgFinish(ty.value.trim()); }, 2200); });
+  }
+}
+function dgPlay(slow){ const st = DG.st; if (!st) return; const t = st.d.turns[st.i]; if (t) TTS.speak(t.say, {rate: slow ? 0.8 : 1}); }
+function dgFinish(said){
+  const st = DG.st; if (!st) return; const t = st.d.turns[st.i]; if (!t) return;
+  st.said = said || ""; st.verdict = null;
+  if (st.said){
+    const cmp = K.compareSaid(t.reply[0], t.reply.slice(1), st.said);
+    st.verdict = cmp.score >= 0.8 ? {cls:"exact", msg:"和参考说法很接近，很好"} : cmp.score >= 0.5 ? {cls:"close", msg:"意思差不多，可以参考下面的说法"} : {cls:"", msg:"换了说法也没关系，看看下面的参考"};
+  }
+  st.phase = "reply"; dgRender(); if (S.settings.autoSpeak) TTS.speak(t.reply[0]);
+}
+ACT["dg-play"] = () => dgPlay(false);
+ACT["dg-repeat"] = () => { const st = DG.st; if (!st) return; st.plays++; dgPlay(st.plays > 1); };
+ACT["dg-show"] = () => { const st = DG.st; if (!st) return; st.show = !st.show; dgRender(); };
+ACT["dg-mic"] = async el => {
+  const st = DG.st; if (!st || st.phase !== "listen") return;
+  if (st.live){ SR.stop(); return; }
+  const h = $("#heard"); st.live = true; el.classList.add("live"); if (h) h.textContent = "在听……";
+  const r = await SR.listen({onInterim: t => { if (h && h.isConnected) h.textContent = t; }});
+  st.live = false; if (DG.st !== st || st.phase !== "listen") return; el.classList.remove("live");
+  if (r.broke && !r.text){ toast("这台手机的自动识别用不了，已改用键盘语音输入"); dgRender(); return; }
+  if (!r.text){ if (h) h.textContent = r.error ? srErrorText(r.error) : "没听清，再点一次"; return; }
+  dgFinish(r.text);
+};
+ACT["dg-check"] = () => { const v = ($("#typed")||{}).value || ""; if (!v.trim()){ toast("先说一句"); return; } SR.abort(); dgFinish(v.trim()); };
+ACT["dg-done"] = () => { SR.abort(); dgFinish(""); };
+ACT["dg-say"] = el => { const st = DG.st; if (!st) return; const t = st.d.turns[st.i]; if (t) TTS.speak(t.reply[+el.dataset.k]); };
+ACT["dg-next"] = () => {
+  const st = DG.st; if (!st) return;
+  st.i++; st.phase = "listen"; st.show = false; st.said = ""; st.verdict = null; st.plays = 0;
+  if (st.i >= st.d.turns.length){ S.dlgDone = S.dlgDone || {}; S.dlgDone[st.d.id] = (S.dlgDone[st.d.id] || 0) + 1; dayRec().cards += 1; save(); dgRender(); return; }
+  dgRender(); setTimeout(() => dgPlay(false), 250);
+};
+ACT["dg-restart"] = () => { const st = DG.st; if (!st) return; st.i = 0; st.phase = "listen"; st.show = false; dgRender(); setTimeout(() => dgPlay(false), 250); };
 
 /* ---------- 练习计划（如果……就……） ---------- */
 const PLAN_OPTS = ["晚饭后坐下的时候","睡前躺到床上的时候","早上起床洗漱完","坐车、走路的时候","午饭后"];
