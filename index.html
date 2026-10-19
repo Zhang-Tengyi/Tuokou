@@ -373,7 +373,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.9.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.9.2"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1803,7 +1803,7 @@ function parseImport(text){
     if (!s || s.startsWith("#")) return;
     const p = s.split(/\s*[|｜]\s*/);
     const kind = p[0];
-    if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); if (p[2] && /替换|replace/i.test(p[2]) && !res.meta.replace.includes(deck)) res.meta.replace.push(deck); return; }
+    if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); if (/^(日常生活|daily)$/i.test(deck.trim())) deck = "daily"; else if (/^(通用|通用（诊断报告）|core)$/i.test(deck.trim())) deck = "core"; if (p[2] && /替换|replace/i.test(p[2]) && !res.meta.replace.includes(deck)) res.meta.replace.push(deck); return; }
     if (kind==="面试日期" && /^\d{4}-\d{2}-\d{2}$/.test(p[1]||"")){ res.meta.date = p[1]; return; }
     if (kind==="面试官" && p[1]){ res.meta.who.push({deck, name:p[1], company:p[2]||""}); return; }
     if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
@@ -1867,6 +1867,8 @@ const W_RULES = [
   {re:/\bhalf (?:a )?(?:month|mouth)\b/gi, tag:"地道说法", msg:()=>"半个月：two weeks"},
   {re:/\bmouth\s+ago\b|\b(?:a|one|two|three|few|last|next|this|per)\s+mouths?\b/gi, tag:"拼写", msg:()=>"月份是 month，不是 mouth"},
   {re:/\bfor study\b/gi, tag:"地道说法", msg:()=>"来读书：for school / to study"},
+  {re:/(?:^|[.!?]\s+)(?:(?:yes|yeah|sure|absolutely|definitely),?\s+)?(?:i'?m|i am|we'?re|we are)\s+(?:(?:definitely|really|very|so|also|still|pretty|super)\s+)*(interested in|good at|familiar with|excited about|looking forward to)\s*(?=[.!?]|$)/gi, g:1, tag:"介词", msg:g=>{ const x = String(g).toLowerCase(); const ex = {"interested in":"I'm interested in this role.　不接东西就只说 I'm interested.", "good at":"I'm good at CAD design.", "familiar with":"I'm familiar with SolidWorks.", "excited about":"I'm excited about this role.　不接东西就只说 I'm excited.", "looking forward to":"I'm looking forward to it.　或者 I'm looking forward to hearing from you."}[x] || ""; return `${x} 后面要接东西：${ex}`; }},
+  {re:/\bhow'?s everything doing\b/gi, tag:"地道说法", msg:()=>"问事情说 How's everything going?　问人说 How are you doing?"},
   {re:/\b(?:master'?s|masters|master|bachelor'?s|bachelors|bachelor|degree|degrees|phd|major|majored|majoring)\s+(?:degree\s+)?(at)\s+(?:mechanical|electrical|computer|civil|chemical|industrial|biomedical|aerospace|software|materials|robotics)\b/gi, g:1, tag:"介词", msg:()=>"专业前面用 in：a master's in mechanical engineering"},
   {re:/\b(?:engineering|science|degree|degrees|master'?s|masters|bachelor'?s|studied|graduated)\s+(as)\s+(?:\w+\s+){0,2}?(?:university|college|school)\b/gi, g:1, tag:"介词", msg:()=>"在某个学校：at，不是 as"},
   {re:/\b(?:[Ee]ngineering|[Ss]cience|[Dd]egrees?|[Mm]aster'?s|[Mm]asters|[Bb]achelor'?s|[Ss]tudied|[Gg]raduated)\s+(as)\s+(?=[A-Z][a-z]+)/g, g:1, tag:"介词", msg:()=>"在某个学校：at，不是 as"},
@@ -2105,7 +2107,7 @@ rebuildQ();
 function allQuestions(){ return CONTENT.QUESTIONS.concat(S.customQ || []); }
 /* ---------- 题库：通用 / 日常生活 / 你导入的 ---------- */
 function deckList(){
-  const names = Array.from(new Set((S.custom || []).map(c => c.deck || "我的卡片").concat((S.customQ || []).map(q => q.deck)).filter(Boolean)));
+  const names = Array.from(new Set((S.custom || []).map(c => c.deck || "我的卡片").concat((S.customQ || []).map(q => q.deck)).filter(Boolean))).filter(n => n !== "daily" && n !== "core");
   return [{id:"all", label:"全部题库"}, {id:"core", label:"通用（诊断报告）"}, {id:"daily", label:"日常生活"}].concat(names.map(n => ({id:"u:" + n, label:n})));
 }
 function curDeck(){ const d = S.settings.deck || "all"; return deckList().some(x => x.id === d) ? d : "all"; }
@@ -3806,7 +3808,8 @@ VIEWS.write = {
       <div id="wOut"></div>
       <details class="panel" style="margin-top:14px"><summary>规则查不出来的，发送前自己再过一遍</summary><ul class="issues">
         <li>每句话都有动词吗？形容词前有 is、's 吗？</li><li>这件事是平时、过去、已经，还是正在？时态对吗？</li><li>although、because 有没有和 but、so 一起用？</li>
-        <li>两个以上的东西加 -s 了吗？</li><li>第一句就说清写信的目的了吗？</li><li>感谢信：面试后 24 小时内发，提一个面试里聊到的具体内容。</li></ul></details></div>`;
+        <li>两个以上的东西加 -s 了吗？</li><li>第一句就说清写信的目的了吗？</li>
+        <li>interested in、looking forward to、good at 后面接东西了吗？</li><li>我是在说自己（I'm free now），还是在问对方（Let me know if you're free）？</li><li>回完消息，有没有加一句反问或者下一步（比如约个时间）？</li><li>感谢信：面试后 24 小时内发，提一个面试里聊到的具体内容。</li></ul></details></div>`;
   },
   mount(){ const ta = $("#wText"); ta && ta.addEventListener("input", () => { L.wDraft = ta.value; saveLocal(); }); }
 };
@@ -4141,7 +4144,8 @@ VIEWS.custom = {
     const names = Object.keys(groups);
     const body = names.map(name => {
       const cs = groups[name]; const qn = (S.customQ || []).filter(q => q.deck === name).length;
-      return `<div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>${esc(name)}：${cs.length} 张卡${qn ? `，${qn} 道面试题` : ""}</span><button class="btn sm danger" data-act="deck-del" data-v="${esc(name)}">删除这个题库</button></div>
+      const shown = name === "daily" ? "日常生活（你导入的部分）" : name === "core" ? "通用（你导入的部分）" : name;
+      return `<div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>${esc(shown)}：${cs.length} 张卡${qn ? `，${qn} 道面试题` : ""}</span><span class="row-gap">${name !== "daily" && name !== "core" ? `<button class="btn sm" data-act="deck-merge" data-v="${esc(name)}">并到其他题库</button>` : ""}<button class="btn sm danger" data-act="deck-del" data-v="${esc(name)}">删除这个题库</button></span></div>
         <div class="list">${cs.slice().reverse().slice(0, 60).map(c => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(c.en)}</b><span>${esc(c.t === "f" ? c.wrong : c.zh)}，${esc((TAGS[c.tag]||TAGS.other).label)}</span></div><button class="btn sm" data-act="cu-del" data-v="${esc(c.id)}">删除</button></div>`).join("")}${cs.length > 60 ? `<div class="li"><span class="small muted">还有 ${cs.length - 60} 张没列出来</span></div>` : ""}</div>`;
     }).join("");
     return `<div class="wrap">${backBtn()}<h2>我导入的内容</h2>
@@ -4152,6 +4156,21 @@ ACT["cu-del"] = async el => {
   if (!await sheet("删除这张卡片？", "它的复习记录也会一起删掉。", "删除", true)) return;
   const id = el.dataset.v; S.custom = S.custom.filter(c => c.id !== id); delete S.cards[id]; delete S.best[id];
   rebuildCatalog(); save(); UI.render();
+};
+/* 把一个导入的题库并到别的题库：卡片的复习记录都保留（卡片编号不变，只是换了所属题库） */
+ACT["deck-merge"] = async el => {
+  const name = el.dataset.v; const hasQ = (S.customQ || []).some(q => q.deck === name);
+  const targets = deckList().filter(d => d.id !== "all" && d.id !== "u:" + name && !(hasQ && (d.id === "daily" || d.id === "core")));
+  if (!targets.length){ toast("没有可以并进去的题库"); return; }
+  const t = await choose(`把“${name}”并到哪个题库？`, (hasQ ? "这个题库里有面试题，只能并到另一个导入的题库。" : "") + "卡片的复习记录都会保留。", targets.map(d => [d.id, d.label]).concat([["", "取消"]]));
+  if (!t) return;
+  const to = t === "daily" ? "daily" : t === "core" ? "core" : t.slice(2); const label = (targets.find(d => d.id === t) || {}).label || to;
+  for (const c of S.custom) if ((c.deck || "我的卡片") === name) c.deck = to;
+  for (const q of (S.customQ || [])) if (q.deck === name) q.deck = to;
+  if (S.deckMeta && S.deckMeta[name]){ if (to !== "daily" && to !== "core" && !S.deckMeta[to]) S.deckMeta[to] = S.deckMeta[name]; delete S.deckMeta[name]; }
+  if (S.settings.deck === "u:" + name) S.settings.deck = t;
+  if (S.settings.callDeck === "u:" + name) S.settings.callDeck = to === "daily" || to === "core" ? "core" : t;
+  rebuildQ(); rebuildCatalog(); save(true); toast(`并好了：现在都在“${label}”里`); UI.render();
 };
 ACT["deck-del"] = async el => {
   const name = el.dataset.v;
