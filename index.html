@@ -357,6 +357,11 @@ audio{width:100%;margin-top:8px}
 .plan-row input[type=checkbox]{width:22px;height:22px;flex:none}
 .plan-card .list{margin-top:6px}
 
+.w.ck{text-decoration:underline dotted;text-decoration-color:var(--muted);text-underline-offset:4px;text-decoration-thickness:1px}
+.ck-box{background:var(--amber-soft);border-radius:12px;padding:12px}
+
+.ckg{background:var(--amber-soft);border-radius:5px;padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -377,7 +382,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.10.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.11.1"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1324,7 +1329,9 @@ const DIALOGS = [
 
 /* 通用面试题的参考回答：美国人在这种场合最自然的说法 */
 const REF = {"Q1": "Sure. I recently finished my master's in mechanical engineering, and my undergrad was in mechatronics, so I work across the mechanical, electrical, and software sides of a system. I did two internships on vacuum coating systems, where I wrote PLC and communication code and helped with on-site commissioning. In a robotics lab, I designed hardware for robots, like cable routing and electronics mounts. Now I'm looking for a hands-on role where I can design, build, and test real systems.", "Q2": "Sure. One project I'm proud of is a cable routing redesign for a robot that can crawl and fly. When it switches modes, the knee rotates 90 degrees, and the cables kept wearing out and popping out. I designed a U-shaped channel in SolidWorks and 3D printed it. The channel opens outward, so the cables get pressed against the wall instead of popping out. After that, the problem stopped, and the lab kept using the design.", "Q3": "During an internship, I helped commission a vacuum coating system at a customer's site. The link between the PLC and the power supply kept failing. We checked it one layer at a time: the wiring, then the protocol, then the firmware. I found that the response frames didn't match, and the vendor confirmed it was a firmware bug. After the fix, the system met all the operation requirements. What I took away is to find the right layer first, and bring clear evidence before you go to a vendor.", "Q4": "During an internship, another engineer designed the HMI screens, and I knew the PLC variables really well, so we tested the screens together. When a screen was linked to the wrong variable, I fixed it, and then we checked it again together. It worked well because we split the work by what each of us knew best.", "Q5": "For my undergrad thesis, I built a jet-propulsion robot inspired by razor clams. My first plan was to use electromagnets to open and close the shell. When I tested them on a bench, they only worked within about two millimeters, so they couldn't move the shell. I switched to a motor that drives a permanent-magnet rotor, and later to a spring mechanism. What I learned is to test the risky part on a bench early, before I build the whole system.", "Q6": "I'm interested in this role because it's really hands-on. I'd get to design, build, and test real hardware, which is exactly what I enjoyed most in the lab and in my internships. And I'd love to learn from a team that builds real products.", "Q7": "I'd say my biggest strength is that I'm hands-on across mechanical, electrical, and software. I can design a part, wire it up, write the control code, and test it. One thing I'm working on is explaining technical details in a short, clear way. So now I start with the result, and then give one or two key details.", "Q8": "Yes, thank you. What qualities make someone really successful on your team? And what would I be working on in the first few months?", "Q9": "I'm on F-1 OPT right now, so I'm authorized to work. I'm also eligible for the STEM OPT extension, and down the road, I will need H-1B sponsorship.", "Q10": "Yes. I'm on F-1 OPT, so I'm authorized to work in the US right now.", "Q11": "I'm flexible, and I'd like to learn more about the role first. Could you share the range for this position?", "Q12": "I can start soon after an offer. I'd just need a little time to relocate if the job isn't nearby.", "Q13": "Yes, I'm open to relocating, and I'm happy to work onsite."};
-const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS, REF};
+/* 常用固定搭配：点句子里的词时，整体显示读法和意思 */
+const CHUNKS = [["job hunting", "找工作"], ["send out applications", "投简历"], ["apply for", "申请（职位）"], ["apply to", "投（某个公司、职位）"], ["follow up on", "跟进（某件事）"], ["follow up", "跟进"], ["reach out to", "主动联系（某人）"], ["reach out", "主动联系"], ["hear back from", "收到……的回复"], ["hear back", "收到回复"], ["get back to", "回复（某人）"], ["look forward to", "期待"], ["come across", "偶然看到"], ["stand out", "很显眼，引人注意"], ["check all the boxes", "完全符合要求"], ["down the road", "将来，以后"], ["a few hundred", "几百"], ["a big part of", "……很重要的一部分"], ["get the hang of", "掌握窍门"], ["give it a try", "试一试"], ["pick it back up", "重新捡起来"], ["hang out", "一起玩，待着"], ["tag along", "跟着去"], ["lie around", "躺着什么都不干"], ["play on my phone", "玩手机"], ["these days", "最近，这段时间"], ["over and over", "一遍又一遍"], ["the exact same", "完全一样的"], ["at the end of the day", "归根结底"], ["in the end", "最后"], ["as a result", "结果，因此"], ["make sure", "确保"], ["figure out", "弄明白，想出办法"], ["work on", "做（项目），在做"], ["set up", "搭建，设置"], ["build on", "在……的基础上提升"], ["pick up", "学会；拿起来"], ["keep track of", "记录，跟踪"], ["keep in mind", "记住"], ["take care of", "处理，照顾"], ["end up", "最后（变成、做了）"], ["run into", "遇到（问题）"], ["turn out", "结果是"], ["find out", "查出来，发现"], ["look into", "调查，研究一下"], ["deal with", "处理，应对"], ["break down", "拆解；坏掉"], ["wear out", "磨损"], ["pop out", "弹出来"], ["line up", "对齐；排队"], ["snap onto", "卡到……上"], ["step by step", "一步一步地"], ["one layer at a time", "一层一层地"], ["at a time", "每次（一个）"], ["in real time", "实时"], ["on the side", "业余，另外"], ["side project", "业余项目"], ["on site", "在现场"], ["on-site work", "现场工作"], ["full-time", "全职"], ["part-time", "兼职"], ["hands-on", "动手的，实际操作的"], ["from design to testing", "从设计到测试"], ["be open to", "愿意接受"], ["open to", "愿意接受"], ["comfortable with", "对……没问题，熟悉"], ["ready to", "准备好（做某事）"], ["excited about", "对……很兴奋，很期待"], ["interested in", "对……感兴趣"], ["eligible for", "有资格（申请）"], ["authorized to work", "有工作许可"], ["work authorization", "工作许可"], ["job description", "职位描述"], ["relocation assistance", "搬家补助"], ["next steps", "接下来的安排"], ["the whole package", "整体待遇"], ["salary range", "薪资范围"], ["club fitting", "球杆定制"], ["ball flight", "球的飞行"], ["driving range", "练习场"], ["play a round", "打一场（球）"], ["keep score", "记杆数"], ["face, path, and contact", "杆面、挥杆路径和击球点"], ["in the loop", "知情，了解最新情况"], ["keep me in the loop", "有消息告诉我一声"], ["circle back", "回头再跟进"], ["touch base", "简单联系一下"], ["on your end", "你那边"], ["cut out", "（电话信号）断了；删掉"], ["say that again", "再说一遍"], ["let me think", "让我想一下"], ["just to make sure", "确认一下"], ["in short", "简单来说"], ["for example", "比如"], ["to be honest", "说实话"], ["kind of", "有点儿；……的一种"], ["a little bit", "一点儿"], ["get started", "开始"], ["wrap up", "收尾，结束"], ["thanks for having me", "谢谢邀请我"], ["nice to meet you", "很高兴认识你"], ["take a look", "看一下"], ["trial and error", "反复试错"], ["root cause", "根本原因"], ["test rig", "测试台架"], ["data acquisition", "数据采集"], ["strain relief", "应力消除"], ["snap-fit", "卡扣（结构）"], ["tool-less", "免工具的"], ["firmware bug", "固件 bug"], ["steady-state error", "稳态误差"], ["transfer function", "传递函数"], ["degree of freedom", "自由度"], ["under its own weight", "在自重下"], ["a dream combination", "梦想中的组合"], ["I'd love to", "我很想"], ["I'm happy to", "我很乐意"], ["would you mind", "你介意……吗"], ["make it work", "想办法搞定"], ["it depends on", "取决于"], ["in charge of", "负责"], ["responsible for", "负责"], ["work closely with", "和……密切合作"], ["come up with", "想出（办法、主意）"], ["get used to", "习惯于"], ["used to", "过去常常（be used to：习惯于）"], ["by the way", "顺便说一下"], ["as soon as possible", "尽快"], ["in person", "当面"], ["on the phone", "在电话里"], ["time zone", "时区"], ["get out", "出门（去打球、去玩）"], ["whenever I can", "只要有机会"], ["so far", "到目前为止"], ["right away", "马上"], ["pretty much", "差不多"], ["as well", "也"], ["a couple of", "几个，两三个"], ["take away", "拿走；（takeaway）收获"], ["get to", "有机会（做某事）；到达"], ["learn from", "向……学习"], ["stay hands-on", "一直动手做事"], ["one thing at a time", "一次只做一件事"], ["change one thing at a time", "每次只改一个因素"], ["in the field", "在现场；在……领域"], ["under pressure", "在压力下"], ["on time", "按时"], ["ahead of time", "提前"], ["at the same time", "同时"], ["work out", "解决；（结果）不错；锻炼"], ["narrow down", "缩小范围"], ["rule out", "排除"], ["back up", "支持；备份"], ["put together", "组装，整理出来"], ["what kind of", "什么样的"], ["as well as", "以及，还有"], ["I'm used to", "我习惯了"], ["are you used to", "你习惯……了吗"], ["be used to", "习惯于"], ["kind of like", "有点像"], ["send out", "发出去（投简历：send out applications）"], ["sent out", "发出去了"], ["right now", "现在、此刻"], ["check in", "联系一下、问问进展"], ["catch up", "叙叙旧；跟上进度"], ["all kinds of", "各种各样的"], ["right up my alley", "正对我胃口、正好是我擅长的"], ["go through", "经历；仔细过一遍"], ["went through", "经历了；仔细过了一遍"], ["one at a time", "一次一个"], ["look for", "找"], ["relocate to", "搬到（为了工作）"], ["based on", "根据、基于"], ["work with", "和…合作；用（某个工具）"], ["switch to", "换成"], ["familiar with", "熟悉"], ["start with", "从…开始"], ["help with", "帮忙做…"], ["fit for", "适合…"], ["able to", "能够"], ["participate in", "参加"], ["move to", "搬到"], ["hear about", "听说"], ["okay with", "能接受、没问题"], ["come with", "附带、配有"], ["addicted to", "对…上瘾"], ["iterate on", "在…基础上反复改进"], ["lose to", "输给"], ["lost to", "输给了"], ["thanks for", "谢谢你的…"], ["learn more about", "进一步了解"], ["all the way", "一路、全程（from design all the way to testing）"], ["from scratch", "从零开始"], ["focus on", "专注于"], ["depend on", "取决于；依靠"], ["come up", "被提到；出现"], ["came up", "被提到了；出现了"], ["show up", "出现、到场"], ["sign up", "报名、注册"], ["shut down", "关机、停掉"], ["turn on", "打开（设备）"], ["turn off", "关掉（设备）"], ["plug in", "插上电"], ["hook up", "接上、连上（线、设备）"], ["free up", "腾出（时间、空间）"], ["ran into", "遇到了（问题）"], ["came up with", "想出了"], ["found out", "发现了、查明了"], ["took care of", "处理了；照顾了"], ["in terms of", "在…方面"], ["as long as", "只要"], ["as soon as", "一…就…"], ["make sense", "说得通、有道理"], ["point out", "指出"], ["try out", "试一试"], ["walk me through", "带我过一遍、给我讲讲"], ["a good fit", "合适（的人选）"], ["on my end", "我这边"], ["be honest", "说实话（to be honest）"], ["at first", "一开始"], ["first time", "第一次"], ["either way", "不管怎样，反正"], ["look like", "看起来像；是什么样子"], ["in the early stages", "还在早期阶段"], ["bring together", "把……结合在一起"], ["check all of those boxes", "完全符合要求"], ["not right now", "现在没有"], ["at least", "至少"], ["instead of", "而不是"], ["such as", "比如"], ["rather than", "而不是"], ["no worries", "没关系，不用担心"], ["sounds good", "好的，听起来不错"], ["for sure", "当然，肯定"], ["of course", "当然"], ["I mean", "我的意思是"], ["I guess", "我猜，应该是"], ["not really", "不太是，其实没有"], ["at all", "一点也（不）"], ["for a while", "一段时间"], ["on my way", "在路上了"], ["supposed to", "应该（按说要）"], ["take a break", "休息一下"], ["hang on", "稍等"], ["hold on", "稍等一下"], ["give me a second", "给我一秒钟"], ["let me know", "告诉我一声"], ["how about", "……怎么样"], ["what about", "……呢；……怎么样"], ["on a bench", "在台架上"], ["bench test", "台架测试"], ["test protocol", "测试规程"], ["noise floor", "噪声底"], ["dynamic range", "动态范围"], ["load cell", "称重传感器"], ["wiring diagram", "接线图"], ["launch monitor", "发射监测仪（测球速、转速）"], ["swing robot", "挥杆机器人"], ["ball speed", "球速"], ["club head speed", "杆头速度"], ["spin rate", "转速"], ["launch angle", "起飞角"], ["impact location", "击球位置"], ["high-speed video", "高速视频"], ["computer vision", "计算机视觉"], ["as a matter of fact", "其实，事实上"], ["the other day", "前几天"], ["once in a while", "偶尔"], ["every other day", "每隔一天"], ["in a row", "连续"], ["make a difference", "有影响，起作用"], ["pay attention to", "注意"], ["take notes", "做笔记"], ["take a look at", "看一下"], ["get in touch", "联系"], ["look up", "查（资料）"], ["fill out", "填（表）"], ["sign in", "登录"], ["run late", "要迟到了"], ["up to you", "你决定"], ["how come", "怎么会，为什么"], ["go ahead", "请便；你先"], ["after all", "毕竟"], ["all set", "都准备好了"], ["by myself", "自己一个人"], ["on my own", "自己独立地"], ["parts list", "零件清单"], ["test log", "测试记录"], ["demo day", "试打活动"], ["two worlds", "两个领域（我的两个世界）"]];
+const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS, REF, CHUNKS};
 
 
 /* 脱口 · 核心逻辑（不碰 DOM，可在 Node 里测试） */
@@ -1743,6 +1750,35 @@ function thoughtGroups(text){
   }
   return out.filter(Boolean).map(x => x.replace(/\u2024/g, "."));
 }
+/* 固定搭配：在一串词里找（最长优先、不重叠），常见的词形变化也认：sending / sent out applications */
+const CK_IRR = {send:["sent"],come:["came"],stand:["stood"],make:["made"],get:["got","gotten"],take:["took","taken"],find:["found"],run:["ran"],break:["broke","broken"],keep:["kept"],give:["gave","given"],go:["went","gone"],hear:["heard"],build:["built"],wear:["wore","worn"],lie:["lying","lay"],deal:["dealt"],set:["set"],cut:["cut"],put:["put"],learn:["learnt"]};
+function ckTok(t, w){
+  if (t === w) return true; if (t.length < 2 || /[^a-z]/.test(t)) return false;
+  if (w === t + "s" || w === t + "es" || w === t + "ed" || w === t + "d" || w === t + "ing") return true;
+  if (t.endsWith("e") && w === t.slice(0, -1) + "ing") return true;
+  if (t.endsWith("y") && (w === t.slice(0, -1) + "ies" || w === t.slice(0, -1) + "ied")) return true;
+  if (/[^aeiou][aeiou][bdgmnprt]$/.test(t) && (w === t + t.slice(-1) + "ing" || w === t + t.slice(-1) + "ed")) return true;
+  return !!(CK_IRR[t] && CK_IRR[t].includes(w));
+}
+function chunkLex(pairs){ return (pairs || []).map(([p, zh]) => ({p, zh, t: String(p).toLowerCase().replace(/’/g, "'").match(/[a-z][a-z'-]*/g) || []})).filter(x => x.t.length >= 2).sort((a, b) => b.t.length - a.t.length); }
+/* 动词 + 小品词的搭配，中间可以夹一个代词（pick it up、figure it out），bring … together 中间最多三个词 */
+const CK_SEP = new Set(["up","out","down","off","on","in","back","over","away","together","through","around"]);
+const CK_PRON = new Set(["it","them","him","her","me","us","this","that","everything","something","things"]);
+function findChunks(words, lex){
+  const out = []; const ws = words.map(w => String(w).toLowerCase().replace(/’/g, "'"));
+  for (let i = 0; i < ws.length; ){
+    let hit = null, end = 0;
+    for (const e of lex){ if (i + e.t.length > ws.length) continue; let ok = true; for (let k = 0; k < e.t.length; k++) if (!ckTok(e.t[k], ws[i + k])){ ok = false; break; } if (ok){ hit = e; end = i + e.t.length - 1; break; } }
+    if (!hit) for (const e of lex){
+      if (e.t.length !== 2 || !CK_SEP.has(e.t[1]) || !ckTok(e.t[0], ws[i])) continue;
+      const tog = e.t[1] === "together";
+      for (let g = 1; g <= (tog ? 3 : 1); g++){ const j = i + g + 1; if (j >= ws.length) break; if ((tog || CK_PRON.has(ws[i + 1])) && ws[j] === e.t[1]){ hit = e; end = j; break; } }
+      if (hit) break;
+    }
+    if (hit){ out.push({s:i, e:end, p:hit.p, zh:hit.zh}); i = end + 1; } else i++;
+  }
+  return out;
+}
 /* 分句：3.3、0.2 这样的小数不当句号 */
 function splitSentences(text){
   const s = String(text || "").replace(/\s+/g, " ").trim(); if (!s) return [];
@@ -1905,13 +1941,17 @@ function checkWriting(text){
   const sentRe = /[^.!?。！？\n]+[.!?。！？]*/g; let s;
   while ((s = sentRe.exec(text))){
     const seg = s[0], off = s.index;
-    if (/\b(although|even though)\b/i.test(seg) || /^\s*though\b/i.test(seg)){
-      const b = /\bbut\b/i.exec(seg);
-      if (b) issues.push({start:off+b.index, end:off+b.index+3, text:b[0], tag:"成对词", msg:"although 和 but 只留一个"});
+    /* 只看 although / because 后面的 but / so（中文“虽然……但是”“因为……所以”的顺序），前面出现的不算 */
+    const al = /\b(although|even though)\b/i.exec(seg) || /^\s*(though)\b/i.exec(seg);
+    if (al){
+      const at = al.index + al[0].length; const b = /\bbut\b/i.exec(seg.slice(at));
+      if (b) issues.push({start:off+at+b.index, end:off+at+b.index+3, text:b[0], tag:"成对词", msg:"although 和 but 只留一个"});
     }
-    if (/\bbecause\b/i.test(seg)){
-      const so = /,\s*(so)\b/i.exec(seg) || /\b(so)\s+(?:i|we|you|he|she|they|it|my|the|that|this|there|usually)\b/i.exec(seg);
-      if (so){ const st = off + so.index + so[0].toLowerCase().indexOf("so"); issues.push({start:st, end:st+2, text:"so", tag:"成对词", msg:"because 和 so 只留一个"}); }
+    const bc = /\bbecause\b/i.exec(seg);
+    if (bc){
+      const at = bc.index + 7; const rest = seg.slice(at);
+      const so = /,\s*(so)\b/i.exec(rest) || /\b(so)\s+(?:i|we|you|he|she|they|it|my|the|that|this|there|usually)\b/i.exec(rest);
+      if (so){ const st = off + at + so.index + so[0].toLowerCase().indexOf("so"); issues.push({start:st, end:st+2, text:"so", tag:"成对词", msg:"because 和 so 只留一个"}); }
     }
   }
   issues.sort((a,b)=>a.start-b.start || b.end-a.end);
@@ -2046,7 +2086,7 @@ function pickQuestions(ctx, n){
 }
 
 const CORE = {TAGS,TYPE_LABEL,TENSE_NOTE,tagKey,dstr,dnum,nstr,splitAlts,shuffle,hash,buildCatalog,INTERVALS,MASTERED_BOX,srsRate,
-  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,thoughtGroups,pronTip,splitSentences,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
+  tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,thoughtGroups,pronTip,splitSentences,chunkLex,findChunks,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
   buildSession,diversify,interleave,pickQuestions,IRR,SESSION_CFG};
 
 
@@ -2107,7 +2147,10 @@ function pruneOld(){
 }
 pruneOld();
 let CAT = K.buildCatalog(CONTENT, S.custom, S.myAlts);
-function rebuildCatalog(){ CAT = K.buildCatalog(CONTENT, S.custom, S.myAlts); }
+let CHUNK_LEX = [];
+function buildChunkLex(){ CHUNK_LEX = K.chunkLex((CONTENT.CHUNKS || []).concat(CAT.cards.filter(c => c.t === "w" && /\s/.test(c.word || "")).map(c => [c.word, c.mean]))); }
+function rebuildCatalog(){ CAT = K.buildCatalog(CONTENT, S.custom, S.myAlts); buildChunkLex(); }
+buildChunkLex();
 const QBY = {};
 function rebuildQ(){ for (const k of Object.keys(QBY)) delete QBY[k]; for (const q of CONTENT.QUESTIONS) QBY[q.id] = q; for (const q of (S.customQ || [])) QBY[q.id] = q; }
 rebuildQ();
@@ -2917,6 +2960,7 @@ class CardStage {
       else runLights($("#lamps"), 170, 200).then(() => { if (!this.alive || this.phase !== "prompt" || this.t0) return; this.startClock(); });
     } else if (this.phase === "reveal"){
       el.innerHTML = `<div class="card">${this.chips()}${this.revealHTML()}</div>`;
+      if (el.querySelector(".ckg") && (L.ckHintN || 0) < 3){ L.ckHintN = (L.ckHintN || 0) + 1; saveLocal(); const h = document.createElement("p"); h.className = "small muted"; h.style.marginTop = "10px"; h.textContent = "黄色底的是固定搭配：点一下，可以整体听、看意思，也能单独听其中一个词。"; el.querySelector(".card").appendChild(h); }
       if (canAutoSpeak()) TTS.speak(this.target().en);
     } else if (this.phase === "drill"){
       const steps = this.drillSteps(); const n = steps.length; const k = Math.min(this.drill, n - 1); const cur = steps[k];
@@ -3064,7 +3108,10 @@ function sayBtns(text){ return `<button class="btn sm ghost say-b" data-act="say
 function wordsHTML(text, key){
   let s = String(text || ""); if (L.slashes && /\s/.test(s)) s = K.thoughtGroups(s).join(" / "); let out = "", last = 0;
   const keys = key ? K.tokens(key).filter(k => k.length >= 3 && !["the","and","for","you","are","out"].includes(k)) : [];
-  s.replace(/[A-Za-z][A-Za-z'’-]*/g, (m, i) => { const isKey = keys.some(k => K.wordsMatch(k, m.toLowerCase())); out += esc(s.slice(last, i)) + `<span class="w${isKey ? " key" : ""}" data-act="word" data-w="${esc(m)}">${esc(m)}</span>`; last = i + m.length; return m; });
+  const ms = [...s.matchAll(/[A-Za-z][A-Za-z'’-]*/g)];
+  const ck = {}; for (const h of K.findChunks(ms.map(m => m[0]), CHUNK_LEX || [])){ const txt = s.slice(ms[h.s].index, ms[h.e].index + ms[h.e][0].length).replace(/ \/ /g, " "); for (let k = h.s; k <= h.e; k++) ck[k] = {txt, zh:h.zh, p:h.p, s:h.s, e:h.e}; }
+  ms.forEach((mm, j) => { const m = mm[0], i = mm.index; const isKey = keys.some(k => K.wordsMatch(k, m.toLowerCase())); const c = ck[j];
+    out += esc(s.slice(last, i)) + (c && j === c.s ? `<span class="ckg" title="${esc(c.zh || "")}">` : "") + `<span class="w${isKey ? " key" : ""}${c ? " ck" : ""}" data-act="word" data-w="${esc(m)}"${c ? ` data-ck="${esc(c.txt)}" data-cz="${esc(c.zh || "")}" data-cb="${esc(c.p)}"` : ""}>${esc(m)}</span>` + (c && j === c.e ? "</span>" : ""); last = i + m.length; });
   return (out + esc(s.slice(last))).replace(/ \/ /g, ' <span class="sl">/</span> ');
 }
 /* 断句开着时，慢速一块一块读，块之间停一下，方便一块一块跟 */
@@ -3080,12 +3127,17 @@ ACT.word = el => {
   const w = String(el.dataset.w || "").replace(/[’']s$/, "").replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g, ""); if (!w) return;
   TTS.speak(w, {rate:0.9});
   const bg = document.createElement("div"); bg.className = "sheet-bg";
-  bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="en" style="font-size:30px">${esc(w)}</div>
+  const ck = el.dataset.ck || "", cz = el.dataset.cz || "", cb = el.dataset.cb || "";
+  const wl = w.toLowerCase(); const wc = CAT.cards.find(c => c.t === "w" && c.word && (String(c.word).toLowerCase() === wl || K.wordsMatch(String(c.word).toLowerCase(), wl)));
+  bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${ck ? `<div class="ck-box"><div class="small muted">这个词在固定搭配里，整体记、整体说更自然</div><div class="en" style="font-size:24px;margin-top:4px">${esc(ck)}</div>${cz ? `<div style="margin-top:2px">${esc(cz)}</div>` : ""}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px"><button class="btn" data-x="cn">${ICON.speak}整体读</button><button class="btn" data-x="cs">慢速</button><button class="btn" data-x="cd">查搭配</button></div></div><div class="small muted" style="margin-top:14px">单独这个词</div>` : ""}<div class="en" style="font-size:30px">${esc(w)}</div>${wc && wc.mean ? `<div style="margin-top:2px">${esc(wc.mean)}</div>` : ""}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn" data-x="n">${ICON.speak}正常读</button><button class="btn" data-x="s">慢速读</button><button class="btn" data-x="d">查意思和音标</button><button class="btn ghost" data-x="c">关闭</button></div>
     <p class="small muted" style="margin-top:10px">“查意思和音标”会打开剑桥英汉词典网页（要联网），里面有中文意思、音标和真人发音。</p></div>`;
   bg.addEventListener("click", e => {
     const b = e.target.closest("[data-x]"); if (e.target === bg || (b && b.dataset.x === "c")){ bg.remove(); return; } if (!b) return;
-    if (b.dataset.x === "n") TTS.speak(w, {rate:0.9}); else if (b.dataset.x === "s") TTS.speak(w, {rate:0.6});
+    if (b.dataset.x === "cn") TTS.speak(ck, {rate:0.95}); else if (b.dataset.x === "cs") TTS.speak(ck, {rate:0.7});
+    else if (b.dataset.x === "cd") window.open("https://dictionary.cambridge.org/dictionary/english-chinese-simplified/" + encodeURIComponent(cb.toLowerCase().replace(/[^a-z' -]/g, "").trim().replace(/\s+/g, "-")), "_blank", "noopener");
+    else if (b.dataset.x === "n") TTS.speak(w, {rate:0.9}); else if (b.dataset.x === "s") TTS.speak(w, {rate:0.6});
     else if (b.dataset.x === "d") window.open("https://dictionary.cambridge.org/dictionary/english-chinese-simplified/" + encodeURIComponent(w.toLowerCase()), "_blank", "noopener");
   });
   document.body.appendChild(bg);
@@ -3473,7 +3525,13 @@ function buildModuleCall(mod, n){
   let order = [];
   if (mod === "phone") order = [first, ...take(qs.filter(q => qRole(q) === "screen"), big ? 3 : 2), ...take(qs.filter(q => !["first","screen","ask"].includes(qRole(q))), 1), ask];
   else if (mod === "basic") order = [first, ...take(qs.filter(q => qRole(q) === "core"), big ? 3 : 2), ask];
-  else if (mod === "tech") order = [...take(qs, big ? 3 : 2), ask];
+  else if (mod === "tech"){
+    /* 先挑有追问、而且追问有参考回答的题：模拟完能对照着学 */
+    const n = big ? 3 : 2, want = big ? 2 : 1; const FA = S.followAns || {};
+    const wf = qs.filter(q => (q.follow || []).length); const wa = wf.filter(q => q.follow.some(f => FA[q.id + "|" + f]));
+    let a = take(wa, Math.min(wa.length, want)); if (a.length < want) a = a.concat(take(wf.filter(q => !a.includes(q)), want - a.length));
+    order = [...a, ...take(qs.filter(q => !a.includes(q)), n - a.length), ask];
+  }
   else order = take(qs, big ? 6 : 4);
   order = order.filter(Boolean);
   order.forEach((q, i) => {
@@ -4702,6 +4760,7 @@ CHG.hfsrc = el => { L.hfSrc = el.value; saveLocal(); if (HF.st){ if (HF.st.playi
 
 /* ---------- 说话技巧：只放对“听懂你”影响最大的几条，每条配例句 ---------- */
 const SPEAK_TIPS = [
+  {h:"固定搭配：整体记、整体说", p:"很多英语不是一个词一个词拼起来的，而是现成的词组，比如 job hunting、send out applications、look forward to。研究发现，学会留意并使用这些固定搭配的学习者，口语被评得更好。练习时，黄色底的就是固定搭配：点一下能整体听、看意思，也能单独听其中一个词。", ex:["I'm job hunting, so I send out applications every day.", "I'm looking forward to hearing from you."]},
   {h:"先抓三件事：重音、语调、断句", p:"研究发现，听的人觉得最影响理解的，是单词重音、句子重音和语调。发音不完美没关系，这三样对了，对方就容易听懂。", ex:[]},
   {h:"重音：拉长、音调起伏，不是喊大声", p:"中文母语者强调一个词时，常用“更大声”；美国人是把这个词拉长，音调先抬起来再落下。一句话里，名词、动词、形容词、否定词重；其余的轻。", ex:["I just finished my master's in mechanical engineering."]},
   {h:"轻读：小词又轻又短", p:"a、the、to、for、of、and、can 在句子里读得很轻，元音含糊成“呃”。每个字都读得一样重，听起来就像机器人。", ex:["I want to grab a cup of coffee.", "I can do it."]},
