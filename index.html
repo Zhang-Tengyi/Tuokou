@@ -362,6 +362,13 @@ audio{width:100%;margin-top:8px}
 
 .ckg{background:var(--amber-soft);border-radius:5px;padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 
+.sc-list{display:grid;gap:6px;margin-top:6px}
+.sc-item{display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.sc-item input{width:20px;height:20px;flex:none;margin-top:2px}
+.sc-fixrow{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--amber-soft)}
+.linkrow{background:none;border:0;padding:0;margin:0;text-align:left;color:inherit;font:inherit;display:flex;flex-direction:column;gap:2px;cursor:pointer}
+.linkrow span{font-size:13px;color:var(--muted)}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -382,7 +389,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.11.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.12.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -2115,7 +2122,7 @@ const KEY = "tuokou.v1", LKEY = "tuokou.local";
 const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
   settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", autoCheck:"smart", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
-  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
+  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, soloIssues:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
 const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false, slashes:false, quiet:false, quietSound:false, resume:null, rdMode:"line", rdSlow:false, rdHide:false});
 function mergeInto(d, o){
   for (const k of Object.keys(o||{})){
@@ -2496,7 +2503,7 @@ const Cloud = {
     if (!this.db) return;
     const base = "data/users/" + this.uid + "/";
     const parts = {
-      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, answers:S.answers, newToday:S.newToday},
+      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, answers:S.answers, newToday:S.newToday},
       stats:{updatedAt:S.updatedAt, days:S.days, tags:S.tags, calls:S.calls},
       journal:{updatedAt:S.updatedAt, journal:S.journal}
     };
@@ -3379,7 +3386,8 @@ class IvStage {
         <h3 style="margin-top:16px">${this.url ? "听回放，对照检查" : "回想一下，对照检查"}</h3>
         <div style="margin-top:6px">${checks.map((c,i) => `<label class="check"><input type="checkbox" data-i="${i}"><span>${c}</span></label>`).join("")}</div><p class="small muted" style="margin-top:6px">没打勾的会变成下一轮的重点。</p>
         ${(() => { const ref = refFor(q); const mine = a && a.text ? a.text.trim() : "";
-          return (ref ? `<details style="margin-top:10px" open><summary>参考回答（对照你刚才说的）</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
+          return selfCheckHTML(q.id, "solo", 0, ((S.soloIssues || {})[q.id] || {}).k)
+            + (ref ? `<details style="margin-top:10px" open><summary>参考回答（对照你刚才说的）</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
             + (mine && mine !== ref ? `<details style="margin-top:10px"><summary>我写好的回答</summary><div class="en sm" style="margin-top:6px">${esc(mine)}</div></details>` : "")
             + (!ref && !mine ? `<div class="note">${esc(q.tip)}</div>${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div></details>` : ""}` : ""); })()}
         <div class="row-gap" style="margin-top:16px">${nextT ? `<button class="btn" data-act="iv-redo">再答一次，压到 ${nextT} 秒</button>` : ""}<button class="btn primary" data-act="iv-done">完成</button></div></div>`;
@@ -3725,8 +3733,98 @@ function crSummaryHTML(rec){
   const rated = qs.filter(q => rate[q]).length; const weak = qs.filter(q => rate[q] === "again" || rate[q] === "hard");
   return `<div class="panel" id="crSum"><b>${rated < qs.length ? `还有 ${qs.length - rated} 题没打分` : weak.length ? `打完分了：${weak.length} 题要重练` : "打完分了：都还行"}</b>
     <p class="small muted" style="margin-top:4px">每题先听自己的录音，再看参考回答，然后给自己打个分。“没说出来”的题明天会再出现，“卡了一下”的后天再出现。</p>
-    ${weak.length ? `<button class="btn primary block" style="margin-top:8px" data-act="cr-redo" data-id="${rec.id}">现在就重练这 ${weak.length} 题</button>` : ""}</div>`;
+    ${weak.length ? `<button class="btn primary block" style="margin-top:8px" data-act="cr-redo" data-id="${rec.id}">现在就重练这 ${weak.length} 题</button>` : ""}
+    <button class="btn block" style="margin-top:8px" data-act="cr-claude" data-id="${rec.id}">复制这次模拟，发给 Claude 分析</button>
+    <p class="small muted" style="margin-top:4px">先在每题下面点“再说一遍，转成文字”，Claude 才能逐句帮你改；它听不到录音，只能看文字。</p></div>`;
 }
+/* 听自己的录音：听这五件事；勾出有问题的，下面直接给对应的练法 */
+const SC_ITEMS = [
+  {k:"flow", t:"顺不顺", d:"有没有长时间停顿、很多 um、说到一半重来"},
+  {k:"gram", t:"语法", d:"过去的事用过去式了吗？-s、be 动词呢？because 和 so 有没有一起用"},
+  {k:"pron", t:"听不听得清", d:"词尾的 -s、-ed、-t 有没有吞掉？重音放对了吗"},
+  {k:"struct", t:"结构", d:"第一句有没有直接回答问题？讲经历有没有按 STAR"},
+  {k:"word", t:"用词", d:"有没有想不起来的词、只能绕着说的地方"}];
+const SC_FIX = {
+  flow:{why:"同一题反复说、慢慢压缩时间，是提高流利度很有效的练法。", acts:[["solo","单题彩排：时间越压越短"],["readflow","连贯跟读参考回答"]]},
+  gram:{why:"先让 app 找出错在哪，再专门练那一类。", acts:[["say","再说一遍，让 app 查语法"],["tense","3 分钟时态练习"]]},
+  pron:{why:"慢速一句一句跟读，最容易把词尾和重音练出来。", acts:[["readslow","慢速一句一句跟读"],["tips","看说话技巧"]]},
+  struct:{why:"第一句直接回答，再讲一两个细节。", acts:[["keys","看要点和第一句"]]},
+  word:{why:"黄色底的固定搭配整体记、整体说，最容易用出来。", acts:[["readline","一句一句跟读参考回答"]]}};
+function scFixHTML(ticks, qid, i, store){
+  if (!ticks.length) return "";
+  return ticks.map(k => { const f = SC_FIX[k], it = SC_ITEMS.find(x => x.k === k); if (!f || !it) return "";
+    const acts = f.acts.filter(([a]) => !(a === "say" && !store.startsWith("call:")));
+    return `<div class="sc-fixrow"><b>${esc(it.t)}</b>：<span class="small">${esc(f.why)}</span><div class="row-gap" style="margin-top:4px">${acts.map(([a, l]) => `<button class="btn sm" data-act="sc-go" data-v="${a}" data-q="${qid}" data-i="${i}" data-store="${esc(store)}">${esc(l)}</button>`).join("")}</div></div>`; }).join("");
+}
+function selfCheckHTML(qid, store, i, ticks){
+  ticks = ticks || [];
+  return `<details class="selfcheck" style="margin-top:10px"${ticks.length ? " open" : ""}><summary class="small"><b>听录音时听这五件事</b>：勾出有问题的，下面告诉你怎么练</summary>
+    <div class="sc-list">${SC_ITEMS.map(it => `<label class="sc-item"><input type="checkbox" data-chg="sc-tick" data-q="${qid}" data-k="${it.k}" data-i="${i}" data-store="${esc(store)}"${ticks.includes(it.k) ? " checked" : ""}><span><b>${esc(it.t)}</b>　<span class="small muted">${esc(it.d)}</span></span></label>`).join("")}</div>
+    <div class="sc-fix">${scFixHTML(ticks, qid, i, store)}</div></details>`;
+}
+CHG["sc-tick"] = el => {
+  const qid = el.dataset.q, st = el.dataset.store, box = el.closest(".selfcheck"); if (!box) return;
+  const ticks = Array.from(box.querySelectorAll('[data-chg="sc-tick"]')).filter(x => x.checked).map(x => x.dataset.k);
+  if (st.startsWith("call:")){ const rec = crRec(st.slice(5)); if (!rec) return; rec.issues = rec.issues || {}; rec.issues[qid] = ticks; }
+  else { S.soloIssues = S.soloIssues || {}; S.soloIssues[qid] = {ts:Date.now(), k:ticks}; }
+  save(); const fx = box.querySelector(".sc-fix"); if (fx) fx.innerHTML = scFixHTML(ticks, qid, el.dataset.i, st);
+};
+ACT["sc-go"] = el => {
+  const a = el.dataset.v, q = el.dataset.q;
+  const rd = (mode, slow) => { L.rdMode = mode; L.rdSlow = slow; saveLocal(); UI.nav("reader", {q, src:"ref"}); };
+  if (a === "solo") return ACT["iv-solo"]({dataset:{q}});
+  if (a === "readflow") return rd("flow", false);
+  if (a === "readslow") return rd("line", true);
+  if (a === "readline") return rd("line", false);
+  if (a === "tense") return startSession("quick", {filter: c => c.t === "t"}, "时态练习");
+  if (a === "tips") return UI.nav("tips");
+  if (a === "keys") return UI.nav("ivedit", {q});
+  if (a === "say") return ACT["cr-say"]({dataset:{id:el.dataset.store.slice(5), q, i:el.dataset.i}});
+};
+/* 最近两周自己勾得最多的问题 */
+function scTop(days){
+  const since = Date.now() - days * 864e5, cnt = {};
+  for (const c of (S.calls || [])) if (c.ts >= since && c.issues) for (const ks of Object.values(c.issues)) for (const k of ks) cnt[k] = (cnt[k] || 0) + 1;
+  for (const v of Object.values(S.soloIssues || {})) if (v.ts >= since) for (const k of v.k) cnt[k] = (cnt[k] || 0) + 1;
+  return Object.entries(cnt).sort((a, b) => b[1] - a[1]);
+}
+/* 再说一遍，用手机的语音识别转成文字（不录音，所以不会和录音抢麦克风） */
+ACT["cr-say"] = async el => {
+  const rec = crRec(el.dataset.id); const qid = el.dataset.q, i = el.dataset.i; const ta = $("#crn-" + i); if (!rec || !ta) return;
+  if (!SR.Ctor || SR.broken){ toast("这台手机现在用不了语音识别。可以点输入框，用键盘的语音输入"); return; }
+  TTS.cancel(); const d = ta.closest("details"); if (d) d.open = true;
+  const btn = $(`[data-act="cr-say"][data-i="${i}"]`); const pre = ta.value.trim() ? ta.value.trim() + " " : "";
+  if (btn){ btn.disabled = true; btn.textContent = "在听……说完停一下"; }
+  const r = await SR.listen({onInterim: t => { ta.value = pre + (t || ""); }});
+  if (btn){ btn.disabled = false; btn.textContent = "再说一遍，转成文字"; }
+  if (r && r.text){ ta.value = pre + r.text; rec.note = rec.note || {}; rec.note[qid] = ta.value; save(); ACT["cr-check"]({dataset:{id:rec.id, q:qid, i}}); }
+  else { ta.value = pre.trim(); toast("没听到。再试一次，或者用键盘的语音输入"); }
+};
+ACT["say-chunk"] = el => TTS.speak(el.dataset.v, {rate:0.9});
+/* 把整次模拟打包，发给 Claude 逐句分析 */
+ACT["cr-claude"] = async el => {
+  const rec = crRec(el.dataset.id); if (!rec) return;
+  const lab = Object.fromEntries(SC_ITEMS.map(x => [x.k, x.t]));
+  const lines = [`下面是我在脱口里做的一次模拟面试（${modName(rec.mode)}，${fmtWhen(rec.ts)}）。请你：`,
+    "1. 逐题看“我说的”：指出语法错误和不自然的地方，给出更自然的说法；",
+    "2. 看内容和结构（第一句有没有直接回答、有没有按 STAR），每题给一条最重要的建议；",
+    "3. 最后给我导入码：要更新的回答写“答 | 题号 | 新回答”，我说错的句子写“改 | 我的原句 | 正确说法 | 类型 | 提示”。", ""];
+  rec.segs.filter(s => s.k === "q").forEach((s, n) => {
+    const said = (rec.note || {})[s.qid] || ""; const iss = ((rec.issues || {})[s.qid] || []).map(k => lab[k]).join("、");
+    lines.push(`题 ${n + 1}（${s.qid}）：${s.say}`, `我说的：${said || "（没转写，只有我自己听出来的问题）"}`, `我自己觉得的问题：${iss || "（没勾）"}`, `参考回答：${refFor(QBY[s.qid]) || "（没有）"}`, "");
+  });
+  const ok = await copyText(lines.join("\n"));
+  toast(ok ? "复制好了。打开 Claude，粘贴发送就行" : "复制没成功，再点一次试试");
+};
+async function callDelete(id){
+  if (!await sheet("删除这次模拟的记录？", "录音、打分和你写下的话会一起删掉。已经安排好的重练不受影响。", "删除", true)) return false;
+  S.calls = (S.calls || []).filter(c => c.id !== id);
+  try { for (const k of await IDB.keys()) if (k.startsWith("cr:" + id + ":")) await IDB.del(k); } catch (e) {}
+  save(true); toast("删掉了"); return true;
+}
+ACT["call-del"] = async el => { if (await callDelete(el.dataset.id)){ const t = UI.top(); if (t && t.name === "callrev") UI.back(); else UI.render(); } };
+ACT["hist-del"] = el => { const d = today(); S.hist[d] = (S.hist[d] || []).filter(e => e.id !== el.dataset.id); save(); toast("删掉了（不影响复习安排）"); UI.render(); };
+ACT["hist-clear"] = async () => { if (!await sheet("清空今天练过的记录？", "只是清掉这个列表，复习安排不受影响。", "清空", true)) return; S.hist[today()] = []; save(); UI.render(); };
 function crRowsHTML(rec, urlFor, live){
   return rec.segs.map((s, i) => {
     const q = s.qid ? QBY[s.qid] : null; const url = urlFor(i);
@@ -3740,9 +3838,10 @@ function crRowsHTML(rec, urlFor, live){
       ${ref ? `<details style="margin-top:8px" ${s.k === "f" ? "open" : ""}><summary>参考回答</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div>${s.k === "q" ? `<button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${s.qid}" data-src="ref">跟读参考回答</button>` : ""}</details>` : ""}
       ${s.k === "q" ? `<div class="small muted" style="margin-top:10px">听完自己的录音，这题说得怎么样？</div>
         <div class="row-gap" style="margin-top:6px">${CR_RATE.map(([k, l]) => `<button class="btn sm${r === k ? " primary" : ""}" data-act="cr-rate" data-id="${rec.id}" data-q="${s.qid}" data-r="${k}" aria-pressed="${r === k}">${l}</button>`).join("")}</div>
-        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">把你说的写下来（可选：边听录音边写，最容易发现自己的错）</summary>
-          <textarea class="en" id="crn-${i}" rows="3" data-chg="crnote" data-id="${rec.id}" data-q="${s.qid}" placeholder="可以用键盘语音输入，把录音里的话复述一遍">${esc(note)}</textarea>
-          <div class="row-gap" style="margin-top:6px"><button class="btn sm" data-act="cr-check" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">检查我说的</button></div>
+        ${selfCheckHTML(s.qid, "call:" + rec.id, i, (rec.issues || {})[s.qid])}
+        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">把你说的变成文字（app 帮你查语法，找出没用上的说法）</summary>
+          <textarea class="en" id="crn-${i}" rows="3" data-chg="crnote" data-id="${rec.id}" data-q="${s.qid}" placeholder="点“再说一遍，转成文字”，照着刚才的意思再说一遍；也可以用键盘打字">${esc(note)}</textarea>
+          <div class="row-gap" style="margin-top:6px"><button class="btn sm primary" data-act="cr-say" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">再说一遍，转成文字</button><button class="btn sm" data-act="cr-check" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">检查我说的</button></div>
           <div id="crf-${i}"></div></details>
         <div class="row-gap" style="margin-top:8px"><button class="btn sm ghost" data-act="iv-solo" data-q="${s.qid}">单题重练</button><button class="btn sm ghost" data-act="nav" data-v="ivedit" data-q="${s.qid}">写这题的回答</button></div>` : ""}
     </div>`;
@@ -3759,7 +3858,13 @@ ACT["cr-check"] = el => {
   const rec = crRec(el.dataset.id); const qid = el.dataset.q; const ta = $("#crn-" + el.dataset.i), out = $("#crf-" + el.dataset.i); if (!rec || !ta || !out) return;
   const text = ta.value.trim(); rec.note = rec.note || {}; rec.note[qid] = text; save(); if (!text){ out.innerHTML = ""; return; }
   const iss = K.checkWriting(text).filter(i => i.tag !== "书写");
-  out.innerHTML = `${iss.length ? `<ul class="fb" style="margin-top:8px">${iss.slice(0, 6).map(i => `<li>${esc(i.msg)}</li>`).join("")}</ul>` : `<p class="small muted" style="margin-top:8px">规则没查出问题。不过规则查不出所有错，拿不准就存起来问 Claude。</p>`}<button class="btn sm" style="margin-top:6px" data-act="cr-ask" data-id="${rec.id}" data-q="${qid}">存起来问 Claude</button>`;
+  const ref = refFor(QBY[qid]); let gap = "";
+  if (ref){
+    const ck = txt => K.findChunks([...String(txt).matchAll(/[A-Za-z][A-Za-z'’-]*/g)].map(m => m[0]), CHUNK_LEX || []).map(h => String(h.p).toLowerCase());
+    const used = new Set(ck(text)); const miss = Array.from(new Set(ck(ref))).filter(p => !used.has(p)).slice(0, 6);
+    gap = miss.length ? `<div class="small" style="margin-top:8px">参考回答里这些固定搭配，你这次没用上（点一下听）：</div><div class="chips" style="margin-top:4px">${miss.map(p => `<button class="chip" data-act="say-chunk" data-v="${esc(p)}">${esc(p)}</button>`).join("")}</div>` : `<p class="small muted" style="margin-top:8px">参考回答里的固定搭配，你都用上了。</p>`;
+  }
+  out.innerHTML = `${iss.length ? `<ul class="fb" style="margin-top:8px">${iss.slice(0, 6).map(i => `<li>${esc(i.msg)}</li>`).join("")}</ul>` : `<p class="small muted" style="margin-top:8px">规则没查出问题。不过规则查不出所有错，拿不准就存起来问 Claude。</p>`}${gap}<button class="btn sm" style="margin-top:6px" data-act="cr-ask" data-id="${rec.id}" data-q="${qid}">存起来问 Claude</button>`;
 };
 ACT["cr-ask"] = el => {
   const rec = crRec(el.dataset.id); const q = QBY[el.dataset.q]; const text = rec && (rec.note || {})[el.dataset.q]; if (!q || !text) return;
@@ -3779,10 +3884,12 @@ VIEWS.calls = {
   tab:"iv",
   render(){
     const list = (S.calls || []).filter(c => c.segs).slice().reverse();
+    const top = scTop(14).slice(0, 2);
     return `<div class="wrap">${backBtn()}<h2>复盘记录</h2><p class="muted small" style="margin:6px 0 12px">每次模拟面试都在这里。点进去听录音、看参考回答、给每题打分；没说出来的题会安排你隔天再练。</p>
+      ${top.length ? `<div class="panel"><b>最近两周你勾得最多的问题</b>${top.map(([k, n]) => { const it = SC_ITEMS.find(x => x.k === k), f = SC_FIX[k]; return it ? `<div style="margin-top:8px"><b>${esc(it.t)}</b>（${n} 次）：<span class="small">${esc(f.why)}</span>${k === "gram" ? `<div style="margin-top:4px"><button class="btn sm" data-act="sc-go" data-v="tense" data-store="">3 分钟时态练习</button></div>` : k === "pron" ? `<div style="margin-top:4px"><button class="btn sm" data-act="sc-go" data-v="tips" data-store="">看说话技巧</button></div>` : ""}</div>` : ""; }).join("")}<p class="small muted" style="margin-top:8px">先练最常出问题的那一件，一次只抓一两件。</p></div>` : ""}
       ${list.length ? `<div class="list">${list.map(c => { const qs = Array.from(new Set(c.segs.filter(s => s.k === "q").map(s => s.qid))); const rt = c.rate || {};
         const cnt = k => qs.filter(q => rt[q] === k).length; const un = qs.filter(q => !rt[q]).length;
-        return `<button class="li" data-act="nav" data-v="callrev" data-id="${c.id}"><div class="grow"><b>${esc(modName(c.mode))}　${esc(fmtWhen(c.ts))}</b><span>${qs.length} 题${cnt("again") ? `　没说出来 ${cnt("again")}` : ""}${cnt("hard") ? `　卡了 ${cnt("hard")}` : ""}${cnt("good") ? `　还行 ${cnt("good")}` : ""}${un ? `　未打分 ${un}` : ""}</span></div><span class="end">${ICON.chev}</span></button>`; }).join("")}</div>`
+        return `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}　${esc(fmtWhen(c.ts))}</b><span>${qs.length} 题${cnt("again") ? `　没说出来 ${cnt("again")}` : ""}${cnt("hard") ? `　卡了 ${cnt("hard")}` : ""}${cnt("good") ? `　还行 ${cnt("good")}` : ""}${un ? `　未打分 ${un}` : ""}</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`; }).join("")}</div>`
         : `<p class="muted">还没有模拟记录。去“面试”页模拟一场，结束后就会出现在这里。</p>`}</div>`;
   }
 };
@@ -3791,7 +3898,8 @@ VIEWS.callrev = {
   render(p){
     const rec = crRec(p.id); if (!rec) return `<div class="wrap">${backBtn()}<p class="muted">找不到这次记录。</p></div>`;
     return `<div class="wrap">${backBtn()}<h2>复盘：${esc(modName(rec.mode))}</h2><p class="muted small" style="margin:4px 0 10px">${esc(fmtWhen(rec.ts))}，回答了 ${rec.segs.filter(s => s.k === "q").length} 题</p>
-      ${crSummaryHTML(rec)}<div id="crRows">${crRowsHTML(rec, () => null, false)}</div></div>`;
+      ${crSummaryHTML(rec)}<div id="crRows">${crRowsHTML(rec, () => null, false)}</div>
+      <button class="btn block danger" style="margin-top:16px" data-act="call-del" data-id="${rec.id}">删除这次记录</button></div>`;
   },
   async mount(p){
     const rec = crRec(p.id); if (!rec) return; const urls = [];
@@ -4760,6 +4868,7 @@ CHG.hfsrc = el => { L.hfSrc = el.value; saveLocal(); if (HF.st){ if (HF.st.playi
 
 /* ---------- 说话技巧：只放对“听懂你”影响最大的几条，每条配例句 ---------- */
 const SPEAK_TIPS = [
+  {h:"听自己的录音：听这五件事", p:"① 顺不顺：有没有长停顿、很多 um。② 语法：时态、-s、be 动词。③ 听不听得清：词尾有没有吞掉，重音对不对。④ 结构：第一句有没有直接回答。⑤ 用词：有没有想不起来的词。每次只抓一两件，先练最常出问题的那件。模拟面试的复盘里勾出来，app 会给你对应的练法。", ex:[]},
   {h:"固定搭配：整体记、整体说", p:"很多英语不是一个词一个词拼起来的，而是现成的词组，比如 job hunting、send out applications、look forward to。研究发现，学会留意并使用这些固定搭配的学习者，口语被评得更好。练习时，黄色底的就是固定搭配：点一下能整体听、看意思，也能单独听其中一个词。", ex:["I'm job hunting, so I send out applications every day.", "I'm looking forward to hearing from you."]},
   {h:"先抓三件事：重音、语调、断句", p:"研究发现，听的人觉得最影响理解的，是单词重音、句子重音和语调。发音不完美没关系，这三样对了，对方就容易听懂。", ex:[]},
   {h:"重音：拉长、音调起伏，不是喊大声", p:"中文母语者强调一个词时，常用“更大声”；美国人是把这个词拉长，音调先抬起来再落下。一句话里，名词、动词、形容词、否定词重；其余的轻。", ex:["I just finished my master's in mechanical engineering."]},
@@ -4806,12 +4915,12 @@ VIEWS.today = {
     const groups = {again:[], hard:[], good:[]};
     for (const id of Object.keys(last)){ const c = CAT.byId[id]; const w = worst[id]; if (c && groups[w.r]) groups[w.r].push({c, e: w.r === "again" ? w : last[id]}); }
     const zhOf = c => c.t === "f" ? "改错：" + c.wrong : c.t === "e" ? "扩句：" + c.base : (c.zh || "");
-    const item = ({c, e}) => `<div class="li" style="display:block"><div class="say-line"><div class="en" style="font-size:17px">${wordsHTML(c.en)}</div><div class="say-btns">${sayBtns(c.en)}</div></div><div class="small muted">${esc(zhOf(c))}</div>${e.said ? `<div class="small">你说的：<span class="en" style="font-size:15px">${esc(e.said)}</span></div>` : ""}</div>`;
+    const item = ({c, e}) => `<div class="li" style="display:block"><div class="say-line"><div class="en" style="font-size:17px">${wordsHTML(c.en)}</div><div class="say-btns">${sayBtns(c.en)}</div></div><div class="small muted">${esc(zhOf(c))}</div>${e.said ? `<div class="small">你说的：<span class="en" style="font-size:15px">${esc(e.said)}</span></div>` : ""}<div style="text-align:right;margin-top:2px"><button class="btn sm ghost" data-act="hist-del" data-id="${c.id}">删掉这条</button></div></div>`;
     const sec = (title, arr) => arr.length ? `<div class="sec-title">${title}（${arr.length}）</div><div class="list">${arr.map(item).join("")}</div>` : "";
     const mis = Object.entries(S.misWords || {}).sort((a, b) => b[1] - a[1]).slice(0, 12);
     const n = Object.keys(last).length;
-    return `<div class="wrap">${backBtn()}<h2>今天练过的</h2><p class="muted small" style="margin:6px 0 4px">${n ? `今天练了 ${n} 句。“没说出来”的那些，明天还会再考你；有空可以先听一遍、跟着说一遍。` : "今天还没练。"}</p>
-      ${(() => { const off = ((+S.settings.dayStart) || 0) * 3600e3; const cs = (S.calls || []).filter(c => c.segs && dstr(new Date(c.ts - off)) === today()); return cs.length ? `<div class="sec-title">今天的模拟面试</div><div class="list">${cs.map(c => `<button class="li" data-act="nav" data-v="callrev" data-id="${c.id}"><div class="grow"><b>${esc(modName(c.mode))}</b><span>${esc(fmtWhen(c.ts))}，点开复盘</span></div><span class="end">${ICON.chev}</span></button>`).join("")}</div>` : ""; })()}
+    return `<div class="wrap">${backBtn()}<h2>今天练过的</h2><p class="muted small" style="margin:6px 0 4px">${n ? `今天练了 ${n} 句。“没说出来”的那些，明天还会再考你；有空可以先听一遍、跟着说一遍。` : "今天还没练。"}</p>${n ? `<div style="text-align:right"><button class="btn sm ghost" data-act="hist-clear">清空今天的记录</button></div>` : ""}
+      ${(() => { const off = ((+S.settings.dayStart) || 0) * 3600e3; const cs = (S.calls || []).filter(c => c.segs && dstr(new Date(c.ts - off)) === today()); return cs.length ? `<div class="sec-title">今天的模拟面试</div><div class="list">${cs.map(c => `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}</b><span>${esc(fmtWhen(c.ts))}，点开复盘</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`).join("")}</div>` : ""; })()}
       ${sec("没说出来，明天还会再来", groups.again)}${sec("卡了一下", groups.hard)}${sec("秒出", groups.good)}
       ${mis.length ? `<div class="sec-title">常被识别错的词（多半是发音要练的地方）</div><div class="panel">${mis.map(([w, k]) => `<span class="chip" style="margin:4px 6px 4px 0"><span class="w" data-act="word" data-w="${esc(w)}">${esc(w)}</span>　${k} 次</span>`).join("")}<p class="small muted" style="margin-top:8px">点词听读音，再用慢速跟读几遍。</p></div>` : ""}</div>`;
   }
