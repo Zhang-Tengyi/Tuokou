@@ -369,6 +369,9 @@ audio{width:100%;margin-top:8px}
 .linkrow{background:none;border:0;padding:0;margin:0;text-align:left;color:inherit;font:inherit;display:flex;flex-direction:column;gap:2px;cursor:pointer}
 .linkrow span{font-size:13px;color:var(--muted)}
 
+.rbar{height:8px;border-radius:99px;background:var(--line, #e2e2e2);overflow:hidden}
+.rbar i{display:block;height:100%;border-radius:99px;background:var(--amber, #c8901a)}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -389,7 +392,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.12.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.12.1"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -2122,7 +2125,7 @@ const KEY = "tuokou.v1", LKEY = "tuokou.local";
 const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
   settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", autoCheck:"smart", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
-  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, soloIssues:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
+  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, soloIssues:{}, soloRate:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
 const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false, slashes:false, quiet:false, quietSound:false, resume:null, rdMode:"line", rdSlow:false, rdHide:false});
 function mergeInto(d, o){
   for (const k of Object.keys(o||{})){
@@ -2503,7 +2506,7 @@ const Cloud = {
     if (!this.db) return;
     const base = "data/users/" + this.uid + "/";
     const parts = {
-      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, answers:S.answers, newToday:S.newToday},
+      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, soloRate:S.soloRate, answers:S.answers, newToday:S.newToday},
       stats:{updatedAt:S.updatedAt, days:S.days, tags:S.tags, calls:S.calls},
       journal:{updatedAt:S.updatedAt, journal:S.journal}
     };
@@ -3386,7 +3389,7 @@ class IvStage {
         <h3 style="margin-top:16px">${this.url ? "听回放，对照检查" : "回想一下，对照检查"}</h3>
         <div style="margin-top:6px">${checks.map((c,i) => `<label class="check"><input type="checkbox" data-i="${i}"><span>${c}</span></label>`).join("")}</div><p class="small muted" style="margin-top:6px">没打勾的会变成下一轮的重点。</p>
         ${(() => { const ref = refFor(q); const mine = a && a.text ? a.text.trim() : "";
-          return selfCheckHTML(q.id, "solo", 0, ((S.soloIssues || {})[q.id] || {}).k)
+          return ivRateHTML(q.id) + selfCheckHTML(q.id, "solo", 0, ((S.soloIssues || {})[q.id] || {}).k)
             + (ref ? `<details style="margin-top:10px" open><summary>参考回答（对照你刚才说的）</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
             + (mine && mine !== ref ? `<details style="margin-top:10px"><summary>我写好的回答</summary><div class="en sm" style="margin-top:6px">${esc(mine)}</div></details>` : "")
             + (!ref && !mine ? `<div class="note">${esc(q.tip)}</div>${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div></details>` : ""}` : ""); })()}
@@ -3781,6 +3784,52 @@ ACT["sc-go"] = el => {
   if (a === "keys") return UI.nav("ivedit", {q});
   if (a === "say") return ACT["cr-say"]({dataset:{id:el.dataset.store.slice(5), q, i:el.dataset.i}});
 };
+/* ---------- 电话初筛准备度 ----------
+   一道题在 3 次不同时间（间隔 2 小时以上）的练习里，你都给自己打了“还行”，就算达标。
+   模拟面试的复盘打分和单题彩排的打分都算。依据：分开几次各想起来一次，比一次连说几遍记得牢（successive relearning）。 */
+const READY_CORE = ["TM01","TM02","TM16","TM23","TM13","TM12","TM15","TM14","TM21","TM17"];
+function readyQs(){ const core = READY_CORE.map(id => QBY[id]).filter(Boolean); return core.length >= 5 ? core : modQs("phone", ivPool()).slice(0, 10); }
+function readyInfo(){
+  const calls = (S.calls || []).filter(c => c.segs && c.rate);
+  const list = readyQs().map(q => {
+    const ev = []; for (const c of calls) if (c.rate[q.id]) ev.push({ts:c.ts, r:c.rate[q.id]});
+    for (const e of ((S.soloRate || {})[q.id] || [])) ev.push(e);
+    ev.sort((a, b) => a.ts - b.ts); let n = 0, last = -Infinity;
+    for (const e of ev) if (e.r === "good" && e.ts - last >= 2 * 3600e3){ n++; last = e.ts; }
+    return {q, n: Math.min(n, 3), lastR: ev.length ? ev[ev.length - 1].r : ""};
+  });
+  return {list, ready: list.filter(x => x.n >= 3).length, total: list.length};
+}
+function readyPanelHTML(){
+  const r = readyInfo(); if (!r.total) return ""; const pct = Math.round(r.ready / r.total * 100);
+  return `<div class="panel ready-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>电话初筛准备度</b><span><b>${r.ready}</b>/${r.total} 题达标</span></div>
+    <div class="rbar" style="margin-top:8px"><i style="width:${pct}%"></i></div>
+    <p class="small muted" style="margin-top:8px">怎么算达标：一道题在 3 次不同时间的练习里，你都给自己打了“还行”。“还行”不是完美：3 秒内说出第一句、讲到要点、卡住了能接上，就是还行。</p>
+    <div class="row-gap" style="margin-top:6px">${r.ready < r.total ? `<button class="btn sm primary" data-act="ready-go">练还没达标的题</button>` : ""}<button class="btn sm" data-act="nav" data-v="ready">看每题的进度</button></div></div>`;
+}
+VIEWS.ready = {
+  tab:"iv",
+  render(){
+    const r = readyInfo(); const st = x => x.n >= 3 ? "达标 ✓" : x.n ? `还行 ${x.n}/3` : x.lastR ? "还没打过“还行”" : "还没练";
+    const rows = r.list.slice().sort((a, b) => a.n - b.n).map(x => `<div class="li" style="gap:8px"><div class="grow"><b>${esc(x.q.zh)}</b><span>${esc(st(x))}</span></div>${x.n < 3 ? `<button class="btn sm" data-act="iv-solo" data-q="${x.q.id}">单题彩排</button>` : ""}</div>`).join("");
+    return `<div class="wrap">${backBtn()}<h2>电话初筛准备度</h2><p class="muted small" style="margin:6px 0 10px">达标 ${r.ready}/${r.total} 题。这 ${r.total} 题是电话初筛最可能问的。每次练完给自己打分；同一题要在 3 次不同时间的练习里都打“还行”才算达标（间隔 2 小时以上）。还没达标的排在前面。</p>
+      ${r.ready < r.total ? `<button class="btn primary block" data-act="ready-go">练还没达标的题（${r.total - r.ready} 题）</button>` : `<p class="panel">10 题都达标了。面试前只要热身一遍，不用再加练。</p>`}
+      <div class="list" style="margin-top:12px">${rows}</div>
+      <p class="small muted" style="margin-top:10px">为什么是 3 次、而且要分开：研究发现，在 3 次分开的练习里各想起来一次，比在一次练习里连说 3 遍记得牢得多。所以今晚、明早、明晚各练一次，正好够。</p></div>`;
+  }
+};
+ACT["ready-go"] = () => { const ids = readyInfo().list.filter(x => x.n < 3).map(x => x.q.id); ivRunQs(ids, "练还没达标的题"); };
+function ivRateHTML(qid){
+  const arr = (S.soloRate || {})[qid] || []; const last = arr[arr.length - 1]; const cur = last && Date.now() - last.ts < 30 * 60e3 ? last.r : "";
+  return `<div class="small muted" style="margin-top:10px">这次说得怎么样？（算进电话初筛准备度）</div><div class="row-gap" style="margin-top:6px">${CR_RATE.map(([k, l]) => `<button class="btn sm${cur === k ? " primary" : ""}" data-act="iv-rate" data-q="${qid}" data-r="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
+}
+ACT["iv-rate"] = el => {
+  const qid = el.dataset.q, r = el.dataset.r; S.soloRate = S.soloRate || {}; const arr = S.soloRate[qid] || (S.soloRate[qid] = []); const last = arr[arr.length - 1];
+  if (last && Date.now() - last.ts < 30 * 60e3){ last.r = r; last.ts = Date.now(); } else arr.push({ts:Date.now(), r});
+  if (arr.length > 30) arr.splice(0, arr.length - 30);
+  S.ivDue = S.ivDue || {}; S.ivDue[qid] = {r, due: dnum(today()) + (IV_GAP[r] || 2)}; save();
+  $$(`[data-act="iv-rate"][data-q="${qid}"]`).forEach(b => { const on = b.dataset.r === r; b.classList.toggle("primary", on); b.setAttribute("aria-pressed", on); });
+};
 /* 最近两周自己勾得最多的问题 */
 function scTop(days){
   const since = Date.now() - days * 864e5, cnt = {};
@@ -4172,6 +4221,7 @@ VIEWS.iv = {
     return `<div class="wrap"><div class="top"><h2 style="font-size:26px">面试准备</h2><span class="muted small">已写 ${nW}/${all.length}</span></div>
       <div class="panel"><label class="fld" style="margin-top:0"><span>电话面试日期</span><input type="date" data-chg="set" data-key="interviewDate" data-rerender="1" value="${esc(S.settings.interviewDate)}"></label>
         <p class="small muted" style="margin-top:8px">${left != null ? `还有 ${left} 天。面试前 3 周内，每天的练习会多放面试内容。` : "设好日期后，面试前 3 周内每天的练习会多放面试内容。"}</p></div>
+      ${readyPanelHTML()}
       <div class="spacer"></div>
       <label class="fld"><span>模拟用哪个题库的回答</span><select data-chg="set" data-key="callDeck" data-rerender="1"><option value="all" ${!(S.settings.callDeck || "").startsWith("u:") ? "selected" : ""}>全部题库</option>${callSets().filter(s => s.id.startsWith("u:")).map(s => `<option value="${esc(s.id)}" ${S.settings.callDeck === s.id ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label>
       <p class="small muted" style="margin:6px 0 12px">每个模块都是一通模拟面试：面试官念题、你开口答、全程录音，结束后逐题回放、看参考说法。同一个模块多来几次，同样的问题说得一次比一次顺。</p>
