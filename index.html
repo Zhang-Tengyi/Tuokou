@@ -295,7 +295,7 @@ audio{width:100%;margin-top:8px}
 .tabbar button{flex:1;max-width:140px;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 9px;font-size:12px;color:var(--muted);position:relative}
 .tabbar svg{width:24px;height:24px}
 .tabbar button[aria-current="page"]{color:var(--ink);font-weight:700}
-.tabbar button[aria-current="page"]::before{content:"";position:absolute;top:4px;left:calc(50% + 10px);width:7px;height:7px;border-radius:50%;background:var(--lamp-on)}
+
 .full .tabbar{display:none}
 
 /* 提示条、确认框 */
@@ -372,6 +372,19 @@ audio{width:100%;margin-top:8px}
 .rbar{height:8px;border-radius:99px;background:var(--line, #e2e2e2);overflow:hidden}
 .rbar i{display:block;height:100%;border-radius:99px;background:var(--amber, #c8901a)}
 
+.tabbar button{transition:color .15s}
+.tabbar button svg{transition:transform .15s}
+.tabbar button[aria-current="page"]{font-size:13px}
+.tabbar button[aria-current="page"] svg{transform:scale(1.14)}
+.gram-box{margin:-2px 0 12px}
+.gline{margin-top:6px;font-size:14px;line-height:1.55}
+.gline .gtag{display:inline-block;font-size:12px;font-weight:600;padding:1px 7px;border-radius:7px;margin-right:6px}
+.gline.must .gtag{background:rgba(217,45,32,.14);color:#c4321f}
+.gline.opt .gtag{background:rgba(224,161,0,.18);color:#9a6700}
+mark.must{background:transparent;color:inherit;border-bottom:2px solid #d92d20}
+mark.opt{background:transparent;color:inherit;border-bottom:2px dashed #e0a100}
+@media (prefers-color-scheme: dark){ .gline.must .gtag{color:#ff8a7a} .gline.opt .gtag{color:#f5c451} }
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -392,7 +405,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.13.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.14.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1920,7 +1933,9 @@ const W_RULES = [
   {re:/\bfor study\b/gi, tag:"地道说法", msg:()=>"来读书：for school / to study"},
   {re:/(?:^|[.!?]\s+)(?:(?:yes|yeah|sure|absolutely|definitely),?\s+)?(?:i'?m|i am|we'?re|we are)\s+(?:(?:definitely|really|very|so|also|still|pretty|super)\s+)*(interested in|good at|familiar with|excited about|looking forward to)\s*(?=[.!?]|$)/gi, g:1, tag:"介词", msg:g=>{ const x = String(g).toLowerCase(); const ex = {"interested in":"I'm interested in this role.　不接东西就只说 I'm interested.", "good at":"I'm good at CAD design.", "familiar with":"I'm familiar with SolidWorks.", "excited about":"I'm excited about this role.　不接东西就只说 I'm excited.", "looking forward to":"I'm looking forward to it.　或者 I'm looking forward to hearing from you."}[x] || ""; return `${x} 后面要接东西：${ex}`; }},
   {re:/\bhow'?s everything doing\b/gi, tag:"地道说法", msg:()=>"问事情说 How's everything going?　问人说 How are you doing?"},
-  {re:/\b(?:am|is|are|was|were|'m|'re|'s)\s+(ran|went|came|did|wore|took|wrote|saw|began|broke|drove|gave|knew|ate|rode|chose|spoke|swam|grew|threw|flew|forgot|stole|sang|drank)\b/gi, g:1, tag:"be", msg:g=>`已经有动词 ${String(g).toLowerCase()}（过去式）了，前面不要再加 is / was：The system ran stably.`},
+  {re:/\b(there's)\s+(?:two|three|four|five|six|a few|several|many)\b/gi, g:1, tag:"口语", msg:()=>"美国人口语里也常这么说；正式一点用 There are"},
+  {re:/\b(me and (?:my|his|her|their|our) \w+)\s+(?:went|go|are|were|played|play|did|had|have|used)\b/gi, g:1, tag:"口语", msg:()=>"口语里很常见；正式一点说 My friend and I"},
+  {re:/\b(?:am|is|are|was|were|'m|'re|'s)\s+(ran|went|came|did|wore|took|wrote|saw|began|broke|drove|gave|knew|ate|rode|chose|spoke|swam|grew|threw|flew|forgot|stole|sang|drank)\b/gi, g:1, tag:"be", msg:g=>`已经有动词 ${String(g).toLowerCase()}（过去式）了，前面不要再加 am / is / was`},
   {re:/\b(?:am|is|are|was|were)\s+(kept|keep)\s+[a-z]+ing\b/gi, g:1, tag:"be", msg:()=>"已经有动词 kept（一直……）了，前面不用再加 is / are：The cables kept wearing out."},
   {re:/\b(?:I\s+am|I'm|I\s+was|you\s+are|you're|you\s+were|we\s+are|we're|we\s+were|they\s+are|they're|they\s+were|it\s+is|it's|it\s+was|he\s+is|he's|he\s+was|she\s+is|she's|she\s+was)\s+(design|make|use|build|need|want|think|know|try|start|finish|graduate|study|play|go|come|help|fix|keep|redesign|debug|program|write|learn)\b(?![-'])/gi, g:1, tag:"be", msg:g=>{ const v = String(g).toLowerCase(); const irr = {make:"made", build:"built", think:"thought", know:"knew", go:"went", come:"came", keep:"kept", write:"wrote", program:"programmed", debug:"debugged"};
     const past = irr[v] || (/[^aeiou]y$/.test(v) ? v.slice(0, -1) + "ied" : /e$/.test(v) ? v + "d" : v + "ed");
@@ -2318,14 +2333,15 @@ const SR = {
       let r;
       try { r = new this.Ctor(); } catch (e) { res({text:"", error:"unsupported"}); return; }
       this.cur = r;
-      r.lang = "en-US"; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+      r.lang = "en-US"; r.interimResults = true; r.continuous = false; r.maxAlternatives = 5;
       if (this.local) try { r.processLocally = true; } catch (e) {}
-      let finals = "", interim = "", err = null, ended = false;
+      let finals = "", interim = "", err = null, ended = false, alts = [];
       const t0 = performance.now(); let tStart = 0;
       r.onspeechstart = () => { if (!tStart) tStart = performance.now(); o.onStart && o.onStart(); };
       r.onresult = e => {
-        const fins = []; interim = "";
-        for (let i = 0; i < e.results.length; i++){ const tx = String(e.results[i][0].transcript || "").trim(); if (!tx) continue; if (e.results[i].isFinal) fins.push(tx); else interim += (interim ? " " : "") + tx; }
+        const fins = [], finAlts = []; interim = "";
+        for (let i = 0; i < e.results.length; i++){ const tx = String(e.results[i][0].transcript || "").trim(); if (!tx) continue; if (e.results[i].isFinal){ fins.push(tx); finAlts.push(Array.from(e.results[i]).map(a => String(a.transcript || "").trim()).filter(Boolean)); } else interim += (interim ? " " : "") + tx; }
+        alts = finAlts.length === 1 ? finAlts[0] : [];
         finals = fins.join(" ");
         if (fins.length && (SR.broken || (L.device && (L.device.sr === "no" || L.device.srBroken)))){ SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; L.device.sr = "ok"; saveLocal(); }
         if (fins.length > 1){ const longest = fins.reduce((a, b) => b.length > a.length ? b : a); if (fins.every(f => longest.toLowerCase().includes(f.toLowerCase()))) finals = longest; }
@@ -2339,7 +2355,7 @@ const SR = {
           this.fails++;
           if (this.fails >= 2){ this.broken = true; L.device = L.device || {}; L.device.srBroken = true; L.device.sr = "no"; saveLocal(); }
         } else if (text) this.fails = 0;
-        res({text, error:err, startMs: tStart ? tStart - t0 : 0, broke: this.broken}); };
+        res({text, error:err, startMs: tStart ? tStart - t0 : 0, broke: this.broken, alts: alts.length > 1 && alts[0] === text ? alts : []}); };
       r.onend = finish;
       const guard = setTimeout(() => { try { r.stop(); } catch (e) {} setTimeout(finish, 600); }, o.maxMs || 12000);
       try { r.start(); } catch (e) { err = "start"; finish(); }
@@ -2926,6 +2942,20 @@ ACT["input-mode"] = el => {
 };
 
 /* 卡片：反射卡 / 时态快反 / 找错 / 扩句 */
+/* 语法检查：红色是一定要改的；黄色是美国人口语里也常这么说、改不改都行的 */
+const GRAM_OPT = new Set(["地道说法", "口语"]);
+function gramCheck(said, shown){
+  const all = K.checkWriting(said).filter(i => i.tag !== "书写").sort((a, b) => a.start - b.start);
+  const must = [], opt = []; for (const i of all) (GRAM_OPT.has(i.tag) ? opt : must).push(i);
+  let html = "", pos = 0;
+  for (const i of all){ if (i.start < pos) continue; html += esc(said.slice(pos, i.start)) + `<mark class="${GRAM_OPT.has(i.tag) ? "opt" : "must"}">${esc(said.slice(i.start, i.end))}</mark>`; pos = i.end; }
+  html += esc(said.slice(pos));
+  const fresh = x => !shown || !shown.has(x.msg);
+  return {html, must: must.filter(fresh), opt: opt.filter(fresh)};
+}
+function gramBoxHTML(gc){
+  return `<div class="gram-box">${gc.must.map(i => `<div class="gline must"><span class="gtag">一定要改</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}${gc.opt.map(i => `<div class="gline opt"><span class="gtag">改不改都行</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}</div>`;
+}
 class CardStage {
   constructor(card, retry){ this.card = card; this.retry = !!retry; this.step = 0; this.phase = "prompt"; this.drill = 0; this.alive = true; this.tries = 0; }
   get isE(){ return this.card.t === "e"; }
@@ -3012,7 +3042,8 @@ class CardStage {
   }
   elapsed(){ return this.t0 ? performance.now() - this.t0 : 0; }
   async mic(){
-    if (this.live){ SR.stop(); return; }
+    if (this.live){ if (Date.now() - (this.liveT || 0) > 600) SR.stop(); return; }
+    this.liveT = Date.now();
     if (!this.t0) this.startClock();
     const btn = $("#micBtn"), heard = $("#heard");
     this.live = true; btn && btn.classList.add("live"); if (heard) heard.textContent = "在听……";
@@ -3022,11 +3053,19 @@ class CardStage {
     if (r.broke && !r.text){ toast("这台手机的自动识别用不了，已改用键盘语音输入"); this.render(); return; }
     if (r.error && !r.text){ if (heard) heard.textContent = srErrorText(r.error); if (r.error === "network" || r.error === "not-allowed") { const ty = $("#typed"); ty && ty.focus(); } return; }
     if (!r.text){ if (heard) heard.textContent = "没听清，再点一次"; return; }
-    this.finish(r.text);
+    this.finish(r.text, r.alts);
   }
-  finish(said){
+  finish(said, alts){
     this.ms = this.elapsed(); clearInterval(this.clock);
     this.said = said || (this.phase === "retry" ? this.firstSaid || "" : "");
+    /* 手机给了几个候选：第一选择不对、但候选里有对的，就按对的判断，并告诉你哪几个词第一遍被听错了 */
+    this.altNote = null;
+    if (alts && alts.length > 1 && this.said){
+      const tg = this.target(); const sc = x => { const c = K.compareSaid(tg.en, tg.alt, x); return (c.exact ? 2 : 0) + (c.score || 0); };
+      let best = this.said, bs = sc(this.said); for (const a of alts.slice(1)){ const v = sc(a); if (v > bs + 0.001){ best = a; bs = v; } }
+      if (best !== this.said){ const ta = K.tokens(this.said), tb = K.tokens(best); this.altNote = {top:this.said, heardW:ta.filter(w => !tb.includes(w)), meantW:tb.filter(w => !ta.includes(w))};
+        S.misWords = S.misWords || {}; for (const w of this.altNote.meantW) if (w.length > 1) S.misWords[w] = (S.misWords[w] || 0) + 1; this.said = best; }
+    }
     const t = this.target();
     let cmp = this.said ? K.compareSaid(t.en, t.alt, this.said) : null;
     const c0 = this.card; let wHint = null;
@@ -3067,20 +3106,27 @@ class CardStage {
       const meaning = this.mean && !cmp.exact;
       const lab = this.misrec ? "按你说对算（识别有误）" : this.mine && cmp.exact ? "按你的说法算对" : cmp.free ? (cmp.exact ? "用上了，规则没查出问题" : cmp.level === "close" ? "用上了，有几处可能有问题" : "这句没用上要练的词") : meaning ? (this.flags.length ? "意思对上了，有几处可能有问题" : "意思对上了，说法和参考不一样") : {exact:"完全正确", close:"差一点", off:"和参考说法差别比较大"}[cmp.level];
       h += `<div class="verdict ${meaning ? (this.flags.length ? "close" : "meaning") : cmp.level}">${lab}${this.tries ? "" : timeChip}</div>`;
-      if (this.said) h += `<p class="small muted" style="margin:-4px 0 10px">${this.misrec ? "识别成了" : "你说的"}：<span class="en" style="font-size:16px">${esc(this.said)}</span></p>`;
+      const gc = this.said && !this.misrec ? gramCheck(this.said, null) : null;
+      const gcMsgs = new Set(gc ? gc.must.concat(gc.opt).map(i => i.msg) : []);
+      if (this.said) h += `<p class="small muted" style="margin:-4px 0 10px">${this.misrec ? "识别成了" : "你说的"}：<span class="en" style="font-size:16px">${gc ? gc.html : esc(this.said)}</span></p>`;
+      if (this.altNote) h += `<p class="small" style="margin:-6px 0 10px">手机第一遍听成了：<span class="en">${esc(this.altNote.top)}</span>。候选里有你要说的那句，所以按它判断。${this.altNote.meantW.length ? `第一遍没听准的：${this.altNote.meantW.map((w, i) => `<span class="w" data-act="word" data-w="${esc(w)}">${esc(w)}</span>${this.altNote.heardW[i] ? `（听成了 ${esc(this.altNote.heardW[i])}）` : ""}`).join("、")}。点一下听听，下次这几个词说慢一点、清楚一点。` : ""}</p>`;
+      if (gc && (gc.must.length || gc.opt.length)) h += gramBoxHTML(gc);
       if (cmp.restart && !this.misrec) h += `<p class="small muted" style="margin:-6px 0 10px">前面重说的部分没算，按后面那句判断。</p>`;
       if (this.mine && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">你的说法记下了，以后这样说也算对。</p>`;
       else if (this.tries && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">按提示自己改对了。改过一次的句子会早一点再出现。</p>`;
       const mineRow = this.said ? `<div class="row-gap" style="margin:-2px 0 12px">${["r","t","f"].includes(c.t) ? `<button class="btn sm" data-act="c-mine">我确定这样也对</button>` : ""}<button class="btn sm" data-act="c-ask">拿不准，存起来问 Claude</button><button class="btn sm ghost" data-act="c-misrec">我说对了，是识别错了</button></div>` : "";
       if (meaning){
-        if (this.flags.length) h += `<ul class="fb">${this.flags.slice(0, 4).map(f => `<li>${esc(f.msg)}</li>`).join("")}</ul>`;
-        else h += `<p class="small muted" style="margin:-4px 0 10px">规则没查出问题，你的说法很可能也是对的。拿不准就存起来问 Claude。</p>`;
+        const fl = this.flags.filter(f => !gcMsgs.has(f.msg));
+        if (fl.length) h += `<ul class="fb">${fl.slice(0, 4).map(f => `<li>${esc(f.msg)}</li>`).join("")}</ul>`;
+        else if (!gcMsgs.size) h += `<p class="small muted" style="margin:-4px 0 10px">规则没查出问题，你的说法很可能也是对的。拿不准就存起来问 Claude。</p>`;
         h += `<details style="margin-bottom:10px"><summary class="small">看逐词对比</summary><div class="diff" style="margin-top:8px">${diffHTML(cmp.ops)}</div></details>` + mineRow;
       } else if (!cmp.exact){
         h += `<div class="diff">${diffHTML(cmp.ops)}</div>`;
-        if (cmp.notes.length) h += `<ul class="fb">${cmp.notes.map(n => `<li>${esc(n.msg)}</li>`).join("")}</ul>`;
+        const nl = cmp.notes.filter(n => !gcMsgs.has(n.msg));
+        if (nl.length) h += `<ul class="fb">${nl.map(n => `<li>${esc(n.msg)}</li>`).join("")}</ul>`;
         if ((cmp.notes || []).some(n => /^(tense|plural|agree|be)$/.test(n.k)) || this.flags.some(f => /时态|复数|be|一致/.test(f.tag || ""))) h += `<p style="margin:-4px 0 10px"><button class="linkbtn small" data-act="nav" data-v="grammar">为什么？看语法要点</button></p>`;
-        if (this.flags.length) h += `<ul class="fb">${this.flags.slice(0, 2).map(f => `<li>${esc(f.msg)}</li>`).join("")}</ul>`;
+        const fl2 = this.flags.filter(f => !gcMsgs.has(f.msg));
+        if (fl2.length) h += `<ul class="fb">${fl2.slice(0, 2).map(f => `<li>${esc(f.msg)}</li>`).join("")}</ul>`;
         h += mineRow;
       }
     } else if (timeChip) h += `<div class="verdict" style="color:var(--muted)">对照一下，你说对了吗？${timeChip}</div>`;
@@ -3207,9 +3253,11 @@ ACT["c-peek"] = el => { el.classList.add("peek"); setTimeout(() => el.classList.
 ACT["c-drill-tick"] = () => { const s = RUN.stage; if (!(s instanceof CardStage)) return; s.drill = Math.min(s.drillSteps().length, s.drill + 1); vib(10); s.render(); };
 ACT["c-drill-mic"] = async el => {
   const s = RUN.stage; if (!(s instanceof CardStage)) return;
-  const heard = $("#heard"); el.classList.add("live"); if (heard) heard.textContent = "在听……";
+  if (s.drillLive){ if (Date.now() - s.drillT > 600) SR.stop(); return; }
+  s.drillLive = true; s.drillT = Date.now();
+  const heard = $("#heard"); el.classList.add("live"); if (heard) heard.textContent = "在听……说完再点一下，或者停一下就好";
   const r = await SR.listen({onInterim: t => { if (heard && heard.isConnected) heard.textContent = t; }});
-  el.classList.remove("live");
+  s.drillLive = false; el.classList.remove("live");
   if (!s.alive) return;
   if (r.broke && !r.text){ s.render(); return; }
   if (!r.text){ if (heard) heard.textContent = r.error ? srErrorText(r.error) : "没听清，再来"; return; }
@@ -3265,8 +3313,11 @@ ACT["c-misrec"] = () => {
 };
 ACT["c-rec"] = async el => {
   const s = RUN.stage; if (!(s instanceof CardStage) || (s.phase !== "prompt" && s.phase !== "retry")) return;
+  if (s.recBusy) return;
   if (!s.recOn){
-    try { await Rec.start(null); } catch (e) { toast(MIC.blocked ? "这个版本不能录音" : "录音用不了"); return; }
+    s.recBusy = true;
+    try { await Rec.start(null); } catch (e) { s.recBusy = false; toast(MIC.blocked ? "这个版本不能录音" : "录音用不了"); return; }
+    s.recBusy = false;
     s.recOn = true; if (!s.t0) s.startClock(); el.textContent = "说完了，停止录音"; el.classList.add("primary"); return;
   }
   const r = await Rec.stop(); s.recOn = false;
@@ -3341,7 +3392,8 @@ class ListenStage {
     this.render();
   }
   async mic(){
-    if (this.live){ SR.stop(); return; }
+    if (this.live){ if (Date.now() - (this.liveT || 0) > 600) SR.stop(); return; }
+    this.liveT = Date.now();
     const b = $("#lMic"), h = $("#heard"); this.live = true; b && b.classList.add("live"); if (h) h.textContent = "在听……";
     const r = await SR.listen({onInterim: t => { if (h && h.isConnected) h.textContent = t; }});
     this.live = false; if (!this.alive || this.done) return; b && b.classList.remove("live");
@@ -3731,8 +3783,8 @@ function callEnd(){
   callRender(); window.scrollTo(0, 0);
 }
 /* ---------- 模拟面试复盘：每题听录音、看参考回答、给自己打分；卡住的题隔天再练 ---------- */
-const CR_RATE = [["again","没说出来"],["hard","卡了一下"],["good","还行"]];
-const IV_GAP = {again:1, hard:2, good:5};
+const CR_RATE = [["again","没说出来"],["hard","卡了一下"],["good","还行"],["great","不错"]];
+const IV_GAP = {again:1, hard:2, good:5, great:7};
 let CR_URLS = [];
 function crRec(id){ return (S.calls || []).find(c => c.id === id); }
 function fmtWhen(ts){ const d = new Date(ts); return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; }
@@ -3805,7 +3857,7 @@ function readyInfo(){
     const ev = []; for (const c of calls) if (c.rate[q.id]) ev.push({ts:c.ts, r:c.rate[q.id]});
     for (const e of ((S.soloRate || {})[q.id] || [])) ev.push(e);
     ev.sort((a, b) => a.ts - b.ts); let n = 0, last = -Infinity;
-    for (const e of ev) if (e.r === "good" && e.ts - last >= 2 * 3600e3){ n++; last = e.ts; }
+    for (const e of ev) if ((e.r === "good" || e.r === "great") && e.ts - last >= 2 * 3600e3){ n++; last = e.ts; }
     return {q, n: Math.min(n, 3), lastR: ev.length ? ev[ev.length - 1].r : ""};
   });
   return {list, ready: list.filter(x => x.n >= 3).length, total: list.length};
@@ -3814,7 +3866,7 @@ function readyPanelHTML(){
   const r = readyInfo(); if (!r.total) return ""; const pct = Math.round(r.ready / r.total * 100);
   return `<div class="panel ready-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>电话初筛准备度</b><span><b>${r.ready}</b>/${r.total} 题达标</span></div>
     <div class="rbar" style="margin-top:8px"><i style="width:${pct}%"></i></div>
-    <p class="small muted" style="margin-top:8px">怎么算达标：一道题在 3 次不同时间的练习里，你都给自己打了“还行”。“还行”不是完美：3 秒内说出第一句、讲到要点、卡住了能接上，就是还行。</p>
+    <p class="small muted" style="margin-top:8px">怎么算达标：一道题在 3 次不同时间的练习里，你都给自己打了“还行”或“不错”。“还行”不是完美：3 秒内说出第一句、讲到要点、卡住了能接上，就是还行。</p>
     <div class="row-gap" style="margin-top:6px">${r.ready < r.total ? `<button class="btn sm primary" data-act="ready-go">练还没达标的题</button>` : ""}<button class="btn sm" data-act="nav" data-v="ready">看每题的进度</button></div></div>`;
 }
 VIEWS.ready = {
@@ -3840,7 +3892,7 @@ ACT["iv-rate"] = el => {
   S.ivDue = S.ivDue || {}; S.ivDue[qid] = {r, due: dnum(today()) + (IV_GAP[r] || 2)}; save();
   $$(`[data-act="iv-rate"][data-q="${qid}"]`).forEach(b => { const on = b.dataset.r === r; b.classList.toggle("primary", on); b.setAttribute("aria-pressed", on); });
   const top = UI.top();
-  if (top && top.name === "run" && RUN.kind === "redo" && r !== "good"){ RUN.ivRetry = RUN.ivRetry || {}; if (!RUN.ivRetry[qid]){ RUN.ivRetry[qid] = 1; RUN.items.push({k:"iv", qid}); toast("这题过一会儿再来一次"); } }
+  if (top && top.name === "run" && RUN.kind === "redo" && r !== "good" && r !== "great"){ RUN.ivRetry = RUN.ivRetry || {}; if (!RUN.ivRetry[qid]){ RUN.ivRetry[qid] = 1; RUN.items.push({k:"iv", qid}); toast("这题过一会儿再来一次"); } }
 };
 /* 最近两周自己勾得最多的问题 */
 function scTop(days){
@@ -3950,7 +4002,7 @@ VIEWS.calls = {
       ${top.length ? `<div class="panel"><b>最近两周你勾得最多的问题</b>${top.map(([k, n]) => { const it = SC_ITEMS.find(x => x.k === k), f = SC_FIX[k]; return it ? `<div style="margin-top:8px"><b>${esc(it.t)}</b>（${n} 次）：<span class="small">${esc(f.why)}</span>${k === "gram" ? `<div style="margin-top:4px"><button class="btn sm" data-act="sc-go" data-v="tense" data-store="">3 分钟时态练习</button></div>` : k === "pron" ? `<div style="margin-top:4px"><button class="btn sm" data-act="sc-go" data-v="tips" data-store="">看说话技巧</button></div>` : ""}</div>` : ""; }).join("")}<p class="small muted" style="margin-top:8px">先练最常出问题的那一件，一次只抓一两件。</p></div>` : ""}
       ${list.length ? `<div class="list">${list.map(c => { const qs = Array.from(new Set(c.segs.filter(s => s.k === "q").map(s => s.qid))); const rt = c.rate || {};
         const cnt = k => qs.filter(q => rt[q] === k).length; const un = qs.filter(q => !rt[q]).length;
-        return `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}　${esc(fmtWhen(c.ts))}</b><span>${qs.length} 题${cnt("again") ? `　没说出来 ${cnt("again")}` : ""}${cnt("hard") ? `　卡了 ${cnt("hard")}` : ""}${cnt("good") ? `　还行 ${cnt("good")}` : ""}${un ? `　未打分 ${un}` : ""}</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`; }).join("")}</div>`
+        return `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}　${esc(fmtWhen(c.ts))}</b><span>${qs.length} 题${cnt("again") ? `　没说出来 ${cnt("again")}` : ""}${cnt("hard") ? `　卡了 ${cnt("hard")}` : ""}${cnt("good") ? `　还行 ${cnt("good")}` : ""}${cnt("great") ? `　不错 ${cnt("great")}` : ""}${un ? `　未打分 ${un}` : ""}</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`; }).join("")}</div>`
         : `<p class="muted">还没有模拟记录。去“面试”页模拟一场，结束后就会出现在这里。</p>`}</div>`;
   }
 };
