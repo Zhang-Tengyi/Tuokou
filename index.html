@@ -405,7 +405,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.15.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.15.1"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1566,8 +1566,10 @@ function sayVariants(ut){
 }
 /* 比较用的词：数字统一成英文读法（220 = two hundred twenty，H-1B = H1B = h one b），
    "a hundred" = "one hundred"，数字中间的 and 不算；只用于比较，不影响卡片 ID */
+/* 意思完全一样、换着说都对的词，比对时当成同一个 */
+const CMP_SAME = {position:"role", positions:"roles", job:"role", jobs:"roles"};
 function cmpTok(s, user){
-  const t = tokens(String(speakEN(s || "")).replace(/\ba (hundred|thousand|million)\b/gi, "one $1"), user);
+  const t = tokens(String(speakEN(s || "")).replace(/\ba (hundred|thousand|million)\b/gi, "one $1"), user).map(w => CMP_SAME[w] || w);
   return t.filter((w, i) => !(w === "and" && CMP_NUMS.has(t[i-1]) && CMP_NUMS.has(t[i+1])));
 }
 /* 连写和分开写算一样：data sheet = datasheet，e verify = everify */
@@ -2970,13 +2972,6 @@ function gramCheck(said, shown){
 function gramBoxHTML(gc){
   return `<div class="gram-box">${gc.must.map(i => `<div class="gline must"><span class="gtag">一定要改</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}${gc.opt.map(i => `<div class="gline opt"><span class="gtag">改不改都行</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}</div>`;
 }
-/* 打分按钮下面的小字：按这张卡现在的熟练度，算出下次实际什么时候再练 */
-function rateSubs(card, retry){
-  if (retry) return {again:"这一轮再来一次", hard:"明天照常复习", good:"明天照常复习", note:"这次是重练：复习时间已经按第一次的打分排好了，这次打分只决定这一轮还要不要再练"};
-  const tn = dnum(today()), p = S.cards[card.id];
-  const d = r => K.srsRate(p, r, tn).due - tn; const lab = n => n <= 1 ? "明天再练" : `${n} 天后再练`;
-  return {again:"这一轮还会再来，明天再练", hard:lab(d("hard")), good:lab(d("good"))};
-}
 class CardStage {
   constructor(card, retry){ this.card = card; this.retry = !!retry; this.step = 0; this.phase = "prompt"; this.drill = 0; this.alive = true; this.tries = 0; }
   get isE(){ return this.card.t === "e"; }
@@ -3166,10 +3161,10 @@ class CardStage {
       h += `<button class="btn primary block big" style="margin-top:16px" data-act="c-next-step">下一步：＋ ${esc(nx.add)}</button>`;
     } else {
       const sg = this.suggest();
-      const rs = rateSubs(this.card, this.retry); h += `${rs.note ? `<p class="small muted" style="margin:6px 0 0">${rs.note}</p>` : ""}<div class="rate">
-        <button class="again ${sg==="again"?"sug":""}" data-act="c-rate" data-v="again">没说出来<small>${rs.again}</small></button>
-        <button class="hard ${sg==="hard"?"sug":""}" data-act="c-rate" data-v="hard">有卡顿<small>${rs.hard}</small></button>
-        <button class="good ${sg==="good"?"sug":""}" data-act="c-rate" data-v="good">秒出<small>${rs.good}</small></button></div>`;
+      h += `<div class="rate">
+        <button class="again ${sg==="again"?"sug":""}" data-act="c-rate" data-v="again">没说出来</button>
+        <button class="hard ${sg==="hard"?"sug":""}" data-act="c-rate" data-v="hard">有卡顿</button>
+        <button class="good ${sg==="good"?"sug":""}" data-act="c-rate" data-v="good">秒出</button></div>`;
     }
     return h + "</div>";
   }
@@ -3476,7 +3471,7 @@ class IvStage {
             + (ref ? `<details style="margin-top:10px" open><summary>参考回答（对照你刚才说的）</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
             + (mine && mine !== ref ? `<details style="margin-top:10px"><summary>我写好的回答</summary><div class="en sm" style="margin-top:6px">${esc(mine)}</div></details>` : "")
             + (!ref && !mine ? `<div class="note">${esc(q.tip)}</div>${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div></details>` : ""}` : ""); })()}
-        <div class="row-gap" style="margin-top:16px">${nextT ? `<button class="btn" data-act="iv-redo">再答一次，压到 ${nextT} 秒</button>` : ""}<button class="btn primary" data-act="iv-done">完成</button></div></div>`;
+        <div class="row-gap" style="margin-top:16px"><button class="btn" data-act="iv-same">再说一遍</button>${nextT ? `<button class="btn" data-act="iv-redo">再答一次，压到 ${nextT} 秒</button>` : ""}<button class="btn primary" data-act="iv-done">完成</button></div></div>`;
     }
   }
   play(){ if (!this.alive) return; this.plays++; TTS.speak(this.variant, {rate: this.plays > 2 ? 0.8 : 1, voice: this.voice}); }
@@ -3511,6 +3506,7 @@ ACT["iv-peek"] = () => { const s = RUN.stage; if (!(s instanceof IvStage)) retur
 ACT["iv-start"] = () => RUN.stage instanceof IvStage && RUN.stage.start();
 ACT["iv-stop"] = () => RUN.stage instanceof IvStage && RUN.stage.stop();
 ACT["iv-redo"] = () => { const s = RUN.stage; if (!(s instanceof IvStage)) return; s.focus = $$(".check input").filter(x => !x.checked).map(x => x.parentElement.textContent.trim()).slice(0, 2); s.round = Math.min(2, s.round + 1); s.start(); };
+ACT["iv-same"] = () => { const s = RUN.stage; if (!(s instanceof IvStage)) return; s.focus = $$(".check input").filter(x => !x.checked).map(x => x.parentElement.textContent.trim()).slice(0, 2); s.start(); };
 ACT["iv-done"] = () => RUN.stage instanceof IvStage && RUN.stage.done();
 
 /* 总结 */
@@ -4788,7 +4784,7 @@ VIEWS.about = {
       <div class="panel" style="margin-top:14px"><ul class="issues">
         <li><b>先说，再看答案。</b>从记忆里把句子说出来，比看十遍记得牢。所以几乎每道题都要你开口。</li>
         <li><b>灯灭就开口。</b>用时从灯灭算到你说完。用时越短，越接近脱口而出；某句刷新最快纪录时会变成紫色。</li>
-        <li><b>三个按钮决定下次什么时候再见。</b>没说出来：这一轮再来一次，明天再练；有卡顿：明天或过几天；秒出：隔得更久。越熟隔得越久，按钮下面的小字会告诉你这张卡下次是哪天。会的越来越少出现，不会的很快回来。</li>
+        <li><b>三个按钮决定下次什么时候再见。</b>没说出来：这一轮再来一次，明天再练；有卡顿：明天或过几天；秒出：隔得更久。每说对一次，下次就隔得更久；忘了就重新从明天开始。会的越来越少出现，不会的很快回来。</li>
         <li><b>说错了先自己改。</b>差一点时，app 先只给提示，让你再说一次，再给答案。自己改出来的记得更牢。</li>
         <li><b>复习听力时听后复述。</b>新句子先选意思；复习时不看文字整句说出来，练的是把连读的声音听成一个个词。</li>
         <li><b>题库可以选。</b>首页“练哪个题库”可以只练通用、日常生活，或者你导入的题库，比如某家公司的面试准备。来电模拟也能选用哪套面试题。</li>
