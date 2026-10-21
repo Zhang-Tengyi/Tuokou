@@ -413,7 +413,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.16.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.16.2"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -2320,7 +2320,7 @@ const TTS = {
       const est = 1500 + text.length * (lang === "zh" ? 260 : 85) / u.rate;
       const tm = setTimeout(() => fin(true), est + 4000);
       const go = () => { try { if (speechSynthesis.paused) speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { fin(false); return; }
-        watch = setTimeout(() => { if (started || done || retried) return; retried = true; try { speechSynthesis.cancel(); } catch (e) {} setTimeout(() => { if (!done){ try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { fin(false); } } }, 180); }, 1800); };
+        watch = setTimeout(() => { if (started || done || retried) return; let sp = false; try { sp = speechSynthesis.speaking && !speechSynthesis.paused; } catch (e) {} if (sp) return; retried = true; try { speechSynthesis.cancel(); } catch (e) {} setTimeout(() => { if (!done){ try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { fin(false); } } }, 180); }, 1800); };
       setTimeout(go, busy ? 220 : 60);
     });
   }
@@ -2362,6 +2362,11 @@ const SR = {
       r.onresult = e => {
         const fins = [], finAlts = []; interim = "";
         for (let i = 0; i < e.results.length; i++){ const tx = String(e.results[i][0].transcript || "").trim(); if (!tx) continue; if (e.results[i].isFinal){ fins.push(tx); finAlts.push(Array.from(e.results[i]).map(a => String(a.transcript || "").trim()).filter(Boolean)); } else interim += (interim ? " " : "") + tx; }
+        /* 安卓 Chrome 的持续识别里，后一段有时会把前一段整个再带一遍：后一段以前一段开头，就只留后一段；完全一样的只留一次 */
+        const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]/g, "").replace(/\s+/g, " ").trim();
+        for (let k = 1; k < fins.length; k++){ const a = norm(fins[k - 1]), b = norm(fins[k]);
+          if (b === a || (a && b.startsWith(a + " "))){ fins.splice(k - 1, 1); finAlts.splice(k - 1, 1); k--; }
+          else if (b && a.startsWith(b + " ")){ fins.splice(k, 1); finAlts.splice(k, 1); k--; } }
         alts = finAlts.length === 1 ? finAlts[0] : [];
         finals = fins.join(" ");
         if (fins.length && (SR.broken || (L.device && (L.device.sr === "no" || L.device.srBroken)))){ SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; L.device.sr = "ok"; saveLocal(); }
@@ -3216,7 +3221,14 @@ async function speakChunks(text, rate){
   for (const c of ch){ if (tok !== chunkTok) return; await TTS.speak(c, {rate: rate || 0.8}); if (tok !== chunkTok) return; await new Promise(r => setTimeout(r, 380)); }
 }
 function sayTxt(text, slow){ chunkTok++; if (slow && L.slashes && /\s/.test(text)) return speakChunks(text, 0.8); return TTS.speak(text, {rate: slow ? 0.75 : 1}); }
-ACT["slash-toggle"] = () => { L.slashes = !L.slashes; saveLocal(); const s = RUN && RUN.stage; if (s && s.render) s.render(); else UI.render(); toast(L.slashes ? "断句打开了：斜杠处停一下" : "断句关掉了"); };
+ACT["slash-toggle"] = el => { L.slashes = !L.slashes; saveLocal();
+  const top = UI.top();
+  if (top && top.name === "reader" && typeof RD !== "undefined"){
+    /* 跟读页：只换句子的显示方式，读到哪儿、在不在读都不动 */
+    $$(".rd-s").forEach((e, k) => { const x = RD.sents[k]; if (x != null) e.textContent = L.slashes ? K.thoughtGroups(x).join(" / ") : x; });
+    $$('[data-act="slash-toggle"]').forEach(b => { b.setAttribute("aria-pressed", L.slashes); b.classList.toggle("on", !!L.slashes); });
+  } else { const s = RUN && RUN.stage; if (s && s.render) s.render(); else UI.render(); }
+  toast(L.slashes ? "断句打开了：斜杠处停一下" : "断句关掉了"); };
 function slashBtn(){ return `<button class="btn sm ghost" data-act="slash-toggle" aria-pressed="${L.slashes ? "true" : "false"}">${L.slashes ? "断句：开" : "断句：关"}</button>`; }
 ACT.word = el => {
   const w = String(el.dataset.w || "").replace(/[’']s$/, "").replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g, ""); if (!w) return;
@@ -4079,6 +4091,11 @@ function googleCalLink(x){
   const f = dt => dt.getFullYear() + String(dt.getMonth() + 1).padStart(2, "0") + String(dt.getDate()).padStart(2, "0") + "T" + String(dt.getHours()).padStart(2, "0") + String(dt.getMinutes()).padStart(2, "0") + "00";
   return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(x.text) + "&dates=" + f(t) + "/" + f(t2) + "&details=" + encodeURIComponent("脱口的练习计划");
 }
+const IS_ANDROID = /Android/i.test(navigator.userAgent || "");
+function androidCalIntent(x){
+  const t = planTime(x); if (!t) return ""; const t2 = new Date(t.getTime() + 30 * 60000);
+  return `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(x.text)};S.description=${encodeURIComponent("脱口的练习计划")};l.beginTime=${t.getTime()};l.endTime=${t2.getTime()};S.browser_fallback_url=${encodeURIComponent(googleCalLink(x))};end`;
+}
 ACT["plan-remind"] = async el => {
   const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x || !planTime(x)) return;
   const c = await choose("加到日历提醒你", "先试第一个：下载一个日历文件，再用手机自带的日历打开它，就会加进去。打不开的话，用第二个。", [["ics", "下载日历文件"], ["google", "用 Google 日历添加"], ["", "取消"]]);
@@ -4091,7 +4108,7 @@ ACT["plan-remind"] = async el => {
 function planRowHTML(x, page){
   const isToday = x.date === today();
   return `<div class="li plan-row"><input type="checkbox" data-chg="plan-done" data-id="${x.id}" ${x.done ? "checked" : ""} aria-label="完成"><div class="grow"><b${x.done ? ' class="muted" style="text-decoration:line-through"' : ""}>${x.cue ? esc(x.cue) + " → " : ""}${esc(x.text)}</b>${x.act && planActLabel(x.act) !== x.text ? `<span>${esc(planActLabel(x.act))}</span>` : ""}${page ? `<span class="pl-tools"><button class="linkbtn" data-act="plan-edit" data-id="${x.id}">编辑</button><button class="linkbtn danger" data-act="plan-del" data-id="${x.id}">删除</button></span>` : ""}</div>
-    <span class="row-gap" style="flex:none">${x.act && !x.done && isToday ? `<button class="btn sm primary" data-act="plan-go" data-v="${esc(x.act)}">开始</button>` : ""}${planTime(x) && !x.done ? `<button class="btn sm ghost" data-act="plan-remind" data-id="${x.id}">提醒我</button>` : ""}</span></div>`;
+    <span class="row-gap" style="flex:none">${x.act && !x.done && isToday ? `<button class="btn sm primary" data-act="plan-go" data-v="${esc(x.act)}">开始</button>` : ""}${planTime(x) && !x.done ? (IS_ANDROID ? `<a class="btn sm ghost" href="${androidCalIntent(x)}">提醒我</a>` : `<button class="btn sm ghost" data-act="plan-remind" data-id="${x.id}">提醒我</button>`) : ""}</span></div>`;
 }
 function todayPlanHTML(){
   const d = today(); const items = (S.plan || []).filter(x => x.date === d); const due = ivDueList();
@@ -5177,7 +5194,7 @@ VIEWS.plan = {
       <div style="margin-top:12px">${body}</div>
       ${PLAN_FORM || ed ? form : `<button class="btn block" style="margin-top:14px" data-act="pl-open">＋ 加一项</button>`}
       <div class="panel" style="margin-top:14px"><b>让 Claude 帮你整理</b><p class="small muted" style="margin-top:4px">计划多了、重复了，就复制给 Claude。它会给你一段第一行写着“计划 | 替换”的导入码：导入以后，所有没做完的计划都换成新的，做完的记录留着。</p><button class="btn block" style="margin-top:8px" data-act="pl-claude">复制所有计划给 Claude</button></div>
-      <p class="small muted" style="margin-top:10px">每一项写成“什么时候 → 做什么”，比只写日期更容易做到。写了具体时间（比如 20:00）的，点“提醒我”可以加到日历里提醒你。</p>
+      <p class="small muted" style="margin-top:10px">每一项写成“什么时候 → 做什么”，比只写日期更容易做到。写了具体时间（比如 20:00）的，点“提醒我”会打开手机日历，内容都填好了，确认就行。</p>
       <h3 style="margin-top:20px">每天固定的练习时间</h3>
       <p class="muted small" style="margin:6px 0 14px">写成“如果……就……”的计划，比只说“我要每天练”更容易坚持。选一个你每天一定会碰到的时刻。</p>
       <div class="panel"><div class="small muted">如果……</div><div class="chips" style="margin-top:8px">${PLAN_OPTS.map(o => `<button class="chip ${o === cur ? "k" : ""}" data-act="plan-pick" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>
