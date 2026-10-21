@@ -405,7 +405,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.14.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.15.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1353,7 +1353,7 @@ const DIALOGS = [
 /* 通用面试题的参考回答：美国人在这种场合最自然的说法 */
 const REF = {"Q1": "Sure. I recently finished my master's in mechanical engineering, and my undergrad was in mechatronics, so I work across the mechanical, electrical, and software sides of a system. I did two internships on vacuum coating systems, where I wrote PLC and communication code and helped with on-site commissioning. In a robotics lab, I designed hardware for robots, like cable routing and electronics mounts. Now I'm looking for a hands-on role where I can design, build, and test real systems.", "Q2": "Sure. One project I'm proud of is a cable routing redesign for a robot that can crawl and fly. When it switches modes, the knee rotates 90 degrees, and the cables kept wearing out and popping out. I designed a U-shaped channel in SolidWorks and 3D printed it. The channel opens outward, so the cables get pressed against the wall instead of popping out. After that, the problem stopped, and the lab kept using the design.", "Q3": "During an internship, I helped commission a vacuum coating system at a customer's site. The link between the PLC and the power supply kept failing. We checked it one layer at a time: the wiring, then the protocol, then the firmware. I found that the response frames didn't match, and the vendor confirmed it was a firmware bug. After the fix, the system met all the operation requirements. What I took away is to find the right layer first, and bring clear evidence before you go to a vendor.", "Q4": "During an internship, another engineer designed the HMI screens, and I knew the PLC variables really well, so we tested the screens together. When a screen was linked to the wrong variable, I fixed it, and then we checked it again together. It worked well because we split the work by what each of us knew best.", "Q5": "For my undergrad thesis, I built a jet-propulsion robot inspired by razor clams. My first plan was to use electromagnets to open and close the shell. When I tested them on a bench, they only worked within about two millimeters, so they couldn't move the shell. I switched to a motor that drives a permanent-magnet rotor, and later to a spring mechanism. What I learned is to test the risky part on a bench early, before I build the whole system.", "Q6": "I'm interested in this role because it's really hands-on. I'd get to design, build, and test real hardware, which is exactly what I enjoyed most in the lab and in my internships. And I'd love to learn from a team that builds real products.", "Q7": "I'd say my biggest strength is that I'm hands-on across mechanical, electrical, and software. I can design a part, wire it up, write the control code, and test it. One thing I'm working on is explaining technical details in a short, clear way. So now I start with the result, and then give one or two key details.", "Q8": "Yes, thank you. What qualities make someone really successful on your team? And what would I be working on in the first few months?", "Q9": "I'm on F-1 OPT right now, so I'm authorized to work. I'm also eligible for the STEM OPT extension, and down the road, I will need H-1B sponsorship.", "Q10": "Yes. I'm on F-1 OPT, so I'm authorized to work in the US right now.", "Q11": "I'm flexible, and I'd like to learn more about the role first. Could you share the range for this position?", "Q12": "I can start soon after an offer. I'd just need a little time to relocate if the job isn't nearby.", "Q13": "Yes, I'm open to relocating, and I'm happy to work onsite."};
 /* 常用固定搭配：点句子里的词时，整体显示读法和意思 */
-const CHUNKS = [["job hunting", "找工作"], ["send out applications", "投简历"], ["apply for", "申请（职位）"], ["apply to", "投（某个公司、职位）"], ["follow up on", "跟进（某件事）"], ["follow up", "跟进"], ["reach out to", "主动联系（某人）"], ["reach out", "主动联系"], ["hear back from", "收到……的回复"], ["hear back", "收到回复"], ["get back to", "回复（某人）"], ["look forward to", "期待"], ["come across", "偶然看到"], ["stand out", "很显眼，引人注意"], ["check all the boxes", "完全符合要求"], ["down the road", "将来，以后"], ["a few hundred", "几百"], ["a big part of", "……很重要的一部分"], ["get the hang of", "掌握窍门"], ["give it a try", "试一试"], ["pick it back up", "重新捡起来"], ["hang out", "一起玩，待着"], ["tag along", "跟着去"], ["lie around", "躺着什么都不干"], ["play on my phone", "玩手机"], ["these days", "最近，这段时间"], ["over and over", "一遍又一遍"], ["the exact same", "完全一样的"], ["at the end of the day", "归根结底"], ["in the end", "最后"], ["as a result", "结果，因此"], ["make sure", "确保"], ["figure out", "弄明白，想出办法"], ["work on", "做（项目），在做"], ["set up", "搭建，设置"], ["build on", "在……的基础上提升"], ["pick up", "学会；拿起来"], ["keep track of", "记录，跟踪"], ["keep in mind", "记住"], ["take care of", "处理，照顾"], ["end up", "最后（变成、做了）"], ["run into", "遇到（问题）"], ["turn out", "结果是"], ["find out", "查出来，发现"], ["look into", "调查，研究一下"], ["deal with", "处理，应对"], ["break down", "拆解；坏掉"], ["wear out", "磨损"], ["pop out", "弹出来"], ["line up", "对齐；排队"], ["snap onto", "卡到……上"], ["step by step", "一步一步地"], ["one layer at a time", "一层一层地"], ["at a time", "每次（一个）"], ["in real time", "实时"], ["on the side", "业余，另外"], ["side project", "业余项目"], ["on site", "在现场"], ["on-site work", "现场工作"], ["full-time", "全职"], ["part-time", "兼职"], ["hands-on", "动手的，实际操作的"], ["from design to testing", "从设计到测试"], ["be open to", "愿意接受"], ["open to", "愿意接受"], ["comfortable with", "对……没问题，熟悉"], ["ready to", "准备好（做某事）"], ["excited about", "对……很兴奋，很期待"], ["interested in", "对……感兴趣"], ["eligible for", "有资格（申请）"], ["authorized to work", "有工作许可"], ["work authorization", "工作许可"], ["job description", "职位描述"], ["relocation assistance", "搬家补助"], ["next steps", "接下来的安排"], ["the whole package", "整体待遇"], ["salary range", "薪资范围"], ["club fitting", "球杆定制"], ["ball flight", "球的飞行"], ["driving range", "练习场"], ["play a round", "打一场（球）"], ["keep score", "记杆数"], ["face, path, and contact", "杆面、挥杆路径和击球点"], ["in the loop", "知情，了解最新情况"], ["keep me in the loop", "有消息告诉我一声"], ["circle back", "回头再跟进"], ["touch base", "简单联系一下"], ["on your end", "你那边"], ["cut out", "（电话信号）断了；删掉"], ["say that again", "再说一遍"], ["let me think", "让我想一下"], ["just to make sure", "确认一下"], ["in short", "简单来说"], ["for example", "比如"], ["to be honest", "说实话"], ["kind of", "有点儿；……的一种"], ["a little bit", "一点儿"], ["get started", "开始"], ["wrap up", "收尾，结束"], ["thanks for having me", "谢谢邀请我"], ["nice to meet you", "很高兴认识你"], ["take a look", "看一下"], ["trial and error", "反复试错"], ["root cause", "根本原因"], ["test rig", "测试台架"], ["data acquisition", "数据采集"], ["strain relief", "应力消除"], ["snap-fit", "卡扣（结构）"], ["tool-less", "免工具的"], ["firmware bug", "固件 bug"], ["steady-state error", "稳态误差"], ["transfer function", "传递函数"], ["degree of freedom", "自由度"], ["under its own weight", "在自重下"], ["a dream combination", "梦想中的组合"], ["I'd love to", "我很想"], ["I'm happy to", "我很乐意"], ["would you mind", "你介意……吗"], ["make it work", "想办法搞定"], ["it depends on", "取决于"], ["in charge of", "负责"], ["responsible for", "负责"], ["work closely with", "和……密切合作"], ["come up with", "想出（办法、主意）"], ["get used to", "习惯于"], ["used to", "过去常常（be used to：习惯于）"], ["by the way", "顺便说一下"], ["as soon as possible", "尽快"], ["in person", "当面"], ["on the phone", "在电话里"], ["time zone", "时区"], ["get out", "出门（去打球、去玩）"], ["whenever I can", "只要有机会"], ["so far", "到目前为止"], ["right away", "马上"], ["pretty much", "差不多"], ["as well", "也"], ["a couple of", "几个，两三个"], ["take away", "拿走；（takeaway）收获"], ["get to", "有机会（做某事）；到达"], ["learn from", "向……学习"], ["stay hands-on", "一直动手做事"], ["one thing at a time", "一次只做一件事"], ["change one thing at a time", "每次只改一个因素"], ["in the field", "在现场；在……领域"], ["under pressure", "在压力下"], ["on time", "按时"], ["ahead of time", "提前"], ["at the same time", "同时"], ["work out", "解决；（结果）不错；锻炼"], ["narrow down", "缩小范围"], ["rule out", "排除"], ["back up", "支持；备份"], ["put together", "组装，整理出来"], ["what kind of", "什么样的"], ["as well as", "以及，还有"], ["I'm used to", "我习惯了"], ["are you used to", "你习惯……了吗"], ["be used to", "习惯于"], ["kind of like", "有点像"], ["send out", "发出去（投简历：send out applications）"], ["sent out", "发出去了"], ["right now", "现在、此刻"], ["check in", "联系一下、问问进展"], ["catch up", "叙叙旧；跟上进度"], ["all kinds of", "各种各样的"], ["right up my alley", "正对我胃口、正好是我擅长的"], ["go through", "经历；仔细过一遍"], ["went through", "经历了；仔细过了一遍"], ["one at a time", "一次一个"], ["look for", "找"], ["relocate to", "搬到（为了工作）"], ["based on", "根据、基于"], ["work with", "和…合作；用（某个工具）"], ["switch to", "换成"], ["familiar with", "熟悉"], ["start with", "从…开始"], ["help with", "帮忙做…"], ["fit for", "适合…"], ["able to", "能够"], ["participate in", "参加"], ["move to", "搬到"], ["hear about", "听说"], ["okay with", "能接受、没问题"], ["come with", "附带、配有"], ["addicted to", "对…上瘾"], ["iterate on", "在…基础上反复改进"], ["lose to", "输给"], ["lost to", "输给了"], ["thanks for", "谢谢你的…"], ["learn more about", "进一步了解"], ["all the way", "一路、全程（from design all the way to testing）"], ["from scratch", "从零开始"], ["focus on", "专注于"], ["depend on", "取决于；依靠"], ["come up", "被提到；出现"], ["came up", "被提到了；出现了"], ["show up", "出现、到场"], ["sign up", "报名、注册"], ["shut down", "关机、停掉"], ["turn on", "打开（设备）"], ["turn off", "关掉（设备）"], ["plug in", "插上电"], ["hook up", "接上、连上（线、设备）"], ["free up", "腾出（时间、空间）"], ["ran into", "遇到了（问题）"], ["came up with", "想出了"], ["found out", "发现了、查明了"], ["took care of", "处理了；照顾了"], ["in terms of", "在…方面"], ["as long as", "只要"], ["as soon as", "一…就…"], ["make sense", "说得通、有道理"], ["point out", "指出"], ["try out", "试一试"], ["walk me through", "带我过一遍、给我讲讲"], ["a good fit", "合适（的人选）"], ["on my end", "我这边"], ["be honest", "说实话（to be honest）"], ["at first", "一开始"], ["first time", "第一次"], ["either way", "不管怎样，反正"], ["look like", "看起来像；是什么样子"], ["in the early stages", "还在早期阶段"], ["bring together", "把……结合在一起"], ["check all of those boxes", "完全符合要求"], ["not right now", "现在没有"], ["at least", "至少"], ["instead of", "而不是"], ["such as", "比如"], ["rather than", "而不是"], ["no worries", "没关系，不用担心"], ["sounds good", "好的，听起来不错"], ["for sure", "当然，肯定"], ["of course", "当然"], ["I mean", "我的意思是"], ["I guess", "我猜，应该是"], ["not really", "不太是，其实没有"], ["at all", "一点也（不）"], ["for a while", "一段时间"], ["on my way", "在路上了"], ["supposed to", "应该（按说要）"], ["take a break", "休息一下"], ["hang on", "稍等"], ["hold on", "稍等一下"], ["give me a second", "给我一秒钟"], ["let me know", "告诉我一声"], ["how about", "……怎么样"], ["what about", "……呢；……怎么样"], ["on a bench", "在台架上"], ["bench test", "台架测试"], ["test protocol", "测试规程"], ["noise floor", "噪声底"], ["dynamic range", "动态范围"], ["load cell", "称重传感器"], ["wiring diagram", "接线图"], ["launch monitor", "发射监测仪（测球速、转速）"], ["swing robot", "挥杆机器人"], ["ball speed", "球速"], ["club head speed", "杆头速度"], ["spin rate", "转速"], ["launch angle", "起飞角"], ["impact location", "击球位置"], ["high-speed video", "高速视频"], ["computer vision", "计算机视觉"], ["as a matter of fact", "其实，事实上"], ["the other day", "前几天"], ["once in a while", "偶尔"], ["every other day", "每隔一天"], ["in a row", "连续"], ["make a difference", "有影响，起作用"], ["pay attention to", "注意"], ["take notes", "做笔记"], ["take a look at", "看一下"], ["get in touch", "联系"], ["look up", "查（资料）"], ["fill out", "填（表）"], ["sign in", "登录"], ["run late", "要迟到了"], ["up to you", "你决定"], ["how come", "怎么会，为什么"], ["go ahead", "请便；你先"], ["after all", "毕竟"], ["all set", "都准备好了"], ["by myself", "自己一个人"], ["on my own", "自己独立地"], ["parts list", "零件清单"], ["test log", "测试记录"], ["demo day", "试打活动"], ["two worlds", "两个领域（我的两个世界）"]];
+const CHUNKS = [["job hunting", "找工作"], ["send out applications", "投简历"], ["apply for", "申请（职位）"], ["apply to", "投（某个公司、职位）"], ["follow up on", "跟进（某件事）"], ["follow up", "跟进"], ["reach out to", "主动联系（某人）"], ["reach out", "主动联系"], ["hear back from", "收到……的回复"], ["hear back", "收到回复"], ["get back to", "回复（某人）"], ["look forward to", "期待"], ["come across", "偶然看到"], ["stand out", "很显眼，引人注意"], ["check all the boxes", "完全符合要求"], ["down the road", "将来，以后"], ["a few hundred", "几百"], ["a big part of", "……很重要的一部分"], ["get the hang of", "掌握窍门"], ["give it a try", "试一试"], ["pick it back up", "重新捡起来"], ["hang out", "一起玩，待着"], ["tag along", "跟着去"], ["lie around", "躺着什么都不干"], ["play on my phone", "玩手机"], ["these days", "最近，这段时间"], ["over and over", "一遍又一遍"], ["the exact same", "完全一样的"], ["at the end of the day", "归根结底"], ["in the end", "最后"], ["as a result", "结果，因此"], ["make sure", "确保"], ["figure out", "弄明白，想出办法"], ["work on", "做（项目），在做"], ["set up", "搭建，设置"], ["build on", "在……的基础上提升"], ["pick up", "学会；拿起来"], ["keep track of", "记录，跟踪"], ["keep in mind", "记住"], ["take care of", "处理，照顾"], ["end up", "最后（变成、做了）"], ["run into", "遇到（问题）"], ["turn out", "结果是"], ["find out", "查出来，发现"], ["look into", "调查，研究一下"], ["deal with", "处理，应对"], ["break down", "拆解；坏掉"], ["wear out", "磨损"], ["pop out", "弹出来"], ["line up", "对齐；排队"], ["snap onto", "卡到……上"], ["step by step", "一步一步地"], ["one layer at a time", "一层一层地"], ["at a time", "每次（一个）"], ["in real time", "实时"], ["on the side", "业余，另外"], ["side project", "业余项目"], ["on site", "在现场"], ["on-site work", "现场工作"], ["full-time", "全职"], ["part-time", "兼职"], ["hands-on", "动手的，实际操作的"], ["be open to", "愿意接受"], ["open to", "愿意接受"], ["comfortable with", "对……没问题，熟悉"], ["ready to", "准备好（做某事）"], ["excited about", "对……很兴奋，很期待"], ["interested in", "对……感兴趣"], ["eligible for", "有资格（申请）"], ["authorized to work", "有工作许可"], ["work authorization", "工作许可"], ["job description", "职位描述"], ["relocation assistance", "搬家补助"], ["next steps", "接下来的安排"], ["the whole package", "整体待遇"], ["salary range", "薪资范围"], ["club fitting", "球杆定制"], ["ball flight", "球的飞行"], ["driving range", "练习场"], ["play a round", "打一场（球）"], ["keep score", "记杆数"], ["in the loop", "知情，了解最新情况"], ["keep me in the loop", "有消息告诉我一声"], ["circle back", "回头再跟进"], ["touch base", "简单联系一下"], ["on your end", "你那边"], ["cut out", "（电话信号）断了；删掉"], ["say that again", "再说一遍"], ["let me think", "让我想一下"], ["just to make sure", "确认一下"], ["in short", "简单来说"], ["for example", "比如"], ["to be honest", "说实话"], ["kind of", "有点儿；……的一种"], ["a little bit", "一点儿"], ["get started", "开始"], ["wrap up", "收尾，结束"], ["thanks for having me", "谢谢邀请我"], ["nice to meet you", "很高兴认识你"], ["take a look", "看一下"], ["trial and error", "反复试错"], ["root cause", "根本原因"], ["test rig", "测试台架"], ["data acquisition", "数据采集"], ["strain relief", "应力消除"], ["snap-fit", "卡扣（结构）"], ["tool-less", "免工具的"], ["firmware bug", "固件 bug"], ["steady-state error", "稳态误差"], ["transfer function", "传递函数"], ["degree of freedom", "自由度"], ["under its own weight", "在自重下"], ["I'd love to", "我很想"], ["I'm happy to", "我很乐意"], ["would you mind", "你介意……吗"], ["make it work", "想办法搞定"], ["it depends on", "取决于"], ["in charge of", "负责"], ["responsible for", "负责"], ["work closely with", "和……密切合作"], ["come up with", "想出（办法、主意）"], ["get used to", "习惯于"], ["used to", "过去常常（be used to：习惯于）"], ["by the way", "顺便说一下"], ["as soon as possible", "尽快"], ["in person", "当面"], ["on the phone", "在电话里"], ["time zone", "时区"], ["get out", "出门（去打球、去玩）"], ["whenever I can", "只要有机会"], ["so far", "到目前为止"], ["right away", "马上"], ["pretty much", "差不多"], ["as well", "也"], ["a couple of", "几个，两三个"], ["take away", "拿走；（takeaway）收获"], ["get to", "有机会（做某事）；到达"], ["learn from", "向……学习"], ["one thing at a time", "一次只做一件事"], ["in the field", "在现场；在……领域"], ["under pressure", "在压力下"], ["on time", "按时"], ["ahead of time", "提前"], ["at the same time", "同时"], ["work out", "解决；（结果）不错；锻炼"], ["narrow down", "缩小范围"], ["rule out", "排除"], ["back up", "支持；备份"], ["put together", "组装，整理出来"], ["what kind of", "什么样的"], ["as well as", "以及，还有"], ["I'm used to", "我习惯了"], ["are you used to", "你习惯……了吗"], ["be used to", "习惯于"], ["kind of like", "有点像"], ["send out", "发出去（投简历：send out applications）"], ["sent out", "发出去了"], ["right now", "现在、此刻"], ["check in", "联系一下、问问进展"], ["catch up", "叙叙旧；跟上进度"], ["all kinds of", "各种各样的"], ["right up my alley", "正对我胃口、正好是我擅长的"], ["go through", "经历；仔细过一遍"], ["went through", "经历了；仔细过了一遍"], ["one at a time", "一次一个"], ["look for", "找"], ["relocate to", "搬到（为了工作）"], ["based on", "根据、基于"], ["work with", "和…合作；用（某个工具）"], ["switch to", "换成"], ["familiar with", "熟悉"], ["start with", "从…开始"], ["help with", "帮忙做…"], ["fit for", "适合…"], ["able to", "能够"], ["participate in", "参加"], ["move to", "搬到"], ["hear about", "听说"], ["okay with", "能接受、没问题"], ["come with", "附带、配有"], ["addicted to", "对…上瘾"], ["iterate on", "在…基础上反复改进"], ["lose to", "输给"], ["lost to", "输给了"], ["thanks for", "谢谢你的…"], ["learn more about", "进一步了解"], ["all the way", "一路、全程（from design all the way to testing）"], ["from scratch", "从零开始"], ["focus on", "专注于"], ["depend on", "取决于；依靠"], ["come up", "被提到；出现"], ["came up", "被提到了；出现了"], ["show up", "出现、到场"], ["sign up", "报名、注册"], ["shut down", "关机、停掉"], ["turn on", "打开（设备）"], ["turn off", "关掉（设备）"], ["plug in", "插上电"], ["hook up", "接上、连上（线、设备）"], ["free up", "腾出（时间、空间）"], ["ran into", "遇到了（问题）"], ["came up with", "想出了"], ["found out", "发现了、查明了"], ["took care of", "处理了；照顾了"], ["in terms of", "在…方面"], ["as long as", "只要"], ["as soon as", "一…就…"], ["make sense", "说得通、有道理"], ["point out", "指出"], ["try out", "试一试"], ["walk me through", "带我过一遍、给我讲讲"], ["a good fit", "合适（的人选）"], ["on my end", "我这边"], ["be honest", "说实话（to be honest）"], ["at first", "一开始"], ["first time", "第一次"], ["either way", "不管怎样，反正"], ["look like", "看起来像；是什么样子"], ["in the early stages", "还在早期阶段"], ["bring together", "把……结合在一起"], ["check all of those boxes", "完全符合要求"], ["not right now", "现在没有"], ["at least", "至少"], ["instead of", "而不是"], ["such as", "比如"], ["rather than", "而不是"], ["no worries", "没关系，不用担心"], ["sounds good", "好的，听起来不错"], ["for sure", "当然，肯定"], ["of course", "当然"], ["I mean", "我的意思是"], ["I guess", "我猜，应该是"], ["not really", "不太是，其实没有"], ["at all", "一点也（不）"], ["for a while", "一段时间"], ["on my way", "在路上了"], ["supposed to", "应该（按说要）"], ["take a break", "休息一下"], ["hang on", "稍等"], ["hold on", "稍等一下"], ["give me a second", "给我一秒钟"], ["let me know", "告诉我一声"], ["how about", "……怎么样"], ["what about", "……呢；……怎么样"], ["on a bench", "在台架上"], ["bench test", "台架测试"], ["test protocol", "测试规程"], ["noise floor", "底噪（噪声基底）"], ["dynamic range", "动态范围"], ["load cell", "称重传感器"], ["wiring diagram", "接线图"], ["launch monitor", "弹道仪（测球速、转速、起飞角）"], ["swing robot", "挥杆机器人"], ["ball speed", "球速"], ["club head speed", "杆头速度"], ["spin rate", "转速"], ["launch angle", "起飞角"], ["impact location", "击球位置"], ["high-speed video", "高速视频"], ["computer vision", "计算机视觉"], ["as a matter of fact", "其实，事实上"], ["the other day", "前几天"], ["once in a while", "偶尔"], ["every other day", "每隔一天"], ["in a row", "连续"], ["make a difference", "有影响，起作用"], ["pay attention to", "注意"], ["take notes", "做笔记"], ["take a look at", "看一下"], ["get in touch", "联系"], ["look up", "查（资料）"], ["fill out", "填（表）"], ["sign in", "登录"], ["run late", "要迟到了"], ["up to you", "你决定"], ["how come", "怎么会，为什么"], ["go ahead", "请便；你先"], ["after all", "毕竟"], ["all set", "都准备好了"], ["by myself", "自己一个人"], ["on my own", "自己独立地"], ["parts list", "零件清单"], ["test log", "测试记录"], ["demo day", "试打活动"]];
 const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS, REF, CHUNKS};
 
 
@@ -2333,7 +2333,10 @@ const SR = {
       let r;
       try { r = new this.Ctor(); } catch (e) { res({text:"", error:"unsupported"}); return; }
       this.cur = r;
-      r.lang = "en-US"; r.interimResults = true; r.continuous = false; r.maxAlternatives = 5;
+      r.lang = "en-US"; r.interimResults = true; r.maxAlternatives = 5;
+      /* 默认：说话中间停一下也不结束，停 2.5 秒才算说完；用户可以在设置里改回手机默认 */
+      const longMode = L.srLong !== false && !o.short; r.continuous = longMode; let quiet = null;
+      const kick = () => { if (!longMode) return; clearTimeout(quiet); quiet = setTimeout(() => { try { r._ours = true; r.stop(); } catch (e) {} }, 2500); };
       if (this.local) try { r.processLocally = true; } catch (e) {}
       let finals = "", interim = "", err = null, ended = false, alts = [];
       const t0 = performance.now(); let tStart = 0;
@@ -2346,9 +2349,10 @@ const SR = {
         if (fins.length && (SR.broken || (L.device && (L.device.sr === "no" || L.device.srBroken)))){ SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; L.device.sr = "ok"; saveLocal(); }
         if (fins.length > 1){ const longest = fins.reduce((a, b) => b.length > a.length ? b : a); if (fins.every(f => longest.toLowerCase().includes(f.toLowerCase()))) finals = longest; }
         o.onInterim && o.onInterim((finals + " " + interim).trim());
+        kick();
       };
       r.onerror = e => { err = e.error || "error"; if (err === "network") this.netFail = true; if (err === "aborted" && r._ours) err = null; else MIC.note(err); };
-      const finish = () => { if (ended) return; ended = true; clearTimeout(guard); if (this.cur === r) this.cur = null; const text = (finals || interim).trim();
+      const finish = () => { if (ended) return; ended = true; clearTimeout(guard); clearTimeout(quiet); if (this.cur === r) this.cur = null; const text = (finals || interim).trim();
         /* 不是我们自己取消的 aborted：手机的识别服务拒绝了。用了本机识别就先关掉重试一次；连续两次就改用键盘语音输入 */
         if (err === "aborted" && !text){
           if (r.processLocally && !o._retry){ this.local = false; L.device = L.device || {}; L.device.local = "failed"; saveLocal(); res(this.listen(Object.assign({}, o, {_retry:true}))); return; }
@@ -2891,14 +2895,24 @@ function showItem(){
 /* 3 / 10 / 20 分钟是真的限时：时间到了就收尾，剩下的题留到下次 */
 function nextItem(){
   RUN.i++;
-  if (RUN.limitMs && !RUN.timeUp && Date.now() - RUN.t0 > RUN.limitMs && RUN.i < RUN.items.length){
-    /* 时间到：不再上新题；刚才没说出来的句子和面试题留着练完 */
-    const keep = x => x.retry || x.k === "iv" || x.introDone; const later = RUN.items.slice(RUN.i);
-    RUN.rest = later.filter(x => !keep(x)); RUN.items = RUN.items.slice(0, RUN.i).concat(later.filter(keep)); RUN.timeUp = true;
-    if (RUN.i < RUN.items.length) toast("时间到了：把刚才没说出来的再练一遍，就结束");
-  }
+  if (RUN.limitMs && !RUN.timeUp && Date.now() - RUN.t0 > RUN.limitMs && RUN.i < RUN.items.length){ RUN.timeUp = true; showTimeUp(); return; }
   showItem();
 }
+/* 到时间了：不偷偷接着练，停下来让你自己选 */
+function showTimeUp(){
+  const el = stageEl(); if (!el){ showItem(); return; }
+  if (RUN.stage && RUN.stage.leave) RUN.stage.leave(); RUN.stage = null; TTS.cancel();
+  const later = RUN.items.slice(RUN.i), retries = later.filter(x => x.retry).length, mins = Math.round(RUN.limitMs / 60000);
+  el.innerHTML = `<div class="card"><h3>${mins} 分钟到了</h3><p class="muted small" style="margin-top:6px">后面还有 ${later.length} 题${retries ? `，其中 ${retries} 题是刚才没说出来、要再练一次的` : ""}。剩下的不会丢，会留到下次。</p>
+    ${retries ? `<button class="btn primary block" style="margin-top:12px" data-act="tu-finish">把没说出来的 ${retries} 题练完再结束</button>` : ""}
+    <button class="btn block${retries ? "" : " primary"}" style="margin-top:8px" data-act="tu-end">现在结束</button>
+    <button class="btn block ghost" style="margin-top:8px" data-act="tu-more">再练 5 分钟</button></div>`;
+}
+ACT["tu-finish"] = () => { const later = RUN.items.slice(RUN.i); RUN.rest = later.filter(x => !x.retry); RUN.items = RUN.items.slice(0, RUN.i).concat(later.filter(x => x.retry)); showItem(); };
+ACT["tu-end"] = () => { RUN.rest = RUN.items.slice(RUN.i).filter(x => !x.retry); RUN.items = RUN.items.slice(0, RUN.i); showItem(); };
+ACT["tu-more"] = () => { RUN.limitMs += 5 * 60000; RUN.timeUp = false; showItem(); };
+/* 切到别的 app 的时间不算进练习时间 */
+document.addEventListener("visibilitychange", () => { if (document.hidden){ RUN._hid = Date.now(); } else if (RUN._hid){ if (RUN.t0) RUN.t0 += Date.now() - RUN._hid; RUN._hid = 0; } });
 ACT["run-rest"] = () => { if (!RUN.rest || !RUN.rest.length) return; RUN.items = RUN.rest; RUN.rest = []; RUN.i = 0; RUN.limitMs = 0; RUN.timeUp = false; showItem(); };
 /* 练到一半：退出或切走时记下没练完的题，回到首页可以接着练（今天之内有效） */
 function saveResume(){
@@ -2955,6 +2969,13 @@ function gramCheck(said, shown){
 }
 function gramBoxHTML(gc){
   return `<div class="gram-box">${gc.must.map(i => `<div class="gline must"><span class="gtag">一定要改</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}${gc.opt.map(i => `<div class="gline opt"><span class="gtag">改不改都行</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}</div>`;
+}
+/* 打分按钮下面的小字：按这张卡现在的熟练度，算出下次实际什么时候再练 */
+function rateSubs(card, retry){
+  if (retry) return {again:"这一轮再来一次", hard:"明天照常复习", good:"明天照常复习", note:"这次是重练：复习时间已经按第一次的打分排好了，这次打分只决定这一轮还要不要再练"};
+  const tn = dnum(today()), p = S.cards[card.id];
+  const d = r => K.srsRate(p, r, tn).due - tn; const lab = n => n <= 1 ? "明天再练" : `${n} 天后再练`;
+  return {again:"这一轮还会再来，明天再练", hard:lab(d("hard")), good:lab(d("good"))};
 }
 class CardStage {
   constructor(card, retry){ this.card = card; this.retry = !!retry; this.step = 0; this.phase = "prompt"; this.drill = 0; this.alive = true; this.tries = 0; }
@@ -3015,7 +3036,7 @@ class CardStage {
       el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">${this.leech ? "分块练" : "跟着说 3 遍"}</span></div>
         <p class="muted small">${this.leech ? `这句错过 ${lapses} 次了，换个练法：一块一块加长，最后说整句。` : "先听慢速、再听正常速度跟着说，最后不听自己说。"}想不起来就点一下句子，偷看两秒。</p>
         <p style="margin-top:10px;font-weight:600">${this.drill < n ? `${this.drill + 1}/${n}　${esc(cur.label)}` : "练完了"}</p>
-        <div class="en blur" id="drillText" data-act="c-peek" style="margin-top:8px">${esc(L.slashes ? K.thoughtGroups(cur.text).join(" / ") : cur.text)}</div>
+        <div class="en${this.drill === 0 ? "" : " blur"}" id="drillText" data-act="c-peek" style="margin-top:8px">${esc(L.slashes ? K.thoughtGroups(cur.text).join(" / ") : cur.text)}</div>
         <div class="row-gap" style="margin-top:10px">${sayBtns(cur.text)}${slashBtn()}</div>
         <p class="small" style="margin-top:8px">发音提示：${esc(K.pronTip(cur.text))}　<button class="linkbtn small" data-act="nav" data-v="tips">更多说话技巧</button></p>
         ${L.quiet ? `<p class="small muted">不方便出声：跟着默念或做口型，比只在心里想记得牢。</p>` : ""}
@@ -3145,10 +3166,10 @@ class CardStage {
       h += `<button class="btn primary block big" style="margin-top:16px" data-act="c-next-step">下一步：＋ ${esc(nx.add)}</button>`;
     } else {
       const sg = this.suggest();
-      h += `<div class="rate">
-        <button class="again ${sg==="again"?"sug":""}" data-act="c-rate" data-v="again">没说出来<small>这一轮还会再来</small></button>
-        <button class="hard ${sg==="hard"?"sug":""}" data-act="c-rate" data-v="hard">卡了一下<small>过几天再练</small></button>
-        <button class="good ${sg==="good"?"sug":""}" data-act="c-rate" data-v="good">秒出<small>隔久一点</small></button></div>`;
+      const rs = rateSubs(this.card, this.retry); h += `${rs.note ? `<p class="small muted" style="margin:6px 0 0">${rs.note}</p>` : ""}<div class="rate">
+        <button class="again ${sg==="again"?"sug":""}" data-act="c-rate" data-v="again">没说出来<small>${rs.again}</small></button>
+        <button class="hard ${sg==="hard"?"sug":""}" data-act="c-rate" data-v="hard">有卡顿<small>${rs.hard}</small></button>
+        <button class="good ${sg==="good"?"sug":""}" data-act="c-rate" data-v="good">秒出<small>${rs.good}</small></button></div>`;
     }
     return h + "</div>";
   }
@@ -3783,7 +3804,7 @@ function callEnd(){
   callRender(); window.scrollTo(0, 0);
 }
 /* ---------- 模拟面试复盘：每题听录音、看参考回答、给自己打分；卡住的题隔天再练 ---------- */
-const CR_RATE = [["again","没说出来"],["hard","卡了一下"],["good","还行"],["great","不错"]];
+const CR_RATE = [["again","没说出来"],["hard","较多卡顿"],["good","还行"],["great","不错"]];
 const IV_GAP = {again:1, hard:2, good:5, great:7};
 let CR_URLS = [];
 function crRec(id){ return (S.calls || []).find(c => c.id === id); }
@@ -3797,7 +3818,7 @@ function crSummaryHTML(rec){
   const qs = Array.from(new Set(rec.segs.filter(s => s.k === "q").map(s => s.qid))); const rate = rec.rate || {};
   const rated = qs.filter(q => rate[q]).length; const weak = qs.filter(q => rate[q] === "again" || rate[q] === "hard");
   return `<div class="panel" id="crSum"><b>${rated < qs.length ? `还有 ${qs.length - rated} 题没打分` : weak.length ? `打完分了：${weak.length} 题要重练` : "打完分了：都还行"}</b>
-    <p class="small muted" style="margin-top:4px">每题先听自己的录音，再看参考回答，然后给自己打个分。“没说出来”的题明天会再出现，“卡了一下”的后天再出现。</p>
+    <p class="small muted" style="margin-top:4px">每题先听自己的录音，再看参考回答，然后给自己打个分。“没说出来”的题明天会再出现，“较多卡顿”的后天再出现。偶尔卡一下、能接上，就打“还行”。</p>
     ${weak.length ? `<button class="btn primary block" style="margin-top:8px" data-act="cr-redo" data-id="${rec.id}">现在就重练这 ${weak.length} 题</button>` : ""}
     <button class="btn block" style="margin-top:8px" data-act="cr-claude" data-id="${rec.id}">复制这次模拟，发给 Claude 分析</button>
     <p class="small muted" style="margin-top:4px">先在每题下面点“再说一遍，转成文字”，Claude 才能逐句帮你改；它听不到录音，只能看文字。</p></div>`;
@@ -4002,7 +4023,7 @@ VIEWS.calls = {
       ${top.length ? `<div class="panel"><b>最近两周你勾得最多的问题</b>${top.map(([k, n]) => { const it = SC_ITEMS.find(x => x.k === k), f = SC_FIX[k]; return it ? `<div style="margin-top:8px"><b>${esc(it.t)}</b>（${n} 次）：<span class="small">${esc(f.why)}</span>${k === "gram" ? `<div style="margin-top:4px"><button class="btn sm" data-act="sc-go" data-v="tense" data-store="">3 分钟时态练习</button></div>` : k === "pron" ? `<div style="margin-top:4px"><button class="btn sm" data-act="sc-go" data-v="tips" data-store="">看说话技巧</button></div>` : ""}</div>` : ""; }).join("")}<p class="small muted" style="margin-top:8px">先练最常出问题的那一件，一次只抓一两件。</p></div>` : ""}
       ${list.length ? `<div class="list">${list.map(c => { const qs = Array.from(new Set(c.segs.filter(s => s.k === "q").map(s => s.qid))); const rt = c.rate || {};
         const cnt = k => qs.filter(q => rt[q] === k).length; const un = qs.filter(q => !rt[q]).length;
-        return `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}　${esc(fmtWhen(c.ts))}</b><span>${qs.length} 题${cnt("again") ? `　没说出来 ${cnt("again")}` : ""}${cnt("hard") ? `　卡了 ${cnt("hard")}` : ""}${cnt("good") ? `　还行 ${cnt("good")}` : ""}${cnt("great") ? `　不错 ${cnt("great")}` : ""}${un ? `　未打分 ${un}` : ""}</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`; }).join("")}</div>`
+        return `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}　${esc(fmtWhen(c.ts))}</b><span>${qs.length} 题${cnt("again") ? `　没说出来 ${cnt("again")}` : ""}${cnt("hard") ? `　较多卡顿 ${cnt("hard")}` : ""}${cnt("good") ? `　还行 ${cnt("good")}` : ""}${cnt("great") ? `　不错 ${cnt("great")}` : ""}${un ? `　未打分 ${un}` : ""}</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`; }).join("")}</div>`
         : `<p class="muted">还没有模拟记录。去“面试”页模拟一场，结束后就会出现在这里。</p>`}</div>`;
   }
 };
@@ -4479,6 +4500,7 @@ VIEWS.me = {
       <div class="sec-title">练习</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>每天最多几道新题</span><select data-chg="set" data-key="newPerDay" data-num="1">${[6,12,20].map(n => `<option value="${n}" ${s.newPerDay === n ? "selected" : ""}>${n} 道</option>`).join("")}</select></label>
         <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${!SR.ok ? "（这个浏览器不支持）" : SR.broken ? "（这台手机现在用不了）" : ""}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
+        <label class="fld"><span>说话中间停顿</span><select data-chg="srlong"><option value="on" ${L.srLong !== false ? "selected" : ""}>停 2.5 秒才算说完（中间想一下也不会断）</option><option value="off" ${L.srLong === false ? "selected" : ""}>停一下就结束（手机默认）</option></select></label>
         <label class="fld"><span>停 2 秒自动检查</span><select data-chg="set" data-key="autoCheck">${[["smart","自动判断：语音说完自动查，打字时不查"],["on","一直开"],["off","关掉：每次自己点“检查”"]].map(([v, l]) => `<option value="${v}" ${(s.autoCheck || "smart") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
         <label class="fld"><span>一天从几点开始算（熬夜时，凌晨的练习和日记还算前一天）</span><select data-chg="set" data-key="dayStart" data-num="1">${[0,2,4,6].map(h => `<option value="${h}" ${(+s.dayStart || 0) === h ? "selected" : ""}>${h ? "凌晨 " + h + " 点" : "半夜 12 点"}</option>`).join("")}</select></label>
         <div style="margin-top:8px">${swRow("lights","起步灯：灯灭再开口")}${swRow("autoSpeak","看答案时自动朗读")}${swRow("sound","提示音")}${swRow("vibrate","振动")}${swRow("cheat","来电模拟可以看小抄")}</div></div>
@@ -4496,7 +4518,7 @@ VIEWS.me = {
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="sec-title">内容和数据</div><div class="sec-title">学习资料</div><div class="list">${liRow("tips","说话技巧","重音、语调、断句、连读、难发的音")}${liRow("grammar","语法要点","时态、-s、-ed、be 动词、语序")}</div><div class="sec-title">设置和工具</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("pending","待确认的说法", ((S.pending || []).length) + " 句")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
+        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("pending","待确认的说法 / 要学的词", ((S.pending || []).length) + " 句，" + ((S.wantWords || []).length) + " 个词")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
         ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
         ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
@@ -4766,7 +4788,7 @@ VIEWS.about = {
       <div class="panel" style="margin-top:14px"><ul class="issues">
         <li><b>先说，再看答案。</b>从记忆里把句子说出来，比看十遍记得牢。所以几乎每道题都要你开口。</li>
         <li><b>灯灭就开口。</b>用时从灯灭算到你说完。用时越短，越接近脱口而出；某句刷新最快纪录时会变成紫色。</li>
-        <li><b>三个按钮决定下次什么时候再见。</b>没说出来，明天再练；卡了一下，过几天；秒出，隔得更久。会的越来越少出现，不会的很快回来。</li>
+        <li><b>三个按钮决定下次什么时候再见。</b>没说出来：这一轮再来一次，明天再练；有卡顿：明天或过几天；秒出：隔得更久。越熟隔得越久，按钮下面的小字会告诉你这张卡下次是哪天。会的越来越少出现，不会的很快回来。</li>
         <li><b>说错了先自己改。</b>差一点时，app 先只给提示，让你再说一次，再给答案。自己改出来的记得更牢。</li>
         <li><b>复习听力时听后复述。</b>新句子先选意思；复习时不看文字整句说出来，练的是把连读的声音听成一个个词。</li>
         <li><b>题库可以选。</b>首页“练哪个题库”可以只练通用、日常生活，或者你导入的题库，比如某家公司的面试准备。来电模拟也能选用哪套面试题。</li>
@@ -4900,7 +4922,7 @@ VIEWS.pending = {
   tab:"me",
   render(){
     const list = S.pending || [];
-    return `<div class="wrap">${backBtn()}<h2>待确认的说法</h2>
+    return `<div class="wrap">${backBtn()}<h2>待确认的说法 / 要学的词</h2>
       <p class="muted small" style="margin:6px 0 14px">没网或拿不准的时候存在这里。联网后一键复制，发到和 Claude 的对话里。Claude 会逐条告诉你对不对，再给你导入码：说对的会加进答案，以后直接算对；说错的会变成找错卡。</p>
       ${list.length ? `<div class="list">${list.map((p, i) => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(p.said)}</b><span>${esc(p.zh)}</span><span class="en" style="font-size:14px">参考：${esc(p.ref)}</span></div><button class="btn sm ghost" data-act="pend-del" data-i="${i}">删除</button></div>`).join("")}</div>
         <button class="btn primary block big" style="margin-top:14px" data-act="pend-copy">全部复制给 Claude（${list.length} 句）</button>
@@ -4909,22 +4931,31 @@ VIEWS.pending = {
       <h3 style="margin-top:22px">要学的词（${(S.wantWords || []).length}）</h3>
       <p class="muted small" style="margin:4px 0 10px">点单词时选“加到要学的词”，就会出现在这里。发给 Claude，换成单词卡：卡片会考你“看中文说英文”，还要你用这个词说一句话。光点开看一眼记不牢，自己想起来、用出来才记得住。</p>
       ${(S.wantWords || []).length ? `<div class="list">${S.wantWords.map((x, i) => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(x.w)}</b>${x.ctx ? `<span class="en" style="font-size:13.5px">${esc(x.ctx)}</span>` : ""}</div><button class="btn sm ghost" data-act="ww-del" data-i="${i}">删除</button></div>`).join("")}</div>
-        <button class="btn primary block" style="margin-top:12px" data-act="ww-copy">复制给 Claude，换成单词卡（${S.wantWords.length} 个）</button>` : `<p class="muted small">现在没有。</p>`}</div>`;
+        <button class="btn primary block" style="margin-top:12px" data-act="ww-copy">复制给 Claude，换成单词卡（${S.wantWords.length} 个）</button>
+        <button class="btn block ghost" style="margin-top:8px" data-act="ww-clear">已经发过了，清空</button>` : `<p class="muted small">现在没有。</p>`}
+      ${(S.pending || []).length && (S.wantWords || []).length ? `<div class="panel" style="margin-top:20px"><b>两样一起发</b><p class="small muted" style="margin-top:4px">把拿不准的说法和要学的词一起复制，一次发给 Claude。</p>
+        <button class="btn primary block" style="margin-top:8px" data-act="all-copy">一起复制给 Claude</button><button class="btn block ghost" style="margin-top:8px" data-act="all-clear">两样都发过了，清空</button></div>` : ""}</div>`;
   }
 };
 ACT["ww-del"] = el => { (S.wantWords || []).splice(+el.dataset.i, 1); save(); UI.render(); };
-ACT["ww-copy"] = () => {
-  const list = S.wantWords || []; if (!list.length) return;
-  const body = list.map((x, i) => `${i + 1}. ${x.w}${x.ctx ? `（我在这句话里看到的：${x.ctx}）` : ""}`).join("\n");
-  sendToClaude(`下面是我在脱口里想学的词和搭配。请给我做成单词卡导入码，第一行写“题库 | 单词”，然后每个一行：\n词 | 单词或搭配 | 中文意思 | 一个我面试或生活里会说的英文例句 | 例句的中文 |\n\n${body}`);
-};
+ACT["ww-copy"] = () => { const t = wwText(); if (t) sendToClaude(t); };
 ACT["pend-del"] = el => { (S.pending || []).splice(+el.dataset.i, 1); save(); UI.render(); };
 ACT["pend-clear"] = async () => { if (!await sheet("清空待确认的说法？", "建议先把 Claude 给的导入码导进来再清空。", "清空", true)) return; S.pending = []; save(); UI.render(); };
-ACT["pend-copy"] = () => {
-  const list = S.pending || []; if (!list.length) return;
+CHG.srlong = el => { L.srLong = el.value === "on"; saveLocal(); toast(L.srLong ? "说话中间停一下也不会断了" : "改回手机默认"); };
+function pendText(){
+  const list = S.pending || []; if (!list.length) return "";
   const body = list.map((p, i) => `${i + 1}. 编号 ${p.cid}｜${p.zh}｜参考：${p.ref}｜我说：${p.said}`).join("\n");
-  sendToClaude(`下面是我在脱口里说的句子，参考说法只是其中一种。请逐条判断我的说法对不对：语法、意思、自然不自然，错在哪里。\n最后给我导入码：说对的写“也对 | 编号 | 我的说法”；说错的写“改 | 我的原句 | 正确说法 | 类型 | 提示”。\n\n${body}`);
-};
+  return `下面是我在脱口里说的句子，参考说法只是其中一种。请逐条判断我的说法对不对：语法、意思、自然不自然，错在哪里。\n最后给我导入码：说对的写“也对 | 编号 | 我的说法”；说错的写“改 | 我的原句 | 正确说法 | 类型 | 提示”。\n\n${body}`;
+}
+function wwText(){
+  const list = S.wantWords || []; if (!list.length) return "";
+  const body = list.map((x, i) => `${i + 1}. ${x.w}${x.ctx ? `（我在这句话里看到的：${x.ctx}）` : ""}`).join("\n");
+  return `下面是我在脱口里想学的词和搭配。请给我做成单词卡导入码，第一行写“题库 | 单词”，然后每个一行：\n词 | 单词或搭配 | 中文意思 | 一个我面试或生活里会说的英文例句 | 例句的中文 |\n\n${body}`;
+}
+ACT["pend-copy"] = () => { const t = pendText(); if (t) sendToClaude(t); };
+ACT["all-copy"] = () => { const parts = [pendText(), wwText()].filter(Boolean); if (parts.length) sendToClaude(parts.join("\n\n————————\n\n")); };
+ACT["all-clear"] = async () => { if (!await sheet("两样都发过了？", "会清空待确认的说法和要学的词。确认 Claude 已经收到再清。", "清空", true)) return; S.pending = []; S.wantWords = []; save(); UI.render(); };
+ACT["ww-clear"] = async () => { if (!await sheet("要学的词都发过了？", "会清空这个列表。确认 Claude 已经收到再清。", "清空", true)) return; S.wantWords = []; save(); UI.render(); };
 
 /* ---------- 英文朗读检查：有的手机用中文语音读英文，跟着练会学成中式发音 ---------- */
 function ttsBanner(){
@@ -5053,7 +5084,7 @@ VIEWS.today = {
     const n = Object.keys(last).length;
     return `<div class="wrap">${backBtn()}<h2>今天练过的</h2><p class="muted small" style="margin:6px 0 4px">${n ? `今天练了 ${n} 句。“没说出来”的那些，明天还会再考你；有空可以先听一遍、跟着说一遍。` : "今天还没练。"}</p>${n ? `<div style="text-align:right"><button class="btn sm ghost" data-act="hist-clear">清空今天的记录</button></div>` : ""}
       ${(() => { const off = ((+S.settings.dayStart) || 0) * 3600e3; const cs = (S.calls || []).filter(c => c.segs && dstr(new Date(c.ts - off)) === today()); return cs.length ? `<div class="sec-title">今天的模拟面试</div><div class="list">${cs.map(c => `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}</b><span>${esc(fmtWhen(c.ts))}，点开复盘</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`).join("")}</div>` : ""; })()}
-      ${sec("没说出来，明天还会再来", groups.again)}${sec("卡了一下", groups.hard)}${sec("秒出", groups.good)}
+      ${sec("没说出来，明天还会再来", groups.again)}${sec("有卡顿", groups.hard)}${sec("秒出", groups.good)}
       ${mis.length ? `<div class="sec-title">常被识别错的词（多半是发音要练的地方）</div><div class="panel">${mis.map(([w, k]) => `<span class="chip" style="margin:4px 6px 4px 0"><span class="w" data-act="word" data-w="${esc(w)}">${esc(w)}</span>　${k} 次</span>`).join("")}<p class="small muted" style="margin-top:8px">点词听读音，再用慢速跟读几遍。</p></div>` : ""}</div>`;
   }
 };
