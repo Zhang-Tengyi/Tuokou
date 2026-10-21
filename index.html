@@ -392,7 +392,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.12.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.13.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1920,6 +1920,13 @@ const W_RULES = [
   {re:/\bfor study\b/gi, tag:"地道说法", msg:()=>"来读书：for school / to study"},
   {re:/(?:^|[.!?]\s+)(?:(?:yes|yeah|sure|absolutely|definitely),?\s+)?(?:i'?m|i am|we'?re|we are)\s+(?:(?:definitely|really|very|so|also|still|pretty|super)\s+)*(interested in|good at|familiar with|excited about|looking forward to)\s*(?=[.!?]|$)/gi, g:1, tag:"介词", msg:g=>{ const x = String(g).toLowerCase(); const ex = {"interested in":"I'm interested in this role.　不接东西就只说 I'm interested.", "good at":"I'm good at CAD design.", "familiar with":"I'm familiar with SolidWorks.", "excited about":"I'm excited about this role.　不接东西就只说 I'm excited.", "looking forward to":"I'm looking forward to it.　或者 I'm looking forward to hearing from you."}[x] || ""; return `${x} 后面要接东西：${ex}`; }},
   {re:/\bhow'?s everything doing\b/gi, tag:"地道说法", msg:()=>"问事情说 How's everything going?　问人说 How are you doing?"},
+  {re:/\b(?:am|is|are|was|were|'m|'re|'s)\s+(ran|went|came|did|wore|took|wrote|saw|began|broke|drove|gave|knew|ate|rode|chose|spoke|swam|grew|threw|flew|forgot|stole|sang|drank)\b/gi, g:1, tag:"be", msg:g=>`已经有动词 ${String(g).toLowerCase()}（过去式）了，前面不要再加 is / was：The system ran stably.`},
+  {re:/\b(?:am|is|are|was|were)\s+(kept|keep)\s+[a-z]+ing\b/gi, g:1, tag:"be", msg:()=>"已经有动词 kept（一直……）了，前面不用再加 is / are：The cables kept wearing out."},
+  {re:/\b(?:I\s+am|I'm|I\s+was|you\s+are|you're|you\s+were|we\s+are|we're|we\s+were|they\s+are|they're|they\s+were|it\s+is|it's|it\s+was|he\s+is|he's|he\s+was|she\s+is|she's|she\s+was)\s+(design|make|use|build|need|want|think|know|try|start|finish|graduate|study|play|go|come|help|fix|keep|redesign|debug|program|write|learn)\b(?![-'])/gi, g:1, tag:"be", msg:g=>{ const v = String(g).toLowerCase(); const irr = {make:"made", build:"built", think:"thought", know:"knew", go:"went", come:"came", keep:"kept", write:"wrote", program:"programmed", debug:"debugged"};
+    const past = irr[v] || (/[^aeiou]y$/.test(v) ? v.slice(0, -1) + "ied" : /e$/.test(v) ? v + "d" : v + "ed");
+    const ing = v === "program" ? "programming" : v === "debug" ? "debugging" : /[^aeiou]e$/.test(v) ? v.slice(0, -1) + "ing" : v + "ing";
+    return `be 动词后面不能直接跟动词原形。讲过去的事：I ${past}；正在做：I'm ${ing}`; }},
+  {re:/(?<!\bof\s)\b(?:the|these|those|my|our|your|his|her|their|some|many|both|two|three|four|five|several|all)\s+(?:[a-z]+\s+)?(?!(?:gas|bus|lens|news|series|species|status|focus|campus|bonus|virus|canvas|atlas|chassis|thesis|analysis|basis|axis|physics|mathematics|electronics|mechanics|robotics|mechatronics)\b)([a-z]+(?<!ss|us|is|ic|ys)s)\s+(?:is|was)\b/gi, g:1, tag:"一致", msg:g=>`${g} 是复数，be 动词要用 are（讲过去用 were）`},
   {re:/(?<!\b(?:does|did|doesn't|didn't|do|can|could|will|would|should|may|might|must|let|lets|help|helps|make|makes|made|see|sees|saw|watch|watched|hear|heard|feel|felt|have|has|had|notice|noticed|to)\s)\b(?:he|she|it|my (?:friend|dad|father|mom|mother|roommate|girlfriend|boyfriend|boss|brother|sister|teammate|coworker|professor|manager))\s+(play|work|go|like|want|need|have|do|make|take|get|watch|live|study|think|know|use|come|say|try|enjoy|love|teach|help|look|feel)\b(?!\s+to\b)/gi, g:1, tag:"一致", msg:g=>{ const v = String(g).toLowerCase(); const f = v === "have" ? "has" : v === "do" ? "does" : v === "go" ? "goes" : v === "try" ? "tries" : /(ch|sh|ss|x)$/.test(v) ? v + "es" : v + "s"; return `主语是 he / she / it 或一个人，现在时动词要加 -s：${f}`; }},
   {re:/\b(?:master'?s|masters|master|bachelor'?s|bachelors|bachelor|degree|degrees|phd|major|majored|majoring)\s+(?:degree\s+)?(at)\s+(?:mechanical|electrical|computer|civil|chemical|industrial|biomedical|aerospace|software|materials|robotics)\b/gi, g:1, tag:"介词", msg:()=>"专业前面用 in：a master's in mechanical engineering"},
   {re:/\b(?:engineering|science|degree|degrees|master'?s|masters|bachelor'?s|studied|graduated)\s+(as)\s+(?:\w+\s+){0,2}?(?:university|college|school)\b/gi, g:1, tag:"介词", msg:()=>"在某个学校：at，不是 as"},
@@ -2125,7 +2132,7 @@ const KEY = "tuokou.v1", LKEY = "tuokou.local";
 const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
   settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", autoCheck:"smart", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
-  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, soloIssues:{}, soloRate:{}, answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
+  cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, soloIssues:{}, soloRate:{}, wantWords:[], answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
 const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false, slashes:false, quiet:false, quietSound:false, resume:null, rdMode:"line", rdSlow:false, rdHide:false});
 function mergeInto(d, o){
   for (const k of Object.keys(o||{})){
@@ -2506,7 +2513,7 @@ const Cloud = {
     if (!this.db) return;
     const base = "data/users/" + this.uid + "/";
     const parts = {
-      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, soloRate:S.soloRate, answers:S.answers, newToday:S.newToday},
+      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, soloRate:S.soloRate, wantWords:S.wantWords, answers:S.answers, newToday:S.newToday},
       stats:{updatedAt:S.updatedAt, days:S.days, tags:S.tags, calls:S.calls},
       journal:{updatedAt:S.updatedAt, journal:S.journal}
     };
@@ -3141,10 +3148,13 @@ ACT.word = el => {
   const wl = w.toLowerCase(); const wc = CAT.cards.find(c => c.t === "w" && c.word && (String(c.word).toLowerCase() === wl || K.wordsMatch(String(c.word).toLowerCase(), wl)));
   bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${ck ? `<div class="ck-box"><div class="small muted">这个词在固定搭配里，整体记、整体说更自然</div><div class="en" style="font-size:24px;margin-top:4px">${esc(ck)}</div>${cz ? `<div style="margin-top:2px">${esc(cz)}</div>` : ""}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px"><button class="btn" data-x="cn">${ICON.speak}整体读</button><button class="btn" data-x="cs">慢速</button><button class="btn" data-x="cd">查搭配</button></div></div><div class="small muted" style="margin-top:14px">单独这个词</div>` : ""}<div class="en" style="font-size:30px">${esc(w)}</div>${wc && wc.mean ? `<div style="margin-top:2px">${esc(wc.mean)}</div>` : ""}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn" data-x="n">${ICON.speak}正常读</button><button class="btn" data-x="s">慢速读</button><button class="btn" data-x="d">查意思和音标</button><button class="btn ghost" data-x="c">关闭</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn" data-x="n">${ICON.speak}正常读</button><button class="btn" data-x="s">慢速读</button><button class="btn" data-x="d">查意思和音标</button><button class="btn ghost" data-x="c">关闭</button>${wc ? `<button class="btn" disabled style="grid-column:1/-1">已经在你的单词卡里</button>` : `<button class="btn" data-x="add" style="grid-column:1/-1">加到要学的词${ck ? "（这个搭配）" : ""}</button>`}</div>
     <p class="small muted" style="margin-top:10px">“查意思和音标”会打开剑桥英汉词典网页（要联网），里面有中文意思、音标和真人发音。</p></div>`;
   bg.addEventListener("click", e => {
     const b = e.target.closest("[data-x]"); if (e.target === bg || (b && b.dataset.x === "c")){ bg.remove(); return; } if (!b) return;
+    if (b.dataset.x === "add"){ const item = (cb || ck || w).trim(); S.wantWords = S.wantWords || [];
+      if (!S.wantWords.some(x => x.w.toLowerCase() === item.toLowerCase())){ const host = el.closest(".en, .rd-s, .card, .li"); S.wantWords.push({w:item, ctx:host ? host.textContent.replace(/\s+/g, " ").trim().slice(0, 200) : "", ts:Date.now()}); save(); }
+      toast("加好了。联网后在“我的 → 待确认的说法”里发给 Claude，换成单词卡"); bg.remove(); return; }
     if (b.dataset.x === "cn") TTS.speak(ck, {rate:0.95}); else if (b.dataset.x === "cs") TTS.speak(ck, {rate:0.7});
     else if (b.dataset.x === "cd") window.open("https://dictionary.cambridge.org/dictionary/english-chinese-simplified/" + encodeURIComponent(cb.toLowerCase().replace(/[^a-z' -]/g, "").trim().replace(/\s+/g, "-")), "_blank", "noopener");
     else if (b.dataset.x === "n") TTS.speak(w, {rate:0.9}); else if (b.dataset.x === "s") TTS.speak(w, {rate:0.6});
@@ -3829,6 +3839,8 @@ ACT["iv-rate"] = el => {
   if (arr.length > 30) arr.splice(0, arr.length - 30);
   S.ivDue = S.ivDue || {}; S.ivDue[qid] = {r, due: dnum(today()) + (IV_GAP[r] || 2)}; save();
   $$(`[data-act="iv-rate"][data-q="${qid}"]`).forEach(b => { const on = b.dataset.r === r; b.classList.toggle("primary", on); b.setAttribute("aria-pressed", on); });
+  const top = UI.top();
+  if (top && top.name === "run" && RUN.kind === "redo" && r !== "good"){ RUN.ivRetry = RUN.ivRetry || {}; if (!RUN.ivRetry[qid]){ RUN.ivRetry[qid] = 1; RUN.items.push({k:"iv", qid}); toast("这题过一会儿再来一次"); } }
 };
 /* 最近两周自己勾得最多的问题 */
 function scTop(days){
@@ -4515,6 +4527,12 @@ ACT["imp-apply"] = () => {
     if (!mine || mine === prev || x.fromRef){ x.text = a.text; x.fromRef = true; x.updated = Date.now(); } }
   for (const k of r.keys){ const x = ans(k.qid); x.keys = k.keys; }
   S.plan = S.plan || []; for (const x of r.plan){ if (!S.plan.some(y => y.date === x.date && y.text === x.text)) S.plan.push({id:"p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date:x.date, cue:x.cue, text:x.text, act:x.act, done:false, ts:Date.now()}); }
+  if ((S.wantWords || []).length){
+    /* 导入的单词卡和“要学的词”对上了（一样，或者一个是另一个的一部分，比如 stepped 和 stepped boss），就从列表里去掉 */
+    const tk = x => String(x).toLowerCase().split(/\s+/).filter(Boolean);
+    const have = r.cards.filter(c => c.t === "w" && c.word).map(c => tk(c.word));
+    S.wantWords = S.wantWords.filter(x => { const a = tk(x.w); return !have.some(b => a.every(t => b.includes(t)) || b.every(t => a.includes(t))); });
+  }
   S.myAlts = S.myAlts || {}; for (const a of r.alts){ S.myAlts[a.id] = Array.from(new Set([...(S.myAlts[a.id] || []), a.text])).slice(-6); }
   if (r.alts.length && S.pending && S.pending.length){ const ok = new Set(r.alts.map(a => a.id + "|" + K.tokens(a.text).join(" "))); S.pending = S.pending.filter(p => !ok.has(p.cid + "|" + K.tokens(p.said).join(" "))); }
   if (r.meta.date) S.settings.interviewDate = r.meta.date;
@@ -4835,8 +4853,18 @@ VIEWS.pending = {
       ${list.length ? `<div class="list">${list.map((p, i) => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(p.said)}</b><span>${esc(p.zh)}</span><span class="en" style="font-size:14px">参考：${esc(p.ref)}</span></div><button class="btn sm ghost" data-act="pend-del" data-i="${i}">删除</button></div>`).join("")}</div>
         <button class="btn primary block big" style="margin-top:14px" data-act="pend-copy">全部复制给 Claude（${list.length} 句）</button>
         <button class="btn ghost block" style="margin-top:6px" data-act="pend-clear">已经问过了，清空</button>` :
-        `<p class="muted">现在没有待确认的说法。练习时拿不准自己说得对不对，就点“拿不准，存起来问 Claude”。</p>`}</div>`;
+        `<p class="muted">现在没有待确认的说法。练习时拿不准自己说得对不对，就点“拿不准，存起来问 Claude”。</p>`}
+      <h3 style="margin-top:22px">要学的词（${(S.wantWords || []).length}）</h3>
+      <p class="muted small" style="margin:4px 0 10px">点单词时选“加到要学的词”，就会出现在这里。发给 Claude，换成单词卡：卡片会考你“看中文说英文”，还要你用这个词说一句话。光点开看一眼记不牢，自己想起来、用出来才记得住。</p>
+      ${(S.wantWords || []).length ? `<div class="list">${S.wantWords.map((x, i) => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(x.w)}</b>${x.ctx ? `<span class="en" style="font-size:13.5px">${esc(x.ctx)}</span>` : ""}</div><button class="btn sm ghost" data-act="ww-del" data-i="${i}">删除</button></div>`).join("")}</div>
+        <button class="btn primary block" style="margin-top:12px" data-act="ww-copy">复制给 Claude，换成单词卡（${S.wantWords.length} 个）</button>` : `<p class="muted small">现在没有。</p>`}</div>`;
   }
+};
+ACT["ww-del"] = el => { (S.wantWords || []).splice(+el.dataset.i, 1); save(); UI.render(); };
+ACT["ww-copy"] = () => {
+  const list = S.wantWords || []; if (!list.length) return;
+  const body = list.map((x, i) => `${i + 1}. ${x.w}${x.ctx ? `（我在这句话里看到的：${x.ctx}）` : ""}`).join("\n");
+  sendToClaude(`下面是我在脱口里想学的词和搭配。请给我做成单词卡导入码，第一行写“题库 | 单词”，然后每个一行：\n词 | 单词或搭配 | 中文意思 | 一个我面试或生活里会说的英文例句 | 例句的中文 |\n\n${body}`);
 };
 ACT["pend-del"] = el => { (S.pending || []).splice(+el.dataset.i, 1); save(); UI.render(); };
 ACT["pend-clear"] = async () => { if (!await sheet("清空待确认的说法？", "建议先把 Claude 给的导入码导进来再清空。", "清空", true)) return; S.pending = []; save(); UI.render(); };
@@ -4941,6 +4969,8 @@ VIEWS.tips = {
 
 /* ---------- 语法要点：说的时候来不及想，先记住“先问什么”的顺序 ---------- */
 const GRAMMAR = [
+  {h:"be 动词：什么时候要 is / are / was / were", p:"① 后面是形容词、名词或地点，句子里没有别的动词 → 要 be：It's light.／It's a robot dog.／I'm in Boston.　② 正在做 → be + -ing：The cables were wearing out.　③ 被做 → be + 过去分词：The channel was printed in PLA.　④ 句子里已经有动作动词了（kept、designed、helped）→ 不要再加 be：The cables kept wearing out.，不说 The cables is kept…　另外，主语是复数用 are / were，单数用 is / was。", ex:["The mounts are light.", "The cables kept wearing out.", "The cables were wearing out.", "The channel was printed in carbon-fiber PLA."]},
+  {h:"两个动词连在一起：help debug、keep wearing", p:"有些动词后面能直接接另一个动词，就像中文的“帮忙调试”。help + 动词原形：I helped debug the system.（help to debug 也对，美国人更常省掉 to）。keep + -ing，意思是“一直……”：kept wearing out。want、need、try + to + 动词：I want to learn.　let、make + 人 + 动词原形：Let me think.　讲过去的事，只把第一个动词变成过去式：helped debug、kept wearing。", ex:["I helped debug the system.", "I helped design a robot dog.", "The cables kept popping out.", "Let me think for a second."]},
   {h:"时态：先问自己“什么时候？”", p:"平时、习惯 → 一般现在时：I play.　已经结束的某一次 → 过去式：I played.　从过去到现在、已经、到现在为止 → 现在完成时：I've played.　此刻正在 → I'm playing.　最近一直在 → I've been playing.　打算好的将来 → I'm going to play.", ex:["I usually play golf on Saturdays.", "I played golf last Saturday.", "I've played golf since fourth grade.", "I've been practicing a lot lately."]},
   {h:"-s：什么时候加", p:"① 主语是 he / she / it、一个人或一样东西，而且是一般现在时 → 动词加 -s。② 两个以上的东西 → 名词加 -s。③ I / you / we / they 后面，动词永远不加 -s。④ a / one / every / each 后面用单数。", ex:["My friend plays golf every week.", "I like all kinds of games.", "They work in the lab.", "I go there every day."]},
   {h:"-ed：过去的事", p:"已经结束的事，动词用过去式：大多数加 -ed（played、tested）；常用的不规则动词要单独记：go → went，take → took，get → got，come → came，buy → bought，do → did，make → made，see → saw。have / has 后面用过去分词：I've played、I've gone。", ex:["I tested the prototype yesterday.", "My dad took me to the range.", "I've already finished it."]},
