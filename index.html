@@ -385,6 +385,14 @@ mark.must{background:transparent;color:inherit;border-bottom:2px solid #d92d20}
 mark.opt{background:transparent;color:inherit;border-bottom:2px dashed #e0a100}
 @media (prefers-color-scheme: dark){ .gline.must .gtag{color:#ff8a7a} .gline.opt .gtag{color:#f5c451} }
 
+.pl-tools{display:flex;gap:16px;margin-top:4px}
+.pl-tools .linkbtn{font-size:13px}
+.linkbtn.danger{color:#c4321f}
+.seg .seg-n{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;font-size:11px;line-height:18px;background:var(--line, #e2e2e2)}
+
+.li .grow .pl-tools{display:flex !important;gap:22px;margin-top:6px}
+.li .grow .pl-tools .linkbtn{padding:2px 0;font-size:13.5px;text-decoration:none}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -405,7 +413,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.15.2"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.16.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -1881,6 +1889,7 @@ function parseImport(text){
       res.questions.push({id, deck, v:splitAlts(p[2]), zh:p[3]||"", sec:Math.max(10, Math.min(180, parseInt(p[4],10) || 60)), role:ROLE[(p[5]||"").trim()] || "core", tip:p.slice(6).join(" | ")});
     }
     else if ((kind==="追问"||kind==="FU") && p[1] && p[2]){ res.follow.push({qid:p[1].toUpperCase(), text:p[2].trim(), ans:p.slice(3).join(" | ").trim()}); }
+    else if ((kind==="计划"||kind==="PLAN") && /^(替换|replace)$/i.test(String(p[1] || "").trim())){ res.planReplace = true; }
     else if ((kind==="计划"||kind==="PLAN") && p[1] && p[3]){ if (/^\d{4}-\d{2}-\d{2}$/.test(p[1].trim())) res.plan.push({date:p[1].trim(), cue:(p[2]||"").trim(), text:p[3].trim(), act:(p[4]||"").trim()}); else res.bad.push(line); }
     else if ((kind==="也对"||kind==="OK") && p[1] && p[2]){ res.alts.push({id:p[1].trim(), text:p.slice(2).join(" | ")}); }
     else if ((kind==="答"||kind==="A") && p[1] && p[2]){ res.answers.push({qid:p[1].toUpperCase(), text:p.slice(2).join(" | ")}); }
@@ -2293,6 +2302,7 @@ const TTS = {
     const lang = o.lang || "en";
     return new Promise(res => {
       if (!this.ok || !text){ res(false); return; }
+      let busy = false; try { busy = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {}
       this.cancel(); pauseAllAudio();
       const u = new SpeechSynthesisUtterance(lang === "zh" ? text : (o && o.raw ? text : K.speakEN(text)));
       const v = o.voice || this.voice(lang);
@@ -2300,12 +2310,18 @@ const TTS = {
       if (v){ try { u.voice = v; u.lang = v.lang; } catch (e) {} }
       u.rate = Math.max(0.5, Math.min(1.6, (o.rate || 1) * (lang === "en" ? (L.rate || 0.95) : 1)));
       let done = false;
-      const fin = ok => { if (done) return; done = true; clearTimeout(tm); this.keep.delete(u); res(ok); };
+      /* 安卓 Chrome 偶尔会吞掉紧跟在上一句后面的那一句：先把朗读从“暂停”里恢复，
+         刚读完上一句的话多等一会儿再发；1.8 秒还没开始出声，就取消重发一次 */
+      let started = false, retried = false, watch = null;
+      const fin = ok => { if (done) return; done = true; clearTimeout(tm); clearTimeout(watch); this.keep.delete(u); res(ok); };
+      u.onstart = () => { started = true; clearTimeout(watch); };
       u.onend = () => fin(true); u.onerror = () => fin(false);
       this.keep.add(u);
       const est = 1500 + text.length * (lang === "zh" ? 260 : 85) / u.rate;
       const tm = setTimeout(() => fin(true), est + 4000);
-      setTimeout(() => { try { speechSynthesis.speak(u); } catch (e) { fin(false); } }, 60);
+      const go = () => { try { if (speechSynthesis.paused) speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { fin(false); return; }
+        watch = setTimeout(() => { if (started || done || retried) return; retried = true; try { speechSynthesis.cancel(); } catch (e) {} setTimeout(() => { if (!done){ try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { fin(false); } } }, 180); }, 1800); };
+      setTimeout(go, busy ? 220 : 60);
     });
   }
 };
@@ -3467,7 +3483,7 @@ class IvStage {
         <h3 style="margin-top:16px">${this.url ? "听回放，对照检查" : "回想一下，对照检查"}</h3>
         <div style="margin-top:6px">${checks.map((c,i) => `<label class="check"><input type="checkbox" data-i="${i}"><span>${c}</span></label>`).join("")}</div><p class="small muted" style="margin-top:6px">没打勾的会变成下一轮的重点。</p>
         ${(() => { const ref = refFor(q); const mine = a && a.text ? a.text.trim() : "";
-          return ivRateHTML(q.id) + selfCheckHTML(q.id, "solo", 0, ((S.soloIssues || {})[q.id] || {}).k)
+          return `<div style="margin-top:10px">${slashBtn()}</div>` + ivRateHTML(q.id) + selfCheckHTML(q.id, "solo", 0, ((S.soloIssues || {})[q.id] || {}).k)
             + (ref ? `<details style="margin-top:10px" open><summary>参考回答（对照你刚才说的）</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
             + (mine && mine !== ref ? `<details style="margin-top:10px"><summary>我写好的回答</summary><div class="en sm" style="margin-top:6px">${esc(mine)}</div></details>` : "")
             + (!ref && !mine ? `<div class="note">${esc(q.tip)}</div>${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div></details>` : ""}` : ""); })()}
@@ -3506,7 +3522,8 @@ ACT["iv-peek"] = () => { const s = RUN.stage; if (!(s instanceof IvStage)) retur
 ACT["iv-start"] = () => RUN.stage instanceof IvStage && RUN.stage.start();
 ACT["iv-stop"] = () => RUN.stage instanceof IvStage && RUN.stage.stop();
 ACT["iv-redo"] = () => { const s = RUN.stage; if (!(s instanceof IvStage)) return; s.focus = $$(".check input").filter(x => !x.checked).map(x => x.parentElement.textContent.trim()).slice(0, 2); s.round = Math.min(2, s.round + 1); s.start(); };
-ACT["iv-same"] = () => { const s = RUN.stage; if (!(s instanceof IvStage)) return; s.focus = $$(".check input").filter(x => !x.checked).map(x => x.parentElement.textContent.trim()).slice(0, 2); s.start(); };
+ACT["iv-same"] = () => { const s = RUN.stage; if (!(s instanceof IvStage)) return; s.focus = $$(".check input").filter(x => !x.checked).map(x => x.parentElement.textContent.trim()).slice(0, 2);
+  clearInterval(s.clock); try { Rec.cancel(); } catch (e) {} s.phase = "ask"; s.plays = 0; s.peek = false; s.show(); };
 ACT["iv-done"] = () => RUN.stage instanceof IvStage && RUN.stage.done();
 
 /* 总结 */
@@ -3819,6 +3836,7 @@ function crSummaryHTML(rec){
     <p class="small muted" style="margin-top:4px">每题先听自己的录音，再看参考回答，然后给自己打个分。“没说出来”的题明天会再出现，“较多卡顿”的后天再出现。偶尔卡一下、能接上，就打“还行”。</p>
     ${weak.length ? `<button class="btn primary block" style="margin-top:8px" data-act="cr-redo" data-id="${rec.id}">现在就重练这 ${weak.length} 题</button>` : ""}
     <button class="btn block" style="margin-top:8px" data-act="cr-claude" data-id="${rec.id}">复制这次模拟，发给 Claude 分析</button>
+    <div style="margin-top:8px">${slashBtn()}</div>
     <p class="small muted" style="margin-top:4px">先在每题下面点“再说一遍，转成文字”，Claude 才能逐句帮你改；它听不到录音，只能看文字。</p></div>`;
 }
 /* 听自己的录音：听这五件事；勾出有问题的，下面直接给对应的练法 */
@@ -4047,16 +4065,21 @@ const PLAN_ACTS = [["","不链接练习"],["phone","模拟一场电话初筛"],[
 function planActLabel(a){ if (!a) return ""; if (a.startsWith("solo:")) return "单题彩排：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); if (a.startsWith("read:")) return "跟读参考回答：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); return (PLAN_ACTS.find(x => x[0] === a) || ["", ""])[1]; }
 function planAutoDone(act){ if (!act) return; const d = today(); let n = 0; for (const x of (S.plan || [])) if (x.date === d && !x.done && x.act === act){ x.done = true; n++; } if (n){ save(); toast("计划里的一项完成了 ✓"); } }
 function fmtDate(dt){ const d = new Date(dt + "T12:00:00"); return `${d.getMonth() + 1}月${d.getDate()}日 周${"日一二三四五六"[d.getDay()]}`; }
-function calLink(x){
-  const m = String(x.cue || "").match(/(\d{1,2})[:：](\d{2})/); if (!m) return "";
-  const [y, mo, d] = x.date.split("-"); const hh = +m[1], mm = +m[2]; const t = (h, mi) => `${y}${mo}${d}T${String(h).padStart(2, "0")}${String(mi).padStart(2, "0")}00`;
-  const e = hh * 60 + mm + 30;
-  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(x.text) + "&dates=" + t(hh, mm) + "/" + t(Math.floor(e / 60) % 24, e % 60) + "&details=" + encodeURIComponent("脱口的练习计划");
+/* 提醒我：安卓上直接打开手机自带的日历，把这一项填好；其他设备下载一个日历文件 */
+const IS_ANDROID = /Android/i.test(navigator.userAgent || "");
+function planTime(x){ const m = String(x.cue || "").match(/(\d{1,2})[:：](\d{2})/); if (!m) return null; const [y, mo, dd] = String(x.date).split("-").map(Number); return new Date(y, mo - 1, dd, +m[1], +m[2]); }
+function remindLink(x){
+  const t = planTime(x); if (!t) return ""; const t2 = new Date(t.getTime() + 30 * 60000); const desc = "脱口的练习计划";
+  if (IS_ANDROID) return `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(x.text)};S.description=${encodeURIComponent(desc)};l.beginTime=${t.getTime()};l.endTime=${t2.getTime()};end`;
+  const f = dt => dt.getFullYear() + String(dt.getMonth() + 1).padStart(2, "0") + String(dt.getDate()).padStart(2, "0") + "T" + String(dt.getHours()).padStart(2, "0") + String(dt.getMinutes()).padStart(2, "0") + "00";
+  const clean = s => String(s).replace(/[,;\\\n]/g, " ");
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//tuokou//plan//CN", "BEGIN:VEVENT", "UID:" + x.id + "@tuokou", "DTSTAMP:" + f(new Date()), "DTSTART:" + f(t), "DTEND:" + f(t2), "SUMMARY:" + clean(x.text), "DESCRIPTION:" + desc, "BEGIN:VALARM", "TRIGGER:-PT0M", "ACTION:DISPLAY", "DESCRIPTION:" + clean(x.text), "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
 }
-function planRowHTML(x, del){
-  const cl = calLink(x);
-  return `<div class="li plan-row"><input type="checkbox" data-chg="plan-done" data-id="${x.id}" ${x.done ? "checked" : ""} aria-label="完成"><div class="grow"><b${x.done ? ' class="muted" style="text-decoration:line-through"' : ""}>${x.cue ? esc(x.cue) + " → " : ""}${esc(x.text)}</b>${x.act && planActLabel(x.act) !== x.text ? `<span>${esc(planActLabel(x.act))}</span>` : ""}</div>
-    <span class="row-gap" style="flex:none">${x.act && !x.done ? `<button class="btn sm primary" data-act="plan-go" data-v="${esc(x.act)}">开始</button>` : ""}${cl && !x.done ? `<a class="btn sm ghost" href="${cl}" target="_blank" rel="noopener">提醒我</a>` : ""}${del ? `<button class="btn sm ghost" data-act="plan-del" data-id="${x.id}" aria-label="删除">删</button>` : ""}</span></div>`;
+function planRowHTML(x, page){
+  const rl = remindLink(x), isToday = x.date === today();
+  return `<div class="li plan-row"><input type="checkbox" data-chg="plan-done" data-id="${x.id}" ${x.done ? "checked" : ""} aria-label="完成"><div class="grow"><b${x.done ? ' class="muted" style="text-decoration:line-through"' : ""}>${x.cue ? esc(x.cue) + " → " : ""}${esc(x.text)}</b>${x.act && planActLabel(x.act) !== x.text ? `<span>${esc(planActLabel(x.act))}</span>` : ""}${page ? `<span class="pl-tools"><button class="linkbtn" data-act="plan-edit" data-id="${x.id}">编辑</button><button class="linkbtn danger" data-act="plan-del" data-id="${x.id}">删除</button></span>` : ""}</div>
+    <span class="row-gap" style="flex:none">${x.act && !x.done && isToday ? `<button class="btn sm primary" data-act="plan-go" data-v="${esc(x.act)}">开始</button>` : ""}${rl && !x.done ? `<a class="btn sm ghost" href="${rl}"${IS_ANDROID ? "" : ` download="tuokou-plan.ics"`}>提醒我</a>` : ""}</span></div>`;
 }
 function todayPlanHTML(){
   const d = today(); const items = (S.plan || []).filter(x => x.date === d); const due = ivDueList();
@@ -4070,7 +4093,7 @@ function todayPlanHTML(){
 }
 ACT["plan-toggle"] = () => { L.planOpen = !L.planOpen; saveLocal(); UI.render(); };
 CHG["plan-done"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x) return; x.done = el.checked; save(); UI.render(); };
-ACT["plan-del"] = el => { S.plan = (S.plan || []).filter(p => p.id !== el.dataset.id); save(); UI.render(); };
+ACT["plan-del"] = el => { S.plan = (S.plan || []).filter(p => p.id !== el.dataset.id); if (PLAN_EDIT === el.dataset.id){ PLAN_EDIT = null; PLAN_FORM = false; } save(); toast("删除了"); UI.render(); };
 ACT["plan-go"] = el => {
   const a = el.dataset.v || "";
   if (["phone","basic","tech","concept"].includes(a)) return ACT["mod-go"]({dataset:{v:a}});
@@ -4083,7 +4106,22 @@ ACT["pl-cue"] = el => { const c = $("#plCue"); if (c) c.value = el.dataset.v; };
 ACT["pl-add"] = () => {
   const text = (($("#plText") || {}).value || "").trim(); if (!text){ toast("写一下要做什么"); return; }
   const date = (($("#plDate") || {}).value || today()), cue = (($("#plCue") || {}).value || "").trim(), act = (($("#plAct") || {}).value || "");
-  S.plan = S.plan || []; S.plan.push({id:"p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), date, cue, text, act, done:false, ts:Date.now()}); save(); toast("加上了"); UI.render();
+  S.plan = S.plan || [];
+  if (PLAN_EDIT){ const x = S.plan.find(p => p.id === PLAN_EDIT); if (x){ x.date = date; x.cue = cue; x.text = text; x.act = act; } PLAN_EDIT = null; toast("改好了"); }
+  else { S.plan.push({id:"p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), date, cue, text, act, done:false, ts:Date.now()}); toast("加上了"); }
+  PLAN_FORM = false; save(); UI.render();
+};
+ACT["pl-tab"] = el => { L.planTab = el.dataset.v; saveLocal(); UI.render(); };
+ACT["pl-open"] = () => { PLAN_FORM = true; PLAN_EDIT = null; UI.render(); const f = $("#plForm"); if (f && f.scrollIntoView) f.scrollIntoView({behavior:"smooth", block:"center"}); };
+ACT["pl-cancel"] = () => { PLAN_FORM = false; PLAN_EDIT = null; UI.render(); };
+ACT["plan-edit"] = el => { PLAN_EDIT = el.dataset.id; PLAN_FORM = true; UI.render(); const f = $("#plForm"); if (f && f.scrollIntoView) f.scrollIntoView({behavior:"smooth", block:"center"}); };
+ACT["pl-late-today"] = () => { const d = today(); let n = 0; for (const x of (S.plan || [])) if (x.date < d && !x.done){ x.date = d; n++; } save(); toast(`挪了 ${n} 项到今天`); L.planTab = "today"; saveLocal(); UI.render(); };
+ACT["pl-late-del"] = async () => { if (!await sheet("删除所有没做完的旧计划？", "只删日期在今天以前、还没打勾的。做完的记录不受影响。", "删除", true)) return; const d = today(); S.plan = (S.plan || []).filter(x => !(x.date < d && !x.done)); save(); UI.render(); };
+ACT["pl-claude"] = () => {
+  const d = today(); const all = (S.plan || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.ts || 0) - (b.ts || 0));
+  const todo = all.filter(x => !x.done), done = all.filter(x => x.done && dnum(d) - dnum(x.date) <= 7);
+  const line = x => `计划 | ${x.date} | ${x.cue || ""} | ${x.text} | ${x.act || ""}`;
+  sendToClaude(`这是我在脱口里的计划。请帮我整理：去掉重复的和已经过时的，按日期排好，“什么时候”写清楚。给我一段导入码：第一行写“计划 | 替换”，后面每项一行：计划 | 日期 | 什么时候 | 做什么 | 动作（没有就空着）。\n今天是 ${d}。\n\n还没做的：\n${todo.map(line).join("\n") || "（没有）"}\n\n最近做完的（只是给你参考，不用放进导入码）：\n${done.map(x => `- ${x.date} ${x.cue || ""} → ${x.text}`).join("\n") || "（没有）"}`);
 };
 function callReviewHTML(){
   const st = CV.st;
@@ -4425,6 +4463,7 @@ VIEWS.reader = {
       ${q ? `<div class="seg" style="margin-top:10px">${[["ref","参考回答"],["mine","我的回答"]].map(([k, l]) => `<button data-act="rd-src" data-q="${q.id}" data-v="${k}" aria-pressed="${src === k}">${l}</button>`).join("")}</div>` : ""}
       <div class="seg" style="margin-top:8px">${[["line","一句一句"],["flow","连贯跟读"]].map(([k, l]) => `<button data-act="rd-mode" data-v="${k}" aria-pressed="${mode === k}">${l}</button>`).join("")}</div>
       <p class="small muted" style="margin-top:6px">${mode === "line" ? "听一句，停下来你跟着说一遍。适合新的回答：先把句子记住。" : "一直放，你同步跟着说，像影子一样。适合已经熟的回答：练节奏和连读。"}</p>
+      <div style="margin-top:6px">${slashBtn()}</div>
       <label class="switch" style="margin-top:6px"><span>慢速</span><input type="checkbox" data-chg="rdopt" data-key="rdSlow" ${L.rdSlow ? "checked" : ""}></label>
       <label class="switch"><span>隐藏文字，只听着跟（熟了再开）</span><input type="checkbox" data-chg="rdopt" data-key="rdHide" ${L.rdHide ? "checked" : ""}></label>
       <p class="small" id="rdStatus" style="margin-top:8px">${RD.sents.length ? "点“开始”。点任意一句，从那句开始。" : (src === "mine" ? "你还没写这题的回答。" : "这题还没有参考回答。")}</p>
@@ -4577,7 +4616,7 @@ ACT["imp-preview"] = () => {
   $("#impOut").innerHTML = `<div class="panel" style="margin-top:12px"><h3>读到了</h3><ul class="issues">
     ${decks.length ? `<li>题库：${decks.map(esc).join("，")}</li>` : ""}
     <li>卡片 ${r.cards.length} 张（反射卡 ${by("r")}，找错 ${by("f")}，听力 ${by("l")}）${dup ? `，其中 ${dup} 张已经有了，会更新` : ""}</li>
-    ${r.questions.length ? `<li>面试题 ${r.questions.length} 道，追问 ${r.follow.length} 个</li>` : ""}${r.plan.length ? `<li>计划 ${r.plan.length} 项</li>` : ""}${r.alts.length ? `<li>确认算对的说法 ${r.alts.length} 条</li>` : ""}
+    ${r.questions.length ? `<li>面试题 ${r.questions.length} 道，追问 ${r.follow.length} 个</li>` : ""}${r.plan.length ? `<li>计划 ${r.plan.length} 项${r.planReplace ? "（会替换所有没做完的计划）" : ""}</li>` : ""}${r.alts.length ? `<li>确认算对的说法 ${r.alts.length} 条</li>` : ""}
     <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
     ${r.meta.date ? `<li>面试日期：${esc(r.meta.date)}</li>` : ""}${who ? `<li>面试官：${esc(who.name)}${who.company ? "，" + esc(who.company) : ""}</li>` : ""}
     ${r.bad.length ? `<li>看不懂、会跳过的：第 ${r.bad.join("、")} 行</li>` : ""}</ul>
@@ -4601,7 +4640,8 @@ ACT["imp-apply"] = () => {
   for (const a of r.answers){ const prev = (S.refAns[a.qid] || "").trim(); S.refAns[a.qid] = a.text; const x = ans(a.qid); const mine = (x.text || "").trim();
     if (!mine || mine === prev || x.fromRef){ x.text = a.text; x.fromRef = true; x.updated = Date.now(); } }
   for (const k of r.keys){ const x = ans(k.qid); x.keys = k.keys; }
-  S.plan = S.plan || []; for (const x of r.plan){ if (!S.plan.some(y => y.date === x.date && y.text === x.text)) S.plan.push({id:"p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date:x.date, cue:x.cue, text:x.text, act:x.act, done:false, ts:Date.now()}); }
+  S.plan = S.plan || []; if (r.planReplace) S.plan = S.plan.filter(x => x.done);
+  for (const x of r.plan){ if (!S.plan.some(y => y.date === x.date && y.text === x.text)) S.plan.push({id:"p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date:x.date, cue:x.cue, text:x.text, act:x.act, done:false, ts:Date.now()}); }
   if ((S.wantWords || []).length){
     /* 导入的单词卡和“要学的词”对上了（一样，或者一个是另一个的一部分，比如 stepped 和 stepped boss），就从列表里去掉 */
     const tk = x => String(x).toLowerCase().split(/\s+/).filter(Boolean);
@@ -5093,26 +5133,39 @@ VIEWS.today = {
 /* ---------- 练习计划（如果……就……） ---------- */
 const PLAN_OPTS = ["晚饭后坐下的时候","睡前躺到床上的时候","早上起床洗漱完","坐车、走路的时候","午饭后"];
 let PLAN_PICK = null;
+/* 计划页：分成 今天 / 接下来 / 没做完 / 已完成 四个标签，一次只看一类；加一项和修改都收在按钮后面 */
+let PLAN_FORM = false, PLAN_EDIT = null;
 VIEWS.plan = {
   tab:"me", noRefresh:true,
   render(){
     const cur = S.settings.planWhen || ""; PLAN_PICK = null;
-    const d = today(); const all = (S.plan || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.ts || 0) - (b.ts || 0));
-    const late = all.filter(x => x.date < d && !x.done), now = all.filter(x => x.date === d), next = all.filter(x => x.date > d);
-    const groups = {}; for (const x of next) (groups[x.date] = groups[x.date] || []).push(x);
-    return `<div class="wrap">${backBtn()}<h2>我的计划</h2>
-      <p class="muted small" style="margin:6px 0 10px">每一项写成“什么时候 → 做什么”，比只写日期更容易做到。链接了练习的，点“开始”直接开始，做完会自动打勾；写了具体时间（比如 20:00）的，可以点“提醒我”加到手机日历。</p>
-      <div class="sec-title">今天　${esc(fmtDate(d))}</div>${now.length ? `<div class="list">${now.map(x => planRowHTML(x, true)).join("")}</div>` : `<p class="small muted">今天还没有计划。</p>`}
-      ${late.length ? `<div class="sec-title">之前没做完的</div><div class="list">${late.map(x => planRowHTML(x, true)).join("")}</div>` : ""}
-      ${Object.entries(groups).map(([dt, xs]) => `<div class="sec-title">${esc(fmtDate(dt))}</div><div class="list">${xs.map(x => planRowHTML(x, true)).join("")}</div>`).join("")}
-      <div class="panel" style="margin-top:14px"><h3>加一项</h3>
-        <label class="fld"><span>哪天</span><input type="date" id="plDate" value="${d}"></label>
-        <label class="fld"><span>什么时候：每天一定会碰到的时刻，或者具体时间</span><input type="text" id="plCue" placeholder="比如：晚饭后、睡前、20:00"></label>
+    const d = today(), tn = dnum(d); const all = (S.plan || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.ts || 0) - (b.ts || 0));
+    const G = {today: all.filter(x => x.date === d && !x.done), next: all.filter(x => x.date > d && !x.done), late: all.filter(x => x.date < d && !x.done), done: all.filter(x => x.done && tn - dnum(x.date) <= 30)};
+    const tabs = [["today","今天"],["next","接下来"],["late","没做完"],["done","已完成"]];
+    const tab = G[L.planTab] ? L.planTab : "today";
+    const byDate = (arr, desc) => { const g = {}; for (const x of arr) (g[x.date] = g[x.date] || []).push(x);
+      return Object.keys(g).sort((a, b) => desc ? (a < b ? 1 : -1) : (a < b ? -1 : 1)).map(dt => `<div class="sec-title">${esc(fmtDate(dt))}</div><div class="list">${g[dt].map(x => planRowHTML(x, true)).join("")}</div>`).join(""); };
+    const doneToday = all.filter(x => x.date === d && x.done);
+    let body = "";
+    if (tab === "today") body = (G.today.length ? `<div class="list">${G.today.map(x => planRowHTML(x, true)).join("")}</div>` : `<p class="small muted">${doneToday.length ? "今天的计划都做完了 ✓" : "今天还没有计划。"}</p>`)
+      + (doneToday.length ? `<details style="margin-top:10px"><summary class="small">今天已完成 ${doneToday.length} 项</summary><div class="list" style="margin-top:6px">${doneToday.map(x => planRowHTML(x, true)).join("")}</div></details>` : "");
+    if (tab === "next") body = G.next.length ? byDate(G.next) : `<p class="small muted">还没有以后的计划。</p>`;
+    if (tab === "late") body = G.late.length ? `<div class="row-gap" style="margin-bottom:6px"><button class="btn sm" data-act="pl-late-today">全部挪到今天</button><button class="btn sm ghost" data-act="pl-late-del">全部删除</button></div>${byDate(G.late, true)}` : `<p class="small muted">没有拖下来没做的计划。</p>`;
+    if (tab === "done") body = G.done.length ? byDate(G.done, true) : `<p class="small muted">最近 30 天还没有完成的计划。</p>`;
+    const ed = PLAN_EDIT ? (S.plan || []).find(x => x.id === PLAN_EDIT) : null;
+    const form = `<div class="panel" id="plForm" style="margin-top:14px"><h3>${ed ? "修改这一项" : "加一项"}</h3>
+        <label class="fld"><span>哪天</span><input type="date" id="plDate" value="${esc(ed ? ed.date : d)}"></label>
+        <label class="fld"><span>什么时候：每天一定会碰到的时刻，或者具体时间</span><input type="text" id="plCue" value="${esc(ed ? ed.cue || "" : "")}" placeholder="比如：晚饭后、睡前、20:00"></label>
         <div class="chips" style="margin-top:6px">${["早上起床后","午饭后","晚饭后","睡前"].map(c => `<button class="chip" data-act="pl-cue" data-v="${c}">${c}</button>`).join("")}</div>
-        <label class="fld"><span>做什么</span><input type="text" id="plText" placeholder="比如：模拟一场电话初筛"></label>
-        <label class="fld"><span>链接到哪个练习（可选，链接了做完会自动打勾）</span><select id="plAct">${PLAN_ACTS.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select></label>
-        <button class="btn primary block" style="margin-top:10px" data-act="pl-add">加上</button></div>
-      <p class="small muted" style="margin-top:8px">也可以让 Claude 帮你排：导入码里写着“计划”的行，导入以后就会出现在这里。</p>
+        <label class="fld"><span>做什么</span><input type="text" id="plText" value="${esc(ed ? ed.text : "")}" placeholder="比如：模拟一场电话初筛"></label>
+        <label class="fld"><span>链接到哪个练习（可选，链接了做完会自动打勾）</span><select id="plAct">${PLAN_ACTS.concat(ed && ed.act && !PLAN_ACTS.some(a => a[0] === ed.act) ? [[ed.act, planActLabel(ed.act)]] : []).map(([v, l]) => `<option value="${esc(v)}" ${ed && ed.act === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+        <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="pl-add">${ed ? "保存修改" : "加上"}</button><button class="btn ghost" data-act="pl-cancel">取消</button></div></div>`;
+    return `<div class="wrap">${backBtn()}<h2>我的计划</h2>
+      <div class="seg" style="margin-top:10px">${tabs.map(([k, l]) => `<button data-act="pl-tab" data-v="${k}" aria-pressed="${tab === k}">${l}${G[k].length ? `<span class="seg-n">${G[k].length}</span>` : ""}</button>`).join("")}</div>
+      <div style="margin-top:12px">${body}</div>
+      ${PLAN_FORM || ed ? form : `<button class="btn block" style="margin-top:14px" data-act="pl-open">＋ 加一项</button>`}
+      <div class="panel" style="margin-top:14px"><b>让 Claude 帮你整理</b><p class="small muted" style="margin-top:4px">计划多了、重复了，就复制给 Claude。它会给你一段第一行写着“计划 | 替换”的导入码：导入以后，所有没做完的计划都换成新的，做完的记录留着。</p><button class="btn block" style="margin-top:8px" data-act="pl-claude">复制所有计划给 Claude</button></div>
+      <p class="small muted" style="margin-top:10px">每一项写成“什么时候 → 做什么”，比只写日期更容易做到。写了具体时间（比如 20:00）的，点“提醒我”就能加到手机自带的日历里。</p>
       <h3 style="margin-top:20px">每天固定的练习时间</h3>
       <p class="muted small" style="margin:6px 0 14px">写成“如果……就……”的计划，比只说“我要每天练”更容易坚持。选一个你每天一定会碰到的时刻。</p>
       <div class="panel"><div class="small muted">如果……</div><div class="chips" style="margin-top:8px">${PLAN_OPTS.map(o => `<button class="chip ${o === cur ? "k" : ""}" data-act="plan-pick" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>
