@@ -413,7 +413,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.16.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.16.1"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -4065,21 +4065,33 @@ const PLAN_ACTS = [["","不链接练习"],["phone","模拟一场电话初筛"],[
 function planActLabel(a){ if (!a) return ""; if (a.startsWith("solo:")) return "单题彩排：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); if (a.startsWith("read:")) return "跟读参考回答：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); return (PLAN_ACTS.find(x => x[0] === a) || ["", ""])[1]; }
 function planAutoDone(act){ if (!act) return; const d = today(); let n = 0; for (const x of (S.plan || [])) if (x.date === d && !x.done && x.act === act){ x.done = true; n++; } if (n){ save(); toast("计划里的一项完成了 ✓"); } }
 function fmtDate(dt){ const d = new Date(dt + "T12:00:00"); return `${d.getMonth() + 1}月${d.getDate()}日 周${"日一二三四五六"[d.getDay()]}`; }
-/* 提醒我：安卓上直接打开手机自带的日历，把这一项填好；其他设备下载一个日历文件 */
-const IS_ANDROID = /Android/i.test(navigator.userAgent || "");
+/* 提醒我：网页没法直接打开手机日历的“新建日程”（Chrome 只允许打开声明了可以从浏览器启动的应用）。
+   所以给两个选择：下载一个日历文件，用手机自带的日历打开；或者用 Google 日历网页添加 */
 function planTime(x){ const m = String(x.cue || "").match(/(\d{1,2})[:：](\d{2})/); if (!m) return null; const [y, mo, dd] = String(x.date).split("-").map(Number); return new Date(y, mo - 1, dd, +m[1], +m[2]); }
-function remindLink(x){
-  const t = planTime(x); if (!t) return ""; const t2 = new Date(t.getTime() + 30 * 60000); const desc = "脱口的练习计划";
-  if (IS_ANDROID) return `intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;S.title=${encodeURIComponent(x.text)};S.description=${encodeURIComponent(desc)};l.beginTime=${t.getTime()};l.endTime=${t2.getTime()};end`;
+function icsText(x){
+  const t = planTime(x); if (!t) return ""; const t2 = new Date(t.getTime() + 30 * 60000);
   const f = dt => dt.getFullYear() + String(dt.getMonth() + 1).padStart(2, "0") + String(dt.getDate()).padStart(2, "0") + "T" + String(dt.getHours()).padStart(2, "0") + String(dt.getMinutes()).padStart(2, "0") + "00";
   const clean = s => String(s).replace(/[,;\\\n]/g, " ");
-  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//tuokou//plan//CN", "BEGIN:VEVENT", "UID:" + x.id + "@tuokou", "DTSTAMP:" + f(new Date()), "DTSTART:" + f(t), "DTEND:" + f(t2), "SUMMARY:" + clean(x.text), "DESCRIPTION:" + desc, "BEGIN:VALARM", "TRIGGER:-PT0M", "ACTION:DISPLAY", "DESCRIPTION:" + clean(x.text), "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
-  return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//tuokou//plan//CN", "BEGIN:VEVENT", "UID:" + x.id + "@tuokou", "DTSTAMP:" + f(new Date()), "DTSTART:" + f(t), "DTEND:" + f(t2), "SUMMARY:" + clean(x.text), "DESCRIPTION:脱口的练习计划", "BEGIN:VALARM", "TRIGGER:-PT0M", "ACTION:DISPLAY", "DESCRIPTION:" + clean(x.text), "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
 }
+function googleCalLink(x){
+  const t = planTime(x); if (!t) return ""; const t2 = new Date(t.getTime() + 30 * 60000);
+  const f = dt => dt.getFullYear() + String(dt.getMonth() + 1).padStart(2, "0") + String(dt.getDate()).padStart(2, "0") + "T" + String(dt.getHours()).padStart(2, "0") + String(dt.getMinutes()).padStart(2, "0") + "00";
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(x.text) + "&dates=" + f(t) + "/" + f(t2) + "&details=" + encodeURIComponent("脱口的练习计划");
+}
+ACT["plan-remind"] = async el => {
+  const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x || !planTime(x)) return;
+  const c = await choose("加到日历提醒你", "先试第一个：下载一个日历文件，再用手机自带的日历打开它，就会加进去。打不开的话，用第二个。", [["ics", "下载日历文件"], ["google", "用 Google 日历添加"], ["", "取消"]]);
+  if (c === "ics"){
+    const url = URL.createObjectURL(new Blob([icsText(x)], {type:"text/calendar"}));
+    const a = document.createElement("a"); a.href = url; a.download = "tuokou-plan.ics"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000); toast("下载好了：点通知栏里的文件，用日历打开");
+  } else if (c === "google") window.open(googleCalLink(x), "_blank", "noopener");
+};
 function planRowHTML(x, page){
-  const rl = remindLink(x), isToday = x.date === today();
+  const isToday = x.date === today();
   return `<div class="li plan-row"><input type="checkbox" data-chg="plan-done" data-id="${x.id}" ${x.done ? "checked" : ""} aria-label="完成"><div class="grow"><b${x.done ? ' class="muted" style="text-decoration:line-through"' : ""}>${x.cue ? esc(x.cue) + " → " : ""}${esc(x.text)}</b>${x.act && planActLabel(x.act) !== x.text ? `<span>${esc(planActLabel(x.act))}</span>` : ""}${page ? `<span class="pl-tools"><button class="linkbtn" data-act="plan-edit" data-id="${x.id}">编辑</button><button class="linkbtn danger" data-act="plan-del" data-id="${x.id}">删除</button></span>` : ""}</div>
-    <span class="row-gap" style="flex:none">${x.act && !x.done && isToday ? `<button class="btn sm primary" data-act="plan-go" data-v="${esc(x.act)}">开始</button>` : ""}${rl && !x.done ? `<a class="btn sm ghost" href="${rl}"${IS_ANDROID ? "" : ` download="tuokou-plan.ics"`}>提醒我</a>` : ""}</span></div>`;
+    <span class="row-gap" style="flex:none">${x.act && !x.done && isToday ? `<button class="btn sm primary" data-act="plan-go" data-v="${esc(x.act)}">开始</button>` : ""}${planTime(x) && !x.done ? `<button class="btn sm ghost" data-act="plan-remind" data-id="${x.id}">提醒我</button>` : ""}</span></div>`;
 }
 function todayPlanHTML(){
   const d = today(); const items = (S.plan || []).filter(x => x.date === d); const due = ivDueList();
@@ -5165,7 +5177,7 @@ VIEWS.plan = {
       <div style="margin-top:12px">${body}</div>
       ${PLAN_FORM || ed ? form : `<button class="btn block" style="margin-top:14px" data-act="pl-open">＋ 加一项</button>`}
       <div class="panel" style="margin-top:14px"><b>让 Claude 帮你整理</b><p class="small muted" style="margin-top:4px">计划多了、重复了，就复制给 Claude。它会给你一段第一行写着“计划 | 替换”的导入码：导入以后，所有没做完的计划都换成新的，做完的记录留着。</p><button class="btn block" style="margin-top:8px" data-act="pl-claude">复制所有计划给 Claude</button></div>
-      <p class="small muted" style="margin-top:10px">每一项写成“什么时候 → 做什么”，比只写日期更容易做到。写了具体时间（比如 20:00）的，点“提醒我”就能加到手机自带的日历里。</p>
+      <p class="small muted" style="margin-top:10px">每一项写成“什么时候 → 做什么”，比只写日期更容易做到。写了具体时间（比如 20:00）的，点“提醒我”可以加到日历里提醒你。</p>
       <h3 style="margin-top:20px">每天固定的练习时间</h3>
       <p class="muted small" style="margin:6px 0 14px">写成“如果……就……”的计划，比只说“我要每天练”更容易坚持。选一个你每天一定会碰到的时刻。</p>
       <div class="panel"><div class="small muted">如果……</div><div class="chips" style="margin-top:8px">${PLAN_OPTS.map(o => `<button class="chip ${o === cur ? "k" : ""}" data-act="plan-pick" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>
