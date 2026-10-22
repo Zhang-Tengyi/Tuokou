@@ -402,6 +402,11 @@ mark.opt{background:transparent;color:inherit;border-bottom:2px dashed #e0a100}
 .asr-model b{font-size:15px;color:var(--ink, inherit)}
 .asr-model .tag-cur{display:inline-block;margin-left:8px;padding:0 7px;border-radius:8px;font-size:11.5px;background:var(--amber-soft, #fff3d6)}
 
+.iv-row.next b{color:var(--ink, inherit)}
+.iv-row.next{background:var(--amber-soft, #fff7e0);border-radius:10px;padding-left:8px;padding-right:8px}
+
+.iv-banner .btn{white-space:nowrap;flex-shrink:0}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -422,7 +427,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.18.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.18.2"};</script>
 <script>
 /* 脱口 · 内置内容（通用版）。个人练习在“我的定制内容”导入文件里。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -2128,7 +2133,7 @@ const MIC = {
 
 /* ---------- 存储 ---------- */
 const KEY = "tuokou.v1", LKEY = "tuokou.local";
-const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0, asrDocs:[],
+const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0, asrDocs:[], interviews:[],
   settings:{goal:"std", profile:"", interviewDate:"", newPerDay:12, inputMode:"auto", autoCheck:"smart", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
   cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, soloIssues:{}, soloRate:{}, wantWords:[], answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
@@ -2152,6 +2157,14 @@ let S = mergeInto(DEF(), readJSON(KEY) || {});
     if (S.myAlts && S.myAlts[o]){ S.myAlts[nw] = Array.from(new Set((S.myAlts[nw] || []).concat(S.myAlts[o]))); delete S.myAlts[o]; }
   }
   if (n){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+})();
+/* 1.18.2：面试从“一个日期”改成“面试列表”。以前设过的日期，变成列表里的一场 */
+(function migrateInterviews(){
+  S.interviews = S.interviews || [];
+  if (!S.interviews.length && S.settings && S.settings.interviewDate){
+    const deck = (S.settings.callDeck || "").startsWith("u:") ? S.settings.callDeck : "";
+    S.interviews.push({id:"i" + Date.now().toString(36), name:"电话面试", date:S.settings.interviewDate, time:"", deck});
+  }
 })();
 let L = mergeInto(LDEF(), readJSON(LKEY) || {});
 let saveTimer = null;
@@ -2656,7 +2669,7 @@ const Cloud = {
     if (!this.db) return;
     const base = "data/users/" + this.uid + "/";
     const parts = {
-      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, soloRate:S.soloRate, wantWords:S.wantWords, asrDocs:S.asrDocs, answers:S.answers, newToday:S.newToday},
+      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, soloRate:S.soloRate, wantWords:S.wantWords, asrDocs:S.asrDocs, interviews:S.interviews, answers:S.answers, newToday:S.newToday},
       stats:{updatedAt:S.updatedAt, days:S.days, tags:S.tags, calls:S.calls},
       journal:{updatedAt:S.updatedAt, journal:S.journal}
     };
@@ -2914,7 +2927,7 @@ VIEWS.home = {
     const mod = (v, icon, t, d) => `<button class="mod" data-act="nav" data-v="${v}">${ICON[icon]}<b>${t}</b><span>${d}</span></button>`;
     return `<div class="wrap">
       <div class="top"><div class="wordmark">脱口</div><div class="streak"><span class="num">${st.streak}</span><span class="lbl">天<br>连续</span></div></div>
-      ${installBanner()}${typeof micBanner === "function" ? micBanner() : ""}${resumeBanner()}${STORAGE_OK ? "" : `<div class="banner"><span>存储空间不够，进度没存上。先备份，再清理旧录音。</span><button class="btn sm primary" data-act="nav" data-v="storage">去看看</button></div>`}${typeof ttsBanner === "function" ? ttsBanner() : ""}${typeof backupBanner === "function" ? backupBanner() : ""}${typeof pendingBanner === "function" ? pendingBanner() : ""}
+      ${installBanner()}${typeof micBanner === "function" ? micBanner() : ""}${resumeBanner()}${typeof nextIvBanner === "function" ? nextIvBanner() : ""}${STORAGE_OK ? "" : `<div class="banner"><span>存储空间不够，进度没存上。先备份，再清理旧录音。</span><button class="btn sm primary" data-act="nav" data-v="storage">去看看</button></div>`}${typeof ttsBanner === "function" ? ttsBanner() : ""}${typeof backupBanner === "function" ? backupBanner() : ""}${typeof pendingBanner === "function" ? pendingBanner() : ""}
       <section class="hero">
         <div class="gantry" id="homeLights">${lamps()}</div>
         <h2>开始今天的练习</h2>
@@ -4201,8 +4214,9 @@ function androidCalIntent(x){
 function goExternal(url){ if (url.startsWith("intent:")) location.href = url; else window.open(url, "_blank", "noopener"); }
 /* 提醒我：三个选项。网页进不了本机日历的“新建日程”（只有允许从浏览器打开的应用才行，你手机上只有 Google 日历允许），
    所以“本机日历”走提醒文件：下载后用手机自带的日历打开。“复制提醒内容”任何浏览器、任何手机都能用 */
-ACT["plan-remind"] = async el => {
-  const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x || !planTime(x)) return;
+ACT["plan-remind"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (x && planTime(x)) remindVia(x); };
+async function remindVia(x){
+  if (!x || !planTime(x)) return;
   const c = await choose("加到哪里提醒你", "本机日历：会下载一个提醒文件，点开它，选手机自带的日历，保存就加进去了。网页没法直接打开本机日历，只能这样。", [["local", "本机日历"], ["google", "Google 日历"], ["copy", "复制提醒内容"], ["", "取消"]]);
   if (c === "local"){
     const url = URL.createObjectURL(new Blob([icsText(x)], {type:"text/calendar"}));
@@ -4215,7 +4229,7 @@ ACT["plan-remind"] = async el => {
     const t = planTime(x); const hm = String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
     const ok = await copyText(`${x.date} ${hm} ${x.text}`); toast(ok ? "复制好了：粘贴到任何提醒、闹钟或备忘录 app" : "复制没成功，再点一次试试");
   }
-};
+}
 function planRowHTML(x, page){
   const isToday = x.date === today();
   return `<div class="li plan-row"><input type="checkbox" data-chg="plan-done" data-id="${x.id}" ${x.done ? "checked" : ""} aria-label="完成"><div class="grow"><b${x.done ? ' class="muted" style="text-decoration:line-through"' : ""}>${x.cue ? esc(x.cue) + " → " : ""}${esc(x.text)}</b>${x.act && planActLabel(x.act) !== x.text ? `<span>${esc(planActLabel(x.act))}</span>` : ""}${page ? `<span class="pl-tools"><button class="linkbtn" data-act="plan-edit" data-id="${x.id}">编辑</button><button class="linkbtn danger" data-act="plan-del" data-id="${x.id}">删除</button></span>` : ""}</div>
@@ -4468,6 +4482,58 @@ ACT["w-copy"] = () => { const t = ($("#wText")||{}).value || ""; if (!t.trim()){
 
 /* ---------- 面试 ---------- */
 const written = q => !!(S.answers[q.id] && S.answers[q.id].text && S.answers[q.id].text.trim().length > 10);
+/* ---------- 面试安排：可以有好几场，每场有名称、日期、时间、准备用的题库 ----------
+   最近的一场决定 S.settings.interviewDate（面试前 3 周内，每天的练习多放面试内容） */
+let IVS_FORM = false, IVS_EDIT = null;
+function ivsSorted(){ return (S.interviews || []).slice().sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1); }
+function nextInterview(){ const d = today(); return ivsSorted().find(x => x.date >= d) || null; }
+function syncInterviewDate(){ const n = nextInterview(); const v = n ? n.date : ""; if (S.settings.interviewDate !== v){ S.settings.interviewDate = v; save(); } }
+function ivWhen(x){ const [y, m, dd] = String(x.date).split("-").map(Number); const w = "日一二三四五六"[new Date(y, m - 1, dd).getDay()]; return `${m}月${dd}日 周${w}${x.time ? " " + x.time : ""}`; }
+function ivLeftText(x){ const n = dnum(x.date) - dnum(today()); return n === 0 ? "就是今天" : n === 1 ? "明天" : n > 0 ? `还有 ${n} 天` : `${-n} 天前`; }
+function deckLabel(id){ return String(id || "").replace(/^u:/, ""); }
+function interviewsPanelHTML(){
+  syncInterviewDate();
+  const d = today(), all = ivsSorted(), up = all.filter(x => x.date >= d), past = all.filter(x => x.date < d).reverse();
+  const row = (x, isNext) => `<div class="li iv-row${isNext ? " next" : ""}"><div class="grow"><b>${esc(x.name)}</b><span>${esc(ivWhen(x))}　${esc(ivLeftText(x))}${x.deck ? "　题库：" + esc(deckLabel(x.deck)) : ""}</span><span class="pl-tools"><button class="linkbtn" data-act="ivs-edit" data-id="${x.id}">编辑</button><button class="linkbtn danger" data-act="ivs-del" data-id="${x.id}">删除</button></span></div>${x.time && x.date >= d ? `<button class="btn sm ghost" data-act="ivs-remind" data-id="${x.id}">提醒我</button>` : ""}</div>`;
+  const ed = IVS_EDIT ? (S.interviews || []).find(x => x.id === IVS_EDIT) : null;
+  /* 所有导入过面试题的题库都能选（不要求已经写了回答） */
+  const decks = Array.from(new Set((S.customQ || []).map(q => q.deck).filter(Boolean))).map(d => ({id:"u:" + d, label:d}));
+  const form = `<div id="ivsForm" style="margin-top:10px;border-top:1px solid var(--line, #e2e2e2);padding-top:10px"><b>${ed ? "修改这场面试" : "添加一场面试"}</b>
+    <label class="fld"><span>名称</span><input type="text" id="ivsName" value="${esc(ed ? ed.name : "")}" placeholder="比如：TaylorMade 招聘经理面试"></label>
+    <label class="fld"><span>日期</span><input type="date" id="ivsDate" value="${esc(ed ? ed.date : "")}"></label>
+    <label class="fld"><span>时间（可选，填了就能加日历提醒）</span><input type="time" id="ivsTime" value="${esc(ed ? ed.time || "" : "")}"></label>
+    <label class="fld"><span>用哪个题库准备（可选）</span><select id="ivsDeck"><option value="">不指定</option>${decks.map(s => `<option value="${esc(s.id)}" ${ed && ed.deck === s.id ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label>
+    <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="ivs-save">${ed ? "保存修改" : "添加"}</button><button class="btn ghost" data-act="ivs-cancel">取消</button></div></div>`;
+  const n = up[0];
+  return `<div class="panel"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>面试安排</b>${IVS_FORM || ed ? "" : `<button class="btn sm" data-act="ivs-open">＋ 添加面试</button>`}</div>
+    <p class="small muted" style="margin-top:6px">${n ? `最近一场：${esc(ivLeftText(n))}。面试前 3 周内，每天的练习会多放面试内容。` : "还没有安排。添加以后，面试前 3 周内每天的练习会多放面试内容。"}</p>
+    ${up.length ? `<div class="list" style="margin-top:8px">${up.map((x, i) => row(x, i === 0)).join("")}</div>` : ""}
+    ${past.length ? `<details style="margin-top:8px"><summary class="small">已经过去的面试 ${past.length} 场</summary><div class="list" style="margin-top:6px">${past.map(x => row(x, false)).join("")}</div></details>` : ""}
+    ${IVS_FORM || ed ? form : ""}</div>`;
+}
+/* 首页：最近一场面试的倒计时（30 天以内才显示） */
+function nextIvBanner(){
+  if (typeof S === "undefined") return ""; syncInterviewDate(); const n = nextInterview(); if (!n) return "";
+  const left = dnum(n.date) - dnum(today()); if (left > 30) return "";
+  return `<div class="banner iv-banner"><span>📅 ${esc(n.name)}：${esc(ivLeftText(n))}（${esc(ivWhen(n))}）</span><button class="btn sm primary" data-act="tab" data-v="iv">去准备</button></div>`;
+}
+ACT["ivs-open"] = () => { IVS_FORM = true; IVS_EDIT = null; UI.render(); const f = $("#ivsForm"); if (f && f.scrollIntoView) f.scrollIntoView({behavior:"smooth", block:"center"}); };
+ACT["ivs-cancel"] = () => { IVS_FORM = false; IVS_EDIT = null; UI.render(); };
+ACT["ivs-edit"] = el => { IVS_EDIT = el.dataset.id; IVS_FORM = true; UI.render(); const f = $("#ivsForm"); if (f && f.scrollIntoView) f.scrollIntoView({behavior:"smooth", block:"center"}); };
+ACT["ivs-save"] = () => {
+  const name = (($("#ivsName") || {}).value || "").trim(), date = ($("#ivsDate") || {}).value || "", time = ($("#ivsTime") || {}).value || "", deck = ($("#ivsDeck") || {}).value || "";
+  if (!name){ toast("写一下这场面试叫什么"); return; } if (!date){ toast("选一下日期"); return; }
+  S.interviews = S.interviews || [];
+  if (IVS_EDIT){ const x = S.interviews.find(i => i.id === IVS_EDIT); if (x) Object.assign(x, {name, date, time, deck}); }
+  else S.interviews.push({id:"i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), name, date, time, deck});
+  /* 选了题库、模拟面试又还没指定题库，就顺手设成这个题库 */
+  if (deck && !(S.settings.callDeck || "").startsWith("u:")) S.settings.callDeck = deck;
+  const wasEdit = !!IVS_EDIT; IVS_FORM = false; IVS_EDIT = null; syncInterviewDate(); save(); toast(wasEdit ? "改好了" : "加上了"); UI.render();
+};
+ACT["ivs-del"] = async el => { const x = (S.interviews || []).find(i => i.id === el.dataset.id); if (!x) return;
+  if (!await sheet("删除这场面试？", `${x.name}（${ivWhen(x)}）。题库和练习记录都不受影响。`, "删除", true)) return;
+  S.interviews = S.interviews.filter(i => i.id !== x.id); if (IVS_EDIT === x.id){ IVS_EDIT = null; IVS_FORM = false; } syncInterviewDate(); save(); UI.render(); };
+ACT["ivs-remind"] = el => { const x = (S.interviews || []).find(i => i.id === el.dataset.id); if (x && x.time) remindVia({id:x.id, date:x.date, cue:x.time, text:x.name}); };
 VIEWS.iv = {
   tab:"iv",
   render(){
@@ -4483,8 +4549,7 @@ VIEWS.iv = {
     const core = [], scr = [];
     const nW = all.filter(written).length; const left = ivDaysLeft();
     return `<div class="wrap"><div class="top"><h2 style="font-size:26px">面试准备</h2><span class="muted small">已写 ${nW}/${all.length}</span></div>
-      <div class="panel"><label class="fld" style="margin-top:0"><span>电话面试日期</span><input type="date" data-chg="set" data-key="interviewDate" data-rerender="1" value="${esc(S.settings.interviewDate)}"></label>
-        <p class="small muted" style="margin-top:8px">${left != null ? `还有 ${left} 天。面试前 3 周内，每天的练习会多放面试内容。` : "设好日期后，面试前 3 周内每天的练习会多放面试内容。"}</p></div>
+      ${interviewsPanelHTML()}
       ${readyPanelHTML()}
       <div class="spacer"></div>
       <label class="fld"><span>模拟用哪个题库的回答</span><select data-chg="set" data-key="callDeck" data-rerender="1"><option value="all" ${!(S.settings.callDeck || "").startsWith("u:") ? "selected" : ""}>全部题库</option>${callSets().filter(s => s.id.startsWith("u:")).map(s => `<option value="${esc(s.id)}" ${S.settings.callDeck === s.id ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label>
@@ -4681,8 +4746,6 @@ VIEWS.me = {
         <label class="fld" style="margin-top:0"><span>每天最多几道新题</span><select data-chg="set" data-key="newPerDay" data-num="1">${[6,12,20].map(n => `<option value="${n}" ${s.newPerDay === n ? "selected" : ""}>${n} 道</option>`).join("")}</select></label>
         <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${!SR.ok ? "（这个浏览器不支持）" : SR.broken ? "（这台手机现在用不了）" : ""}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
         <label class="fld"><span>给 Claude 的自我介绍（可选，AI 批改时会带上）</span><textarea rows="3" data-chg="profile" placeholder="比如：机械工程硕士，正在准备美国工程类岗位面试，口语大约 A2–B1">${esc(S.settings.profile || "")}</textarea></label>
-        <label class="fld"><span>录音转文字用的模型</span><select data-chg="asrmodel">${Object.entries(ASR_MODELS).map(([k, m]) => `<option value="${k}" ${(L.asrModel || "large") === k ? "selected" : ""}>${esc(m.label)}</option>`).join("")}</select></label>
-        <label class="switch"><span>录音转文字用显卡加速（可能更快；有的手机会出乱码，出乱码就关掉）</span><input type="checkbox" data-chg="asrgpu" ${L.asrGpu ? "checked" : ""}></label>
         <label class="fld"><span>说话中间停顿</span><select data-chg="srlong"><option value="on" ${L.srLong !== false ? "selected" : ""}>停 2.5 秒才算说完（中间想一下也不会断）</option><option value="off" ${L.srLong === false ? "selected" : ""}>停一下就结束（手机默认）</option></select></label>
         <label class="fld"><span>停 2 秒自动检查</span><select data-chg="set" data-key="autoCheck">${[["smart","自动判断：语音说完自动查，打字时不查"],["on","一直开"],["off","关掉：每次自己点“检查”"]].map(([v, l]) => `<option value="${v}" ${(s.autoCheck || "smart") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
         <label class="fld"><span>一天从几点开始算（熬夜时，凌晨的练习和日记还算前一天）</span><select data-chg="set" data-key="dayStart" data-num="1">${[0,2,4,6].map(h => `<option value="${h}" ${(+s.dayStart || 0) === h ? "selected" : ""}>${h ? "凌晨 " + h + " 点" : "半夜 12 点"}</option>`).join("")}</select></label>
@@ -4793,7 +4856,7 @@ ACT["imp-apply"] = () => {
   }
   S.myAlts = S.myAlts || {}; for (const a of r.alts){ S.myAlts[a.id] = Array.from(new Set([...(S.myAlts[a.id] || []), a.text])).slice(-6); }
   if (r.alts.length && S.pending && S.pending.length){ const ok = new Set(r.alts.map(a => a.id + "|" + K.tokens(a.text).join(" "))); S.pending = S.pending.filter(p => !ok.has(p.cid + "|" + K.tokens(p.said).join(" "))); }
-  if (r.meta.date) S.settings.interviewDate = r.meta.date;
+  if (r.meta.date){ S.interviews = S.interviews || []; if (!S.interviews.some(x => x.date === r.meta.date)){ const dk = (r.questions[0] || r.cards[0] || {}).deck || ""; const nm = dk && dk !== "core" && dk !== "daily" ? (/面试/.test(dk) ? dk : dk + " 面试") : "面试"; S.interviews.push({id:"i" + Date.now().toString(36), name:nm, date:r.meta.date, time:"", deck: dk && dk !== "core" && dk !== "daily" ? "u:" + dk : ""}); } syncInterviewDate(); }
   S.deckMeta = S.deckMeta || {}; for (const w of r.meta.who) S.deckMeta[w.deck] = {name:w.name, company:w.company};
   if (r.questions.length) S.settings.callDeck = "u:" + r.questions[0].deck;
   rebuildCatalog(); save(true); IMP = null;
@@ -5157,9 +5220,9 @@ VIEWS.asr = {
         : `<p class="small muted" style="margin-top:6px">排队中或正在转写……转好了会提醒你。</p>`}</div>`;
     return `<div class="wrap">${backBtn()}<h2>录音转文字</h2>
       <p class="muted small" style="margin:6px 0 10px">在手机上识别英文录音，比如实验室开会、面试的录音。识别在后台进行，转写的时候你可以去练别的，转好了会提醒你。</p>
-      ${ASR.supported() ? `<div class="panel" style="margin-bottom:12px"><b>识别模型</b><div id="asrModels" class="small muted" style="margin-top:6px">正在查看手机里存了哪些模型……</div><p class="small muted" id="asrUse" style="margin-top:8px"></p></div>
+      ${ASR.supported() ? `<div class="panel small" id="asrCur" style="margin-bottom:12px">正在查看用的是哪个模型……</div>
         <label class="btn primary block" style="text-align:center">选录音文件（可以一次选几个）<input type="file" id="asrFile" accept="audio/*,video/*" multiple data-chg="asr-file" style="display:none"></label>
-        <p class="small muted" style="margin-top:8px">用的是${esc((ASR_MODELS[L.asrModel] || ASR_MODELS.large).label)}，可以在“我的 → 设置”里换。很长的录音（比如一小时）在手机上会很慢，也可能内存不够，最好先剪成 20 分钟以内的几段，或者在电脑浏览器里打开 app 转。</p>
+        <p class="small muted" style="margin-top:8px">很长的录音（比如一小时）在手机上会很慢，也可能内存不够，最好先剪成 20 分钟以内的几段，或者在电脑浏览器里打开 app 转。</p>
         <p class="small muted">转出来的文字可能会把口误和小的语法错“修好”，找语法错时，最好对着录音再听一遍。</p>`
         : `<p class="panel">这个版本用不了：录音转文字要在安装到手机上的版本里用（claude.ai 里下载不了识别模型）。</p>`}
       <div style="margin-top:14px">${list.length ? list.map(row).join("") : `<p class="muted small">还没有转写过的录音。</p>`}</div></div>`;
@@ -5177,13 +5240,18 @@ async function asrModelsPaint(){
   if (use){ try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; use.textContent = e && e.quota ? `app 现在一共占用约 ${fmtMB(e.usage || 0)}，手机还给它留了约 ${fmtMB(Math.max(0, (e.quota || 0) - (e.usage || 0)))}。` : ""; } catch (err) { use.textContent = ""; } }
   const d = info[cur]; if (d && d.files > 0 && !L.asrReady){ L.asrReady = true; saveLocal(); }
 }
-VIEWS.asr.mount = () => { asrModelsPaint(); };
+VIEWS.asr.mount = async () => {
+  const el = document.getElementById("asrCur"); if (!el) return;
+  const info = await ASR.cacheInfo(); const k = L.asrModel || "large", m = ASR_MODELS[k], have = info[k] && info[k].files > 0;
+  if (have && !L.asrReady){ L.asrReady = true; saveLocal(); }
+  el.innerHTML = `正在用：<b>${esc(m.label.split("（")[0])}</b>（${esc(m.label.replace(/^[^（]*（|）$/g, ""))}，${have ? "已下载" : "还没下载，第一次转写时会先下载"}）　<button class="linkbtn" data-act="nav" data-v="storage">管理模型</button>`;
+};
 ACT["asrm-use"] = async el => { const k = el.dataset.v; L.asrModel = k; const info = await ASR.cacheInfo(); L.asrReady = !!(info[k] && info[k].files); saveLocal();
   if (ASR.w && !ASR.cur){ try { ASR.w.terminate(); } catch (e) {} ASR.w = null; }
   toast(L.asrReady ? "换好了，下次转写就用它" : "换好了；这个模型还没下载，第一次转写时会先下载"); UI.render(); };
 ACT["asrm-get"] = async el => { const k = el.dataset.v; const m = ASR_MODELS[k];
   if (!await sheet("下载这个模型？", `${m.label}。建议连着 Wi-Fi 下载，下载时请让 app 开着。下载好以后存在手机里，不联网也能用。`, "下载", false)) return;
-  ASR.download(k, () => { if ((L.asrModel || "large") === k){ L.asrReady = true; saveLocal(); } const t = UI.top(); if (t && t.name === "asr") asrModelsPaint(); });
+  ASR.download(k, () => { if ((L.asrModel || "large") === k){ L.asrReady = true; saveLocal(); } if (document.getElementById("asrModels")) asrModelsPaint(); });
   setTimeout(asrModelsPaint, 50); };
 ACT["asrm-del"] = async el => { const k = el.dataset.v; const m = ASR_MODELS[k];
   if (!await sheet("删除这个模型？", `删除以后能腾出空间；以后再用要重新下载。（${m.label.split("（")[0]}）`, "删除", true)) return;
@@ -5252,6 +5320,9 @@ VIEWS.storage = {
   tab:"me",
   render(){
     return `<div class="wrap">${backBtn()}<h2>存储空间</h2><div class="panel" id="stInfo">正在计算……</div>
+      ${ASR.supported() ? `<div class="panel"><h3>录音转文字的模型</h3><p class="small muted" style="margin:4px 0 6px">模型存在手机里，不联网也能用。不用的可以删掉，腾出空间。</p><div id="asrModels" class="small muted">正在查看手机里存了哪些模型……</div>
+        <label class="switch" style="margin-top:10px"><span>用显卡加速（可能更快；有的手机会出乱码，出乱码就关掉）</span><input type="checkbox" data-chg="asrgpu" ${L.asrGpu ? "checked" : ""}></label></div>`
+        : `<div class="panel"><h3>录音转文字的模型</h3><p class="small muted" style="margin-top:4px">要在安装到手机上的版本里用。</p></div>`}
       <div class="panel"><h3>日记录音</h3><p class="small muted" style="margin:4px 0 10px">日记最多保留最近 60 篇。删录音不会删日记文字。</p><button class="btn block" data-act="st-clean30">删掉 30 天前的日记录音</button></div>
       <p class="small muted">进度和卡片都存在这台手机的浏览器里。换手机或清浏览器数据之前，先到“我的 → 备份”导出。</p></div>`;
   },
@@ -5266,6 +5337,7 @@ VIEWS.storage = {
         ${pers === true ? `<p class="small muted" style="margin-top:6px">已设为长期保存：手机空间紧张时，浏览器不会自动清掉这些数据。</p>` : pers === false ? `<p class="small muted" style="margin-top:6px">浏览器还没把这些数据设为长期保存，空间特别紧张时有可能被清掉，记得偶尔备份。</p>` : ""}`;
     } catch (e) { html = "暂时算不出来。"; }
     const el = $("#stInfo"); if (el) el.innerHTML = html;
+    if (typeof asrModelsPaint === "function") asrModelsPaint();
   }
 };
 ACT["st-clean30"] = async () => {
@@ -5416,7 +5488,7 @@ VIEWS.onboard = {
   },
   mount(){ setTimeout(() => runLights($("#obLamps"), 260, 500, true), 300); }
 };
-function obSave(){ const d = $("#obDate"); if (d && d.value) S.settings.interviewDate = d.value; if (PLAN_PICK) S.settings.planWhen = PLAN_PICK; PLAN_PICK = null; S.settings.onboarded = true; save(true); }
+function obSave(){ const d = $("#obDate"); if (d && d.value){ S.interviews = S.interviews || []; if (!S.interviews.some(x => x.date === d.value)) S.interviews.push({id:"i" + Date.now().toString(36), name:"面试", date:d.value, time:"", deck:""}); S.settings.interviewDate = d.value; } if (PLAN_PICK) S.settings.planWhen = PLAN_PICK; PLAN_PICK = null; S.settings.onboarded = true; save(true); }
 ACT["ob-plan"] = el => { $$('[data-act="ob-plan"]').forEach(b => b.classList.remove("k")); el.classList.add("k"); PLAN_PICK = el.dataset.v; };
 ACT["ob-go"] = () => { obSave(); UI.stack = [{name:"home", params:{}}]; UI.nav("device", {from:"ob"}); };
 ACT["ob-skip"] = () => { obSave(); UI.tab("home"); };
