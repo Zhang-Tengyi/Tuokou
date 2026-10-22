@@ -427,7 +427,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.18.2"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.18.3"};</script>
 <script>
 /* 脱口 · 内置内容（通用版）。个人练习在“我的定制内容”导入文件里。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -3606,6 +3606,7 @@ class IvStage {
       el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">复盘</span>${this.ms ? `<span class="num" style="margin-left:auto;font-size:18px">${fmtSec(this.ms)}</span>` : ""}</div>
         <div class="en sm">${esc(this.variant)}</div><div class="small muted">${esc(q.zh)}</div>
         ${this.url ? `<audio controls src="${this.url}"></audio>` : ""}
+        ${this.blob && typeof ASR !== "undefined" && ASR.supported() ? `<div id="ivAsr" style="margin-top:8px">${(typeof soloAsrHTML === "function" && soloAsrHTML(q, this.recAt)) || `<button class="btn sm" data-act="iv-asr">把录音转成文字（查语法、找没用上的说法）</button>`}</div>` : ""}
         <h3 style="margin-top:16px">${this.url ? "听回放，对照检查" : "回想一下，对照检查"}</h3>
         <div style="margin-top:6px">${checks.map((c,i) => `<label class="check"><input type="checkbox" data-i="${i}"><span>${c}</span></label>`).join("")}</div><p class="small muted" style="margin-top:6px">没打勾的会变成下一轮的重点。</p>
         ${(() => { const ref = refFor(q); const mine = a && a.text ? a.text.trim() : "";
@@ -3629,7 +3630,7 @@ class IvStage {
   }
   async stop(){
     clearInterval(this.clock); this.ms = Date.now() - this.t0;
-    if (this.recOn){ const r = await Rec.stop(); if (r && r.blob && r.blob.size){ if (this.url) URL.revokeObjectURL(this.url); this.url = URL.createObjectURL(r.blob); this.blob = r.blob; } }
+    if (this.recOn){ const r = await Rec.stop(); if (r && r.blob && r.blob.size){ if (this.url) URL.revokeObjectURL(this.url); this.url = URL.createObjectURL(r.blob); this.blob = r.blob; this.recAt = Date.now(); } }
     if (!this.alive) return;
     this.phase = "review"; this.render();
   }
@@ -3986,7 +3987,7 @@ function scFixHTML(ticks, qid, i, store){
 }
 function selfCheckHTML(qid, store, i, ticks){
   ticks = ticks || [];
-  return `<details class="selfcheck" style="margin-top:10px"${ticks.length ? " open" : ""}><summary class="small"><b>听录音时听这五件事</b>：勾出有问题的，下面告诉你怎么练</summary>
+  return `<details class="selfcheck" style="margin-top:10px" open><summary class="small"><b>听录音时听这五件事</b>：勾出有问题的，下面告诉你怎么练</summary>
     <div class="sc-list">${SC_ITEMS.map(it => `<label class="sc-item"><input type="checkbox" data-chg="sc-tick" data-q="${qid}" data-k="${it.k}" data-i="${i}" data-store="${esc(store)}"${ticks.includes(it.k) ? " checked" : ""}><span><b>${esc(it.t)}</b>　<span class="small muted">${esc(it.d)}</span></span></label>`).join("")}</div>
     <div class="sc-fix">${scFixHTML(ticks, qid, i, store)}</div></details>`;
 }
@@ -4111,13 +4112,14 @@ function crRowsHTML(rec, urlFor, live){
     return `<div class="panel"><b>${esc(title)}</b>
       <div class="en sm" style="margin-top:6px">${wordsHTML(s.say)}</div>
       ${url ? `<audio controls src="${url}"></audio>` : `<p class="small muted" style="margin-top:6px">${live ? "没有录音" : "录音只保留最近 5 次模拟"}</p>`}
+      ${url && s.k === "q" && ASR.supported() ? `<button class="btn sm" style="margin-top:6px" data-act="cr-asr" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">把这段录音转成文字（查语法、找没用上的说法）</button>` : ""}
       ${ref ? `<details style="margin-top:8px" ${s.k === "f" ? "open" : ""}><summary>参考回答</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div>${s.k === "q" ? `<button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${s.qid}" data-src="ref">跟读参考回答</button>` : ""}</details>` : ""}
       ${s.k === "q" ? `<div class="small muted" style="margin-top:10px">听完自己的录音，这题说得怎么样？</div>
         <div class="row-gap" style="margin-top:6px">${CR_RATE.map(([k, l]) => `<button class="btn sm${r === k ? " primary" : ""}" data-act="cr-rate" data-id="${rec.id}" data-q="${s.qid}" data-r="${k}" aria-pressed="${r === k}">${l}</button>`).join("")}</div>
         ${selfCheckHTML(s.qid, "call:" + rec.id, i, (rec.issues || {})[s.qid])}
-        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">把你说的变成文字：用手机识别录音，或者再说一遍（app 帮你查语法，找出没用上的说法）</summary>
+        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">你说的文字（转写好的会放在这里；也可以再说一遍、用键盘打字）</summary>
           <textarea class="en" id="crn-${i}" rows="3" data-chg="crnote" data-id="${rec.id}" data-q="${s.qid}" placeholder="点“再说一遍，转成文字”，照着刚才的意思再说一遍；也可以用键盘打字">${esc(note)}</textarea>
-          <div class="row-gap" style="margin-top:6px"><button class="btn sm primary" data-act="cr-say" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">再说一遍，转成文字</button><button class="btn sm" data-act="cr-asr" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">用手机识别这段录音</button><button class="btn sm" data-act="cr-check" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">检查我说的</button></div>
+          <div class="row-gap" style="margin-top:6px"><button class="btn sm primary" data-act="cr-say" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">再说一遍，转成文字</button><button class="btn sm" data-act="cr-check" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">检查我说的</button></div>
           <div id="crf-${i}"></div></details>
         <div class="row-gap" style="margin-top:8px"><button class="btn sm ghost" data-act="iv-solo" data-q="${s.qid}">单题重练</button><button class="btn sm ghost" data-act="nav" data-v="ivedit" data-q="${s.qid}">写这题的回答</button></div>` : ""}
     </div>`;
@@ -4129,6 +4131,46 @@ ACT["cr-rate"] = el => {
   $$(`[data-act="cr-rate"][data-id="${rec.id}"][data-q="${qid}"]`).forEach(b => { const on = b.dataset.r === r; b.classList.toggle("primary", on); b.setAttribute("aria-pressed", on); });
   const sum = $("#crSum"); if (sum) sum.outerHTML = crSummaryHTML(rec);
 };
+/* 参考回答里的固定搭配，这次没用上的（最多 6 个） */
+function chunkMiss(text, ref){
+  const ck = txt => K.findChunks([...String(txt).matchAll(/[A-Za-z][A-Za-z'’-]*/g)].map(m => m[0]), CHUNK_LEX || []).map(h => String(h.p).toLowerCase());
+  const used = new Set(ck(text)); return Array.from(new Set(ck(ref))).filter(p => !used.has(p)).slice(0, 6);
+}
+/* 单题彩排复盘：录音转成的文字 + 语法问题 + 没用上的说法（只显示这一次录音的转写） */
+function soloAsrHTML(q, at){
+  const x = (S.soloText || {})[q.id]; if (!x || x.at !== at) return "";
+  const t = x.text || ""; if (!t.trim()) return `<p class="small muted">没识别出内容。录音太短、太小声都会这样。</p>`;
+  const iss = K.checkWriting(t).filter(i => i.tag !== "书写"); const ref = refFor(q); const miss = ref ? chunkMiss(t, ref) : [];
+  return `<div class="panel" style="margin:8px 0 0"><b>录音转成的文字</b><div class="en sm asr-text" style="margin-top:6px">${esc(t)}</div>
+    ${iss.length ? `<ul class="fb" style="margin-top:8px">${iss.slice(0, 6).map(i => `<li>${esc(i.msg)}</li>`).join("")}</ul>` : `<p class="small muted" style="margin-top:8px">规则没查出问题。不过规则查不出所有错，拿不准就存起来问 Claude。</p>`}
+    ${ref ? (miss.length ? `<div class="small" style="margin-top:8px">参考回答里这些固定搭配，你这次没用上（点一下听）：</div><div class="chips" style="margin-top:4px">${miss.map(p => `<button class="chip" data-act="say-chunk" data-v="${esc(p)}">${esc(p)}</button>`).join("")}</div>` : `<p class="small muted" style="margin-top:8px">参考回答里的固定搭配，你都用上了。</p>`) : ""}
+    <p class="small muted" style="margin-top:6px">转写工具有时会把口误“修好”，拿不准的地方再听一遍录音。</p>
+    <button class="btn sm" style="margin-top:8px" data-act="solo-ask" data-q="${q.id}">存起来问 Claude</button></div>`;
+}
+ACT["iv-asr"] = async () => {
+  const st = RUN.stage; if (!st || !st.blob || !st.q) return;
+  if (!await asrOK()) return;
+  const q = st.q; const at = st.recAt || (st.recAt = Date.now());
+  const box = $("#ivAsr"); if (box) box.innerHTML = `<p class="small muted">正在转写……可以先看下面的检查表，转好了会自动显示在这里。</p>`;
+  ASR.enqueue({blob:st.blob, label:"彩排：" + q.zh,
+    onDone: text => { S.soloText = S.soloText || {}; S.soloText[q.id] = {text, at}; save(); if (RUN.stage === st){ const b = $("#ivAsr"); if (b) b.innerHTML = soloAsrHTML(q, at); } },
+    onErr: msg => { if (RUN.stage === st){ const b = $("#ivAsr"); if (b) b.innerHTML = `<p class="small">没转成：${esc(msg)}</p><button class="btn sm" data-act="iv-asr">再试一次</button>`; } }});
+};
+ACT["solo-ask"] = el => {
+  const q = QBY[el.dataset.q]; const x = q && (S.soloText || {})[q.id]; if (!q || !x || !x.text) return;
+  S.pending = S.pending || []; S.pending.push({cid:q.id, zh:"面试回答：" + q.zh, ref:refFor(q) || q.v[0], said:x.text, ts:Date.now()}); save();
+  toast("存好了。联网后在“我的 → 待确认的说法”里一起发给 Claude");
+};
+/* 日记录音转文字 */
+ACT["j-asr"] = async el => {
+  const e = (S.journal || []).find(x => x.id === el.dataset.v); if (!e || !e.rec) return;
+  if (!await asrOK()) return;
+  let blob = null; try { blob = await IDB.get(e.rec); } catch (err) {}
+  if (!blob){ toast("这条日记的录音已经不在了"); return; }
+  ASR.enqueue({blob, label:"日记 " + e.date, onDone: text => { const x = (S.journal || []).find(y => y.id === e.id); if (x){ x.asr = text; save(); } const t = UI.top(); if (t && t.name === "journal") UI.render(); },
+    onErr: msg => toast("这条没转成：" + msg, 6000)});
+  toast("开始转写，你可以接着练别的；好了会提醒你");
+};
 CHG.crnote = el => { const rec = crRec(el.dataset.id); if (!rec) return; rec.note = rec.note || {}; rec.note[el.dataset.q] = el.value; save(); };
 ACT["cr-check"] = el => {
   const rec = crRec(el.dataset.id); const qid = el.dataset.q; const ta = $("#crn-" + el.dataset.i), out = $("#crf-" + el.dataset.i); if (!rec || !ta || !out) return;
@@ -4136,8 +4178,7 @@ ACT["cr-check"] = el => {
   const iss = K.checkWriting(text).filter(i => i.tag !== "书写");
   const ref = refFor(QBY[qid]); let gap = "";
   if (ref){
-    const ck = txt => K.findChunks([...String(txt).matchAll(/[A-Za-z][A-Za-z'’-]*/g)].map(m => m[0]), CHUNK_LEX || []).map(h => String(h.p).toLowerCase());
-    const used = new Set(ck(text)); const miss = Array.from(new Set(ck(ref))).filter(p => !used.has(p)).slice(0, 6);
+    const miss = chunkMiss(text, ref);
     gap = miss.length ? `<div class="small" style="margin-top:8px">参考回答里这些固定搭配，你这次没用上（点一下听）：</div><div class="chips" style="margin-top:4px">${miss.map(p => `<button class="chip" data-act="say-chunk" data-v="${esc(p)}">${esc(p)}</button>`).join("")}</div>` : `<p class="small muted" style="margin-top:8px">参考回答里的固定搭配，你都用上了。</p>`;
   }
   out.innerHTML = `${iss.length ? `<ul class="fb" style="margin-top:8px">${iss.slice(0, 6).map(i => `<li>${esc(i.msg)}</li>`).join("")}</ul>` : `<p class="small muted" style="margin-top:8px">规则没查出问题。不过规则查不出所有错，拿不准就存起来问 Claude。</p>`}${gap}<button class="btn sm" style="margin-top:6px" data-act="cr-ask" data-id="${rec.id}" data-q="${qid}">存起来问 Claude</button>`;
@@ -4424,7 +4465,7 @@ VIEWS.journal = {
         <div class="row-gap" style="margin-top:10px"><button class="btn" data-act="j-check">检查过去式</button><button class="btn has-ai-only" data-act="j-ai">AI 标错</button><button class="btn" data-act="j-copy">复制给 Claude</button></div>
         <div id="jOut"></div></div>
       <button class="btn primary block" style="margin-top:12px" data-act="j-save">保存今天的日记</button>
-      ${recent.length ? `<div class="sec-title">以前的日记</div><div class="list">${recent.map(e => `<div class="li"><div class="grow"><b>${esc(e.date)}</b><span>${esc((e.text || "只有录音").slice(0, 80))}</span></div>${e.rec ? `<div class="row-gap" style="flex:none"><button class="btn sm" data-act="j-play" data-v="${esc(e.rec)}">播放</button><button class="btn sm ghost" data-act="j-restart" data-v="${esc(e.rec)}">从头放</button></div>` : ""}</div>`).join("")}</div>` : ""}
+      ${recent.length ? `<div class="sec-title">以前的日记</div><div class="list">${recent.map(e => `<div class="li"><div class="grow"><b>${esc(e.date)}</b><span>${esc((e.text || "只有录音").slice(0, 80))}</span>${e.asr ? `<span class="small" style="margin-top:4px">录音转写：${esc(e.asr)}</span>` : ""}</div>${e.rec ? `<div class="row-gap" style="flex:none"><button class="btn sm" data-act="j-play" data-v="${esc(e.rec)}">播放</button><button class="btn sm ghost" data-act="j-restart" data-v="${esc(e.rec)}">从头放</button>${ASR.supported() && !e.asr ? `<button class="btn sm ghost" data-act="j-asr" data-v="${esc(e.id)}">转成文字</button>` : ""}</div>` : ""}</div>`).join("")}</div>` : ""}
     </div>`;
   },
   mount(){ Act.start(); const ta = $("#jText"); ta && ta.addEventListener("input", () => { L.jDraft = ta.value; saveLocal(); }); },
@@ -5321,6 +5362,7 @@ VIEWS.storage = {
   render(){
     return `<div class="wrap">${backBtn()}<h2>存储空间</h2><div class="panel" id="stInfo">正在计算……</div>
       ${ASR.supported() ? `<div class="panel"><h3>录音转文字的模型</h3><p class="small muted" style="margin:4px 0 6px">模型存在手机里，不联网也能用。不用的可以删掉，腾出空间。</p><div id="asrModels" class="small muted">正在查看手机里存了哪些模型……</div>
+        <p class="small muted" style="margin-top:6px">只有下载过的模型才会出现“删除”。还没下载的模型不占空间。</p>
         <label class="switch" style="margin-top:10px"><span>用显卡加速（可能更快；有的手机会出乱码，出乱码就关掉）</span><input type="checkbox" data-chg="asrgpu" ${L.asrGpu ? "checked" : ""}></label></div>`
         : `<div class="panel"><h3>录音转文字的模型</h3><p class="small muted" style="margin-top:4px">要在安装到手机上的版本里用。</p></div>`}
       <div class="panel"><h3>日记录音</h3><p class="small muted" style="margin:4px 0 10px">日记最多保留最近 60 篇。删录音不会删日记文字。</p><button class="btn block" data-act="st-clean30">删掉 30 天前的日记录音</button></div>
