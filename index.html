@@ -413,7 +413,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.16.5"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.17.0"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -2302,18 +2302,24 @@ const TTS = {
     const lang = o.lang || "en";
     return new Promise(res => {
       if (!this.ok || !text){ res(false); return; }
-      this.cancel(); pauseAllAudio();
+      /* 只在确实有东西在读时才取消。安卓 Chrome 上，刚“取消”完马上读，下一句容易被吞掉；手机空着的时候就别去取消它 */
+      let busy = false; try { busy = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {}
+      if (busy) this.cancel();
+      pauseAllAudio();
       const u = new SpeechSynthesisUtterance(lang === "zh" ? text : (o && o.raw ? text : K.speakEN(text)));
       const v = o.voice || this.voice(lang);
       u.lang = lang === "zh" ? "zh-CN" : "en-US";
       if (v){ try { u.voice = v; u.lang = v.lang; } catch (e) {} }
       u.rate = Math.max(0.5, Math.min(1.6, (o.rate || 1) * (lang === "en" ? (L.rate || 0.95) : 1)));
       let done = false;
+      let started = false;
       const fin = ok => { if (done) return; done = true; clearTimeout(tm); this.keep.delete(u); res(ok); };
-      u.onend = () => fin(true); u.onerror = () => fin(false);
+      /* 只记录、不去动朗读服务：开始出声了就清零；到了预计时间还没开始也没结束，算一次“没出声” */
+      u.onstart = () => { started = true; this.miss = 0; };
+      u.onend = () => { this.miss = 0; fin(true); }; u.onerror = () => fin(false);
       this.keep.add(u);
       const est = 1500 + text.length * (lang === "zh" ? 260 : 85) / u.rate;
-      const tm = setTimeout(() => fin(true), est + 4000);
+      const tm = setTimeout(() => { if (!started){ this.miss = (this.miss || 0) + 1; if (this.miss >= 2 && !this.warned){ this.warned = true; toast("手机的朗读好像卡住了：先把脱口彻底关掉再打开；还没声音就重启一下手机", 8000); } } fin(true); }, est + 4000);
       setTimeout(() => { try { speechSynthesis.speak(u); } catch (e) { fin(false); } }, 60);
     });
   }
@@ -2341,44 +2347,63 @@ const SR = {
     this.abort(); TTS.cancel();
     return new Promise(res => {
       if (!this.Ctor){ res({text:"", error:"unsupported"}); return; }
-      let r;
-      try { r = new this.Ctor(); } catch (e) { res({text:"", error:"unsupported"}); return; }
-      this.cur = r;
-      r.lang = "en-US"; r.interimResults = true; r.maxAlternatives = 5;
-      /* 默认：说话中间停一下也不结束，停 2.5 秒才算说完；用户可以在设置里改回手机默认 */
-      const longMode = L.srLong !== false && !o.short; r.continuous = longMode; let quiet = null;
-      const kick = () => { if (!longMode) return; clearTimeout(quiet); quiet = setTimeout(() => { try { r._ours = true; r.stop(); } catch (e) {} }, 2500); };
-      if (this.local) try { r.processLocally = true; } catch (e) {}
-      let finals = "", interim = "", err = null, ended = false, alts = [];
+      /* 默认：说话中间停一下也不结束，停 2.5 秒才算说完。安卓上的识别一停顿就会自己结束，
+         所以它自己结束时，如果你刚刚还在说话（不到 2.5 秒前），就马上重新开始听，把后面说的接在前面。
+         你点麦克风、真的停了 2.5 秒、或者从头到尾没说话，才算说完 */
+      const longMode = L.srLong !== false && !o.short;
+      let r = null, prev = "", finals = "", interim = "", err = null, ended = false, alts = [], restarts = 0, heard = false, lastHeard = 0, quiet = null;
       const t0 = performance.now(); let tStart = 0;
-      r.onspeechstart = () => { if (!tStart) tStart = performance.now(); o.onStart && o.onStart(); };
-      r.onresult = e => {
-        const fins = [], finAlts = []; interim = "";
-        for (let i = 0; i < e.results.length; i++){ const tx = String(e.results[i][0].transcript || "").trim(); if (!tx) continue; if (e.results[i].isFinal){ fins.push(tx); finAlts.push(Array.from(e.results[i]).map(a => String(a.transcript || "").trim()).filter(Boolean)); } else interim += (interim ? " " : "") + tx; }
-        /* 安卓 Chrome 的持续识别里，后一段有时会把前一段整个再带一遍：后一段以前一段开头，就只留后一段；完全一样的只留一次 */
-        const norm = s => s.toLowerCase().replace(/[^a-z0-9' ]/g, "").replace(/\s+/g, " ").trim();
-        for (let k = 1; k < fins.length; k++){ const a = norm(fins[k - 1]), b = norm(fins[k]);
-          if (b === a || (a && b.startsWith(a + " "))){ fins.splice(k - 1, 1); finAlts.splice(k - 1, 1); k--; }
-          else if (b && a.startsWith(b + " ")){ fins.splice(k, 1); finAlts.splice(k, 1); k--; } }
-        alts = finAlts.length === 1 ? finAlts[0] : [];
-        finals = fins.join(" ");
-        if (fins.length && (SR.broken || (L.device && (L.device.sr === "no" || L.device.srBroken)))){ SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; L.device.sr = "ok"; saveLocal(); }
-        if (fins.length > 1){ const longest = fins.reduce((a, b) => b.length > a.length ? b : a); if (fins.every(f => longest.toLowerCase().includes(f.toLowerCase()))) finals = longest; }
-        o.onInterim && o.onInterim((finals + " " + interim).trim());
-        kick();
-      };
-      r.onerror = e => { err = e.error || "error"; if (err === "network") this.netFail = true; if (err === "aborted" && r._ours) err = null; else MIC.note(err); };
-      const finish = () => { if (ended) return; ended = true; clearTimeout(guard); clearTimeout(quiet); if (this.cur === r) this.cur = null; const text = (finals || interim).trim();
+      const all = () => (prev + " " + finals).replace(/\s+/g, " ").trim();
+      const kick = () => { if (!longMode) return; clearTimeout(quiet); quiet = setTimeout(() => { if (r){ try { r._ours = true; r.stop(); } catch (e) {} } }, 2500); };
+      const finish = () => { if (ended) return; ended = true; clearTimeout(guard); clearTimeout(idle); clearTimeout(quiet); if (this.cur === r) this.cur = null; const text = (all() || interim).trim();
         /* 不是我们自己取消的 aborted：手机的识别服务拒绝了。用了本机识别就先关掉重试一次；连续两次就改用键盘语音输入 */
         if (err === "aborted" && !text){
-          if (r.processLocally && !o._retry){ this.local = false; L.device = L.device || {}; L.device.local = "failed"; saveLocal(); res(this.listen(Object.assign({}, o, {_retry:true}))); return; }
+          if (r && r.processLocally && !o._retry){ this.local = false; L.device = L.device || {}; L.device.local = "failed"; saveLocal(); res(this.listen(Object.assign({}, o, {_retry:true}))); return; }
           this.fails++;
           if (this.fails >= 2){ this.broken = true; L.device = L.device || {}; L.device.srBroken = true; L.device.sr = "no"; saveLocal(); }
         } else if (text) this.fails = 0;
-        res({text, error:err, startMs: tStart ? tStart - t0 : 0, broke: this.broken, alts: alts.length > 1 && alts[0] === text ? alts : []}); };
-      r.onend = finish;
-      const guard = setTimeout(() => { try { r.stop(); } catch (e) {} setTimeout(finish, 600); }, o.maxMs || 12000);
-      try { r.start(); } catch (e) { err = "start"; finish(); }
+        res({text, error: text ? null : err, startMs: tStart ? tStart - t0 : 0, broke: this.broken, alts: !prev && alts.length > 1 && alts[0] === text ? alts : []}); };
+      const startRec = () => {
+        let rr; try { rr = new this.Ctor(); } catch (e) { err = err || "unsupported"; finish(); return; }
+        r = rr; this.cur = rr; finals = ""; interim = ""; let sessHeard = false;
+        rr.lang = "en-US"; rr.interimResults = true; rr.maxAlternatives = 5; rr.continuous = longMode;
+        if (this.local) try { rr.processLocally = true; } catch (e) {}
+        rr.onspeechstart = () => { if (!tStart) tStart = performance.now(); o.onStart && o.onStart(); };
+        rr.onresult = e => {
+          if (rr !== r) return;
+          const fins = [], finAlts = []; interim = "";
+          for (let i = 0; i < e.results.length; i++){ const tx = String(e.results[i][0].transcript || "").trim(); if (!tx) continue; if (e.results[i].isFinal){ fins.push(tx); finAlts.push(Array.from(e.results[i]).map(a => String(a.transcript || "").trim()).filter(Boolean)); } else interim += (interim ? " " : "") + tx; }
+          /* 安卓 Chrome 有时会把前一段整个再带一遍：后一段以前一段开头，就只留后一段；完全一样的只留一次 */
+          const norm = x => x.toLowerCase().replace(/[^a-z0-9' ]/g, "").replace(/\s+/g, " ").trim();
+          for (let k = 1; k < fins.length; k++){ const a = norm(fins[k - 1]), b = norm(fins[k]);
+            if (b === a || (a && b.startsWith(a + " "))){ fins.splice(k - 1, 1); finAlts.splice(k - 1, 1); k--; }
+            else if (b && a.startsWith(b + " ")){ fins.splice(k, 1); finAlts.splice(k, 1); k--; } }
+          alts = finAlts.length === 1 ? finAlts[0] : [];
+          finals = fins.join(" ");
+          if (fins.length > 1){ const longest = fins.reduce((a, b) => b.length > a.length ? b : a); if (fins.every(f => longest.toLowerCase().includes(f.toLowerCase()))) finals = longest; }
+          if (fins.length && (SR.broken || (L.device && (L.device.sr === "no" || L.device.srBroken)))){ SR.broken = false; SR.fails = 0; L.device = L.device || {}; L.device.srBroken = false; L.device.sr = "ok"; saveLocal(); }
+          if (finals || interim){ heard = true; sessHeard = true; lastHeard = Date.now(); }
+          o.onInterim && o.onInterim((all() + " " + interim).trim());
+          kick();
+        };
+        rr.onerror = e => { if (rr !== r) return; const ee = e.error || "error";
+          if (ee === "no-speech" && (prev || finals)) return;   /* 接着听的那一段里没再说话：不算错 */
+          err = ee; if (err === "network") this.netFail = true; if (err === "aborted" && rr._ours) err = null; else MIC.note(err); };
+        rr.onend = () => {
+          if (ended || rr !== r) return;
+          const natural = !rr._ours && !err;
+          /* 只有刚结束的这一段里确实说了话，才接着听；这一段没说话就算说完（免得一直重新开始、一直“嘀”） */
+          if (longMode && natural && sessHeard && restarts < 8 && Date.now() - lastHeard < 2500 && performance.now() - t0 < 60000){
+            prev = all(); finals = ""; interim = ""; restarts++;
+            setTimeout(() => { if (!ended) startRec(); }, 80); return;
+          }
+          finish();
+        };
+        try { rr.start(); } catch (e) { err = "start"; finish(); }
+      };
+      const guard = setTimeout(() => { if (r){ try { r._ours = true; r.stop(); } catch (e) {} } setTimeout(finish, 600); }, o.maxMs || (longMode ? 60000 : 12000));
+      const idle = setTimeout(() => { if (!heard && r){ try { r._ours = true; r.stop(); } catch (e) {} setTimeout(finish, 600); } }, o.idleMs || 10000);
+      startRec();
     });
   },
   stop(){ if (this.cur){ this.cur._ours = true; try { this.cur.stop(); } catch (e) {} } }
@@ -2640,7 +2665,7 @@ function fmtSec(ms){ const s = Math.round(ms/1000); return Math.floor(s/60) + ":
 function fmt1(ms){ return (ms/1000).toFixed(1); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let toastTimer = null;
-function toast(msg){ const t = $("#toast"); if (!t) return; t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2600); }
+function toast(msg, ms){ const t = $("#toast"); if (!t) return; t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), ms || 2600); }
 function sheet(title, text, ok, danger){
   return new Promise(res => {
     const bg = document.createElement("div"); bg.className = "sheet-bg";
@@ -4813,7 +4838,7 @@ ACT["dv-mic-reset"] = () => { MIC.blocked = false; L.device = L.device || {}; L.
 ACT["dv-sr"] = async el => {
   const h = $("#dvHeard"); if (MIC.blocked){ if (h) h.textContent = srErrorText("not-allowed"); return; }
   el.disabled = true; if (h) h.textContent = "在听……";
-  const r = await SR.listen({onInterim: t => { if (h && h.isConnected) h.textContent = t; }});
+  const r = await SR.listen({short:true, onInterim: t => { if (h && h.isConnected) h.textContent = t; }});
   if (!el.isConnected) return; el.disabled = false;
   L.device = L.device || {};
   if (r.text){ L.device.sr = "ok"; if (h) h.textContent = "识别到：" + r.text; }
