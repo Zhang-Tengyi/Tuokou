@@ -393,6 +393,10 @@ mark.opt{background:transparent;color:inherit;border-bottom:2px dashed #e0a100}
 .li .grow .pl-tools{display:flex !important;gap:22px;margin-top:6px}
 .li .grow .pl-tools .linkbtn{padding:2px 0;font-size:13.5px;text-decoration:none}
 
+.asr-bar{position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom, 0px));z-index:40;padding:9px 12px;border-radius:12px;background:#1b2333;color:#fff;font-size:13.5px;line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.asr-bar[hidden]{display:none}
+.asr-text{white-space:pre-wrap;line-height:1.6}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -413,9 +417,9 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.17.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.18.0"};</script>
 <script>
-/* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
+/* 脱口 · 内置内容（通用版）。个人练习在“我的定制内容”导入文件里。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
 
 // 反射卡：[id, 类型, 中文, 英文（多个答案用 // 分隔）, 提示]
@@ -432,7 +436,6 @@ const R_CARDS = [
   ["r009","be","今天天气真好。","It's a really nice day. // It's a really nice day today. // It's a beautiful day.",""],
   ["r010","be","我准备好了。","I'm ready.",""],
   ["r011","be","我有点生疏了。","I'm a little rusty.","rusty：很久没练，手生了"],
-  ["r012","be","我对机器人很感兴趣。","I'm really interested in robotics. // I'm very interested in robotics.","人感兴趣用 interested（-ed）"],
   ["r013","be","我不是专家。","I'm not an expert.",""],
   ["r014","be","这正对我胃口。","That's right up my alley.","right up my alley：正好是我喜欢、擅长的"],
   ["r015","be","这很正常。","That's totally normal. // That's normal.",""],
@@ -456,40 +459,27 @@ const R_CARDS = [
   ["r031","tense","我已经毕业了。","I've already graduated. // I already graduated. // I've graduated.","不说 I'm graduated"],
   ["r032","tense","我 2024 年来的美国。","I came to the US in 2024. // I came to the States in 2024.","过去的事用过去式；年份用 in"],
   ["r033","tense","我是来读书的。（已经毕业了）","I came here to study.","已经毕业，不说 I'm here to study"],
-  ["r034","tense","我读的是机械工程硕士。","I did my master's in Mechanical Engineering. // I got my master's in Mechanical Engineering.",""],
-  ["r035","tense","我爸带我去的。","My dad took me. // My dad took me there.","take → took"],
-  ["r036","tense","我四年级开始打高尔夫。","I started playing golf in fourth grade.",""],
   ["r037","tense","我就是这么开始接触的。","That's how I got into it.",""],
   ["r038","tense","我朋友提过一点。","My friend told me a little about it.",""],
   ["r039","tense","我还没玩。","I haven't played it yet.","完成时：have + 过去分词"],
   ["r040","tense","我在美国两年了。","I've been in the US for two years. // I've been here for two years.","从过去持续到现在：现在完成时"],
   ["r041","tense","我还在找工作。","I'm still looking for a job.","正在进行：am doing"],
   ["r042","tense","我平时周末会去散步。","I usually go for a walk on weekends.","习惯用一般现在时，不用 will"],
-  ["r043","tense","我今天买了游戏，还下载好了。","Today I bought the game and downloaded it. // I bought the game today and downloaded it.",""],
-  ["r044","tense","Avorion 我玩了 370 个小时。","I've played Avorion for 370 hours.",""],
   ["r045","tense","今年夏天我和朋友去了三次。","My friends and I went there three times this summer.","不用 had been"],
   ["r046","tense","我最近一直在投各种工程类岗位。","I've been applying to all kinds of engineering roles.","最近一直在做：have been doing"],
-  ["r047","tense","我的专业是机械工程。（已毕业）","My major was Mechanical Engineering. // I majored in Mechanical Engineering.","毕业了用过去式"],
-  ["r048","tense","我小学时第一次玩这个游戏。","I first played this game in elementary school.","美式说法：elementary school"],
-  ["r049","tense","我今年夏天去现场看了世界杯。","I went to a World Cup game this summer. // I watched a World Cup game in person this summer.",""],
-  ["r050","tense","德国点球输给了巴拉圭。","Germany lost to Paraguay on penalties.",""],
   ["r051","tense","我当时负责测试。","I was responsible for testing.",""],
   ["r052","tense","我们把成本降低了 20%。","We reduced the cost by 20 percent. // We cut the cost by 20 percent.",""],
   ["r053","tense","我从中学到了很多。","I learned a lot from it.",""],
-  ["r054","tense","我那时在做一个机械臂项目。","I was working on a robotic arm project.","过去某段时间正在做：was doing"],
   ["r055","tense","我解决了这个问题。","I solved the problem. // I fixed the problem.",""],
   ["r056","tense","那是我最喜欢的一门课。","That was my favorite class.",""],
   ["r057","tense","毕业以后我一直在找工作。","Since I graduated, I've been looking for a job. // I've been looking for a job since I graduated.",""],
   ["r058","tense","我最近有点懒，也有点忙。","I've been a little lazy and busy lately.",""],
-  ["r059","tense","我最近一直在玩 PEAK。","I've been playing PEAK a lot lately. // I've been playing PEAK lately.",""],
   ["r060","tense","我昨天投了两家公司。","I applied to two companies yesterday.",""],
 
   // 成对词
-  ["r061","pair","虽然我看 F1，但不是特别关注。","I watch F1, but I don't follow it closely. // Although I watch F1, I don't follow it closely.","although 和 but 只留一个"],
   ["r062","pair","因为在找工作，所以我每天都在投简历。","I'm job hunting, so I send out applications every day. // I'm looking for a job, so I send out applications every day.","because 和 so 只留一个；口语里只用 so 最简单"],
   ["r063","pair","虽然只是小雨，你还是会淋湿。","It's just a light rain, but you'll still get wet. // It's just drizzling, but you'll still get wet.",""],
   ["r064","pair","虽然我在这儿两年了，但英语进步不大。","I've been here for two years, but my English hasn't improved much.",""],
-  ["r065","pair","因为我学的是机械工程，所以我对机器人很感兴趣。","I studied Mechanical Engineering, so I'm really into robotics.",""],
   ["r066","pair","虽然我行业经验不多，但我做过很多项目。","I don't have much industry experience yet, but I've worked on a lot of projects.","面试里很容易说成 although...but"],
   ["r067","pair","因为太冷了，所以我待在家。","It was too cold, so I stayed home.",""],
   ["r068","pair","虽然很难，但很有意思。","It's hard, but it's really interesting.",""],
@@ -503,17 +493,14 @@ const R_CARDS = [
   ["r074","to","我会继续玩下去。","I'll keep playing it. // I'll keep playing.","keep + -ing"],
 
   // 复数
-  ["r075","plural","我每周六打高尔夫。","I play golf on Saturdays.","习惯性的每周六：on Saturdays"],
   ["r076","plural","我喜欢各种游戏。","I like all kinds of games.","all kinds of + 复数"],
   ["r077","plural","我每次都打到同一个位置。","I hit the same spot every time.","every time 不加 s"],
   ["r078","plural","我们实验室有一两台 3D 打印机。","Our lab has one or two 3D printers.",""],
   ["r079","plural","我喜欢 RPG 游戏。","I like RPGs.",""],
-  ["r080","plural","我做过一些小机器人。","I've built some small robots. // I built some small robots.",""],
   ["r081","plural","我有几个问题。","I have a few questions.",""],
   ["r082","plural","我拿到了两个面试。","I got two interviews.",""],
 
   // 语序
-  ["r083","order","我昨天和朋友在练习场打了高尔夫。","I played golf with my friend at the driving range yesterday. // Yesterday I played golf with my friend at the driving range.","先说“谁 + 做什么”，再加和谁、在哪、什么时候"],
   ["r084","order","我一般只看比赛日。","I usually only watch on race day.",""],
   ["r085","order","我上周投了三家公司。","I applied to three companies last week. // Last week I applied to three companies.",""],
   ["r086","order","我晚上在家玩游戏。","I play games at home at night.",""],
@@ -522,7 +509,6 @@ const R_CARDS = [
 
   // 介词
   ["r089","prep","我在家。","I'm at home.","在家：at home"],
-  ["r090","prep","我在 MC 球场打球。","I play at the MC golf course.","具体地点用 at"],
   ["r091","prep","我在找工作。","I'm looking for a job. // I'm searching for jobs.","search for / look for"],
   ["r092","prep","两脚与肩同宽。","Keep your feet shoulder-width apart.",""],
   ["r093","prep","我的周末和工作日一样。","My weekends are the same as my workdays.","the same as"],
@@ -554,7 +540,6 @@ const R_CARDS = [
 
   // 救急句
   ["r117","rescue","不好意思，我没听清，能再说一遍吗？","Sorry, I didn't catch that. Could you say that again?",""],
-  ["r118","rescue","我确认一下，你是问我的硕士项目，对吗？","Just to make sure, you're asking about my master's project, right?",""],
   ["r119","rescue","好问题，我想一下。","That's a good question. Let me think for a second.",""],
   ["r120","rescue","不好意思，我重新说一遍。","Sorry, let me say that again.",""],
   ["r121","rescue","我不确定那个词，但它有点像抓东西的那个部分。","I'm not sure of the exact word, but it's like the part that grabs things.","想不起单词就描述它"],
@@ -567,8 +552,6 @@ const R_CARDS = [
   ["r128","rescue","我怎么说呢……","How do I put this?",""],
 
   // 面试语块
-  ["r129","interview","我最近刚毕业，拿的是机械工程硕士。","I recently graduated with a master's in Mechanical Engineering.",""],
-  ["r130","interview","读研期间，我做过一个机器人项目。","During my master's, I worked on a robotics project.",""],
   ["r131","interview","我在找能接触真实硬件的职位。","I'm looking for roles where I can work on real hardware.",""],
   ["r132","interview","我的任务是改进设计。","My task was to improve the design.",""],
   ["r133","interview","所以我做的是重新设计那个关节。","So what I did was redesign the joint.",""],
@@ -613,7 +596,7 @@ const R_CARDS = [
   ["r168","question","你看 F1 吗？","Do you watch F1?",""],
 
   // 发音：专业词放在句子里练
-  ["r169","pron","我学的是机械工程。","I studied Mechanical Engineering.","重音：me-CHA-ni-cal en-gi-NEER-ing"],
+  ["r169","pron","她学的是机械工程。","She studied mechanical engineering.","重音：me-CHA-ni-cal en-gi-NEER-ing"],
   ["r170","pron","这是一个六轴机械臂。","It's a six-axis robotic arm.","ro-BO-tic；axis 读 AK-sis"],
   ["r171","pron","这个执行器需要更大的扭矩。","The actuator needs more torque.","AC-tu-a-tor；torque 只有一个音节，读 tork"],
   ["r172","pron","最难的是重复定位精度。","The hardest part is repeatability.","re-pea-ta-BI-li-ty，重音在 BI"],
@@ -623,17 +606,24 @@ const R_CARDS = [
   ["r176","pron","我们每周迭代一次设计。","We iterated on the design every week.","I-te-ra-ted，重音在开头"],
   ["r177","pron","这个机械臂的负载是五公斤。","The arm has a payload of five kilograms.","PAY-load"],
   ["r178","pron","我在找适合我的岗位。","I'm looking for roles that are a good fit for me.","roles 不是 rules：o 要把嘴收圆"],
-  ["r179","pron","我和朋友打高尔夫。","I play golf with my friends.","上次被识别成 I put it off：play 拉长，golf 的 l 要发出来"],
   ["r180","pron","协作机器人可以安全地在人旁边工作。","Cobots can work safely next to people.","CO-bots"],
   ["r181","pron","伺服电机连着一个减速器。","The servo motor is connected to a gearbox.","SER-vo"],
   ["r182","pron","我用 SolidWorks 和 MATLAB。","I use SolidWorks and MATLAB.","MAT-lab"],
-  ["r183","pron","具身智能现在很火。","Embodied AI is really popular right now.","em-BO-died"]
+  ["r183","pron","具身智能现在很火。","Embodied AI is really popular right now.","em-BO-died"],
+  // 10/22 电话初筛里 recruiter 的真实说法（通用）
+  ["r184","rescue","没关系，现在聊正好。","No problem at all. Now is a great time.","对方道歉、问你方便吗"],
+  ["r185","rescue","谢谢您的耐心。","Thanks for your patience. // I really appreciate your patience.",""],
+  ["r186","rescue","不好意思，您说的是 9.5 万吗？","Sorry, did you say 95,000?","数字没听清，就把你听到的数字说出来确认"],
+  ["r187","rescue","让我想一下怎么说。","Let me think about how to put it.","卡住超过 3 秒，先说这句"],
+  ["r188","interview","我还没正式做过，但我知道它为什么重要。","I haven't done it formally yet, but I know why it matters.","没做过的技术题，第一句先这样说"],
+  ["r189","interview","我已经准备好搬过去了。","I'm ready to relocate. // I'm happy to relocate.","别说 I can relocate：can 和 can't 在电话里容易听混"],
+  ["r190","chat","这很有道理。","That makes a lot of sense.",""],
+  ["r191","interview","我很期待您的消息。","I look forward to hearing from you.",""],
 ];
 
 // 时态快反：[id, 动词, 主语(空=我), 内容, 时间提示, 时态, 中文, 英文]
 // 时态：past 过去式 / perf 现在完成时 / prog 进行时 / pres 一般现在时 / pp 现在完成进行时
 const T_CARDS = [
-  ["t01","design","","一个夹爪","上学期","past","我上学期设计了一个夹爪。","I designed a gripper last semester."],
   ["t02","design","","第一版","已经","perf","我已经设计好了第一版。","I've already designed the first version."],
   ["t03","design","","一个新零件","现在正在","prog","我现在正在设计一个新零件。","I'm designing a new part right now."],
   ["t04","design","","零件（用 SolidWorks）","平时","pres","我平时用 SolidWorks 设计零件。","I usually design parts in SolidWorks."],
@@ -644,46 +634,34 @@ const T_CARDS = [
   ["t09","apply","","这个职位","两周前","past","我两周前申请了这个职位。","I applied for this position two weeks ago."],
   ["t10","apply","","工作（早上）","平时","pres","我平时早上投简历。","I usually apply for jobs in the morning."],
   ["t11","graduate","","","今年","past","我今年毕业的。","I graduated this year."],
-  ["t12","work on","","一个机械臂项目","读研期间","past","读研期间我做了一个机械臂项目。","I worked on a robotic arm project during my master's. // During my master's, I worked on a robotic arm project."],
   ["t13","work on","","面试回答","现在正在","prog","我现在正在准备面试回答。","I'm working on my interview answers."],
   ["t14","work on","","英语口语","最近一直","pp","我最近一直在练英语口语。","I've been working on my spoken English."],
-  ["t15","build","","一个小机器人","去年","past","我去年做了一个小机器人。","I built a small robot last year."],
   ["t16","build","","三个样机","到现在一共","perf","我到现在一共做了三个样机。","I've built three prototypes."],
   ["t17","fix","","这个问题","昨天","past","我昨天解决了这个问题。","I fixed the problem yesterday."],
-  ["t18","play","","高尔夫（周六）","平时","pres","我平时周六打高尔夫。","I usually play golf on Saturdays."],
   ["t19","play","","这个游戏","从来没有","perf","我从来没玩过这个游戏。","I've never played this game."],
   ["t20","play","","游戏","昨晚","past","我昨晚玩了游戏。","I played games last night."],
-  ["t21","go","","练习场","上周末","past","我上周末去了练习场。","I went to the driving range last weekend."],
   ["t22","go","","那儿","去过三次","perf","我去过那儿三次。","I've been there three times."],
-  ["t23","take","我爸","我去球场","小时候","past","我小时候，我爸带我去球场。","My dad took me to the golf course when I was a kid. // When I was a kid, my dad took me to the golf course."],
   ["t24","live","","美国（两年）","到现在","perf","我在美国住了两年了。","I've lived in the US for two years."],
-  ["t25","watch","","F1（比赛日）","平时","pres","我平时只看 F1 的比赛日。","I usually only watch F1 on race day."],
   ["t26","learn","","Python","现在正在","prog","我现在正在学 Python。","I'm learning Python right now."],
   ["t27","learn","","很多（从那个项目）","那次","past","我从那个项目学到了很多。","I learned a lot from that project."],
   ["t28","lead","","一个四人小组","上学期","past","我上学期带了一个四人小组。","I led a team of four last semester."],
   ["t29","use","","SolidWorks（三年）","到现在","perf","我用 SolidWorks 三年了。","I've used SolidWorks for three years."],
   ["t30","meet","","我朋友的合伙人","上周","past","我上周见了我朋友的合伙人。","I met my friend's co-founder last week."],
   // 多练第三人称 -s、过去式、完成时（混在一起练，练的是“什么时候用哪个”）
-  ["t31","play","我朋友","高尔夫","每周六","pres","我朋友每周六打高尔夫。","My friend plays golf every Saturday."],
   ["t32","work","她","实验室","平时","pres","她平时在实验室工作。","She usually works in the lab."],
-  ["t33","watch","我室友","F1","每个比赛日","pres","我室友每个比赛日都看 F1。","My roommate watches F1 every race day."],
   ["t34","go","他","健身房","每天早上","pres","他每天早上去健身房。","He goes to the gym every morning."],
   ["t35","have","这个机械臂","六个关节","现在","pres","这个机械臂有六个关节。","This robotic arm has six joints."],
-  ["t36","take","我爸","我去练习场","上周末","past","我爸上周末带我去了练习场。","My dad took me to the driving range last weekend."],
   ["t37","get","","一个面试","昨天","past","我昨天拿到了一个面试。","I got an interview yesterday."],
   ["t38","buy","","一根新推杆","上个月","past","我上个月买了一根新推杆。","I bought a new putter last month."],
   ["t39","send","","简历","今天早上","past","我今天早上发了简历。","I sent my resume this morning."],
   ["t40","finish","","这个项目","已经","perf","我已经做完这个项目了。","I've already finished the project."],
   ["t41","apply","","二十多份工作","这个月到现在","perf","这个月到现在我投了二十多份工作。","I've applied to more than twenty jobs this month."],
-  ["t42","be","","波士顿","两年（到现在）","perf","我在波士顿待了两年了。","I've been in Boston for two years."],
   ["t43","work on","","这个设计","现在正在","prog","我现在正在改这个设计。","I'm working on the design right now."],
   ["t44","look for","","工程类的工作","最近一直","pp","我最近一直在找工程类的工作。","I've been looking for engineering jobs."],
   ["t45","practice","","面试回答","这周一直","pp","我这周一直在练面试回答。","I've been practicing my interview answers this week."],
-  ["t46","move","","波士顿","2024 年","past","我 2024 年搬到了波士顿。","I moved to Boston in 2024."],
   ["t47","test","我们","样机","上周（三次）","past","我们上周测试了样机三次。","We tested the prototype three times last week."],
   ["t48","fix","他","这个 bug","已经","perf","他已经修好这个 bug 了。","He's already fixed the bug."],
   ["t49","design","她","一个新夹具","上学期","past","她上学期设计了一个新夹具。","She designed a new fixture last semester."],
-  ["t50","study","","机械工程","读研的时候","past","我读研的时候学的是机械工程。","I studied mechanical engineering in grad school."]
 ];
 
 // 找错：[id, 类型, 你写过/说过的原句, 正确句, 提示]
@@ -699,14 +677,12 @@ const F_CARDS = [
   ["f09","tense","I get here at 2024, and I go back one.","I got here in 2024 and went back once.","过去式；年份用 in；一次是 once"],
   ["f10","tense","Today I just buy and downloads it.","Today I bought it and downloaded it. // Today I just bought it and downloaded it.","过去式；I 后面不加 -s"],
   ["f11","tense","My friends and I had been there 3 time this summer.","My friends and I went there three times this summer.","不用 had been；three times"],
-  ["f12","pair","Although I watch F1, but I don't follow it closely.","I watch F1, but I don't follow it closely. // Although I watch F1, I don't follow it closely.","although 和 but 只留一个"],
   ["f13","pair","Because I'm looking for a job, so I stay home a lot.","I'm looking for a job, so I stay home a lot. // Because I'm looking for a job, I stay home a lot.","because 和 so 只留一个"],
   ["f14","agree","This place usually have some game.","This place usually has games.","单数主语 + has"],
   ["f15","agree","I really likes it.","I really like it.","I 后面动词不加 -s"],
   ["f16","plural","We have 1 or 2 3d printing machine.","We have one or two 3D printers.","两台以上加 -s；3D printer"],
   ["f17","question","What your lab function?","What do you use your lab for?","疑问词 + do + 主语 + 动词"],
   ["f18","question","Are you came here for study?","Did you come here for school?","过去的事用 Did you + 动词原形"],
-  ["f19","eding","Golf is a really excited but tired sport.","Golf is a really exciting but tiring sport.","事物让人感到…用 -ing"],
   ["f20","to","I will continue play it.","I'll keep playing it.","keep + -ing"],
   ["f21","modal","I might can improve my English.","I might be able to improve my English. // I could improve my English.","两个情态动词不能连用"],
   ["f22","compare","It's the most longest game I played.","It's the longest game I've played.","most 和 -est 二选一"],
@@ -717,15 +693,11 @@ const F_CARDS = [
   ["f27","tense","I'm already graduated.","I've already graduated. // I already graduated.","顽固错误：不说 I'm graduated"],
   ["f28","colloc","I just be laying around.","I just lie around.","躺着：lie around"],
   ["f29","plural","I play all kind of game.","I play all kinds of games.","all kinds of + 复数"],
-  ["f30","plural","I play golf on Saturday with my friend on the MC golf.","I play golf on Saturdays with my friend at the MC golf course. // I play golf with my friend at the MC golf course on Saturdays.","习惯 on Saturdays；地点用 at"],
   ["f31","to","I spend a lot of time to post my resume.","I spend a lot of time posting my resume.","spend time + -ing"],
   ["f32","to","It is my first time to get here.","It's my first time here.",""],
-  ["f33","modal","I may, maybe will teach him golf.","I might teach him some golf basics. // I might teach him golf.","相信第一反应：I might"],
-  ["f34","tense","When I was a kid, my dad take me to his boss's place.","When I was a kid, my dad took me to his boss's place.","take → took"],
   ["f35","prep","I'm searching the job.","I'm searching for jobs.","search for"],
   ["f36","tense","I usually will watch some video.","I usually watch videos.","习惯不用 will；videos"],
   ["f37","be","I like the song which really popular.","I like really popular songs.","从句里也要有 be"],
-  ["f38","tense","My major is ME.","My major was Mechanical Engineering.","毕业后用过去式；ME 写全称"],
   ["f39","colloc","We went to the whale.","We went whale watching.",""],
   ["f40","colloc","I bought it half mouth ago.","I bought it two weeks ago.","month 拼写；半个月 → two weeks"],
   ["f41","colloc","It's a small rain.","It's just a light rain. // It's just drizzling.","小雨：light rain / drizzle"],
@@ -737,10 +709,6 @@ const F_CARDS = [
 
 // 扩句：先说 I + 动词，再一块一块往后加
 const E_CARDS = [
-  {id:"e01",tag:"order",base:"I play golf.",steps:[
-    ["加时间","每周六","I play golf on Saturdays."],
-    ["加和谁","和朋友","I play golf with my friends on Saturdays. // I play golf on Saturdays with my friends."],
-    ["加地点","在 MC 球场","I play golf with my friends at the MC golf course on Saturdays. // I play golf on Saturdays with my friends at the MC golf course."]]},
   {id:"e02",tag:"order",base:"I tested the gripper.",steps:[
     ["加时间","上学期","I tested the gripper last semester."],
     ["加和谁","和队友","I tested the gripper with my teammate last semester."],
@@ -753,24 +721,12 @@ const E_CARDS = [
     ["加工具","用 SolidWorks","I designed a part in SolidWorks."],
     ["加用途","给机械臂用","I designed a part in SolidWorks for a robotic arm."],
     ["加时间","读研期间","I designed a part in SolidWorks for a robotic arm during my master's."]]},
-  {id:"e05",tag:"order",base:"I went to the driving range.",steps:[
-    ["加和谁","和两个朋友","I went to the driving range with two friends."],
-    ["加时间","上周末","I went to the driving range with two friends last weekend."],
-    ["加结果","我教他们挥杆","I went to the driving range with two friends last weekend, and I taught them how to swing."]]},
-  {id:"e06",tag:"order",base:"I watched a soccer game.",steps:[
-    ["加方式","现场看","I watched a soccer game in person."],
-    ["换成哪场","世界杯","I watched a World Cup game in person."],
-    ["加结果","德国点球输给了巴拉圭","I watched a World Cup game in person, and Germany lost to Paraguay on penalties."]]},
   {id:"e07",tag:"order",base:"I learned a lot.",steps:[
     ["加来源","从这个项目","I learned a lot from this project."],
     ["加重点","尤其是测试方面","I learned a lot from this project, especially about testing."]]},
   {id:"e08",tag:"order",base:"I fixed the problem.",steps:[
     ["加方法","重新设计接头","I fixed the problem by redesigning the joint."],
     ["加结果","成本降了 20%","I fixed the problem by redesigning the joint, and it cut the cost by 20 percent."]]},
-  {id:"e09",tag:"order",base:"I came to the US.",steps:[
-    ["加目的","来读书","I came to the US to study."],
-    ["加时间","2024 年","I came to the US to study in 2024. // I came to the US in 2024 to study."],
-    ["加结果","拿到了机械工程硕士","I came to the US to study in 2024, and I got my master's in Mechanical Engineering. // I came to the US in 2024 to study, and I got my master's in Mechanical Engineering."]]},
   {id:"e10",tag:"order",base:"I'm interested in this role.",steps:[
     ["加原因","能做真实的硬件","I'm interested in this role because I can work on real hardware."],
     ["加补充","而且和我的项目很相关","I'm interested in this role because I can work on real hardware, and it's closely related to my projects."]]},
@@ -799,10 +755,6 @@ const E_CARDS = [
     ["加地点","在实验室","I tested the sensor in the lab."],
     ["加多久","测了两个小时","I tested the sensor in the lab for two hours."],
     ["加结果","数据很稳定","I tested the sensor in the lab for two hours, and the data was really stable."]]},
-  {id:"e17",tag:"order",base:"I hit some balls.",steps:[
-    ["加地点","在练习场","I hit some balls at the driving range."],
-    ["加和谁","和一个朋友","I hit some balls at the driving range with a friend."],
-    ["加时间","昨天下午","I hit some balls at the driving range with a friend yesterday afternoon."]]},
   {id:"e18",tag:"order",base:"I'm learning Python.",steps:[
     ["加目的","为了处理测试数据","I'm learning Python to process test data."],
     ["加时间","这些天","These days, I'm learning Python to process test data. // I'm learning Python to process test data these days."]]},
@@ -813,12 +765,6 @@ const E_CARDS = [
     ["加给谁","给室友","I cooked dinner for my roommate."],
     ["加时间","昨晚","I cooked dinner for my roommate last night."],
     ["加结果","他很喜欢","I cooked dinner for my roommate last night, and he really liked it."]]},
-  {id:"e21",tag:"order",base:"I worked in a robotics lab.",steps:[
-    ["加时间","读研期间","During my master's, I worked in a robotics lab. // I worked in a robotics lab during my master's."],
-    ["加做什么","做一个能爬也能飞的机器人","During my master's, I worked in a robotics lab on a robot that can crawl and fly."]]},
-  {id:"e22",tag:"order",base:"I started playing golf.",steps:[
-    ["加时间","四年级","I started playing golf in fourth grade."],
-    ["加和谁","跟我爸老板的儿子一起","I started playing golf in fourth grade with my dad's boss's son."]]}
 ];
 
 // 听力：[id, 组, 英文, 中文意思]   组：iv 面试官问法 / cs 缩读、连读和日常说法
@@ -870,7 +816,24 @@ const L_CARDS = [
   ["l45","cs","What brought you to the States?","你是因为什么来美国的"],
   ["l46","cs","It's about fifty degrees out.","外面大概 50 华氏度（10°C 左右）"],
   ["l47","cs","That must have been awesome.","那一定很棒"],
-  ["l48","cs","You'll get the hang of it.","你会慢慢上手的"]
+  ["l48","cs","You'll get the hang of it.","你会慢慢上手的"],
+  // 10/22 电话初筛里 recruiter 的真实说法（通用）
+  ["l49","iv","Just as a heads-up, I'm going to be taking a lot of notes. So if I go silent, just bear with me.","先说一声，我会边听边记很多笔记，我要是一阵子没说话，请稍等一下"],
+  ["l50","iv","Sorry, I got pulled into another meeting that ran much longer than I expected.","抱歉，我被临时叫去开了个会，比预想的拖了很久"],
+  ["l51","iv","Is now still a good time to talk?","现在还方便聊吗？"],
+  ["l52","iv","Tell me what you know about our company. By no means is this a quiz.","说说你对我们公司的了解，这绝对不是考试"],
+  ["l53","iv","I'll fill in any gaps that may exist.","你没说到的地方，我来补充"],
+  ["l54","iv","Before we get too far into this conversation, I want to go over a couple of logistics.","聊得太深之前，我想先过几个具体安排"],
+  ["l55","iv","This role is 100% onsite. What concerns do you have about relocating?","这个职位完全在现场办公，搬家你有什么顾虑吗？"],
+  ["l56","iv","You put on your application that you would require sponsorship, either now or in the future.","你申请时写了现在或将来需要签证担保"],
+  ["l57","iv","From a compensation perspective, we have this role listed from 110 to 120,000 a year.","从薪酬来看，这个职位标的是一年 11 万到 12 万"],
+  ["l58","iv","Based on your experience, we would likely bring you in at a different level.","按你的经验，我们可能会把你定在另一个级别"],
+  ["l59","iv","If we were to extend an offer, it would probably land between 95,000 and 100,000.","如果我们给你发 offer，大概会在 9.5 万到 10 万之间"],
+  ["l60","iv","If things were to work out, what start date would be appropriate?","如果顺利的话，你什么时候开始上班合适？"],
+  ["l61","iv","Talk to me about any experience you have with that.","讲讲你在这方面有什么经验"],
+  ["l62","iv","I plan to meet with the hiring manager to chat more about your background.","我打算和招聘经理再聊聊你的背景"],
+  ["l63","iv","I'll get back in touch with you by the end of the week or early next week.","我会在这周末或下周初再联系你"],
+  ["l64","iv","If anything comes up, don't hesitate to reach out.","有什么事，随时联系我"],
 ];
 
 // 面试问题
@@ -878,8 +841,8 @@ const QUESTIONS = [
   {id:"Q1",grp:"core",zh:"介绍一下你自己",sec:90,
    v:["So, tell me a little bit about yourself.","Could you walk me through your background?","Why don't you start by telling me about yourself?"],
    tip:"现在 → 过去 → 未来，60–90 秒。第一句直接说你是谁；讲经历用过去式；最后落到为什么是这个职位。",
-   tpl:"I'm a recent graduate with a master's in Mechanical Engineering. During my master's, I worked on ___, where I ___. Before that, I ___. Now I'm looking for ___ roles, and I'm really interested in this position because ___.",
-   follow:["Can you tell me a little more about that project?","Why did you choose mechanical engineering?"]},
+   tpl:"I'm a recent graduate with a degree in ___. During school, I worked on ___, where I ___. Before that, I ___. Now I'm looking for ___ roles, and I'm really interested in this position because ___.",
+   follow:["Can you tell me a little more about that project?","Why did you choose your major?"]},
   {id:"Q2",grp:"core",zh:"讲一个你做过的项目",sec:90,
    v:["Tell me about a project you worked on.","Walk me through a project you're proud of.","Can you tell me about one of the projects on your resume?"],
    tip:"STAR：背景 → 你的任务 → 你做了什么（多用 I）→ 结果（最好有数字）。全部用过去式。",
@@ -989,22 +952,17 @@ const ALT_EXTRA = {
   r001:"It's very cold. // It's so cold.", r002:"I'm so tired. // I'm very tired.", r003:"I'm a bit nervous. // I'm kind of nervous.",
   r004:"It's a bit windy today. // It's kind of windy today. // It's a little windy.", r005:"This is my first time here.", r006:"That's really cool!",
   r007:"It's a lot harder than I expected. // It's way harder than I expected. // It's much harder than I thought.",
-  r008:"I'm not that familiar with soccer. // I don't really know much about soccer.", r009:"It's such a nice day.", r011:"I'm a bit rusty.", r012:"I'm really into robotics.",
+  r008:"I'm not that familiar with soccer. // I don't really know much about soccer.", r009:"It's such a nice day.", r011:"I'm a bit rusty.",
   r015:"It's normal. // It's totally normal.", r016:"That's so impressive. // That's very impressive.", r017:"That's hard to say.",
   r018:"That's a great opportunity.", r019:"I'm really interested in this role. // I'm very interested in this role.",
   r020:"It's nice to talk to you. // It's good to talk with you.", r022:"I'm pretty familiar with CAD.", r023:"I'm open to relocation. // I'm open to moving.",
   r025:"That's awesome.", r026:"It's a bit chilly today. // It's a little cold today.", r028:"It's hard.",
   r029:"It's around fifty degrees outside. // It's about fifty degrees out.",
-  r034:"I studied Mechanical Engineering for my master's. // I did a master's in Mechanical Engineering.",
-  r036:"I started playing golf when I was in fourth grade. // I began playing golf in fourth grade.",
   r037:"That's how I started. // That's how I got started.", r038:"My friend mentioned it a little. // My friend mentioned it a bit.",
   r039:"I haven't tried it yet.", r041:"I'm still job hunting. // I'm still searching for a job.", r042:"I usually go for walks on weekends.",
-  r046:"I've been applying for all kinds of engineering roles. // I've been applying to all kinds of engineering jobs.",
-  r050:"Germany lost to Paraguay in a penalty shootout.", r053:"I learned a lot from that. // I learned so much from it.",
-  r054:"I was working on a robot arm project.", r058:"I've been kind of lazy and busy lately. // I've been a bit lazy and busy lately.",
+  r046:"I've been applying for all kinds of engineering roles. // I've been applying to all kinds of engineering jobs.", r053:"I learned a lot from that. // I learned so much from it.", r058:"I've been kind of lazy and busy lately. // I've been a bit lazy and busy lately.",
   r062:"I'm job hunting, so I send out resumes every day. // I'm looking for a job, so I'm sending out applications every day. // I'm looking for a job, so I'm applying to jobs every day.",
   r064:"I've been here for two years, but my English hasn't gotten much better.",
-  r065:"I studied Mechanical Engineering, so I'm really interested in robotics.",
   r066:"I don't have a lot of industry experience yet, but I've worked on a lot of projects.",
   r067:"It was really cold, so I stayed home. // It was too cold, so I stayed at home.", r068:"It's difficult, but it's really interesting.",
   r069:"Honestly, I usually just lie around and play on my phone.", r071:"I spent two weeks getting ready for the interview.",
@@ -1022,7 +980,6 @@ const ALT_EXTRA = {
   r111:"I want to get back into it.", r112:"I haven't touched it in ages.", r113:"I'll try it. // I'll give it a shot.",
   r115:"It feels weird at first.", r116:"You'll get used to it.",
   r117:"Sorry, I didn't catch that. Can you say that again? // Sorry, I didn't hear that. Could you say that again? // Sorry, I didn't catch that. Could you repeat that? // Sorry, could you say that again? // Sorry, I didn't hear that clearly. Can you say that again? // Sorry, I didn't hear that clearly. Could you say that again?",
-  r118:"Just to make sure, are you asking about my master's project? // Just to be sure, you're asking about my master's project, right?",
   r119:"That's a great question. Let me think for a second. // Good question. Let me think for a second. // That's a good question. Let me think about that for a second.",
   r120:"Sorry, let me try that again. // Sorry, let me rephrase that.",
   r121:"I don't know the exact word, but it's like the part that grabs things.",
@@ -1030,8 +987,6 @@ const ALT_EXTRA = {
   r123:"Could you speak a little more slowly? // Could you say that a bit more slowly?", r124:"Let me think of an example. // Let me think of a good example for that.",
   r125:"Do you mean the design part or the test part? // Are you asking about the design part or the testing part?",
   r126:"Does that make sense to you?", r127:"Can you hear me? // Can you hear me all right?", r128:"How should I put this? // How do I say this?",
-  r129:"I just graduated with a master's in Mechanical Engineering. // I recently got my master's in Mechanical Engineering.",
-  r130:"During my master's, I did a robotics project.",
   r131:"I'm looking for a role where I can work on real hardware. // I'm looking for positions where I can work on real hardware.",
   r132:"My job was to improve the design. // My task was to make the design better.", r133:"So I redesigned the joint.",
   r134:"As a result, it was much more reliable. // As a result, it became a lot more reliable.",
@@ -1062,7 +1017,7 @@ const ALT_EXTRA = {
   t27:"I learned a lot from the project.", t28:"I led a four-person team last semester.", t29:"I've been using SolidWorks for three years.",
   f01:"That's so cool!", f05:"I usually take a walk.", f07:"I've already finished my master's degree. // I already finished my master's.",
   f09:"I came here in 2024 and went back once. // I came here in 2024, and I've been back home once.", f20:"I'll continue playing it. // I'll keep playing.", f25:"I'm also a PC gamer.",
-  f26:"The weather is so cold these days.", f37:"I like songs that are really popular.", f38:"I majored in Mechanical Engineering.",
+  f26:"The weather is so cold these days.", f37:"I like songs that are really popular.",
   f40:"I bought it a couple of weeks ago.", f42:"Wow, that's so impressive.", f43:"So you started a YouTube channel?",
   f44:"I first played this game when I was in elementary school.", f45:"I usually just watch on race day."
 };
@@ -1071,7 +1026,6 @@ const ALT_EXTRA = {
 const D_CARDS = [
   ["d001","smalltalk","你周末过得怎么样？","How was your weekend? // How did your weekend go?",""],
   ["d002","smalltalk","还不错，挺放松的。你呢？","It was good, pretty relaxing. How about you? // It was pretty relaxing. What about you?","回答后反问一句，话题就接下去了"],
-  ["d003","smalltalk","我周六去练习场打了会儿球。","I went to the driving range on Saturday. // I hit some balls at the driving range on Saturday.",""],
   ["d004","smalltalk","今天天气真好，对吧？","It's a beautiful day, isn't it? // Nice weather today, right?","陈述句加 isn't it / right，最自然的开场"],
   ["d005","smalltalk","最近忙吗？","Have you been busy lately? // Been busy lately?",""],
   ["d006","smalltalk","一直挺忙的，不过还好。","It's been pretty busy, but it's not bad. // It's been busy, but I'm doing okay.",""],
@@ -1092,7 +1046,6 @@ const D_CARDS = [
   ["d021","starter","你用的是什么球杆？","What clubs are you using? // What clubs do you play?",""],
   ["d022","starter","我刚来这边，还不认识什么人。","I'm new here, so I don't know many people yet.",""],
   ["d023","starter","你是做什么工作的？","What do you do for work? // What do you do?",""],
-  ["d024","starter","我是机械工程师，现在在找工作。","I'm a mechanical engineer, and I'm looking for a job right now. // I'm a mechanical engineer, and I'm job hunting right now.",""],
   ["d025","starter","你是本地人吗？","Are you from around here? // Are you from here?",""],
   ["d026","starter","你那个在哪儿买的？看起来不错。","Where did you get that? It looks great.",""],
   ["d027","starter","你以前来过这家吗？","Have you been here before?",""],
@@ -1310,8 +1263,8 @@ const DIALOGS = [
     {say:"Hey, you must be the new engineer. I'm Jake.",zh:"嘿，你就是新来的工程师吧，我叫 Jake。",reply:["Hi Jake, nice to meet you. I just started this week."]},
     {say:"Welcome! How are you liking it so far?",zh:"欢迎！目前感觉怎么样？",reply:["So far so good. Everyone's been really nice.","I like it so far. There's a lot to learn."]},
     {say:"Where did you move from?",zh:"你从哪儿搬过来的？",reply:["I moved here from the East Coast.","I moved from out of state."]},
-    {say:"Nice. Do you do anything for fun outside of work?",zh:"工作之外有什么爱好吗？",reply:["I play golf. How about you?","I'm really into golf and PC games."]},
-    {say:"No way, I golf too! We should hit the range sometime.",zh:"真的？我也打！哪天一起去练习场吧。",reply:["That sounds great. Just let me know when.","I'd love that. Are you free this weekend?"]},
+    {say:"Nice. Do you do anything for fun outside of work?",zh:"工作之外有什么爱好吗？",reply:["I like hiking and playing video games. How about you?","I'm really into sports."]},
+    {say:"No way, me too! We should go together sometime.",zh:"真的？我也打！哪天一起去练习场吧。",reply:["That sounds great. Just let me know when.","I'd love that. Are you free this weekend?"]},
     {say:"Definitely. Anyway, let me know if you need anything.",zh:"一定。有什么需要随时找我。",reply:["Thanks, I really appreciate it.","Thanks, that's really nice of you."]}]},
   {id:"g04",title:"开会提问",zh:"提问、确认时间、找对的人、答应跟进",who:"Manager",turns:[
     {say:"Okay, that's the plan for the test rig. Any questions so far?",zh:"测试台的计划就这样。目前有问题吗？",reply:["Yes, quick question. When do we need the first prototype?","Can I ask a quick question?"]},
@@ -1359,10 +1312,12 @@ const DIALOGS = [
 ];
 
 /* 通用面试题的参考回答：美国人在这种场合最自然的说法 */
-const REF = {"Q1": "Sure. I recently finished my master's in mechanical engineering, and my undergrad was in mechatronics, so I work across the mechanical, electrical, and software sides of a system. I did two internships on vacuum coating systems, where I wrote PLC and communication code and helped with on-site commissioning. In a robotics lab, I designed hardware for robots, like cable routing and electronics mounts. Now I'm looking for a hands-on role where I can design, build, and test real systems.", "Q2": "Sure. One project I'm proud of is a cable routing redesign for a robot that can crawl and fly. When it switches modes, the knee rotates 90 degrees, and the cables kept wearing out and popping out. I designed a U-shaped channel in SolidWorks and 3D printed it. The channel opens outward, so the cables get pressed against the wall instead of popping out. After that, the problem stopped, and the lab kept using the design.", "Q3": "During an internship, I helped commission a vacuum coating system at a customer's site. The link between the PLC and the power supply kept failing. We checked it one layer at a time: the wiring, then the protocol, then the firmware. I found that the response frames didn't match, and the vendor confirmed it was a firmware bug. After the fix, the system met all the operation requirements. What I took away is to find the right layer first, and bring clear evidence before you go to a vendor.", "Q4": "During an internship, another engineer designed the HMI screens, and I knew the PLC variables really well, so we tested the screens together. When a screen was linked to the wrong variable, I fixed it, and then we checked it again together. It worked well because we split the work by what each of us knew best.", "Q5": "For my undergrad thesis, I built a jet-propulsion robot inspired by razor clams. My first plan was to use electromagnets to open and close the shell. When I tested them on a bench, they only worked within about two millimeters, so they couldn't move the shell. I switched to a motor that drives a permanent-magnet rotor, and later to a spring mechanism. What I learned is to test the risky part on a bench early, before I build the whole system.", "Q6": "I'm interested in this role because it's really hands-on. I'd get to design, build, and test real hardware, which is exactly what I enjoyed most in the lab and in my internships. And I'd love to learn from a team that builds real products.", "Q7": "I'd say my biggest strength is that I'm hands-on across mechanical, electrical, and software. I can design a part, wire it up, write the control code, and test it. One thing I'm working on is explaining technical details in a short, clear way. So now I start with the result, and then give one or two key details.", "Q8": "Yes, thank you. What qualities make someone really successful on your team? And what would I be working on in the first few months?", "Q9": "I'm on F-1 OPT right now, so I'm authorized to work. I'm also eligible for the STEM OPT extension, and down the road, I will need H-1B sponsorship.", "Q10": "Yes. I'm on F-1 OPT, so I'm authorized to work in the US right now.", "Q11": "I'm flexible, and I'd like to learn more about the role first. Could you share the range for this position?", "Q12": "I can start soon after an offer. I'd just need a little time to relocate if the job isn't nearby.", "Q13": "Yes, I'm open to relocating, and I'm happy to work onsite."};
+const REF = {"Q1": "Sure. I recently graduated with a degree in engineering. During school, I did an internship where I helped test a new product. I also led a team project that built a working prototype. I really enjoy hands-on work and learning new tools. Now I'm looking for a role where I can keep growing and work on real products.", "Q2": "Sure. One project I'm proud of is a small delivery robot my team built for a class. My role was the mechanical design. The first version kept tipping over on turns, so I lowered the battery and widened the base. After that, it ran smoothly. What I learned is to test early and change one thing at a time.", "Q3": "During my internship, a test machine kept stopping in the middle of a run. First, I checked the logs, and I noticed it always stopped at the same step. Then I tested that step on its own and found a loose sensor cable. After I fixed it, the machine ran all day without stopping. What I took away is to find the pattern first, and then test one part at a time.", "Q4": "In a team project, a teammate and I disagreed about which design to build. Instead of arguing, we each listed the pros and cons, and we built a quick test for both. The test showed that his idea was cheaper, but mine was stronger, so we combined the two. It worked well, and we both learned from it.", "Q5": "In my first big project, I built the whole system before testing any part of it. When I finally tested it, one part didn't work, and I had to redo a lot. It cost us a week. Now I test the riskiest part early, before I build everything else.", "Q6": "There are two main reasons. First, the role is very hands-on, and that's the kind of work I enjoy most. Second, I really like what your company makes. I'd love to learn from a team that builds real products.", "Q7": "I'd say my biggest strength is that I learn fast, and I like hands-on work. One thing I'm working on is explaining my ideas in a short, clear way. So now I start with the main point, and then I give one or two details.", "Q8": "Yes, thank you. What qualities make someone really successful on your team? And what would I be working on in the first few months?", "Q9": "Right now, I'm authorized to work in the US. But down the road, I will need visa sponsorship.", "Q10": "Yes, I'm authorized to work in the US.", "Q11": "I'm flexible, and I'd like to learn more about the role first. Could you share the range for this position?", "Q12": "I can start soon after an offer. I'd just need a little time to relocate if the job isn't nearby.", "Q13": "Yes, I'm open to relocating, and I'm happy to work onsite."};
 /* 常用固定搭配：点句子里的词时，整体显示读法和意思 */
 const CHUNKS = [["job hunting", "找工作"], ["send out applications", "投简历"], ["apply for", "申请（职位）"], ["apply to", "投（某个公司、职位）"], ["follow up on", "跟进（某件事）"], ["follow up", "跟进"], ["reach out to", "主动联系（某人）"], ["reach out", "主动联系"], ["hear back from", "收到……的回复"], ["hear back", "收到回复"], ["get back to", "回复（某人）"], ["look forward to", "期待"], ["come across", "偶然看到"], ["stand out", "很显眼，引人注意"], ["check all the boxes", "完全符合要求"], ["down the road", "将来，以后"], ["a few hundred", "几百"], ["a big part of", "……很重要的一部分"], ["get the hang of", "掌握窍门"], ["give it a try", "试一试"], ["pick it back up", "重新捡起来"], ["hang out", "一起玩，待着"], ["tag along", "跟着去"], ["lie around", "躺着什么都不干"], ["play on my phone", "玩手机"], ["these days", "最近，这段时间"], ["over and over", "一遍又一遍"], ["the exact same", "完全一样的"], ["at the end of the day", "归根结底"], ["in the end", "最后"], ["as a result", "结果，因此"], ["make sure", "确保"], ["figure out", "弄明白，想出办法"], ["work on", "做（项目），在做"], ["set up", "搭建，设置"], ["build on", "在……的基础上提升"], ["pick up", "学会（pick up new tools）；拿起来；开车接人（I'll pick you up）。注意：在酒吧 pick up 某人是“搭讪”"], ["keep track of", "记录，跟踪"], ["keep in mind", "记住"], ["take care of", "处理，照顾"], ["end up", "最后（变成、做了）"], ["run into", "遇到（问题）"], ["turn out", "结果是"], ["find out", "查出来，发现"], ["look into", "调查，研究一下"], ["deal with", "处理，应对"], ["break down", "拆解；坏掉"], ["wear out", "磨损"], ["pop out", "弹出来"], ["line up", "对齐；排队"], ["snap onto", "卡到……上"], ["step by step", "一步一步地"], ["one layer at a time", "一层一层地"], ["at a time", "每次（一个）"], ["in real time", "实时"], ["on the side", "业余，另外"], ["side project", "业余项目"], ["on site", "在现场"], ["on-site work", "现场工作"], ["full-time", "全职"], ["part-time", "兼职"], ["hands-on", "动手的，实际操作的"], ["be open to", "愿意接受"], ["open to", "愿意接受"], ["comfortable with", "对……没问题，熟悉"], ["ready to", "准备好（做某事）"], ["excited about", "对……很兴奋，很期待"], ["interested in", "对……感兴趣"], ["eligible for", "有资格（申请）"], ["authorized to work", "有工作许可"], ["work authorization", "工作许可"], ["job description", "职位描述"], ["relocation assistance", "搬家补助"], ["next steps", "接下来的安排"], ["the whole package", "整体待遇"], ["salary range", "薪资范围"], ["club fitting", "球杆定制"], ["ball flight", "球的飞行"], ["driving range", "练习场"], ["play a round", "打一场（球）"], ["keep score", "记杆数"], ["in the loop", "知情，了解最新情况"], ["keep me in the loop", "有消息告诉我一声"], ["circle back", "回头再跟进"], ["touch base", "简单联系一下"], ["on your end", "你那边"], ["cut out", "（电话信号）断了；删掉"], ["say that again", "再说一遍"], ["let me think", "让我想一下"], ["just to make sure", "确认一下"], ["in short", "简单来说"], ["for example", "比如"], ["to be honest", "说实话"], ["kind of", "有点儿；……的一种"], ["a little bit", "一点儿"], ["get started", "开始"], ["wrap up", "收尾，结束"], ["thanks for having me", "谢谢邀请我"], ["nice to meet you", "很高兴认识你"], ["take a look", "看一下"], ["trial and error", "反复试错"], ["root cause", "根本原因"], ["test rig", "测试台架"], ["data acquisition", "数据采集"], ["strain relief", "应力消除"], ["snap-fit", "卡扣（结构）"], ["tool-less", "免工具的"], ["firmware bug", "固件 bug"], ["steady-state error", "稳态误差"], ["transfer function", "传递函数"], ["degree of freedom", "自由度"], ["under its own weight", "在自重下"], ["I'd love to", "我很想"], ["I'm happy to", "我很乐意"], ["would you mind", "你介意……吗"], ["make it work", "想办法搞定"], ["it depends on", "取决于"], ["in charge of", "负责"], ["responsible for", "负责"], ["work closely with", "和……密切合作"], ["come up with", "想出（办法、主意）"], ["get used to", "习惯于"], ["used to", "过去常常（be used to：习惯于）"], ["by the way", "顺便说一下"], ["as soon as possible", "尽快"], ["in person", "当面"], ["on the phone", "在电话里"], ["time zone", "时区"], ["get out", "出门（get out and play golf）。注意：单独对人说 Get out! 是“滚出去”，很冲"], ["whenever I can", "只要有机会"], ["so far", "到目前为止"], ["right away", "马上"], ["pretty much", "差不多"], ["as well", "也"], ["a couple of", "几个，两三个"], ["take away", "拿走；（takeaway）收获"], ["get to", "有机会（做某事）；到达"], ["learn from", "向……学习"], ["one thing at a time", "一次只做一件事"], ["in the field", "在现场；在……领域"], ["under pressure", "在压力下"], ["on time", "按时"], ["ahead of time", "提前"], ["at the same time", "同时"], ["work out", "解决；（结果）不错；锻炼"], ["narrow down", "缩小范围"], ["rule out", "排除"], ["back up", "支持；备份"], ["put together", "组装，整理出来"], ["what kind of", "什么样的"], ["as well as", "以及，还有"], ["I'm used to", "我习惯了"], ["are you used to", "你习惯……了吗"], ["be used to", "习惯于"], ["kind of like", "有点像"], ["send out", "发出去（投简历：send out applications）"], ["sent out", "发出去了"], ["right now", "现在、此刻"], ["check in", "联系一下、问问进展"], ["catch up", "叙叙旧；跟上进度"], ["all kinds of", "各种各样的"], ["right up my alley", "正对我胃口、正好是我擅长的"], ["go through", "经历；仔细过一遍"], ["went through", "经历了；仔细过了一遍"], ["one at a time", "一次一个"], ["look for", "找"], ["relocate to", "搬到（为了工作）"], ["based on", "根据、基于"], ["work with", "和…合作；用（某个工具）"], ["switch to", "换成"], ["familiar with", "熟悉"], ["start with", "从…开始"], ["help with", "帮忙做…"], ["fit for", "适合…"], ["able to", "能够"], ["participate in", "参加"], ["move to", "搬到"], ["hear about", "听说"], ["okay with", "能接受、没问题"], ["come with", "附带、配有"], ["addicted to", "对…上瘾"], ["iterate on", "在…基础上反复改进"], ["lose to", "输给"], ["lost to", "输给了"], ["thanks for", "谢谢你的…"], ["learn more about", "进一步了解"], ["all the way", "一路、全程（from design all the way to testing）"], ["from scratch", "从零开始"], ["focus on", "专注于"], ["depend on", "取决于；依靠"], ["come up", "被提到；出现"], ["came up", "被提到了；出现了"], ["show up", "出现、到场"], ["sign up", "报名、注册"], ["shut down", "关机、停掉"], ["turn on", "打开（设备）。注意：turn someone on 是“让人性兴奋”，说人的时候别用"], ["turn off", "关掉（设备）"], ["plug in", "插上电"], ["hook up", "接上、连上（线、设备）。注意：说人 hook up with someone 常指“和人发生关系”，说人时别用"], ["free up", "腾出（时间、空间）"], ["ran into", "遇到了（问题）"], ["came up with", "想出了"], ["found out", "发现了、查明了"], ["took care of", "处理了；照顾了"], ["in terms of", "在…方面"], ["as long as", "只要"], ["as soon as", "一…就…"], ["make sense", "说得通、有道理"], ["point out", "指出"], ["try out", "试一试"], ["walk me through", "带我过一遍、给我讲讲"], ["a good fit", "合适（的人选）"], ["on my end", "我这边"], ["be honest", "说实话（to be honest）"], ["at first", "一开始"], ["first time", "第一次"], ["either way", "不管怎样，反正"], ["look like", "看起来像；是什么样子"], ["in the early stages", "还在早期阶段"], ["bring together", "把……结合在一起"], ["check all of those boxes", "完全符合要求"], ["not right now", "现在没有"], ["at least", "至少"], ["instead of", "而不是"], ["such as", "比如"], ["rather than", "而不是"], ["no worries", "没关系，不用担心"], ["sounds good", "好的，听起来不错"], ["for sure", "当然，肯定"], ["of course", "当然"], ["I mean", "我的意思是"], ["I guess", "我猜，应该是"], ["not really", "不太是，其实没有"], ["at all", "一点也（不）"], ["for a while", "一段时间"], ["on my way", "在路上了"], ["supposed to", "应该（按说要）"], ["take a break", "休息一下"], ["hang on", "稍等"], ["hold on", "稍等一下"], ["give me a second", "给我一秒钟"], ["let me know", "告诉我一声"], ["how about", "……怎么样"], ["what about", "……呢；……怎么样"], ["on a bench", "在台架上"], ["bench test", "台架测试"], ["test protocol", "测试规程"], ["noise floor", "底噪（噪声基底）"], ["dynamic range", "动态范围"], ["load cell", "称重传感器"], ["wiring diagram", "接线图"], ["launch monitor", "弹道仪（测球速、转速、起飞角）"], ["swing robot", "挥杆机器人"], ["ball speed", "球速"], ["club head speed", "杆头速度"], ["spin rate", "转速"], ["launch angle", "起飞角"], ["impact location", "击球位置"], ["high-speed video", "高速视频"], ["computer vision", "计算机视觉"], ["as a matter of fact", "其实，事实上"], ["the other day", "前几天"], ["once in a while", "偶尔"], ["every other day", "每隔一天"], ["in a row", "连续"], ["make a difference", "有影响，起作用"], ["pay attention to", "注意"], ["take notes", "做笔记"], ["take a look at", "看一下"], ["get in touch", "联系"], ["look up", "查（资料）"], ["fill out", "填（表）"], ["sign in", "登录"], ["run late", "要迟到了"], ["up to you", "你决定"], ["how come", "怎么会，为什么"], ["go ahead", "请便；你先"], ["after all", "毕竟"], ["all set", "都准备好了"], ["by myself", "自己一个人"], ["on my own", "自己独立地"], ["parts list", "零件清单"], ["test log", "测试记录"], ["demo day", "试打活动"]];
-const CONTENT = {R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS, REF, CHUNKS};
+/* 1.18：个人练习卡挪到了“我的定制内容”导入文件里。旧编号 → 导入后的新编号，打开 app 时把练习进度接过去 */
+const MIGRATE = {"r012": "cxa46ti", "r034": "cwp070x", "r035": "cgebluz", "r036": "cftw46h", "r043": "cjhrf2a", "r044": "c1agcmpl", "r047": "c1jz2s7f", "r048": "c1kegthm", "r049": "c1rmwuk5", "r050": "cfw0son", "r054": "cu60hyx", "r059": "c1utingy", "r061": "c1ys6gzn", "r065": "c1f5kmop", "r075": "c10p68ip", "r080": "c52cu88", "r083": "c1yf1o2h", "r090": "c1b2ezej", "r118": "ct4h21o", "r129": "c1n5kepu", "r130": "crech6a", "r179": "cqz8zjz", "t01": "c359ul7", "t12": "c1gt2tz9", "t15": "cesfutr", "t18": "c1hquc2", "t21": "causilx", "t23": "c1w8bj53", "t25": "c12e8wvh", "t31": "crndqpe", "t33": "cs0guer", "t36": "crqyzz2", "t42": "c1bkcm4x", "t46": "c15u127m", "t50": "c121z62l", "f12": "c60hf7b", "f19": "cxnp16g", "f30": "cdvy2my", "f33": "c1ewhump", "f34": "c73tuwy", "f38": "c1xgr4jb", "e01": "cypvi1h", "e05": "cb9rikm", "e06": "c9789j0", "e09": "cirq0rp", "e17": "cyxorks", "e21": "cysi3hk", "e22": "cbhw9t1", "d003": "c1w72j28", "d024": "c1whsmfp"};
+const CONTENT = {MIGRATE, R_CARDS, T_CARDS, F_CARDS, E_CARDS, L_CARDS, QUESTIONS, CALL, JOURNAL_PROMPTS, TIPS, ALT_EXTRA, D_CARDS, DL_CARDS, DIALOGS, REF, CHUNKS};
 
 
 /* 脱口 · 核心逻辑（不碰 DOM，可在 Node 里测试） */
@@ -1944,6 +1899,19 @@ const W_RULES = [
   {re:/\bfor study\b/gi, tag:"地道说法", msg:()=>"来读书：for school / to study"},
   {re:/(?:^|[.!?]\s+)(?:(?:yes|yeah|sure|absolutely|definitely),?\s+)?(?:i'?m|i am|we'?re|we are)\s+(?:(?:definitely|really|very|so|also|still|pretty|super)\s+)*(interested in|good at|familiar with|excited about|looking forward to)\s*(?=[.!?]|$)/gi, g:1, tag:"介词", msg:g=>{ const x = String(g).toLowerCase(); const ex = {"interested in":"I'm interested in this role.　不接东西就只说 I'm interested.", "good at":"I'm good at CAD design.", "familiar with":"I'm familiar with SolidWorks.", "excited about":"I'm excited about this role.　不接东西就只说 I'm excited.", "looking forward to":"I'm looking forward to it.　或者 I'm looking forward to hearing from you."}[x] || ""; return `${x} 后面要接东西：${ex}`; }},
   {re:/\bhow'?s everything doing\b/gi, tag:"地道说法", msg:()=>"问事情说 How's everything going?　问人说 How are you doing?"},
+  /* ---- 以下几条来自 10/22 电话初筛里你真实说错的句子 ---- */
+  {re:/\b((?:I|we|they|you)\s+(?:play|work|live|study|know|use|practice|coach))\s+(?:\w+\s+){0,2}since\b/gi, g:1, tag:"时态", msg:()=>"从过去一直到现在，要用 have + 过去分词：I've played since fourth grade."},
+  {re:/\bsince (was|were)\b/gi, g:0, tag:"时态", msg:()=>"since 后面要有主语：since I was in fourth grade"},
+  {re:/(?<!\b(?:have|has|had|are|were|is|was|get|got|if|when)\s)(?<!['’]ve\s)\b(?:I|we|they|you)\s+(?:already\s+|just\s+|never\s+)?(done|gone|seen|been|taken|written|known|given|gotten)\b/gi, g:1, tag:"时态", msg:g=>`${String(g).toLowerCase()} 前面要有 have：I've ${String(g).toLowerCase()}`},
+  {re:/\bI\s+(?:really\s+|also\s+|just\s+)?(are|is)\b/g, g:1, tag:"be", msg:()=>"主语是 I，用 am：I'm really interested."},
+  {re:/\b(?:is|are|was|were)\s+(use|make|need|want|know|think|design|build|play|help)\s+(?:your|the|my|our|a|an|this|that|these|those|it|them|him|her)\b/gi, g:1, tag:"be", msg:g=>`be 动词后面不能直接跟动词原形：去掉 is，直接说 ${String(g).toLowerCase()}s（一个人）或 ${String(g).toLowerCase()}（几个人）`},
+  {re:/\bone of (?:the|my|your|our|their|his|her|these|those)\s+(?:[a-z]+est\s+|most\s+\w+\s+|top\s+|main\s+|favorite\s+)?(internship|project|robot|year|month|week|day|sensor|app|version|role|job|interview|company|prototype|test|player|engineer|club|ball|course|tournament|lab|system|module|board|motor|camera|model|design|idea|reason|name|brand|reason|thing|part|person)\b(?!s)/gi, g:1, tag:"复数", msg:g=>`one of the 后面用复数：${String(g).toLowerCase()}s`},
+  {re:/\b(?:two|three|four|five|six|seven|eight|nine|ten|several|many|a few)\s+(internship|project|robot|year|month|week|day|sensor|app|version|role|job|interview|company|prototype|test|player|engineer|club|ball|course|tournament|lab|system|module|board|motor|camera|model|design|idea|reason)\b(?!s)/gi, g:1, tag:"复数", msg:g=>`两个以上要用复数：${String(g).toLowerCase()}s`},
+  {re:/\ba lot of (?:top\s+|good\s+|other\s+|different\s+)?(player|engineer|project|sensor|robot|internship|club|ball|company|prototype)\b(?!s)/gi, g:1, tag:"复数", msg:g=>`a lot of 后面的可数名词用复数：${String(g).toLowerCase()}s`},
+  {re:/\b(?:play|plays|played|playing|practice|practices|practiced|practicing)\s+(the golf)\b/gi, g:1, tag:"冠词", msg:()=>"运动前面不加 the：play golf、practice golf"},
+  {re:/\b(relocate it)\b/gi, g:1, tag:"地道说法", msg:()=>"relocate 后面不加 it：I'm ready to relocate."},
+  {re:/\b(this days)\b/gi, g:1, tag:"地道说法", msg:()=>"“最近这段时间”是 these days"},
+
   {re:/\b(there's)\s+(?:two|three|four|five|six|a few|several|many)\b/gi, g:1, tag:"口语", msg:()=>"美国人口语里也常这么说；正式一点用 There are"},
   {re:/\b(me and (?:my|his|her|their|our) \w+)\s+(?:went|go|are|were|played|play|did|had|have|used)\b/gi, g:1, tag:"口语", msg:()=>"口语里很常见；正式一点说 My friend and I"},
   {re:/\b(?:am|is|are|was|were|'m|'re|'s)\s+(ran|went|came|did|wore|took|wrote|saw|began|broke|drove|gave|knew|ate|rode|chose|spoke|swam|grew|threw|flew|forgot|stole|sang|drank)\b/gi, g:1, tag:"be", msg:g=>`已经有动词 ${String(g).toLowerCase()}（过去式）了，前面不要再加 am / is / was`},
@@ -2155,8 +2123,8 @@ const MIC = {
 
 /* ---------- 存储 ---------- */
 const KEY = "tuokou.v1", LKEY = "tuokou.local";
-const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0,
-  settings:{goal:"std", interviewDate:"", newPerDay:12, inputMode:"auto", autoCheck:"smart", vibrate:true, sound:true, lights:true, autoSpeak:true,
+const DEF = () => ({v:1, createdAt:Date.now(), updatedAt:0, asrDocs:[],
+  settings:{goal:"std", profile:"", interviewDate:"", newPerDay:12, inputMode:"auto", autoCheck:"smart", vibrate:true, sound:true, lights:true, autoSpeak:true,
     theme:"auto", cheat:true, callQs:3, onboarded:false, planWhen:"", deck:"all", callDeck:"core", dayStart:4},
   cards:{}, best:{}, custom:[], customQ:[], deckMeta:{}, dlgDone:{}, myAlts:{}, pending:[], hist:{}, misWords:{}, followAns:{}, refAns:{}, plan:[], ivDue:{}, soloIssues:{}, soloRate:{}, wantWords:[], answers:{}, days:{}, tags:{}, newToday:{d:"",n:0}, journal:[], calls:[]});
 const LDEF = () => ({enVoice:"", zhVoice:"", rate:0.95, thinkSec:4, device:{}, wDraft:"", jDraft:"", voiceMix:true, accentMix:false, hfSeen:{}, ttsCN:false, slashes:false, quiet:false, quietSound:false, resume:null, rdMode:"line", rdSlow:false, rdHide:false});
@@ -2171,6 +2139,15 @@ function mergeInto(d, o){
 let STORAGE_OK = true;
 function readJSON(key){ try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch (e) { STORAGE_OK = false; return null; } }
 let S = mergeInto(DEF(), readJSON(KEY) || {});
+/* 1.18：个人练习卡挪到了“我的定制内容”导入文件里，导入以后编号会变。这里把旧编号的练习进度接到新编号上（只做一次，没有旧进度就什么都不做） */
+(function migrateIds(){
+  const M = (typeof CONTENT !== "undefined" && CONTENT.MIGRATE) || {}; let n = 0;
+  for (const [o, nw] of Object.entries(M)){
+    if (S.cards && S.cards[o]){ if (!S.cards[nw]) S.cards[nw] = S.cards[o]; delete S.cards[o]; n++; }
+    if (S.myAlts && S.myAlts[o]){ S.myAlts[nw] = Array.from(new Set((S.myAlts[nw] || []).concat(S.myAlts[o]))); delete S.myAlts[o]; }
+  }
+  if (n){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+})();
 let L = mergeInto(LDEF(), readJSON(LKEY) || {});
 let saveTimer = null;
 function save(now){
@@ -2201,7 +2178,7 @@ function allQuestions(){ return CONTENT.QUESTIONS.concat(S.customQ || []); }
 /* ---------- 题库：通用 / 日常生活 / 你导入的 ---------- */
 function deckList(){
   const names = Array.from(new Set((S.custom || []).map(c => c.deck || "我的卡片").concat((S.customQ || []).map(q => q.deck)).filter(Boolean))).filter(n => n !== "daily" && n !== "core");
-  return [{id:"all", label:"全部题库"}, {id:"core", label:"通用（诊断报告）"}, {id:"daily", label:"日常生活"}].concat(names.map(n => ({id:"u:" + n, label:n})));
+  return [{id:"all", label:"全部题库"}, {id:"core", label:"通用"}, {id:"daily", label:"日常生活"}].concat(names.map(n => ({id:"u:" + n, label:n})));
 }
 function curDeck(){ const d = S.settings.deck || "all"; return deckList().some(x => x.id === d) ? d : "all"; }
 function deckPred(id){
@@ -2460,6 +2437,75 @@ const Rec = {
     this.stream = null; this.mr = null; this.ctx = null; this.lvlEl = null;
   }
 };
+/* ---------- 录音转文字：在手机上跑 Whisper（transformers.js），后台线程识别，排队，好了弹提示 ----------
+   只在安装版里能用（claude.ai 里下载不了模型）。默认用 CPU（WASM）：手机显卡跑 Whisper 有时会出乱码；设置里可以打开显卡加速 */
+const ASR_MODELS = {large:{id:"onnx-community/whisper-large-v3-turbo", label:"最准（Whisper large-v3-turbo，约 800 MB）"}, small:{id:"onnx-community/whisper-small", label:"均衡（Whisper small，约 250 MB）"}, base:{id:"onnx-community/whisper-base", label:"最快（Whisper base，约 80 MB）"}};
+const ASR_WORKER_SRC = `
+import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+env.allowLocalModels = false; env.useBrowserCache = true;
+let asr = null, key = "";
+async function load(cfg){
+  const k = cfg.id + "|" + (cfg.gpu ? "gpu" : "cpu"); if (asr && key === k) return asr; asr = null;
+  const tries = cfg.gpu ? [["webgpu", {encoder_model:"fp16", decoder_model_merged:"q4"}], ["wasm", "q4"], ["wasm", "q8"]] : [["wasm", "q4"], ["wasm", "q8"]];
+  let last = null;
+  for (const [device, dtype] of tries){
+    try {
+      asr = await pipeline("automatic-speech-recognition", cfg.id, {device, dtype, progress_callback: p => postMessage({type:"progress", p:{status:p.status, file:p.file, loaded:p.loaded, total:p.total}})});
+      key = k; postMessage({type:"ready", device}); return asr;
+    } catch (e){ last = e; postMessage({type:"note", msg:"换一种方式加载模型（" + device + "）"}); }
+  }
+  throw last;
+}
+onmessage = async e => {
+  const m = e.data; if (!m || m.type !== "run") return;
+  try { const a = await load(m.cfg); const out = await a(m.audio, {language:"english", task:"transcribe", chunk_length_s:30, stride_length_s:5}); postMessage({type:"result", id:m.id, text:String((out && out.text) || "").trim()}); }
+  catch (err){ postMessage({type:"error", id:m.id, msg:String((err && err.message) || err)}); }
+};`;
+const ASR = {
+  w:null, q:[], cur:null, dl:{}, status:"", lockObj:null,
+  supported(){ return !!BUILD.pwa && typeof Worker !== "undefined" && typeof WebAssembly !== "undefined" && typeof OfflineAudioContext !== "undefined"; },
+  mkWorker(){ const url = URL.createObjectURL(new Blob([ASR_WORKER_SRC], {type:"text/javascript"})); return new Worker(url, {type:"module"}); },
+  ensure(){ if (this.w) return; this.w = this.mkWorker(); this.w.onmessage = e => this.onMsg(e.data || {});
+    this.w.onerror = e => { const j = this.cur; this.cur = null; this.w = null; this.status = ""; if (j && j.onErr) j.onErr("识别模块没加载起来：" + ((e && e.message) || "检查网络后再试一次")); this.next(); }; },
+  pending(){ return (this.cur ? 1 : 0) + this.q.length; },
+  enqueue(job){ job.id = job.id || ("a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)); this.q.push(job); this.ensure(); this.paint(); if (!this.cur) this.next(); return job.id; },
+  async next(){
+    if (this.cur) return; if (!this.q.length){ this.paint(); this.unlock(); return; }
+    this.cur = this.q.shift(); this.status = "准备音频……"; this.lock(); this.paint();
+    try { const audio = await this.decode(this.cur.blob); this.status = ""; this.paint();
+      this.w.postMessage({type:"run", id:this.cur.id, audio, cfg:{id:(ASR_MODELS[L.asrModel] || ASR_MODELS.large).id, gpu:!!L.asrGpu}}, [audio.buffer]); }
+    catch (e){ const j = this.cur; this.cur = null; this.status = ""; if (j && j.onErr) j.onErr("这段录音解不开（" + ((e && e.message) || e) + "）"); this.next(); }
+  },
+  onMsg(m){
+    if (m.type === "progress"){ const p = m.p || {}; if (p.file && p.total) this.dl[p.file] = [p.loaded || 0, p.total]; this.paint(); }
+    else if (m.type === "ready"){ this.dl = {}; this.status = ""; if (!L.asrReady){ L.asrReady = true; saveLocal(); } this.paint(); }
+    else if (m.type === "note"){ this.status = m.msg || ""; this.paint(); }
+    else if (m.type === "result" || m.type === "error"){
+      const j = this.cur; this.cur = null; this.status = "";
+      if (j){ if (m.type === "result"){ try { j.onDone && j.onDone(m.text || ""); } catch (e) {} toast("转写好了：" + j.label, 5000); vib(30); }
+              else { try { j.onErr && j.onErr(m.msg || "识别出错了"); } catch (e) {} } }
+      this.next();
+    }
+  },
+  async decode(blob){
+    const buf = await blob.arrayBuffer(); const AC = window.AudioContext || window.webkitAudioContext; const ac = new AC();
+    let ab; try { ab = await ac.decodeAudioData(buf.slice(0)); } finally { try { ac.close(); } catch (e) {} }
+    const len = Math.max(1, Math.ceil(ab.duration * 16000)); const off = new OfflineAudioContext(1, len, 16000);
+    const src = off.createBufferSource(); src.buffer = ab; src.connect(off.destination); src.start(); const out = await off.startRendering();
+    return out.getChannelData(0).slice(0);
+  },
+  dlPct(){ let a = 0, b = 0; for (const [x, y] of Object.values(this.dl)){ a += x; b += y; } return b ? Math.min(100, Math.round(a / b * 100)) : -1; },
+  paint(){
+    let el = document.getElementById("asrBar");
+    if (!el){ el = document.createElement("div"); el.id = "asrBar"; el.className = "asr-bar"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    const n = this.pending(); if (!n){ el.hidden = true; return; }
+    const pct = this.dlPct(); const left = n - 1;
+    el.hidden = false;
+    el.textContent = pct >= 0 && pct < 100 ? `正在下载识别模型：${pct}%（第一次才要下载）` : `正在转写：${this.cur ? this.cur.label : ""}${left ? `（后面还有 ${left} 段）` : ""}${this.status ? "　" + this.status : ""}`;
+  },
+  async lock(){ try { if (!this.lockObj && navigator.wakeLock) this.lockObj = await navigator.wakeLock.request("screen"); } catch (e) {} },
+  unlock(){ try { if (this.lockObj) this.lockObj.release(); } catch (e) {} this.lockObj = null; }
+};
 const IDB = {
   db:null, mem:new Map(),
   open(){
@@ -2574,7 +2620,7 @@ const Cloud = {
     if (!this.db) return;
     const base = "data/users/" + this.uid + "/";
     const parts = {
-      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, soloRate:S.soloRate, wantWords:S.wantWords, answers:S.answers, newToday:S.newToday},
+      state:{v:S.v, createdAt:S.createdAt, updatedAt:S.updatedAt, settings:S.settings, cards:S.cards, best:S.best, custom:S.custom, customQ:S.customQ, deckMeta:S.deckMeta, dlgDone:S.dlgDone, myAlts:S.myAlts, pending:S.pending, misWords:S.misWords, followAns:S.followAns, refAns:S.refAns, plan:S.plan, ivDue:S.ivDue, soloIssues:S.soloIssues, soloRate:S.soloRate, wantWords:S.wantWords, asrDocs:S.asrDocs, answers:S.answers, newToday:S.newToday},
       stats:{updatedAt:S.updatedAt, days:S.days, tags:S.tags, calls:S.calls},
       journal:{updatedAt:S.updatedAt, journal:S.journal}
     };
@@ -2599,8 +2645,8 @@ const AI = {
     } catch (e) {}
   },
   prompt(kind, text, extra){
-    return `你是一位耐心的英语口语教练。学生是中文母语者，机械工程硕士已毕业，正在准备美国工程类岗位的电话面试，英语口语大约 A2–B1。
-他最常见的错误：漏 be 动词（That cool → That's cool）；时态（讲过去的事用现在时；I'm graduated → I've graduated；用 will 表示习惯）；although…but、because…so 成对使用；多余的 to（spend time to do）；复数 -s；介词；中式搭配。
+    return `你是一位耐心的英语口语教练。学生是中文母语者，正在练习英语口语。
+${(S.settings.profile || "").trim() ? "关于他：" + S.settings.profile.trim() + "\n" : ""}中文母语者最常见的错误：漏 be 动词（That cool → That's cool）；时态（讲过去的事用现在时；I'm graduated → I've graduated；用 will 表示习惯）；although…but、because…so 成对使用；多余的 to（spend time to do）；复数 -s；介词；中式搭配。
 他的学习方法是：先只看错误和提示，自己改，再看参考改法。所以 hint 里不要直接给出改好的句子。
 内容类型：${kind}
 ${extra ? extra + "\n" : ""}他写的（或说的）内容：
@@ -3407,7 +3453,7 @@ class ListenStage {
     const el = stageEl(); if (!el) return; const c = this.card; const tts = TTS.ok;
     const head = `<div class="kind"><span class="chip k">${this.mode === "repeat" ? "听后复述" : "听力"}</span><span class="chip">${c.grp === "iv" ? "面试官问法" : "日常说法"}</span></div>`;
     const playRow = tts ? `<div class="listen-hero"><button class="play" data-act="l-play" aria-label="再听一遍">${ICON.speak}</button></div>
-      <div class="row-gap" style="justify-content:center"><button class="btn sm" data-act="l-play">再听一遍</button><button class="btn sm" data-act="l-slow">慢速听</button></div>` :
+      <div class="row-gap" style="justify-content:center"><button class="btn sm" data-act="l-play">再听一遍</button><button class="btn sm" data-act="l-slow">慢速听</button><button class="btn sm${L.fastListen ? " primary" : ""}" data-act="l-fast" aria-pressed="${!!L.fastListen}">快速 1.2×</button></div>` :
       `<p class="note">这台设备没有英文朗读，先看文字练：</p><div class="en">${wordsHTML(c.en)}</div>`;
     if (this.mode === "repeat"){
       if (!this.done){
@@ -3442,7 +3488,7 @@ class ListenStage {
         <button class="btn primary block big" style="margin-top:14px" data-act="l-next">下一题</button></div>` : ""}
     </div>`;
   }
-  play(slow){ if (!this.alive) return; if (!this.done) this.plays++; if (slow) this.slow = true; TTS.speak(this.card.en, {rate: slow ? 0.72 : 1, voice: this.voice}); }
+  play(slow){ if (!this.alive) return; if (!this.done) this.plays++; if (slow) this.slow = true; TTS.speak(this.card.en, {rate: slow ? 0.72 : (L.fastListen ? 1.2 : 1), voice: this.voice}); }
   pick(i){
     if (this.done || this.mode !== "meaning") return;
     this.done = true; this.picked = i;
@@ -3475,6 +3521,7 @@ class ListenStage {
 }
 ACT["l-play"] = () => RUN.stage instanceof ListenStage && RUN.stage.play(false);
 ACT["l-slow"] = () => RUN.stage instanceof ListenStage && RUN.stage.play(true);
+ACT["l-fast"] = () => { L.fastListen = !L.fastListen; saveLocal(); const s = RUN.stage; if (s instanceof ListenStage){ s.render(); s.play(false); } toast(L.fastListen ? "快速听：1.2 倍速，练听快语速" : "恢复正常语速"); };
 ACT["l-pick"] = el => RUN.stage instanceof ListenStage && RUN.stage.pick(+el.dataset.v);
 ACT["l-next"] = () => nextItem();
 ACT["l-mic"] = () => RUN.stage instanceof ListenStage && RUN.stage.mic();
@@ -4019,9 +4066,9 @@ function crRowsHTML(rec, urlFor, live){
       ${s.k === "q" ? `<div class="small muted" style="margin-top:10px">听完自己的录音，这题说得怎么样？</div>
         <div class="row-gap" style="margin-top:6px">${CR_RATE.map(([k, l]) => `<button class="btn sm${r === k ? " primary" : ""}" data-act="cr-rate" data-id="${rec.id}" data-q="${s.qid}" data-r="${k}" aria-pressed="${r === k}">${l}</button>`).join("")}</div>
         ${selfCheckHTML(s.qid, "call:" + rec.id, i, (rec.issues || {})[s.qid])}
-        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">把你说的变成文字（app 帮你查语法，找出没用上的说法）</summary>
+        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">把你说的变成文字：用手机识别录音，或者再说一遍（app 帮你查语法，找出没用上的说法）</summary>
           <textarea class="en" id="crn-${i}" rows="3" data-chg="crnote" data-id="${rec.id}" data-q="${s.qid}" placeholder="点“再说一遍，转成文字”，照着刚才的意思再说一遍；也可以用键盘打字">${esc(note)}</textarea>
-          <div class="row-gap" style="margin-top:6px"><button class="btn sm primary" data-act="cr-say" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">再说一遍，转成文字</button><button class="btn sm" data-act="cr-check" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">检查我说的</button></div>
+          <div class="row-gap" style="margin-top:6px"><button class="btn sm primary" data-act="cr-say" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">再说一遍，转成文字</button><button class="btn sm" data-act="cr-asr" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">用手机识别这段录音</button><button class="btn sm" data-act="cr-check" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">检查我说的</button></div>
           <div id="crf-${i}"></div></details>
         <div class="row-gap" style="margin-top:8px"><button class="btn sm ghost" data-act="iv-solo" data-q="${s.qid}">单题重练</button><button class="btn sm ghost" data-act="nav" data-v="ivedit" data-q="${s.qid}">写这题的回答</button></div>` : ""}
     </div>`;
@@ -4597,6 +4644,9 @@ VIEWS.me = {
       <div class="sec-title">练习</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>每天最多几道新题</span><select data-chg="set" data-key="newPerDay" data-num="1">${[6,12,20].map(n => `<option value="${n}" ${s.newPerDay === n ? "selected" : ""}>${n} 道</option>`).join("")}</select></label>
         <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${!SR.ok ? "（这个浏览器不支持）" : SR.broken ? "（这台手机现在用不了）" : ""}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
+        <label class="fld"><span>给 Claude 的自我介绍（可选，AI 批改时会带上）</span><textarea rows="3" data-chg="profile" placeholder="比如：机械工程硕士，正在准备美国工程类岗位面试，口语大约 A2–B1">${esc(S.settings.profile || "")}</textarea></label>
+        <label class="fld"><span>录音转文字用的模型</span><select data-chg="asrmodel">${Object.entries(ASR_MODELS).map(([k, m]) => `<option value="${k}" ${(L.asrModel || "large") === k ? "selected" : ""}>${esc(m.label)}</option>`).join("")}</select></label>
+        <label class="switch"><span>录音转文字用显卡加速（可能更快；有的手机会出乱码，出乱码就关掉）</span><input type="checkbox" data-chg="asrgpu" ${L.asrGpu ? "checked" : ""}></label>
         <label class="fld"><span>说话中间停顿</span><select data-chg="srlong"><option value="on" ${L.srLong !== false ? "selected" : ""}>停 2.5 秒才算说完（中间想一下也不会断）</option><option value="off" ${L.srLong === false ? "selected" : ""}>停一下就结束（手机默认）</option></select></label>
         <label class="fld"><span>停 2 秒自动检查</span><select data-chg="set" data-key="autoCheck">${[["smart","自动判断：语音说完自动查，打字时不查"],["on","一直开"],["off","关掉：每次自己点“检查”"]].map(([v, l]) => `<option value="${v}" ${(s.autoCheck || "smart") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
         <label class="fld"><span>一天从几点开始算（熬夜时，凌晨的练习和日记还算前一天）</span><select data-chg="set" data-key="dayStart" data-num="1">${[0,2,4,6].map(h => `<option value="${h}" ${(+s.dayStart || 0) === h ? "selected" : ""}>${h ? "凌晨 " + h + " 点" : "半夜 12 点"}</option>`).join("")}</select></label>
@@ -4615,7 +4665,7 @@ VIEWS.me = {
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="sec-title">内容和数据</div><div class="sec-title">学习资料</div><div class="list">${liRow("tips","说话技巧","重音、语调、断句、连读、难发的音")}${liRow("grammar","语法要点","时态、-s、-ed、be 动词、语序")}</div><div class="sec-title">设置和工具</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("pending","待确认的说法 / 要学的词", ((S.pending || []).length) + " 句，" + ((S.wantWords || []).length) + " 个词")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
+        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("asr","录音转文字", BUILD.pwa ? "在手机上识别录音，转好了会提醒你" : "要在安装到手机上的版本里用")}${liRow("pending","待确认的说法 / 要学的词", ((S.pending || []).length) + " 句，" + ((S.wantWords || []).length) + " 个词")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
         ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
         ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
@@ -5039,6 +5089,61 @@ ACT["ww-del"] = el => { (S.wantWords || []).splice(+el.dataset.i, 1); save(); UI
 ACT["ww-copy"] = () => { const t = wwText(); if (t) sendToClaude(t); };
 ACT["pend-del"] = el => { (S.pending || []).splice(+el.dataset.i, 1); save(); UI.render(); };
 ACT["pend-clear"] = async () => { if (!await sheet("清空待确认的说法？", "建议先把 Claude 给的导入码导进来再清空。", "清空", true)) return; S.pending = []; save(); UI.render(); };
+CHG.profile = el => { S.settings.profile = el.value.slice(0, 600); save(); };
+CHG.asrmodel = el => { if (L.asrModel !== el.value){ L.asrModel = el.value; L.asrReady = false; saveLocal(); toast("换了模型：第一次用要重新下载"); } };
+CHG.asrgpu = el => { L.asrGpu = !!el.checked; saveLocal(); toast(L.asrGpu ? "用显卡加速：出乱码就关掉" : "用 CPU：慢一点，但结果更可靠"); };
+/* 录音转文字：第一次要下载模型，先说一声 */
+async function asrOK(){
+  if (!ASR.supported()){ toast("录音转文字只能在安装到手机上的版本里用"); return false; }
+  if (L.asrReady) return true;
+  const m = ASR_MODELS[L.asrModel] || ASR_MODELS.large;
+  return await sheet("第一次要下载识别模型", `${m.label}。建议连着 Wi-Fi 下载，下载一次以后不联网也能用。转写在后台进行，你可以接着练别的；转写时请让 app 开着，屏幕会保持亮着。`, "开始", false);
+}
+ACT["cr-asr"] = async el => {
+  const rec = crRec(el.dataset.id); const qid = el.dataset.q, i = +el.dataset.i; if (!rec) return;
+  if (!await asrOK()) return;
+  let blob = null; try { blob = (CV && CV.st && CV.recId === rec.id && CV.st.recs && CV.st.recs[i] && CV.st.recs[i].blob) || await IDB.get("cr:" + rec.id + ":" + i); } catch (e) {}
+  if (!blob){ toast("这段录音已经不在了（只保留最近 5 次模拟的录音）"); return; }
+  const n = rec.segs.filter(s => s.k === "q").findIndex(s => s.qid === qid) + 1;
+  ASR.enqueue({blob, label:`模拟面试第 ${n || "?"} 题`, onDone: text => {
+      const r2 = crRec(rec.id); if (!r2) return; r2.asr = r2.asr || {}; r2.asr[qid] = text; r2.note = r2.note || {}; if (!(r2.note[qid] || "").trim()) r2.note[qid] = text; save();
+      const ta = document.getElementById("crn-" + i); if (ta){ if (!ta.value.trim()) ta.value = text; const d = ta.closest("details"); if (d) d.open = true; ACT["cr-check"]({dataset:{id:rec.id, q:qid, i}}); } },
+    onErr: msg => toast("这段没转成：" + msg, 6000)});
+  toast("开始转写，你可以接着练别的；好了会提醒你");
+};
+VIEWS.asr = {
+  tab:"me",
+  render(){
+    const list = (S.asrDocs || []).slice().reverse();
+    const row = d => `<div class="panel"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>${esc(d.name)}</b><span class="small muted">${esc(fmtWhen(d.ts))}</span></div>
+      ${d.status === "done" ? `<div class="en asr-text" style="margin-top:8px;font-size:15.5px">${esc(d.text || "（没识别出内容）")}</div><div class="row-gap" style="margin-top:8px"><button class="btn sm" data-act="asr-copy" data-id="${d.id}">复制文字</button><button class="btn sm primary" data-act="asr-claude" data-id="${d.id}">发给 Claude 分析</button><button class="btn sm ghost" data-act="asr-del" data-id="${d.id}">删除</button></div>`
+        : d.status === "error" ? `<p class="small" style="margin-top:6px">没转成：${esc(d.err || "")}</p><button class="btn sm ghost" data-act="asr-del" data-id="${d.id}">删除</button>`
+        : `<p class="small muted" style="margin-top:6px">排队中或正在转写……转好了会提醒你。</p>`}</div>`;
+    return `<div class="wrap">${backBtn()}<h2>录音转文字</h2>
+      <p class="muted small" style="margin:6px 0 10px">在手机上识别英文录音，比如实验室开会、面试的录音。识别在后台进行，转写的时候你可以去练别的，转好了会提醒你。</p>
+      ${ASR.supported() ? `<label class="btn primary block" style="text-align:center">选录音文件（可以一次选几个）<input type="file" id="asrFile" accept="audio/*,video/*" multiple data-chg="asr-file" style="display:none"></label>
+        <p class="small muted" style="margin-top:8px">用的是${esc((ASR_MODELS[L.asrModel] || ASR_MODELS.large).label)}，可以在“我的 → 设置”里换。很长的录音（比如一小时）在手机上会很慢，也可能内存不够，最好先剪成 20 分钟以内的几段，或者在电脑浏览器里打开 app 转。</p>
+        <p class="small muted">转出来的文字可能会把口误和小的语法错“修好”，找语法错时，最好对着录音再听一遍。</p>`
+        : `<p class="panel">这个版本用不了：录音转文字要在安装到手机上的版本里用（claude.ai 里下载不了识别模型）。</p>`}
+      <div style="margin-top:14px">${list.length ? list.map(row).join("") : `<p class="muted small">还没有转写过的录音。</p>`}</div></div>`;
+  }
+};
+CHG["asr-file"] = async el => {
+  const files = Array.from(el.files || []); el.value = ""; if (!files.length) return;
+  if (!await asrOK()) return;
+  S.asrDocs = S.asrDocs || [];
+  for (const f of files){
+    const d = {id:"d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name:f.name, ts:Date.now(), status:"queued", text:""};
+    S.asrDocs.push(d); if (S.asrDocs.length > 20) S.asrDocs.splice(0, S.asrDocs.length - 20);
+    ASR.enqueue({blob:f, label:f.name, onDone: text => { const x = (S.asrDocs || []).find(y => y.id === d.id); if (x){ x.status = "done"; x.text = text; save(); } const t = UI.top(); if (t && t.name === "asr") UI.render(); },
+      onErr: msg => { const x = (S.asrDocs || []).find(y => y.id === d.id); if (x){ x.status = "error"; x.err = msg; save(); } const t = UI.top(); if (t && t.name === "asr") UI.render(); toast("没转成：" + f.name, 5000); }});
+  }
+  save(); UI.render(); toast(`开始转写 ${files.length} 个文件，你可以接着练别的`);
+};
+ACT["asr-copy"] = async el => { const d = (S.asrDocs || []).find(x => x.id === el.dataset.id); if (d){ const ok = await copyText(d.text || ""); toast(ok ? "复制好了" : "复制没成功"); } };
+ACT["asr-claude"] = el => { const d = (S.asrDocs || []).find(x => x.id === el.dataset.id); if (!d) return;
+  sendToClaude(`下面是一段英文录音的转写（${d.name}，在手机上用 Whisper 识别的，可能有识别错误，也可能把小的语法错自动修好了）。请帮我：\n1. 找出我说的句子里的语法错误和不自然的地方，给出正确说法；\n2. 挑出别人说的、值得我学的地道说法；\n3. 最后给我导入码：我说错的写“改 | 我的原句 | 正确说法 | 类型 | 提示”，值得学的说法写“卡 | 中文 | 英文 | 类型 | 提示”或者“听 | 英文 | 中文”。\n如果分不清哪句是我说的，就先问我。\n\n${String(d.text || "").slice(0, 12000)}`); };
+ACT["asr-del"] = el => { S.asrDocs = (S.asrDocs || []).filter(x => x.id !== el.dataset.id); save(); UI.render(); };
 CHG.srlong = el => { L.srLong = el.value === "on"; saveLocal(); toast(L.srLong ? "说话中间停一下也不会断了" : "改回手机默认"); };
 function pendText(){
   const list = S.pending || []; if (!list.length) return "";
@@ -5150,14 +5255,14 @@ VIEWS.tips = {
 
 /* ---------- 语法要点：说的时候来不及想，先记住“先问什么”的顺序 ---------- */
 const GRAMMAR = [
-  {h:"be 动词：什么时候要 is / are / was / were", p:"① 后面是形容词、名词或地点，句子里没有别的动词 → 要 be：It's light.／It's a robot dog.／I'm in Boston.　② 正在做 → be + -ing：The cables were wearing out.　③ 被做 → be + 过去分词：The channel was printed in PLA.　④ 句子里已经有动作动词了（kept、designed、helped）→ 不要再加 be：The cables kept wearing out.，不说 The cables is kept…　另外，主语是复数用 are / were，单数用 is / was。", ex:["The mounts are light.", "The cables kept wearing out.", "The cables were wearing out.", "The channel was printed in carbon-fiber PLA."]},
-  {h:"两个动词连在一起：help debug、keep wearing", p:"有些动词后面能直接接另一个动词，就像中文的“帮忙调试”。help + 动词原形：I helped debug the system.（help to debug 也对，美国人更常省掉 to）。keep + -ing，意思是“一直……”：kept wearing out。want、need、try + to + 动词：I want to learn.　let、make + 人 + 动词原形：Let me think.　讲过去的事，只把第一个动词变成过去式：helped debug、kept wearing。", ex:["I helped debug the system.", "I helped design a robot dog.", "The cables kept popping out.", "Let me think for a second."]},
-  {h:"时态：先问自己“什么时候？”", p:"平时、习惯 → 一般现在时：I play.　已经结束的某一次 → 过去式：I played.　从过去到现在、已经、到现在为止 → 现在完成时：I've played.　此刻正在 → I'm playing.　最近一直在 → I've been playing.　打算好的将来 → I'm going to play.", ex:["I usually play golf on Saturdays.", "I played golf last Saturday.", "I've played golf since fourth grade.", "I've been practicing a lot lately."]},
-  {h:"-s：什么时候加", p:"① 主语是 he / she / it、一个人或一样东西，而且是一般现在时 → 动词加 -s。② 两个以上的东西 → 名词加 -s。③ I / you / we / they 后面，动词永远不加 -s。④ a / one / every / each 后面用单数。", ex:["My friend plays golf every week.", "I like all kinds of games.", "They work in the lab.", "I go there every day."]},
-  {h:"-ed：过去的事", p:"已经结束的事，动词用过去式：大多数加 -ed（played、tested）；常用的不规则动词要单独记：go → went，take → took，get → got，come → came，buy → bought，do → did，make → made，see → saw。have / has 后面用过去分词：I've played、I've gone。", ex:["I tested the prototype yesterday.", "My dad took me to the range.", "I've already finished it."]},
+  {h:"be 动词：什么时候要 is / are / was / were", p:"① 后面是形容词、名词或地点，句子里没有别的动词 → 要 be：It's light.／It's a new phone.／I'm at home.　② 正在做 → be + -ing：My phone was freezing.　③ 被做 → be + 过去分词：The report was printed this morning.　④ 句子里已经有动作动词了（kept、fixed、helped）→ 不要再加 be：My phone kept freezing.，不说 My phone is kept freezing…　另外，主语是复数用 are / were，单数用 is / was。", ex:["The new laptop is light.", "My phone kept freezing.", "My phone was freezing.", "The report was printed this morning."]},
+  {h:"两个动词连在一起：help fix、keep ringing", p:"有些动词后面能直接接另一个动词，就像中文的“帮忙调试”。help + 动词原形：I helped fix the website.（help to fix 也对，美国人更常省掉 to）。keep + -ing，意思是“一直……”：kept ringing。want、need、try + to + 动词：I want to learn.　let、make + 人 + 动词原形：Let me think.　讲过去的事，只把第一个动词变成过去式：helped fix、kept ringing。", ex:["I helped fix the website.", "I helped plan the party.", "My phone kept ringing.", "Let me think for a second."]},
+  {h:"时态：先问自己“什么时候？”", p:"平时、习惯 → 一般现在时：I play.　已经结束的某一次 → 过去式：I played.　从过去到现在、已经、到现在为止 → 现在完成时：I've played.　此刻正在 → I'm playing.　最近一直在 → I've been playing.　打算好的将来 → I'm going to play.", ex:["I usually go to the gym on Saturdays.", "I went to the gym last Saturday.", "I've played the piano since fourth grade.", "I've been practicing a lot lately."]},
+  {h:"-s：什么时候加", p:"① 主语是 he / she / it、一个人或一样东西，而且是一般现在时 → 动词加 -s。② 两个以上的东西 → 名词加 -s。③ I / you / we / they 后面，动词永远不加 -s。④ a / one / every / each 后面用单数。", ex:["My friend plays basketball every week.", "I like all kinds of games.", "They work in the lab.", "I go there every day."]},
+  {h:"-ed：过去的事", p:"已经结束的事，动词用过去式：大多数加 -ed（played、tested）；常用的不规则动词要单独记：go → went，take → took，get → got，come → came，buy → bought，do → did，make → made，see → saw。have / has 后面用过去分词：I've played、I've gone。", ex:["I tested the prototype yesterday.", "My dad took me to the park.", "I've already finished it."]},
   {h:"be 动词：形容词、名词、地点前面要有", p:"中文说“天气很冷”“我在家”不用“是”，英语要有 is / am / are / was：It's cold.　I'm tired.　I'm at home.　开口先说 It's 或 I'm，后面基本就对了。", ex:["It's really cold today.", "I'm a little nervous.", "I was at home all day."]},
-  {h:"语序：先说“谁 + 做什么”", p:"中文常把时间、地点放前面；英语先说“谁 + 做什么 + 什么”，再往后加和谁、在哪、什么时候。时间也可以放句首，但地点一般放在动词后面。练法就是扩句：先说最短的一句，再一块一块往后加。", ex:["I played golf with my friend at the range yesterday.", "Yesterday, I played golf with my friend."]},
-  {h:"because 和 so、although 和 but：二选一", p:"中文说“因为……所以……”“虽然……但是……”，英语只用其中一个。口语里最简单：因果只用 so，转折只用 but。", ex:["I'm job hunting, so I stay home a lot.", "I watch F1, but I don't follow it closely."]}
+  {h:"语序：先说“谁 + 做什么”", p:"中文常把时间、地点放前面；英语先说“谁 + 做什么 + 什么”，再往后加和谁、在哪、什么时候。时间也可以放句首，但地点一般放在动词后面。练法就是扩句：先说最短的一句，再一块一块往后加。", ex:["I played basketball with my friend at the park yesterday.", "Yesterday, I played basketball with my friend."]},
+  {h:"because 和 so、although 和 but：二选一", p:"中文说“因为……所以……”“虽然……但是……”，英语只用其中一个。口语里最简单：因果只用 so，转折只用 but。", ex:["I'm job hunting, so I stay home a lot.", "I watch soccer, but I don't follow it closely."]}
 ];
 VIEWS.grammar = {
   tab:"me",
