@@ -397,6 +397,11 @@ mark.opt{background:transparent;color:inherit;border-bottom:2px dashed #e0a100}
 .asr-bar[hidden]{display:none}
 .asr-text{white-space:pre-wrap;line-height:1.6}
 
+.asr-model{padding:10px 0;border-top:1px solid var(--line, #e2e2e2)}
+.asr-model:first-child{border-top:0}
+.asr-model b{font-size:15px;color:var(--ink, inherit)}
+.asr-model .tag-cur{display:inline-block;margin-left:8px;padding:0 7px;border-radius:8px;font-size:11.5px;background:var(--amber-soft, #fff3d6)}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -417,7 +422,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.18.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.18.1"};</script>
 <script>
 /* 脱口 · 内置内容（通用版）。个人练习在“我的定制内容”导入文件里。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -2457,7 +2462,9 @@ async function load(cfg){
   throw last;
 }
 onmessage = async e => {
-  const m = e.data; if (!m || m.type !== "run") return;
+  const m = e.data; if (!m) return;
+  if (m.type === "load"){ try { await load(m.cfg); postMessage({type:"loaded", id:m.id}); } catch (err){ postMessage({type:"error", id:m.id, msg:String((err && err.message) || err)}); } return; }
+  if (m.type !== "run") return;
   try { const a = await load(m.cfg); const out = await a(m.audio, {language:"english", task:"transcribe", chunk_length_s:30, stride_length_s:5}); postMessage({type:"result", id:m.id, text:String((out && out.text) || "").trim()}); }
   catch (err){ postMessage({type:"error", id:m.id, msg:String((err && err.message) || err)}); }
 };`;
@@ -2471,15 +2478,24 @@ const ASR = {
   enqueue(job){ job.id = job.id || ("a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)); this.q.push(job); this.ensure(); this.paint(); if (!this.cur) this.next(); return job.id; },
   async next(){
     if (this.cur) return; if (!this.q.length){ this.paint(); this.unlock(); return; }
-    this.cur = this.q.shift(); this.status = "准备音频……"; this.lock(); this.paint();
+    this.cur = this.q.shift(); this.lock();
+    if (this.cur.kind === "load"){ this.status = ""; this.paint(); this.w.postMessage({type:"load", id:this.cur.id, cfg:{id:(ASR_MODELS[this.cur.model] || ASR_MODELS.large).id, gpu:!!L.asrGpu}}); return; }
+    this.status = "准备音频……"; this.paint();
     try { const audio = await this.decode(this.cur.blob); this.status = ""; this.paint();
-      this.w.postMessage({type:"run", id:this.cur.id, audio, cfg:{id:(ASR_MODELS[L.asrModel] || ASR_MODELS.large).id, gpu:!!L.asrGpu}}, [audio.buffer]); }
+      this.w.postMessage({type:"run", id:this.cur.id, audio, cfg:{id:(ASR_MODELS[this.cur.model || L.asrModel] || ASR_MODELS.large).id, gpu:!!L.asrGpu}}, [audio.buffer]); }
     catch (e){ const j = this.cur; this.cur = null; this.status = ""; if (j && j.onErr) j.onErr("这段录音解不开（" + ((e && e.message) || e) + "）"); this.next(); }
   },
   onMsg(m){
     if (m.type === "progress"){ const p = m.p || {}; if (p.file && p.total) this.dl[p.file] = [p.loaded || 0, p.total]; this.paint(); }
     else if (m.type === "ready"){ this.dl = {}; this.status = ""; if (!L.asrReady){ L.asrReady = true; saveLocal(); } this.paint(); }
     else if (m.type === "note"){ this.status = m.msg || ""; this.paint(); }
+    else if (m.type === "loaded"){
+      const j = this.cur; this.cur = null; this.dl = {}; this.status = "";
+      if (j){ try { j.onDone && j.onDone(""); } catch (e) {} toast("模型下载好了：" + j.label, 5000); }
+      /* 只是下载：模型已经存好了，关掉识别线程，把内存还给手机 */
+      if (!this.q.length && this.w){ try { this.w.terminate(); } catch (e) {} this.w = null; }
+      this.next();
+    }
     else if (m.type === "result" || m.type === "error"){
       const j = this.cur; this.cur = null; this.status = "";
       if (j){ if (m.type === "result"){ try { j.onDone && j.onDone(m.text || ""); } catch (e) {} toast("转写好了：" + j.label, 5000); vib(30); }
@@ -2501,8 +2517,28 @@ const ASR = {
     const n = this.pending(); if (!n){ el.hidden = true; return; }
     const pct = this.dlPct(); const left = n - 1;
     el.hidden = false;
-    el.textContent = pct >= 0 && pct < 100 ? `正在下载识别模型：${pct}%（第一次才要下载）` : `正在转写：${this.cur ? this.cur.label : ""}${left ? `（后面还有 ${left} 段）` : ""}${this.status ? "　" + this.status : ""}`;
+    const what = this.cur && this.cur.kind === "load" ? "正在准备模型" : "正在转写";
+    el.textContent = pct >= 0 && pct < 100 ? `正在下载识别模型：${pct}%（下载一次就存在手机里）` : `${what}：${this.cur ? this.cur.label : ""}${left ? `（后面还有 ${left} 段）` : ""}${this.status ? "　" + this.status : ""}`;
   },
+  /* 哪些模型已经下载了、各占多少：transformers.js 把模型文件存在浏览器的 transformers-cache 里 */
+  async cacheInfo(){
+    const out = {}; for (const k of Object.keys(ASR_MODELS)) out[k] = {files:0, bytes:0};
+    try {
+      if (!window.caches) return out; const c = await caches.open("transformers-cache"); const keys = await c.keys();
+      for (const req of keys){ for (const [k, m] of Object.entries(ASR_MODELS)) if (req.url.includes("/" + m.id + "/")){
+        out[k].files++; try { const r = await c.match(req); const n = +((r && r.headers.get("content-length")) || 0); out[k].bytes += n || (r ? (await r.clone().blob()).size : 0); } catch (e) {} } }
+    } catch (e) {}
+    return out;
+  },
+  async deleteModel(key){
+    const m = ASR_MODELS[key]; if (!m || !window.caches) return 0; let n = 0;
+    try { const c = await caches.open("transformers-cache"); for (const req of await c.keys()) if (req.url.includes("/" + m.id + "/")){ await c.delete(req); n++; } } catch (e) {}
+    if (this.w && !this.cur){ try { this.w.terminate(); } catch (e) {} this.w = null; }
+    if ((L.asrModel || "large") === key){ L.asrReady = false; saveLocal(); }
+    return n;
+  },
+  download(key, onDone){ try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+    return this.enqueue({kind:"load", model:key, label:ASR_MODELS[key].label.split("（")[0] + "模型", onDone, onErr: msg => toast("模型没下载成功：" + msg, 6000)}); },
   async lock(){ try { if (!this.lockObj && navigator.wakeLock) this.lockObj = await navigator.wakeLock.request("screen"); } catch (e) {} },
   unlock(){ try { if (this.lockObj) this.lockObj.release(); } catch (e) {} this.lockObj = null; }
 };
@@ -5121,13 +5157,37 @@ VIEWS.asr = {
         : `<p class="small muted" style="margin-top:6px">排队中或正在转写……转好了会提醒你。</p>`}</div>`;
     return `<div class="wrap">${backBtn()}<h2>录音转文字</h2>
       <p class="muted small" style="margin:6px 0 10px">在手机上识别英文录音，比如实验室开会、面试的录音。识别在后台进行，转写的时候你可以去练别的，转好了会提醒你。</p>
-      ${ASR.supported() ? `<label class="btn primary block" style="text-align:center">选录音文件（可以一次选几个）<input type="file" id="asrFile" accept="audio/*,video/*" multiple data-chg="asr-file" style="display:none"></label>
+      ${ASR.supported() ? `<div class="panel" style="margin-bottom:12px"><b>识别模型</b><div id="asrModels" class="small muted" style="margin-top:6px">正在查看手机里存了哪些模型……</div><p class="small muted" id="asrUse" style="margin-top:8px"></p></div>
+        <label class="btn primary block" style="text-align:center">选录音文件（可以一次选几个）<input type="file" id="asrFile" accept="audio/*,video/*" multiple data-chg="asr-file" style="display:none"></label>
         <p class="small muted" style="margin-top:8px">用的是${esc((ASR_MODELS[L.asrModel] || ASR_MODELS.large).label)}，可以在“我的 → 设置”里换。很长的录音（比如一小时）在手机上会很慢，也可能内存不够，最好先剪成 20 分钟以内的几段，或者在电脑浏览器里打开 app 转。</p>
         <p class="small muted">转出来的文字可能会把口误和小的语法错“修好”，找语法错时，最好对着录音再听一遍。</p>`
         : `<p class="panel">这个版本用不了：录音转文字要在安装到手机上的版本里用（claude.ai 里下载不了识别模型）。</p>`}
       <div style="margin-top:14px">${list.length ? list.map(row).join("") : `<p class="muted small">还没有转写过的录音。</p>`}</div></div>`;
   }
 };
+/* 模型管理：每个模型显示下没下载、占多少、是不是正在用；可以下载、换着用、删除 */
+function fmtMB(b){ return b >= 1e9 ? (b / 1e9).toFixed(2) + " GB" : Math.max(1, Math.round(b / 1e6)) + " MB"; }
+async function asrModelsPaint(){
+  const box = document.getElementById("asrModels"); if (!box) return;
+  const info = await ASR.cacheInfo(); const cur = L.asrModel || "large"; const busy = ASR.pending() > 0;
+  box.innerHTML = Object.entries(ASR_MODELS).map(([k, m]) => { const d = info[k] || {files:0, bytes:0}; const have = d.files > 0;
+    return `<div class="asr-model${k === cur ? " cur" : ""}"><div><b>${esc(m.label.split("（")[0])}</b>${k === cur ? `<span class="tag-cur">正在用</span>` : ""}<br><span>${esc(m.label.replace(/^[^（]*（|）$/g, ""))}</span>　<span>${have ? "已下载，占 " + fmtMB(d.bytes) : "还没下载"}</span></div>
+      <div class="row-gap" style="margin-top:6px">${k !== cur ? `<button class="btn sm" data-act="asrm-use" data-v="${k}">用这个</button>` : ""}${!have ? `<button class="btn sm${k === cur ? " primary" : ""}" data-act="asrm-get" data-v="${k}" ${busy ? "disabled" : ""}>下载</button>` : `<button class="btn sm ghost" data-act="asrm-del" data-v="${k}" ${busy ? "disabled" : ""}>删除</button>`}</div></div>`; }).join("");
+  const use = document.getElementById("asrUse");
+  if (use){ try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; use.textContent = e && e.quota ? `app 现在一共占用约 ${fmtMB(e.usage || 0)}，手机还给它留了约 ${fmtMB(Math.max(0, (e.quota || 0) - (e.usage || 0)))}。` : ""; } catch (err) { use.textContent = ""; } }
+  const d = info[cur]; if (d && d.files > 0 && !L.asrReady){ L.asrReady = true; saveLocal(); }
+}
+VIEWS.asr.mount = () => { asrModelsPaint(); };
+ACT["asrm-use"] = async el => { const k = el.dataset.v; L.asrModel = k; const info = await ASR.cacheInfo(); L.asrReady = !!(info[k] && info[k].files); saveLocal();
+  if (ASR.w && !ASR.cur){ try { ASR.w.terminate(); } catch (e) {} ASR.w = null; }
+  toast(L.asrReady ? "换好了，下次转写就用它" : "换好了；这个模型还没下载，第一次转写时会先下载"); UI.render(); };
+ACT["asrm-get"] = async el => { const k = el.dataset.v; const m = ASR_MODELS[k];
+  if (!await sheet("下载这个模型？", `${m.label}。建议连着 Wi-Fi 下载，下载时请让 app 开着。下载好以后存在手机里，不联网也能用。`, "下载", false)) return;
+  ASR.download(k, () => { if ((L.asrModel || "large") === k){ L.asrReady = true; saveLocal(); } const t = UI.top(); if (t && t.name === "asr") asrModelsPaint(); });
+  setTimeout(asrModelsPaint, 50); };
+ACT["asrm-del"] = async el => { const k = el.dataset.v; const m = ASR_MODELS[k];
+  if (!await sheet("删除这个模型？", `删除以后能腾出空间；以后再用要重新下载。（${m.label.split("（")[0]}）`, "删除", true)) return;
+  const n = await ASR.deleteModel(k); toast(n ? "删掉了" : "这个模型没有存在手机里"); asrModelsPaint(); };
 CHG["asr-file"] = async el => {
   const files = Array.from(el.files || []); el.value = ""; if (!files.length) return;
   if (!await asrOK()) return;

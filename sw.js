@@ -1,5 +1,5 @@
 /* 脱口离线缓存 */
-const VERSION = "1.18.0";
+const VERSION = "1.18.1";
 const CACHE = "tuokou-" + VERSION;
 const FONTS = "tuokou-fonts";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
@@ -20,6 +20,12 @@ self.addEventListener("fetch", e => {
       const net = fetch(req).then(res => { if (res && res.ok) c.put(req, res.clone()); return res; }).catch(() => null);
       if (hit){ e.waitUntil(net); return hit; }
       return (await net) || (await c.match("./index.html")) || new Response("offline", {status:503});
+    }));
+  } else if (url.hostname === "cdn.jsdelivr.net" && (url.pathname.includes("/@huggingface/transformers@") || url.pathname.includes("/onnxruntime-web@"))){
+    /* 录音转文字的识别模块：第一次联网时存下来，之后断网也能用（模型文件本身由 transformers.js 存在 transformers-cache 里） */
+    e.respondWith(caches.open("asr-lib").then(async c => {
+      const hit = await c.match(req); if (hit) return hit;
+      const res = await fetch(req); if (res && res.ok) c.put(req, res.clone()); return res;
     }));
   } else if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com"){
     e.respondWith(caches.open(FONTS).then(async c => {
