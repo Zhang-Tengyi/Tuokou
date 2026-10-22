@@ -413,7 +413,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.16.3"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.16.4"};</script>
 <script>
 /* 脱口 · 内置内容。全部来自《英语问题诊断报告》第 3 版。
    注意：id 一经发布就不要改（进度按 id 记录），新内容只能追加。 */
@@ -2310,17 +2310,28 @@ const TTS = {
       if (v){ try { u.voice = v; u.lang = v.lang; } catch (e) {} }
       u.rate = Math.max(0.5, Math.min(1.6, (o.rate || 1) * (lang === "en" ? (L.rate || 0.95) : 1)));
       let done = false;
-      /* 安卓 Chrome 偶尔会吞掉紧跟在上一句后面的那一句：先把朗读从“暂停”里恢复，
-         刚读完上一句的话多等一会儿再发；1.8 秒还没开始出声，就取消重发一次 */
-      let started = false, retried = false, watch = null;
-      const fin = ok => { if (done) return; done = true; clearTimeout(tm); clearTimeout(watch); this.keep.delete(u); res(ok); };
+      /* 安卓 Chrome 偶尔会吞掉紧跟在上一句后面的那一句：先把朗读从“暂停”里恢复，刚读完上一句的话多等一会儿再发。
+         3.5 秒后还没开始出声、手机也不在排队或朗读，才算被吞了，用一个新的朗读请求重发一次。
+         注意：第一次用某个声音时，手机可能要一两秒才出声，所以不能等太短，也不能打断还在排队的 */
+      let started = false, retried = false, watch = null, u2 = null;
+      const fin = ok => { if (done) return; done = true; clearTimeout(tm); clearTimeout(watch); this.keep.delete(u); if (u2) this.keep.delete(u2); res(ok); };
       u.onstart = () => { started = true; clearTimeout(watch); };
       u.onend = () => fin(true); u.onerror = () => fin(false);
       this.keep.add(u);
       const est = 1500 + text.length * (lang === "zh" ? 260 : 85) / u.rate;
-      const tm = setTimeout(() => fin(true), est + 4000);
+      const tm = setTimeout(() => fin(true), est + 6000);
+      const resend = () => {
+        if (started || done || retried) return;
+        let inProgress = false; try { inProgress = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {}
+        if (inProgress) return;
+        retried = true;
+        u2 = new SpeechSynthesisUtterance(u.text); u2.lang = u.lang; if (u.voice){ try { u2.voice = u.voice; } catch (e) {} } u2.rate = u.rate;
+        u2.onstart = u.onstart; u2.onend = u.onend; u2.onerror = u.onerror; this.keep.add(u2);
+        try { speechSynthesis.cancel(); } catch (e) {}
+        setTimeout(() => { if (!done){ try { if (speechSynthesis.paused) speechSynthesis.resume(); speechSynthesis.speak(u2); } catch (e) { fin(false); } } }, 200);
+      };
       const go = () => { try { if (speechSynthesis.paused) speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { fin(false); return; }
-        watch = setTimeout(() => { if (started || done || retried) return; let sp = false; try { sp = speechSynthesis.speaking && !speechSynthesis.paused; } catch (e) {} if (sp) return; retried = true; try { speechSynthesis.cancel(); } catch (e) {} setTimeout(() => { if (!done){ try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { fin(false); } } }, 180); }, 1800); };
+        watch = setTimeout(resend, 3500); };
       setTimeout(go, busy ? 220 : 60);
     });
   }
