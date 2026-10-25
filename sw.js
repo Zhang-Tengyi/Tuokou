@@ -1,8 +1,8 @@
 /* 脱口离线缓存 */
-const VERSION = "1.27.0";
+const VERSION = "1.29.0";
 const CACHE = "tuokou-" + VERSION;
 const FONTS = "tuokou-fonts";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./scenes/day.webp", "./scenes/night.webp", "./scenes/garage.webp", "./scenes/factory.webp", "./scenes/forest.webp", "./scenes/forestN.webp", "./scenes/gday.webp", "./scenes/gday_front.webp", "./scenes/gnight.webp", "./scenes/gnight_front.webp", "./scenes/gforest.webp", "./scenes/gforest_front.webp", "./scenes/gforestN.webp", "./scenes/gforestN_front.webp", "./scenes/amuse.webp", "./scenes/amuse_front.webp", "./scenes/amuseN.webp", "./scenes/amuseN_front.webp", "./scenes/moon.webp", "./scenes/moon_front.webp", "./scenes/gas.webp", "./scenes/gas_front.webp", "./scenes/gasN.webp", "./scenes/gasN_front.webp"];
 const FONT_CSS = "https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:ital,wght@0,600;1,600;1,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap";
 self.addEventListener("install", e => { e.waitUntil((async () => {
   const c = await caches.open(CACHE);
