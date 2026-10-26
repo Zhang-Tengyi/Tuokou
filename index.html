@@ -651,7 +651,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.31.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.32.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -9496,7 +9496,7 @@ const BT = (() => {
   const TEMPLATES = {
     brawler:{name:"格斗型", light:"punch", heavy:"kick", skill:"wideBeam", hover:false, r:0.80, cm:180},
     blade:  {name:"剑士型", light:"thrust", heavy:"kesa", skill:"crescent", hover:false, r:0.83, cm:180},
-    beam:   {name:"光线型", light:"laserThin", heavy:"laserThick", skill:"wideBeam", hover:true, r:1.10, cm:183},
+    beam:   {name:"光线型", light:"laserThin", heavy:"laserThick", skill:"wideBeam", hover:true, r:1.0, cm:183},
     storm:  {name:"电光型", light:"punch", heavy:"fireKick", skill:"stormBeam", hover:false, r:0.852, cm:185}
   };
   const tplOf = id => TEMPLATES[MS_ALIAS[id] || id] ? (MS_ALIAS[id] || id) : null;
@@ -10795,8 +10795,8 @@ const BT = (() => {
   const ML = () => (typeof TuokouMonsters !== "undefined" ? TuokouMonsters.list() : []);
   const ids = tier => ML().filter(x => x.tier === tier).map(x => x.id);
   function codeMon(id, hp){ const x = ML().find(m => m.id === id) || {name:id}; return {code:id, codemon:true, name:x.name, en:"", note:x.note || "", tierName:x.tierName || "", hp, max:hp, boss:false}; }
-  function minor(i){ const l = ids("minor"); return codeMon(l[i % l.length], 24); }
-  function eliteMon(i){ const l = ids("elite"); return codeMon(l[i % l.length], 36); }
+  function minor(i){ const l = ids("minor"); return Object.assign(codeMon(l[i % l.length], 24), {tier:"minor"}); }
+  function eliteMon(i){ const l = ids("elite"); return Object.assign(codeMon(l[i % l.length], 36), {tier:"elite"}); }
   function monster(i){ if (typeof TuokouMonsters !== "undefined") return minor(i); const m = MONSTERS[i % MONSTERS.length]; return Object.assign({}, m, {svg: MON_ART[m.id], hp:24, max:24, boss:false}); }
   /* 首领：形象 8 只轮流（img），弱点照旧按学习数据（tag），名字用怪物的 */
   function boss(tag, hp, img){
@@ -10890,6 +10890,12 @@ function batRecord(stage){
   stage.batEntry = e; RUN.battle.push(e);
   if (RUN.game && GAME.st) GAME.onCard(e);
 }
+/* 对手反击的伤害：档位底数 × 招式加成（轻击 ×1、重击 ×1.3、技能 ×1.6），四舍五入
+   小兵 6 / 8 / 10，小怪 7 / 9 / 11，强化兵 8 / 10 / 13，精英和劲敌 10 / 13 / 16，首领 重击 18、技能 22 */
+const COUNTER_BASE = {grunt:6, minor:7, trooper:8, elite:10, boss:14};
+const COUNTER_MULT = {light:1, heavy:1.3, skill:1.6};
+function counterTier(e){ return e.boss ? "boss" : e.rival ? "elite" : (COUNTER_BASE[e.tier] ? e.tier : "minor"); }
+function counterDmg(e, kind){ return Math.round(COUNTER_BASE[counterTier(e)] * (COUNTER_MULT[kind] || 1)); }
 /* 舞台上写的名字：正在用的角色的名字（原创小人就写“你”） */
 function youName(){ const c = BAT_CHAR && BAT_LIST.find(x => x.id === L.batActive); return c ? c.name : "你"; }
 /* “识别错了”：不限次数（识别不准不是用户能控制的）；一轮里点得多，结算时提醒去换识别 */
@@ -10937,7 +10943,7 @@ const GAME = {
     GAME.next(true);
     if (r && r.hp != null && GAME.st.enemy){ GAME.st.enemy.hp = r.hp; A.setHP(r.hp, true, GAME.st.enemy.max); }
     GAME.score(); GAME.meter();
-    if (!L.gameTip){ const g = document.querySelector(".g-top"); if (g) g.insertAdjacentHTML("beforeend", `<div class="panel g-tip"><b>怎么打</b><p class="small" style="margin-top:4px">说完一句，你的角色就出招：完全对打得最重，3 秒内说出来还有暴击；只要开口说了，至少也能擦伤对手；一个字没说，对手加一层护盾，重练时说对就能打碎。被识别错了，就点“我说对了，是识别错了”，一样算你打中。每次第一次就说对，攒一格能量；攒满 5 格，下一张是大招卡，说对了就放大招。没看清，点“回放”。</p><button class="btn sm" data-act="g-tip-ok" style="margin-top:6px">知道了</button></div>`); }
+    if (!L.gameTip){ const g = document.querySelector(".g-top"); if (g) g.insertAdjacentHTML("beforeend", `<div class="panel g-tip"><b>怎么打</b><p class="small" style="margin-top:4px">说完一句，你的角色就出招：完全对打得最重，3 秒内说出来还有暴击；只要开口说了，至少也能擦伤对手；一个字没说，对手加一层护盾，还会反击你：小兵打得轻，首领打得最重。重练时说对就能打碎护盾。被识别错了，就点“我说对了，是识别错了”，一样算你打中。每次第一次就说对，攒一格能量；攒满 5 格，下一张是大招卡，说对了就放大招。没看清，点“回放”。</p><button class="btn sm" data-act="g-tip-ok" style="margin-top:6px">知道了</button></div>`); }
   },
   score(){ const st = GAME.st; if (!st) return; const day = batDayRec(); st.A.setScore(`今天 ${st.todayBefore + st.sessionDmg}${day.hp ? ` / 昨天 ${day.hp}` : " 点"}`); },
   /* 连击、能量（5 格满了，下一张就是大招卡）、第几只 */
@@ -11068,14 +11074,15 @@ const GAME = {
     if (ok1 && st.energy < 5){ st.energy++; if (st.energy >= 5) GAME.armSpecial(); }
     GAME.meter();
   },
-  /* 对手反击：只有主动放弃（一个字没说）才会；每次正好扣 10 点 */
+  /* 对手反击：只有主动放弃（一个字没说）才会。伤害按对手的档位分（小兵最低、首领最高），再按出的招加成 */
   async counter(){
     const st = GAME.st; if (!st) return; const A = st.A, e = st.enemy;
     st.giveups++;
     const kind = e.boss ? (st.giveups === 1 ? "heavy" : "skill") : (st.giveups === 1 ? "light" : st.giveups === 2 ? "heavy" : "skill");
-    st.last.push({kind:"counter", mv:kind, label:"对手反击：你 -10"});
-    await A.enemyMove(kind, 10);
-    GAME.say(`对手反击：你 -10（还剩 ${st.php}）`);
+    const dmg = counterDmg(e, kind);
+    st.last.push({kind:"counter", mv:kind, label:`对手反击：你 -${dmg}`});
+    await A.enemyMove(kind, dmg);
+    GAME.say(`对手反击：你 -${dmg}（还剩 ${st.php}）`);
     if (st.php <= 0) await GAME.fail();
   },
   /* 血扣光：这一局失败。停下来，让用户选 */
