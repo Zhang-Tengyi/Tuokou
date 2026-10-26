@@ -570,8 +570,9 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .dict-list .btn span{font-weight:400}
 
 /* ---------- 1.25：代码怪物、你的血条、图鉴 ---------- */
-.bt-youbar{margin-top:4px;width:100%;margin-left:auto}
-.bt-youbar .bt-fill{background:#E5484D}
+.bt-youbar{margin:2px 0 3px;width:100%;margin-left:auto}
+.bt-youbar .bt-fill{background:#A3161F}
+.bt-youbar .bt-trail{background:rgba(255,170,170,.85)}
 .bt-monprev{position:relative;margin-top:8px}
 .bt-mons{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
 .bt-mon{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 10px;border:1px solid var(--line,#e2e2e2);border-radius:10px;background:transparent;color:inherit;font:inherit;cursor:pointer}
@@ -606,6 +607,15 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .bt-stage.soft .bt-vignette{display:block;background:radial-gradient(130% 100% at 50% 55%,transparent 64%,rgba(6,10,22,.12) 100%)}
 .bt-stage.night.soft .bt-vignette{background:radial-gradient(130% 100% at 50% 55%,transparent 60%,rgba(2,4,12,.18) 100%)}
 
+/* 敌人图鉴：每个对手一张卡片（图、名字、档位、介绍） */
+.bt-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}
+.bt-card{display:flex;flex-direction:column;align-items:stretch;gap:2px;text-align:left;padding:8px;border:1px solid var(--line,#e2e2e2);border-radius:12px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.bt-card.on{border-color:var(--purple,#7b4dd6);box-shadow:0 0 0 1px var(--purple,#7b4dd6) inset}
+.bt-card b{font-size:13.5px}
+.bt-thumb{width:100%;aspect-ratio:260/230;object-fit:contain;border-radius:8px;background:rgba(127,127,127,.08);margin-bottom:4px}
+.bt-card-tier{font-size:11.5px;color:var(--purple,#7b4dd6);font-weight:700}
+.bt-card-note{font-size:11.5px;color:var(--muted,#566274);line-height:1.45}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -626,7 +636,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.29.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.30.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2348,7 +2358,7 @@ const BAT_RANK = {off:0, graze:0, meaning:1, sound:1, close:2, exact:3};
    - 没对上，但开口说了：听起来很像 → sound（5）；否则 → 擦伤 graze（2）。开口尝试本身就有用（Kornell 等 2009）
    - 一个字没说：off，对手加一层护盾 */
 function battleFirst(e){
-  if (e.mis) return "close";
+  if (e.mis) return "exact";   /* 用户说对了、只是识别错了：按完全对算（不给暴击），每轮最多 3 次 */
   const lv = BAT_DMG[e.lv1] != null ? e.lv1 : "off";
   if (lv === "off" && e.spoke) return e.sound ? "sound" : "graze";
   return lv;
@@ -6125,7 +6135,7 @@ Kit.glowParts = function (svg) {
   return [...svg.querySelectorAll('[filter]')].filter((e) => /Glow\)$/.test(e.getAttribute('filter') || ''));
 };
 Kit.lightGlow = function (svg, boost) {
-  if (svg.__lite) return;   /* app 补丁：精简模式（lite）下不加发光滤镜 */
+  if (svg.__lite) return;          // lite mode: no filters at all
   for (const e of Kit.glowParts(svg)) {
     if (!e.dataset.glowCol) {
       let c = e.getAttribute('fill');
@@ -6140,7 +6150,7 @@ Kit.lightGlow = function (svg, boost) {
 };
 // a defeated monster's lights go out (and come back when it gets up)
 Kit.dimGlow = function (svg, off) {
-  if (svg.__lite) return;   /* app 补丁：精简模式下没有发光部位 */
+  if (svg.__lite) return;
   for (const e of Kit.glowParts(svg)) {
     e.style.transition = 'filter .7s ease';
     if (off) { if (e.dataset.lit === undefined) e.dataset.lit = e.style.filter || ''; e.style.filter = `${e.getAttribute('filter')} brightness(0.4) saturate(0.35)`; }
@@ -6272,7 +6282,7 @@ function CardFX(svg, fxLayer, target) {
     const ring = el('ellipse', { cx: x, cy: y, rx: 10, ry: 4, fill: f.grad('dust') }, fxLayer);
     f.run((now) => {
       const dt = Math.min(0.05, (now - last) / 1000), T = (now - t0) / 1000; last = now;
-      ring.setAttribute('rx', 10 + T * 160); ring.setAttribute('ry', 4 + T * 26); ring.setAttribute('opacity', Math.max(0, 1 - T * 1.6));
+      ring.setAttribute('rx', Math.max(0, 10 + T * 160)); ring.setAttribute('ry', Math.max(0, 4 + T * 26)); ring.setAttribute('opacity', Math.max(0, 1 - T * 1.6));
       for (const p of parts) { p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += 400 * dt; p.c.setAttribute('transform', `translate(${p.x} ${Math.min(p.y, 388)}) rotate(${p.r})`); p.c.setAttribute('opacity', Math.max(0, 1 - T * 1.2)); }
       if (T > 0.9) { parts.forEach((p) => p.c.remove()); ring.remove(); return false; }
       return true;
@@ -6359,6 +6369,7 @@ function CardFX(svg, fxLayer, target) {
     stone:   { n: 12, cols: ['#8E8A80', '#A9A59A', '#6E6A62'], glow: ['#FFD36A'], glowN: 4, shape: 'chip', size: [6, 12] },
     drop:    { n: 12, cols: ['#2A4A7A', '#1E3658'], glow: ['#7FF6FF'], glowN: 5, shape: 'blob', size: [3, 7] },
     venom:   { n: 12, cols: ['#6E9A3A', '#557A2C'], glow: ['#7CFF5A', '#B8FF6A'], glowN: 6, shape: 'blob', size: [3, 7] },
+    armor:   { n: 12, cols: ['#5A6270', '#8A93A3', '#3A404C'], glow: ['#FFD36A', '#FFF2B0'], glowN: 5, shape: 'chip', size: [4, 8], spark: true },
     void:    { n: 12, cols: ['#6B4AA8', '#4A3278', '#8E6AD8'], glow: ['#C8A8FF'], glowN: 4, shape: 'shard', size: [5, 10], float: true }
   };
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -6409,6 +6420,64 @@ function CardFX(svg, fxLayer, target) {
     });
   };
 
+  // a swing's arc: a bright crescent swept round a shoulder from angle a0 to a1 (degrees), fading fast
+  f.swing = (c, r, a0, a1, col) => {
+    const t0 = performance.now(), A = (d) => (d * Math.PI) / 180;
+    const p = el('path', { fill: 'none', stroke: col, 'stroke-width': 9, 'stroke-linecap': 'round', opacity: 0.9, filter: f.filter('bloom') }, fxLayer);
+    const q = el('path', { fill: 'none', stroke: '#FFFFFF', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.9 }, fxLayer);
+    const arc = (k) => { const e = a0 + (a1 - a0) * Math.min(1, k * 2.2), s = Math.max(a0 + (a1 - a0) * (k * 2.2 - 0.6), a0);
+      const x0 = c.x + Math.cos(A(s)) * r, y0 = c.y + Math.sin(A(s)) * r, x1 = c.x + Math.cos(A(e)) * r, y1 = c.y + Math.sin(A(e)) * r;
+      return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 0 ${a1 > a0 ? 1 : 0} ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+    f.run((now) => { const k = (now - t0) / 300; if (k >= 1) { p.remove(); q.remove(); return false; }
+      const d = arc(k); p.setAttribute('d', d); q.setAttribute('d', d); const o = (1 - k).toFixed(2); p.setAttribute('opacity', o); q.setAttribute('opacity', o); return true; });
+  };
+  // light gathering into a point: sparks drawn in from all round, spiralling, faster as they close in
+  f.gather = (at, ms, col) => {
+    const t0 = performance.now(), list = [];
+    let last = t0;
+    f.run((now) => {
+      const k = (now - t0) / ms, dt = (now - last) / 1000; last = now;
+      if (k < 1 && list.length < 70 && Math.random() < 0.9) for (let i = 0; i < 2; i++) {
+        const a = Math.random() * Math.PI * 2, d = 70 + Math.random() * 60;
+        list.push({ a, d, s: 1.5 + Math.random() * 2.5, p: el('circle', { r: 2.5, fill: Math.random() < 0.5 ? col : '#FFF4E0', filter: f.filter('bloom') }, fxLayer) });
+      }
+      const c = typeof at === 'function' ? at() : at;
+      for (const q of list) { if (!q.p) continue; q.d -= (60 + (120 - q.d) * 3) * dt; q.a += (3 + 60 / Math.max(8, q.d)) * dt;
+        if (q.d <= 4) { q.p.remove(); q.p = null; continue; }
+        q.p.setAttribute('cx', (c.x + Math.cos(q.a) * q.d).toFixed(1)); q.p.setAttribute('cy', (c.y + Math.sin(q.a) * q.d * 0.8).toFixed(1)); q.p.setAttribute('r', Math.max(0.5, q.s * Math.min(1, q.d / 40)).toFixed(2)); }
+      if (k >= 1 && list.every((q) => !q.p)) return false;
+      if (k >= 1.4) { list.forEach((q) => q.p && q.p.remove()); return false; }
+      return true;
+    });
+  };
+  // the streak a dash leaves through the air
+  f.trail = (x0, y0, x1, y1, col) => {
+    const t0 = performance.now();
+    const p = el('path', { d: `M${x0} ${y0} L${x1} ${y1}`, stroke: col, 'stroke-width': 10, 'stroke-linecap': 'round', opacity: 0.95, filter: f.filter('bloom') }, fxLayer);
+    const q = el('path', { d: `M${x0} ${y0} L${x1} ${y1}`, stroke: '#FFFFFF', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.95 }, fxLayer);
+    f.run((now) => { const k = (now - t0) / 420; if (k >= 1) { p.remove(); q.remove(); return false; }
+      p.setAttribute('stroke-width', (10 * (1 - k)).toFixed(1)); const o = (1 - k).toFixed(2); p.setAttribute('opacity', o); q.setAttribute('opacity', o); return true; });
+  };
+  // cut after cut across a target: bright slashes at random angles, one after another, over ms
+  f.slashes = (cx, cy, ms, n, col, onEach) => {
+    const t0 = performance.now(); let made = 0; const list = [];
+    f.run((now) => {
+      const k = (now - t0) / ms;
+      while (made < n && made / n <= k) {
+        const a = Math.random() * Math.PI, L = 70 + Math.random() * 60, ox = (Math.random() - 0.5) * 50, oy = (Math.random() - 0.5) * 80;
+        const x0 = cx + ox - Math.cos(a) * L / 2, y0 = cy + oy - Math.sin(a) * L / 2, x1 = cx + ox + Math.cos(a) * L / 2, y1 = cy + oy + Math.sin(a) * L / 2;
+        list.push({ t: now, p: el('path', { d: `M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}`, stroke: col, 'stroke-width': 6, 'stroke-linecap': 'round', filter: f.filter('bloom') }, fxLayer),
+                    q: el('path', { d: `M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}`, stroke: '#FFFFFF', 'stroke-width': 2, 'stroke-linecap': 'round' }, fxLayer) });
+        made++; if (onEach) onEach();
+      }
+      let alive = 0;
+      for (const s of list) { if (!s.p) continue; const j = (now - s.t) / 260; if (j >= 1) { s.p.remove(); s.q.remove(); s.p = null; continue; } alive++;
+        const o = (1 - j).toFixed(2); s.p.setAttribute('opacity', o); s.q.setAttribute('opacity', o); }
+      return made < n || alive > 0;
+    });
+  };
+  f.layer = fxLayer;
+
   return f;
 }
 // the stand-in for your character: a dim silhouette that flashes and staggers when hit
@@ -6442,7 +6511,7 @@ CardFX.more = function (f, svg) {
         if (k < 0) return true;
         if (k >= 1) { r.remove(); if (i === n - 1) { f.hit(1); if (f.impact) f.impact(b.x, b.y, 60, col, 1); } return false; }
         const x = a.x + (b.x - a.x) * k, y = a.y + (b.y - a.y) * k;
-        r.setAttribute('cx', x); r.setAttribute('cy', y); r.setAttribute('rx', 10 + k * 26); r.setAttribute('ry', 22 + k * 50); r.setAttribute('opacity', 1 - k * 0.7);
+        r.setAttribute('cx', x); r.setAttribute('cy', y); r.setAttribute('rx', Math.max(0, 10 + k * 26)); r.setAttribute('ry', Math.max(0, 22 + k * 50)); r.setAttribute('opacity', 1 - k * 0.7);
         return true;
       });
     }
@@ -6691,7 +6760,7 @@ CardFX.power = function (f, svg) {
       }
       if (puddle) {
         const k = (now - puddle._t) / 1800;
-        puddle.setAttribute('rx', 14 + Math.min(1, k * 3) * 46); puddle.setAttribute('ry', 4 + Math.min(1, k * 3) * 7);
+        puddle.setAttribute('rx', Math.max(0, 14 + Math.min(1, k * 3) * 46)); puddle.setAttribute('ry', Math.max(0, 4 + Math.min(1, k * 3) * 7));
         puddle.setAttribute('opacity', k > 0.7 ? 0.75 * (1 - (k - 0.7) / 0.3) : 0.75);
         if (Math.random() < 0.25 && k < 0.8) {
           const bx = t.x + (Math.random() - 0.5) * 70, b = el('circle', { cx: bx, cy: 384, r: 2 + Math.random() * 3, fill: 'none', stroke: '#C8FF8A', 'stroke-width': 1.4 }, L), b0 = now;
@@ -7367,7 +7436,7 @@ const VOLTAIL_POSES = {
   skill: { torso: 58, head: -40, t1: 14, t2: 6, t3: 2, t4: 0, t5: 0, sting: 34, nUpper: -76, nFore: 18, nPincer: 0, fUpper: -70, fFore: 16, nThigh: -46, nShin: 64, fThigh: -40, fShin: 58, dx: 10, dy: 40 },
   hit: { torso: -16, head: -20, t1: -14, t2: -10, nUpper: 26, nFore: 16, fUpper: 24, nThigh: 10, fThigh: -6, dx: -24, dy: -4 },
   win: { torso: -10, head: -16, t1: -8, t2: -6, t3: -4, nUpper: -110, nFore: -40, nFinger: 26, fUpper: -100, fFore: -36, dy: -4 },
-  loseMid: { torso: 10, head: 12, t1: -39, t2: -6, t3: -5, t4: -4, t5: -3, nUpper: -13, nFore: 17, nPincer: 4, fUpper: -12, fFore: 15, nThigh: -20, nShin: 64, fThigh: -39, fShin: 39, dx: -2, nFoot: -18, fFoot: 0, sting: -5, dy: 24.3 },
+  loseMid: { torso: 10, head: 12, t1: -40, t2: -1.5, t3: -15, t4: -15, t5: -11, nUpper: -27.5, nFore: 54, nPincer: 0, fUpper: -17, fFore: 46, nThigh: -20, nShin: 64, fThigh: -39, fShin: 39, dx: -2, nFoot: -18, fFoot: 0, sting: 0, fPincer: 0, dy: 24.3 },
   lose: { torso: 20, head: 24, t1: -80, t2: -3, t3: -30, t4: -30, t5: -22, nUpper: -55, nFore: 108, nPincer: 0, fUpper: -34, fFore: 92, nThigh: -40, nShin: 128, fThigh: -78, fShin: 78, dx: -4, dy: 63.2, nFoot: -36, fFoot: 0, sting: 0, fPincer: 0 }
 };
 const MOVES_VOLTAIL = {
@@ -8524,8 +8593,8 @@ const NULLWRAITH_POSES = {
   skill: { torso: -4, head: -6, halo: 80, nUpper: -110, nFore: -10, fUpper: -60, fFore: -20, dy: -20 },
   hit: { torso: -16, head: -20, halo: -20, nUpper: 24, nFore: 14, fUpper: 20, nThigh: 8, fThigh: 6, dx: -20, dy: -4 },
   win: { torso: -6, head: -14, halo: 60, nUpper: -150, nFore: -20, fUpper: -140, fFore: -18, dy: -12 },
-  loseMid: { torso: 9, head: 15, halo: -20, nUpper: -5, nFore: 10, nHand: 5, fUpper: 0, fFore: 5, nThigh: -20, nShin: 64, fThigh: -39, fShin: 39, dx: -2, nFoot: -18, fFoot: 0, dy: 17.5 },
-  lose: { torso: 18, head: 30, halo: -40, nUpper: -51, nFore: 59, nHand: 0, fUpper: -26, fFore: 34, nThigh: -40, nShin: 128, fThigh: -78, fShin: 78, dx: -4, dy: 59, nFoot: -36, fFoot: 0, fHand: 0 }
+  loseMid: { torso: 9, head: 15, halo: -20, nUpper: 1, nFore: -28.5, nHand: 0, fUpper: 2, fFore: -13, nThigh: -20, nShin: 64, fThigh: -39, fShin: 39, dx: -2, nFoot: -18, fFoot: 0, fHand: 0, dy: 17.5 },
+  lose: { torso: 18, head: 30, halo: -40, nUpper: 2, nFore: -57, nHand: 0, fUpper: 4, fFore: -26, nThigh: -40, nShin: 128, fThigh: -78, fShin: 78, dx: -4, dy: 67.3, nFoot: -36, fFoot: 0, fHand: 0 }
 };
 const MOVES_NULLWRAITH = {
   async light(m) {
@@ -8563,13 +8632,485 @@ const MOVES_NULLWRAITH = {
   }
 };
 
+// ----- soldiers.js -----
+// 人形小兵: five armoured foot soldiers on one shared body, each with its own gear and fighting style.
+//   拳斗兵 bare-handed with heavy power gauntlets · 电棍兵 a shock baton · 枪兵 a plasma rifle
+//   盾卫 an energy riot shield and a short club · 刃卫 an energy katana and a long scarf
+// The colours follow the app's tiers: 小兵 gunmetal with cyan light, 强化兵 navy with yellow, 精英 dark red with orange.
+// Faces right; the ground is y 386.
+const SOLDIER_KITS = {
+  brawler: { pal: 'grunt', gear: 'fists' }, shocker: { pal: 'grunt', gear: 'baton' },
+  gunner: { pal: 'trooper', gear: 'rifle' }, guard: { pal: 'trooper', gear: 'shield' }, blade: { pal: 'elite', gear: 'blade' }
+};
+const SOLDIER_PAL = {
+  grunt: { line: '#101218', main: '#454D5C', dark: '#2A2F39', light: '#7A8496', trim: '#A3ADBF', suit: '#1D2027', accent: '#59E3FF', accentD: '#2789A8', visor: '#7FF2FF', visorL: '#F0FFFF', steel: '#B9C2CF', steelD: '#6C7584' },
+  trooper: { line: '#0C1222', main: '#2E4373', dark: '#1C2A4B', light: '#5A76AE', trim: '#9AAED6', suit: '#131A2C', accent: '#F4CE4C', accentD: '#B08A1E', visor: '#FFE46C', visorL: '#FFF9DC', steel: '#C2CAD6', steelD: '#707A8A' },
+  elite: { line: '#150A0D', main: '#64202D', dark: '#3C1119', light: '#9A4351', trim: '#D8AEB3', suit: '#1B1115', accent: '#FF7A45', accentD: '#B8401E', visor: '#FF6E3C', visorL: '#FFE6D6', steel: '#D3D7DE', steelD: '#7C838F' }
+};
+function buildSoldier(svg, kind) {
+  const KIT = SOLDIER_KITS[kind], C = SOLDIER_PAL[KIT.pal], gear = KIT.gear;
+  const P = new Puppet(svg);
+  const K = Kit(svg, C, 'sd' + kind);
+  // one piece of limb: a capsule from a to b (radius r0 at a, r1 at b), filled so its outline is its real edge
+  const cap = (g, a, b, r0, r1, fill, extra) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+    const p = (q, r, s) => `${(q[0] + nx * r * s).toFixed(1)} ${(q[1] + ny * r * s).toFixed(1)}`;
+    return K.path(g, `M${p(a, r0, 1)} L${p(b, r1, 1)} A${r1} ${r1} 0 0 0 ${p(b, r1, -1)} L${p(a, r0, -1)} A${r0} ${r0} 0 0 0 ${p(a, r0, 1)} Z`, fill, extra);
+  };
+  const glow = (g, d, col, op) => K.fill(g, d, col || C.accent, { filter: K.glowF, opacity: op === undefined ? 1 : op });
+  const big = gear === 'fists';
+  if (gear === 'blade') {
+    var backW = P.follow(null, ['torso']);
+    const cape = P.part('cape', backW, 198, 146);
+    K.path(cape, 'M178 142 L232 142 C236 200 226 262 214 330 L200 316 L188 340 L176 318 L160 336 C150 286 150 214 178 142 Z', C.dark);
+    K.fill(cape, 'M206 146 L232 142 C236 200 226 262 214 330 L200 316 C210 262 214 200 206 146 Z', C.main);
+    glow(cape, 'M160 336 L176 318 L188 340 L200 316 L214 330 L212 336 L200 324 L188 346 L176 326 L162 342 Z', C.accent, 0.7);
+  }
+  // ---------- far leg ----------
+  const fThigh = P.part('fThigh', null, 190, 254), fShin = P.part('fShin', fThigh, 188, 312), fFoot = P.part('fFoot', fShin, 186, 366);
+  cap(fThigh, [190, 254], [188, 312], 15, 13, C.dark);
+  K.path(fThigh, 'M178 262 L202 262 L200 300 L180 300 Z', C.dark, { 'stroke-width': 2 });
+  cap(fShin, [188, 312], [186, 366], 13, 11, C.dark);
+  K.path(fShin, 'M178 304 C182 296 196 296 200 304 L198 318 L180 318 Z', C.suit, { 'stroke-width': 2 });
+  K.path(fFoot, 'M172 360 L200 360 L206 374 L218 378 L218 388 L170 388 Z', C.suit);
+  // ---------- far arm (behind the body, follows it) ----------
+  const fArmW = P.follow(null, ['torso']);
+  const fUpper = P.part('fUpper', fArmW, 186, 152), fFore = P.part('fFore', fUpper, 184, 204), fHand = P.part('fHand', fFore, 184, 250);
+  cap(fUpper, [186, 152], [184, 204], 13, 11, C.dark);
+  cap(fFore, [184, 204], [184, 250], big ? 14 : 11, big ? 14 : 10, C.dark);
+  if (big) K.path(fFore, 'M170 212 L198 212 L200 246 L168 246 Z', C.suit, { 'stroke-width': 2 });
+  K.path(fHand, big ? 'M168 248 C168 240 200 240 202 250 L202 270 C200 280 170 280 168 270 Z' : 'M174 248 C174 242 194 242 196 250 L196 266 C194 274 176 274 174 266 Z', C.suit);
+  if (big) glow(fHand, 'M172 256 L198 256 L198 259 L172 259 Z', C.accent, 0.8);
+  if (gear === 'shield') {           // a long club gripped in the far fist, the shaft sticking out forward
+    const club = P.part('fWeapon', fHand, 185, 259);
+    K.path(club, 'M164 254 L176 254 L176 264 L164 264 Z', C.suit, { 'stroke-width': 2 });                // pommel
+    K.path(club, 'M176 255 L300 253 C304 253 306 256 306 259 C306 262 304 265 300 265 L176 263 Z', C.steelD, { 'stroke-width': 2.4 });
+    K.fill(club, 'M196 255 L300 254 C303 254 305 256 305 258 L196 258 Z', C.steel);
+    [210, 226].forEach((x) => K.line(club, `M${x} 254 L${x} 264`, C.suit, 2.2));
+    glow(club, 'M268 255 L298 254 L298 264 L268 263 Z', C.accent, 0.75);
+  }
+  // ---------- body ----------
+  const torso = P.part('torso', null, 200, 252);
+  K.path(torso, 'M182 150 L232 150 L238 250 L178 250 Z', C.suit);                                     // undersuit
+  K.path(torso, 'M178 252 L236 252 L232 274 C220 280 194 280 182 274 Z', C.main);                      // hip guard
+  K.fill(torso, 'M210 254 L236 252 L232 274 C224 278 214 279 208 278 Z', C.dark);
+  K.path(torso, 'M180 238 L236 238 L236 254 L180 254 Z', C.dark, { 'stroke-width': 2.4 });            // belt
+  K.path(torso, 'M204 240 L220 240 L220 252 L204 252 Z', C.accentD, { 'stroke-width': 2 });
+  glow(torso, 'M208 243 L216 243 L216 249 L208 249 Z', C.accent, 0.9);
+  [186, 228].forEach((x) => K.path(torso, `M${x - 6} 240 L${x + 6} 240 L${x + 6} 256 L${x - 6} 256 Z`, C.suit, { 'stroke-width': 1.8 }));
+  [214, 226].forEach((y) => K.path(torso, `M182 ${y} L234 ${y - 2} L234 ${y + 9} L182 ${y + 11} Z`, C.dark, { 'stroke-width': 1.8 }));   // ab plates
+  // chest armour: broad plate, shaded below, lit on the upper edge
+  K.path(torso, 'M174 154 C182 140 230 136 244 150 L248 194 C244 212 226 218 208 218 C190 218 178 210 174 196 Z', C.main);
+  K.fill(torso, 'M212 218 C230 216 244 208 248 194 L246 166 C244 188 232 204 212 210 Z', C.dark);
+  K.fill(torso, 'M178 158 C188 146 226 142 240 152 C224 150 200 152 182 166 Z', C.light);
+  K.line(torso, 'M208 146 L210 216', C.dark, 2);
+  // tier stripes and the chest core light
+  if (KIT.pal === 'trooper') { K.path(torso, 'M178 186 L198 178 L200 186 L180 194 Z', C.accent, { 'stroke-width': 1.6 }); K.path(torso, 'M222 178 L244 186 L242 194 L220 186 Z', C.accent, { 'stroke-width': 1.6 }); }
+  if (KIT.pal === 'elite') { K.path(torso, 'M184 170 L208 196 L232 170 L232 178 L208 204 L184 178 Z', C.accentD, { 'stroke-width': 1.6 }); }
+  if (KIT.pal === 'grunt') { K.line(torso, 'M184 176 L200 170', C.accentD, 2); K.line(torso, 'M218 170 L236 176', C.accentD, 2); }
+  K.path(torso, 'M218 160 L230 160 L234 170 L230 180 L218 180 L214 170 Z', C.suit, { 'stroke-width': 2 });
+  glow(torso, 'M220 164 L228 164 L231 170 L228 176 L220 176 L217 170 Z', C.accent);
+  K.path(torso, 'M194 134 L222 134 L228 152 L190 152 Z', C.dark, { 'stroke-width': 2.4 });            // collar
+  // the elite's long scarf trails behind
+  if (gear === 'blade') {
+    const scarf = P.part('scarf', torso, 196, 142);
+    K.path(scarf, 'M198 138 C174 136 150 146 128 170 C140 168 150 166 158 168 C146 178 138 190 132 204 C156 186 176 166 200 150 Z', C.accent);
+    K.fill(scarf, 'M198 146 C178 154 160 170 146 186 C164 172 182 160 200 152 Z', C.accentD);
+  }
+  // ---------- head: helmet with a glowing visor and a breathing guard ----------
+  const head = P.part('head', torso, 209, 140);
+  K.path(head, 'M190 128 C186 102 196 84 216 82 C236 82 246 98 242 122 L238 138 C228 146 200 146 192 138 Z', C.main);
+  K.fill(head, 'M222 84 C236 86 244 100 242 122 L238 138 C232 142 226 143 220 143 C230 132 234 110 222 84 Z', C.dark);
+  K.fill(head, 'M194 116 C192 100 200 88 214 86 C204 92 198 104 198 118 Z', C.light);
+  K.path(head, 'M202 104 L244 100 L244 120 L204 124 Z', C.suit, { 'stroke-width': 2.4 });           // visor band
+  glow(head, 'M206 108 L242 104 L242 112 L206 116 Z', C.visor);
+  K.line(head, 'M210 109 L238 106', C.visorL, 1.4);
+  K.path(head, 'M224 124 L242 122 L240 138 L226 140 Z', C.dark, { 'stroke-width': 2 });               // breathing guard
+  [128, 133].forEach((y) => K.line(head, `M229 ${y} L238 ${y - 1}`, C.suit, 1.6));
+  if (KIT.pal === 'grunt') K.path(head, 'M200 86 L214 80 L230 84 L216 88 Z', C.trim, { 'stroke-width': 1.8 });
+  if (KIT.pal === 'trooper') { K.line(head, 'M196 96 L184 70', C.steelD, 2.6); glow(head, 'M181 64 L187 64 L187 70 L181 70 Z', C.accent); }
+  if (KIT.pal === 'elite') { K.path(head, 'M204 88 L188 56 L216 82 Z', C.accent, { 'stroke-width': 2 }); K.path(head, 'M222 84 L226 58 L234 88 Z', C.accentD, { 'stroke-width': 2 }); }
+  // ---------- near leg ----------
+  const nThigh = P.part('nThigh', null, 210, 254), nShin = P.part('nShin', nThigh, 214, 312), nFoot = P.part('nFoot', nShin, 214, 366);
+  cap(nThigh, [210, 254], [214, 312], 16, 14, C.suit);
+  K.path(nThigh, 'M196 262 L226 262 L228 300 L200 302 Z', C.main, { 'stroke-width': 2.4 });
+  K.fill(nThigh, 'M214 262 L226 262 L228 300 L216 301 Z', C.dark);
+  cap(nShin, [214, 312], [214, 366], 14, 12, C.suit);
+  K.path(nShin, 'M200 318 L230 316 L228 360 L202 360 Z', C.main, { 'stroke-width': 2.4 });
+  K.fill(nShin, 'M216 317 L230 316 L228 360 L216 360 Z', C.dark);
+  K.path(nShin, 'M202 302 C206 292 224 292 230 302 L228 320 L204 320 Z', C.light, { 'stroke-width': 2.2 });   // knee pad
+  K.path(nFoot, 'M198 360 L230 360 L236 374 L250 378 L250 388 L196 388 Z', C.dark);
+  K.line(nFoot, 'M198 384 L250 384', C.suit, 3);
+  // ---------- near arm (in front) ----------
+  const nArmW = P.follow(null, ['torso']);           // the near arm is drawn over the legs and the body
+  const nUpper = P.part('nUpper', nArmW, 226, 152), nFore = P.part('nFore', nUpper, 230, 204), nHand = P.part('nHand', nFore, 232, 250);
+  cap(nUpper, [226, 152], [230, 204], 14, 12, C.suit);
+  K.path(nUpper, 'M210 142 C220 130 244 132 250 148 L248 170 C238 174 222 174 212 166 Z', C.main);        // pauldron
+  K.fill(nUpper, 'M232 136 C244 138 250 146 250 150 L248 170 C244 172 238 173 232 173 Z', C.dark);
+  K.fill(nUpper, 'M214 146 C220 138 234 136 242 140 C232 142 222 146 216 152 Z', C.light);
+  if (KIT.pal === 'trooper') K.path(nUpper, 'M220 160 L246 158 L246 164 L220 166 Z', C.accent, { 'stroke-width': 1.4 });
+  if (KIT.pal === 'elite') K.path(nUpper, 'M236 134 L256 124 L248 144 Z', C.accentD, { 'stroke-width': 2 });
+  const cannon = gear === 'rifle';
+  if (!cannon) cap(nFore, [230, 204], [232, 250], big ? 15 : 12, big ? 15 : 11, C.suit);
+  if (cannon) {     // the forearm is a plasma cannon: elbow socket, armoured housing, coils, a long barrel ending past the fist
+    cap(nFore, [230, 204], [231, 230], 14, 15, C.suit);
+    K.path(nFore, 'M210 214 C210 206 252 206 252 214 L254 290 C254 298 210 298 208 290 Z', C.main, { 'stroke-width': 2.6 });
+    K.fill(nFore, 'M234 208 C246 208 252 210 252 214 L254 290 C254 296 244 298 234 298 Z', C.dark);
+    K.fill(nFore, 'M214 216 C216 210 226 209 232 210 C222 214 218 222 216 236 Z', C.light);
+    [234, 254, 274].forEach((y) => { K.path(nFore, `M208 ${y} L254 ${y} L254 ${y + 7} L208 ${y + 7} Z`, C.suit, { 'stroke-width': 1.8 }); glow(nFore, `M212 ${y + 2} L250 ${y + 2} L250 ${y + 5} L212 ${y + 5} Z`, C.accent, 0.85); });
+    K.path(nFore, 'M218 296 L246 296 L244 330 L220 330 Z', C.suit, { 'stroke-width': 2.4 });            // barrel
+    K.fill(nFore, 'M232 297 L246 296 L244 330 L232 330 Z', C.dark);
+    K.path(nFore, 'M214 326 L250 326 L250 340 L214 340 Z', C.dark, { 'stroke-width': 2.4 });            // muzzle brake
+    [222, 232, 242].forEach((x) => K.line(nFore, `M${x} 328 L${x} 338`, C.suit, 2));
+    glow(nFore, 'M220 338 L244 338 L244 343 L220 343 Z', C.accent, 0.9);
+    K.path(nFore, 'M252 240 L264 236 L266 262 L254 266 Z', C.dark, { 'stroke-width': 2 });              // sight
+    glow(nFore, 'M256 244 L262 242 L263 252 L257 254 Z', C.visor, 0.9);
+  }
+  if (!cannon) {
+    K.path(nFore, big ? 'M212 210 L250 210 L252 252 L212 252 Z' : 'M218 212 L244 212 L246 248 L220 248 Z', C.main, { 'stroke-width': 2.4 });   // bracer
+    K.fill(nFore, big ? 'M234 210 L250 210 L252 252 L234 252 Z' : 'M234 212 L244 212 L246 248 L234 248 Z', C.dark);
+    glow(nFore, big ? 'M214 224 L250 224 L250 228 L214 228 Z' : 'M220 226 L244 226 L244 229 L220 229 Z', C.accent, 0.85);
+  }
+  if (big) {   // power gauntlet: a big armoured fist with glowing knuckles
+    K.path(nHand, 'M212 248 C212 238 252 238 254 250 L256 276 C254 288 216 288 212 276 Z', C.main);
+    K.fill(nHand, 'M236 242 C248 244 254 248 254 252 L256 276 C254 284 244 286 236 286 Z', C.dark);
+    [254, 264, 274].forEach((y) => K.line(nHand, `M216 ${y} L252 ${y}`, C.dark, 2));
+    glow(nHand, 'M248 252 L256 252 L257 280 L249 280 Z', C.accent);
+  } else if (!cannon) {
+    K.path(nHand, 'M220 248 C220 242 244 242 246 250 L246 268 C244 276 222 276 220 268 Z', C.suit);
+  }
+  // ---------- gear in the near hand ----------
+  if (gear === 'baton') {
+    const w = P.part('weapon', nHand, 233, 259);
+    K.path(w, 'M212 254 L222 254 L222 264 L212 264 Z', C.dark, { 'stroke-width': 2 });                  // pommel
+    K.path(w, 'M244 254 L318 253 L318 265 L244 264 Z', C.steelD, { 'stroke-width': 2.4 });              // shaft
+    K.fill(w, 'M246 255 L318 254 L318 258 L246 258 Z', C.steel);
+    [262, 280, 298].forEach((x) => { K.path(w, `M${x} 252 L${x + 6} 252 L${x + 6} 266 L${x} 266 Z`, C.suit, { 'stroke-width': 1.6 }); });
+    K.path(w, 'M316 250 L336 250 C340 250 342 254 342 259 C342 264 340 268 336 268 L316 268 Z', C.dark, { 'stroke-width': 2.4 });   // shock head
+    glow(w, 'M320 253 L334 253 C337 253 338 256 338 259 C338 262 337 265 334 265 L320 265 Z', C.accent);
+    w.setAttribute('data-tip', '1');
+  }
+  if (gear === 'shield') {
+    const s = P.part('shield', nFore, 231, 228);
+    K.path(s, 'M236 172 L246 168 L246 290 L236 280 Z', C.dark, { 'stroke-width': 2.6 });                         // the rim, seen edge-on
+    K.path(s, 'M246 168 L276 176 L290 198 L290 268 L272 300 L246 290 Z', C.main, { 'stroke-width': 3 });        // the face, turned toward the opponent
+    K.fill(s, 'M268 176 L276 176 L290 198 L290 268 L272 300 L266 298 C278 270 280 220 268 176 Z', C.dark);
+    K.fill(s, 'M248 172 L262 174 C256 210 254 250 256 286 L248 284 Z', C.light);
+    K.path(s, 'M252 184 L272 190 L282 206 L282 262 L270 286 L252 278 Z', C.suit, { 'stroke-width': 2 });
+    glow(s, 'M256 194 L270 198 L278 210 L278 258 L268 278 L256 272 Z', C.accent, 0.42);
+    K.path(s, 'M256 228 L266 218 L276 230 L276 238 L266 226 L256 236 Z', C.accent, { 'stroke-width': 1.6 });
+    K.path(s, 'M256 248 L266 238 L276 250 L276 258 L266 246 L256 256 Z', C.accent, { 'stroke-width': 1.6 });
+    s.setAttribute('data-field', '1');
+  }
+  if (gear === 'blade') {
+    const w = P.part('weapon', nHand, 233, 259);
+    K.path(w, 'M206 255 L246 254 L246 264 L206 264 Z', C.suit, { 'stroke-width': 2.2 });                  // long grip
+    [212, 220, 228].forEach((x) => K.line(w, `M${x} 255 L${x + 4} 264`, C.accentD, 1.6));
+    K.path(w, 'M246 246 L254 246 L254 272 L246 272 Z', C.accent, { 'stroke-width': 2 });                  // guard
+    const bl = el('g', { 'data-blade': '1' }, w);
+    K.path(bl, 'M254 254 L392 248 C398 250 400 254 396 258 C350 266 300 266 254 264 Z', C.steel, { 'stroke-width': 2.2 });
+    K.fill(bl, 'M256 255 L392 249 C395 250 396 252 394 253 L256 258 Z', '#FFFFFF', { opacity: 0.55 });
+    glow(bl, 'M256 262 C300 264 350 263 394 257 L396 259 C350 267 300 268 256 266 Z', C.accent);       // burning edge
+    w.setAttribute('data-tip', '1');
+    // the elite's armour: horned crest, a jaw guard with glowing slits, layered spiked pauldrons, glowing seams
+    K.path(head, 'M196 96 L168 60 L176 58 L206 90 Z', C.accent, { 'stroke-width': 2 });
+    K.path(head, 'M226 86 L240 46 L246 52 L236 90 Z', C.accentD, { 'stroke-width': 2 });
+    glow(head, 'M210 84 L216 70 L222 84 Z', C.accent, 0.9);
+    K.path(head, 'M220 122 L246 118 L244 142 L224 146 Z', C.dark, { 'stroke-width': 2.2 });
+    [126, 132, 138].forEach((y) => glow(head, `M228 ${y} L242 ${y - 2} L242 ${y} L228 ${y + 2} Z`, C.accent, 0.8));
+    K.path(nUpper, 'M206 138 C216 120 250 120 260 142 L252 152 C240 136 222 136 210 148 Z', C.dark, { 'stroke-width': 2.4 });
+    K.path(nUpper, 'M240 128 L270 110 L258 140 Z', C.accent, { 'stroke-width': 2 });
+    glow(nUpper, 'M214 168 L246 166 L246 169 L214 171 Z', C.accent, 0.8);
+    K.path(torso, 'M172 150 C178 128 206 124 214 136 L204 150 C196 142 184 142 176 154 Z', C.dark, { 'stroke-width': 2.2 });
+    glow(torso, 'M186 200 L208 214 L230 200 L230 204 L208 218 L186 204 Z', C.accent, 0.85);
+  }
+  // both legs go behind the arms (the hands are never hidden by a leg); the elite's cape covers everything
+  P.root.insertBefore(nThigh, fArmW);
+  if (gear === 'blade' && backW) { P.root.appendChild(backW); }
+  if (gear === 'shield') nUpper.appendChild(nFore);
+  P.apply();
+  return P;
+}
+const buildBrawler = (svg) => buildSoldier(svg, 'brawler');
+const buildShocker = (svg) => buildSoldier(svg, 'shocker');
+const buildGunner = (svg) => buildSoldier(svg, 'gunner');
+const buildGuard = (svg) => buildSoldier(svg, 'guard');
+const buildBlade = (svg) => buildSoldier(svg, 'blade');
+
+// ---------- poses: a shared guard stance, hit and win, then each soldier's own attacks ----------
+const SOLDIER_BASE = {
+  idle: { torso: 4, head: -4, nUpper: -36, nFore: -80, fUpper: -22, fFore: -88, nThigh: -18, nShin: 18, nFoot: 0, fThigh: 16, fShin: 10, fFoot: -6, dy: 4 },
+  hit: { torso: -16, head: -20, nUpper: -6, nFore: -46, fUpper: 12, fFore: -40, nThigh: -4, nShin: 10, fThigh: 24, fShin: 12, dx: -18 },
+  win: { torso: -6, head: -12, nUpper: -168, nFore: -12, fUpper: -30, fFore: -96, nThigh: -10, fThigh: 10 },
+  lose: { torso: 30, head: 34, nUpper: -25, nFore: 0, nHand: 0, weapon: 0, fUpper: -27, fFore: 0, fWeapon: 0, shield: 0, nThigh: 6, nShin: 101, nFoot: -17, fThigh: 4, fShin: 101, fFoot: -15, dx: -4, dy: 55.5, cape: 0 }
+};
+const soldierPoses = (own) => Object.assign({}, SOLDIER_BASE, own);
+const BRAWLER_POSES = soldierPoses({
+  lightWind: { torso: -4, head: -4, nUpper: -16, nFore: -110, fUpper: -30, fFore: -92, nThigh: -18, nShin: 18, fThigh: 18, fShin: 10, dx: -8, dy: 4 },
+  light: { torso: 12, head: 4, nUpper: -88, nFore: -6, fUpper: -16, fFore: -100, nThigh: -28, nShin: 20, fThigh: 24, fShin: 6, dx: 34, dy: 2 },
+  jab2: { torso: 14, head: 4, nUpper: -20, nFore: -110, fUpper: -90, fFore: -6, nThigh: -26, nShin: 20, fThigh: 24, dx: 38, dy: 2 },
+  heavyWind: { torso: 14, head: 8, nUpper: 16, nFore: -50, fUpper: -30, fFore: -90, nThigh: -32, nShin: 44, fThigh: 30, fShin: 36, dx: -6, dy: 16 },
+  heavy: { torso: -14, head: -10, nUpper: -156, nFore: -24, fUpper: 6, fFore: -60, nThigh: -12, nShin: 6, fThigh: 20, fShin: 10, dx: 32, dy: -10 },
+  skillWind: { torso: -12, head: -6, nUpper: 18, nFore: -118, fUpper: -60, fFore: -64, nThigh: -26, nShin: 26, fThigh: 26, fShin: 18, dx: -12, dy: 8 },
+  skill: { torso: 18, head: 6, nUpper: -94, nFore: 0, fUpper: 8, fFore: -70, nThigh: -34, nShin: 22, fThigh: 32, fShin: 6, dx: 46, dy: 4 },
+  win: { torso: -6, head: -12, nUpper: -168, nFore: -12, fUpper: 10, fFore: -110, nThigh: -10, fThigh: 10 }
+});
+// world angle of a piece = its rest direction + everything above it; the weapons stick out of the fist at a right angle
+const SHOCKER_POSES = soldierPoses({
+  // the baton rests back over the shoulder, ready to come down
+  idle: { torso: 4, head: -4, nUpper: -29, nFore: -133, weapon: 10, fUpper: -22, fFore: -88, nThigh: -18, nShin: 18, fThigh: 16, fShin: 10, fFoot: -6, dy: 4 },
+  lightWind: { torso: -8, head: -6, nUpper: -160, nFore: -40, weapon: 0, fUpper: -30, fFore: -80, nThigh: -16, nShin: 16, fThigh: 18, dx: -6, dy: 4 },
+  light: { torso: 14, head: 4, nUpper: -79, nFore: -8, weapon: 40, fUpper: -10, fFore: -96, nThigh: -28, nShin: 20, fThigh: 24, dx: 34, dy: 2 },
+  backWind: { torso: 18, head: 6, nUpper: -70, nFore: -120, weapon: 0, fUpper: -10, fFore: -96, nThigh: -28, nShin: 20, fThigh: 24, dx: 34, dy: 2 },
+  back: { torso: 6, head: 2, nUpper: -10, nFore: -70, weapon: 30, fUpper: -10, fFore: -96, nThigh: -26, nShin: 20, fThigh: 24, dx: 40, dy: 2 },
+  heavyWind: { torso: -14, head: -10, nUpper: -176, nFore: -30, weapon: 0, fUpper: -168, fFore: -36, nThigh: -12, fThigh: 14, dx: -10, dy: -8 },
+  heavy: { torso: 24, head: 10, nUpper: -119, nFore: -13, weapon: 70, fUpper: -115, fFore: -13, nThigh: -34, nShin: 28, fThigh: 30, fShin: 10, dx: 44, dy: 8 },
+  skillWind: { torso: -4, head: -8, nUpper: -111, nFore: -33, weapon: 60, fUpper: -60, fFore: -60, nThigh: -20, nShin: 20, fThigh: 18, dy: 4 },
+  win: { torso: -6, head: -12, nUpper: -149, nFore: -33, weapon: 70, fUpper: -20, fFore: -100, nThigh: -10, fThigh: 10 }
+});
+const GUNNER_POSES = soldierPoses({
+  // the arm cannon: at rest pointing forward-down, the other hand ready under it; aimed, the whole arm is level
+  idle: { torso: 2, head: -2, nUpper: -32, nFore: -33, fUpper: -44, fFore: -54, nThigh: -18, nShin: 16, fThigh: 16, fShin: 10, fFoot: -6, dy: 4 },
+  lightWind: { torso: 0, head: 0, nUpper: -85, nFore: -3, fUpper: -70, fFore: -44, nThigh: -18, nShin: 16, fThigh: 16, fShin: 10, dy: 4 },
+  light: { torso: -4, head: -2, nUpper: -81, nFore: -3, fUpper: -66, fFore: -44, nThigh: -16, nShin: 14, fThigh: 18, fShin: 10, dx: -6, dy: 4 },
+  heavyWind: { torso: 6, head: 2, nUpper: -91, nFore: -3, fUpper: -76, fFore: -44, nThigh: -30, nShin: 36, fThigh: 30, fShin: 30, dy: 14 },
+  heavy: { torso: -12, head: -8, nUpper: -73, nFore: -3, fUpper: -58, fFore: -44, nThigh: -24, nShin: 30, fThigh: 30, fShin: 26, dx: -18, dy: 12 },
+  skillWind: { torso: 2, head: 0, nUpper: -87, nFore: -3, fUpper: -72, fFore: -44, nThigh: -20, nShin: 20, fThigh: 20, fShin: 14, dy: 6 },
+  throwWind: { torso: -10, head: -6, nUpper: -30, nFore: -30, fUpper: 30, fFore: -100, nThigh: -16, nShin: 16, fThigh: 20, dy: 4 },
+  throw: { torso: 12, head: 4, nUpper: -40, nFore: -30, fUpper: -150, fFore: -20, nThigh: -26, nShin: 18, fThigh: 24, dx: 10, dy: 4 },
+  win: { torso: -6, head: -12, nUpper: -159, nFore: -13, fUpper: -30, fFore: -96, nThigh: -10, fThigh: 10 },
+  lose: Object.assign({}, SOLDIER_BASE.lose, { nUpper: -63, nFore: -8 })
+});
+const GUARD_POSES = soldierPoses({
+  // shield forward, the long club held low behind it
+  idle: { torso: 4, head: -4, nUpper: -28, nFore: -64, shield: 0, fUpper: -26, fFore: -35, fWeapon: 17, nThigh: -18, nShin: 18, fThigh: 16, fShin: 10, fFoot: -6, dy: 4 },
+  lightWind: { torso: -6, head: -4, nUpper: -24, nFore: -66, fUpper: -186, fFore: -38, fWeapon: 0, nThigh: -16, nShin: 16, fThigh: 18, dx: -4, dy: 4 },
+  light: { torso: 12, head: 4, nUpper: -30, nFore: -60, fUpper: -94, fFore: -8, fWeapon: 50, nThigh: -26, nShin: 20, fThigh: 24, dx: 30, dy: 2 },
+  heavyWind: { torso: -8, head: -6, nUpper: 6, nFore: -84, fUpper: -30, fFore: -8, nThigh: -12, nShin: 14, fThigh: 20, fShin: 12, dx: -14, dy: 6 },
+  heavy: { torso: 16, head: 6, nUpper: -74, nFore: -16, fUpper: -40, fFore: -8, nThigh: -32, nShin: 20, fThigh: 30, fShin: 4, dx: 54, dy: 2 },
+  skillWind: { torso: 10, head: 6, nUpper: -36, nFore: -60, fUpper: -36, fFore: -8, nThigh: -30, nShin: 40, fThigh: 30, fShin: 30, dx: -10, dy: 14 },
+  skill: { torso: 20, head: 8, nUpper: -80, nFore: -14, fUpper: -46, fFore: -8, nThigh: -36, nShin: 22, fThigh: 34, fShin: 4, dx: 80, dy: 4 },
+  win: { torso: -6, head: -12, nUpper: -40, nFore: -60, fUpper: -166, fFore: -28, fWeapon: 50, nThigh: -10, fThigh: 10 },
+  lose: Object.assign({}, SOLDIER_BASE.lose, { nUpper: -34, shield: -12 })
+});
+const BLADE_POSES = soldierPoses({
+  // a low guard, the blade forward and up from both fists
+  idle: { torso: 4, head: -4, nUpper: -19, nFore: -23, weapon: 0, fUpper: -30, fFore: -60, nThigh: -20, nShin: 20, fThigh: 18, fShin: 10, fFoot: -6, dy: 4, cape: 0 },
+  lightWind: { torso: -10, head: -6, nUpper: -165, nFore: -33, weapon: 0, fUpper: -60, fFore: -80, nThigh: -18, nShin: 18, fThigh: 18, dx: -6, dy: 4, cape: 6 },
+  light: { torso: 16, head: 6, nUpper: -71, nFore: -8, weapon: 75, fUpper: -10, fFore: -90, nThigh: -30, nShin: 22, fThigh: 26, dx: 34, dy: 2, cape: -8 },
+  heavyWind: { torso: -12, head: -6, nUpper: -165, nFore: -33, weapon: 0, fUpper: -60, fFore: -80, nThigh: -18, nShin: 18, fThigh: 18, dx: -8, dy: 4, cape: 8 },
+  heavyA: { torso: 14, head: 4, nUpper: -149, nFore: -13, weapon: 70, fUpper: -10, fFore: -90, nThigh: -30, nShin: 22, fThigh: 26, dx: 46, dy: 2, cape: -10 },
+  heavy: { torso: 26, head: 10, nUpper: -61, nFore: -3, weapon: 100, fUpper: -10, fFore: -80, nThigh: -36, nShin: 26, fThigh: 32, dx: 40, dy: 6, cape: -14 },
+  // the draw: crouched low, the blade held down behind, gathering light
+  skillWind: { torso: 24, head: 12, nUpper: 1, nFore: -3, weapon: 7, fUpper: -40, fFore: -70, nThigh: -48, nShin: 70, nFoot: -22, fThigh: 36, fShin: 4, fFoot: -40, dx: -14, dy: 26.1, cape: 16 },
+  // the cut through: lunging flat out, the blade forward and low
+  dash: { torso: 26, head: 10, nUpper: -91, nFore: -8, weapon: 95, fUpper: 30, fFore: -40, nThigh: -44, nShin: 24, fThigh: 40, fShin: 6, dy: 8, cape: -24 },
+  // back turned, sliding the blade home along the scabbard
+  zanshin: { sx: -1, torso: 12, head: 6, nUpper: 3, nFore: -3, weapon: 12, fUpper: -10, fFore: -30, nThigh: -30, nShin: 30, fThigh: 30, fShin: 20, dy: 10, cape: 18 },
+  win: { torso: -6, head: -12, nUpper: -149, nFore: -33, weapon: 80, fUpper: -20, fFore: -96, nThigh: -10, fThigh: 10, cape: 12 },
+  lose: Object.assign({}, SOLDIER_BASE.lose, { cape: 30, weapon: 8 })
+});
+
+// ---------- moves ----------
+const soldierHit = (m, x, y, size, col, k) => { m.fx.impact(x, y, size, col, k); m.fx.hit(k); };
+const MOVES_BRAWLER = {
+  async light(m) {     // a quick one-two
+    await m.go('lightWind', 140); await m.go('light', 90);
+    soldierHit(m, m.t.cx - 10, m.t.cy - 30, 34, '#BFF6FF', 0.8);
+    await m.wait(80); await m.go('jab2', 100);
+    soldierHit(m, m.t.cx - 6, m.t.cy - 18, 40, '#BFF6FF', 1);
+    await m.wait(200); await m.go('idle', 320);
+  },
+  async heavy(m) {     // drops low, then a rising uppercut that lifts off the ground
+    await m.go('heavyWind', 260); await m.wait(80);
+    await m.go('heavy', 150);
+    soldierHit(m, m.t.cx - 4, m.t.cy - 40, 80, '#7FF2FF', 1.8);
+    m.fx.dust(() => m.pt('nFoot', 230, 388), 400, 60);
+    await m.wait(300); await m.go('idle', 380);
+  },
+  async skill(m) {     // the gauntlets charge up, a burst of punches, then one huge blow with a shock ring
+    await m.go('skillWind', 300);
+    m.fx.burst(m.pt('nHand', 236, 262).x, m.pt('nHand', 236, 262).y, 40, 'glow');
+    await m.wait(360);
+    for (let i = 0; i < 3; i++) {
+      await m.go('light', 70); soldierHit(m, m.t.cx - 10 + i * 4, m.t.cy - 30 + i * 8, 30, '#BFF6FF', 0.6);
+      await m.go('jab2', 70); soldierHit(m, m.t.cx - 6, m.t.cy - 20 - i * 6, 30, '#BFF6FF', 0.6);
+    }
+    await m.go('skillWind', 140);
+    await m.go('skill', 110);
+    soldierHit(m, m.t.cx - 14, m.t.cy - 26, 120, '#59E3FF', 2.4);
+    m.fx.rings(m.pt('nHand', 250, 262), { x: m.t.cx, y: m.t.cy - 26 }, 3, '#7FF2FF', 520);
+    await m.wait(420); await m.go('idle', 420);
+  }
+};
+const batonTip = (m) => m.pt('weapon', 338, 259);
+const MOVES_SHOCKER = {
+  async light(m) {     // the baton swung down from over the shoulder, crackling where it lands
+    await m.go('lightWind', 170); await m.wait(40);
+    await m.go('light', 100);
+    const t = batonTip(m); m.fx.swing(m.pt('nUpper', 226, 152), 92, -150, -30, '#7FF2FF');
+    m.fx.zap(() => t, () => ({ x: m.t.cx - 6, y: m.t.cy - 34 }), 160); soldierHit(m, m.t.cx - 8, m.t.cy - 30, 40, '#BFF6FF', 1.1);
+    await m.wait(220); await m.go('idle', 340);
+  },
+  async heavy(m) {     // two hands overhead, a leaping smash down onto the target
+    await m.go('heavyWind', 280); await m.wait(90);
+    await m.go('heavy', 130);
+    m.fx.swing(m.pt('nUpper', 226, 152), 100, -130, -40, '#7FF2FF');
+    const t = batonTip(m); m.fx.burst(t.x, t.y, 60, 'glow');
+    for (let i = 0; i < 3; i++) { const e = { x: m.t.cx - 30 + i * 30, y: m.t.cy - 70 + i * 40 }; m.fx.zap(() => t, () => e, 220); }
+    soldierHit(m, m.t.cx - 10, m.t.cy - 40, 80, '#BFF6FF', 2);
+    await m.wait(320); await m.go('idle', 400);
+  },
+  async skill(m) {     // the baton held up spitting sparks, a forehand, a backhand, then a leaping smash that bursts with lightning
+    await m.go('skillWind', 300);
+    for (let i = 0; i < 6; i++) { const e = { x: (Math.random() - 0.5) * 60, y: -20 - Math.random() * 40 }; m.fx.zap(() => batonTip(m), () => { const t = batonTip(m); return { x: t.x + e.x, y: t.y + e.y }; }, 140); await m.wait(80); }
+    await m.go('lightWind', 120); await m.go('light', 90);
+    m.fx.swing(m.pt('nUpper', 226, 152), 92, -150, -30, '#7FF2FF'); soldierHit(m, m.t.cx - 8, m.t.cy - 30, 40, '#BFF6FF', 0.9);
+    await m.go('backWind', 100); await m.go('back', 90);
+    m.fx.swing(m.pt('nUpper', 226, 152), 92, 40, -60, '#7FF2FF'); soldierHit(m, m.t.cx - 4, m.t.cy - 10, 40, '#BFF6FF', 0.9);
+    await m.go('heavyWind', 200); await m.wait(60); await m.go('heavy', 120);
+    m.fx.swing(m.pt('nUpper', 226, 152), 100, -130, -40, '#7FF2FF');
+    const t = batonTip(m);
+    m.fx.burst(m.t.cx, m.t.cy - 30, 110, 'glow');
+    for (let i = 0; i < 6; i++) { const e = { x: m.t.cx + (Math.random() - 0.5) * 90, y: m.t.cy - 100 + Math.random() * 140 }; m.fx.zap(() => t, () => e, 300); }
+    soldierHit(m, m.t.cx - 10, m.t.cy - 40, 110, '#BFF6FF', 2.4);
+    await m.wait(420); await m.go('idle', 420);
+  }
+};
+// the arm cannon fires straight out along its own barrel
+const muzzle = (m) => m.pt('nFore', 232, 342);
+const barrelRay = (m, len) => { const a = m.pt('nFore', 231, 230), b = muzzle(m); const L = Math.hypot(b.x - a.x, b.y - a.y) || 1; return { x: b.x + (b.x - a.x) / L * len, y: b.y + (b.y - a.y) / L * len }; };
+const rayTo = (m) => { const b = muzzle(m); return barrelRay(m, Math.max(40, m.t.cx - b.x)); };
+const MOVES_GUNNER = {
+  async light(m) {     // two quick bolts
+    await m.go('lightWind', 160);
+    for (let i = 0; i < 2; i++) {
+      await m.go('light', 60);
+      const a = muzzle(m), b = rayTo(m);
+      m.fx.burst(a.x, a.y, 22, 'glow'); m.fx.beam(() => muzzle(m), () => rayTo(m), 110, '#FFE46C', null, 0.5);
+      soldierHit(m, b.x, b.y, 28, '#FFF2B0', 0.7);
+      await m.go('lightWind', 90);
+    }
+    await m.go('idle', 320);
+  },
+  async heavy(m) {     // braced, the coils charge, one thick shot with a hard kick back
+    await m.go('heavyWind', 240);
+    for (let i = 0; i < 5; i++) { const a = muzzle(m); m.fx.burst(a.x, a.y, 14 + i * 6, 'glow'); await m.wait(70); }
+    await m.go('heavy', 90);
+    m.fx.beam(() => muzzle(m), () => rayTo(m), 360, '#FFE46C', () => m.fx.hit(0.5), 1.3);
+    const b = rayTo(m); soldierHit(m, b.x, b.y, 70, '#FFF2B0', 1.8);
+    await m.wait(460); await m.go('idle', 380);
+  },
+  async skill(m) {     // a burst of five bolts straight down the barrel, then a grenade lobbed in for the finish
+    await m.go('skillWind', 200);
+    for (let i = 0; i < 5; i++) {
+      await m.go('light', 50);
+      const b = rayTo(m); m.fx.burst(muzzle(m).x, muzzle(m).y, 18, 'glow');
+      m.fx.beam(() => muzzle(m), () => rayTo(m), 80, '#FFE46C', null, 0.45); soldierHit(m, b.x, b.y - 6 + i * 3, 26, '#FFF2B0', 0.6);
+      await m.go('skillWind', 60);
+    }
+    await m.go('throwWind', 200); await m.go('throw', 120);
+    const g = el('g', {}, m.fx.layer || m.P.svg);
+    el('circle', { cx: 0, cy: 0, r: 8, fill: '#2A2F39', stroke: '#101218', 'stroke-width': 2 }, g);
+    el('circle', { cx: 0, cy: 0, r: 3, fill: '#FFE46C', filter: m.fx.filter('bloom') }, g);
+    m.fx.throwIt(g, m.pt('fHand', 185, 258), { x: m.t.cx, y: m.t.cy - 10 }, 520, 120, 720, () => {
+      m.fx.burst(m.t.cx, m.t.cy - 10, 120, 'fire'); m.fx.debris(m.t.cx, m.t.cy - 10, 'armor', 1); soldierHit(m, m.t.cx, m.t.cy - 10, 110, '#FFD27A', 2.2);
+    });
+    await m.wait(700); await m.go('idle', 400);
+  }
+};
+const MOVES_GUARD = {
+  async light(m) {     // the long club comes over the top of the shield
+    await m.go('lightWind', 170); await m.wait(40);
+    await m.go('light', 110);
+    m.fx.swing(m.pt('fUpper', 186, 152), 110, -150, -40, '#FFE46C');
+    soldierHit(m, m.t.cx - 8, m.t.cy - 40, 44, '#FFF2B0', 1.2);
+    await m.wait(220); await m.go('idle', 340);
+  },
+  async heavy(m) {     // shield bash: drawn back, then driven forward in one step
+    await m.go('heavyWind', 240); await m.wait(80);
+    await m.go('heavy', 130);
+    soldierHit(m, m.t.cx - 20, m.t.cy - 20, 90, '#FFF2B0', 2);
+    m.fx.dust(() => m.pt('nFoot', 230, 388), 380, 60);
+    await m.wait(300); await m.go('idle', 400);
+  },
+  async skill(m) {     // light gathers into the shield, the field flares, a full charge that slams through, then the club over the top
+    const field = m.P.svg.querySelector('[data-field] [filter]');
+    await m.go('skillWind', 300);
+    m.fx.gather(() => m.pt('shield', 268, 236), 700, '#FFE46C');
+    if (field) field.animate([{ opacity: 0.42 }, { opacity: 1 }], { duration: 700, fill: 'forwards' });
+    await m.wait(700);
+    for (let i = 0; i < 4; i++) m.fx.dust(() => m.pt('nFoot', 230, 388), 260, 40);
+    await m.go('skill', 180);
+    m.fx.rings(m.pt('shield', 268, 236), { x: m.t.cx + 40, y: m.t.cy - 16 }, 4, '#FFE46C', 520);
+    m.fx.burst(m.t.cx - 10, m.t.cy - 20, 110, 'glow');
+    soldierHit(m, m.t.cx - 10, m.t.cy - 20, 110, '#FFF2B0', 2.2);
+    await m.wait(180);
+    await m.go('lightWind', 150, { dx: 80 }); await m.wait(40);
+    await m.go('light', 100, { dx: 96 });
+    m.fx.swing(m.pt('fUpper', 186, 152), 110, -150, -40, '#FFE46C');
+    m.fx.burst(m.t.cx - 6, m.t.cy - 40, 90, 'glow'); m.fx.rings({ x: m.t.cx - 6, y: m.t.cy - 40 }, { x: m.t.cx + 60, y: m.t.cy - 40 }, 3, '#FFE46C', 420);
+    soldierHit(m, m.t.cx - 6, m.t.cy - 40, 100, '#FFF2B0', 2.6);
+    if (field) field.animate([{ opacity: 1 }, { opacity: 0.42 }], { duration: 600, fill: 'forwards' });
+    await m.wait(360); await m.go('idle', 480);
+  }
+};
+const bladeTip = (m) => m.pt('weapon', 394, 254);
+// one long cut drawn across the opponent, from one side to the other at an angle (degrees)
+const cutAcross = (m, ang, len, col) => {
+  const a = (ang * Math.PI) / 180, cx = m.t.cx, cy = m.t.cy - 30, L = len || 150;
+  m.fx.trail(cx - Math.cos(a) * L / 2, cy - Math.sin(a) * L / 2, cx + Math.cos(a) * L / 2, cy + Math.sin(a) * L / 2, col || '#FF9A5C');
+};
+const MOVES_BLADE = {
+  async light(m) {     // one clean cut down from over the shoulder; the cut opens on the opponent
+    await m.go('lightWind', 160); await m.wait(40);
+    await m.go('light', 90);
+    cutAcross(m, 62, 150); soldierHit(m, m.t.cx - 6, m.t.cy - 30, 40, '#FFD2B0', 1.1);
+    await m.wait(200); await m.go('idle', 320);
+  },
+  async heavy(m) {     // a cut straight down, then back up again through the same opponent
+    await m.go('heavyWind', 220); await m.wait(60);
+    await m.go('heavy', 100);
+    cutAcross(m, 78, 170); soldierHit(m, m.t.cx, m.t.cy - 30, 50, '#FFD2B0', 1.2);
+    await m.wait(80);
+    await m.go('heavyA', 110);
+    cutAcross(m, -64, 170); soldierHit(m, m.t.cx - 4, m.t.cy - 20, 66, '#FFD2B0', 1.7);
+    await m.wait(260); await m.go('idle', 380);
+  },
+  async skill(m) {
+    // a long draw gathering light and fire; a dash straight through the opponent and back again; then he stands
+    // still with his back to it, blade low, cape flaring, while the opponent is torn by cut after cut and a final cross
+    const glows = [...m.P.svg.querySelectorAll('[data-blade] [filter]')];
+    await m.go('skillWind', 360);
+    m.fx.gather(() => bladeTip(m), 1400, '#FF7A45');
+    glows.forEach((g) => g.animate([{ opacity: 1 }, { opacity: 1, filter: 'brightness(2.4)' }], { duration: 1400, fill: 'forwards' }));
+    for (let i = 0; i < 4; i++) { const t = bladeTip(m); m.fx.burst(t.x, t.y, 30 + i * 14, 'glow'); m.fx.dust(() => m.pt('nFoot', 230, 388), 300, 40 + i * 10); await m.wait(340); }
+    const y = m.pt('torso', 200, 200).y, x0 = m.pt('torso', 200, 200).x, past = m.t.cx + 70 - 200;
+    await m.go('dash', 80, { dx: past });
+    m.fx.trail(x0, y, x0 + past + 40, y, '#FF7A45'); m.fx.trail(x0, y + 16, x0 + past + 40, y + 16, '#FFD2B0'); m.fx.burst(m.t.cx, m.t.cy - 30, 70, 'glow'); m.fx.hit(1);
+    await m.wait(110);
+    await m.go('dash', 90, { dx: -40, sx: -1 });
+    m.fx.trail(x0 + past + 40, y + 8, x0 - 60, y + 8, '#FF7A45'); m.fx.burst(m.t.cx, m.t.cy - 30, 70, 'glow'); m.fx.hit(1);
+    await m.wait(120);
+    await m.go('zanshin', 240, { dx: -40 });
+    m.fx.slashes(m.t.cx, m.t.cy - 30, 1000, 16, '#FF9A5C', () => m.fx.hit(0.35));
+    await m.wait(1050);
+    cutAcross(m, 45, 230, '#FFD2B0'); cutAcross(m, -45, 230, '#FFD2B0');
+    m.fx.burst(m.t.cx, m.t.cy - 30, 150, 'fire'); m.fx.debris(m.t.cx, m.t.cy - 30, 'armor', 1);
+    soldierHit(m, m.t.cx, m.t.cy - 30, 130, '#FFD2B0', 2.8);
+    glows.forEach((g) => g.getAnimations().forEach((a) => a.cancel()));
+    await m.wait(520);
+    await m.go('idle', 520);
+  }
+};
+
 
 // ===================================================================================================
 // Runtime: put one monster on a battle stage, play its moves, report hits back to the game.
 // ===================================================================================================
 const GROUND = 386, FOOT_X = 210, UNITS = 300;   // monster frame: feet at y 386 round x 210; 300 units = ready-stance height
-const TIER_SCALE = { '小怪': 1, '精英': 1.15, '首领': 1.35 };
-const TIER_KEY = { '小怪': 'minor', '精英': 'elite', '首领': 'boss' };
+const TIER_SCALE = { '小怪': 1, '精英': 1.15, '首领': 1.35, '人形': 1 };
+const TIER_KEY = { '小怪': 'minor', '精英': 'elite', '首领': 'boss', '人形': 'mob' };
 const MONSTERS = [
   { id: 'scree', build: buildScree, poses: SCREE_POSES, moves: MOVES_SCREE, name: '碎岩蜥', tier: '小怪',
     note: '用指节走路的岩石爬兽，背着一块裂开的巨岩。轻击：抬爪往下挠；重击：转身甩尾抽过去；大招：裂缝烧红，张嘴往前喷火。' },
@@ -8598,7 +9139,17 @@ const MONSTERS = [
   { id: 'colossus', build: buildColossus, poses: COLOSSUS_POSES, moves: MOVES_COLOSSUS, name: '镇岳像', tier: '首领',
     note: '镇守山门的石像巨人：石块垒成的身躯箍着青铜环，头盔下一道金色符文眼缝。轻击：石拳直击；重击：双拳砸地，一排石刺冲到对手脚下；大招：蓄力下蹲，高高跳起，整个身子砸在对手身上。' },
   { id: 'nullwraith', build: buildNullwraith, poses: NULLWRAITH_POSES, moves: MOVES_NULLWRAITH, name: '虚渊魔', tier: '首领',
-    note: '没有脸的瘦长外星怪，身体里嵌着一个转动的暗紫色漩涡，身后飘着一圈碎石。轻击：长爪斩；重击：消失，在对手面前现身一斩，再消失回原位；大招：在对手身上打开一个引力井，把一切吸进去再炸开。' }
+    note: '没有脸的瘦长外星怪，身体里嵌着一个转动的暗紫色漩涡，身后飘着一圈碎石。轻击：长爪斩；重击：消失，在对手面前现身一斩，再消失回原位；大招：在对手身上打开一个引力井，把一切吸进去再炸开。' },
+  { id: 'brawler', build: buildBrawler, poses: BRAWLER_POSES, moves: MOVES_BRAWLER, name: '拳斗兵', tier: '人形', mobTier: 'grunt',
+    note: '小兵·空手。灰黑装甲的步兵，头盔一道青色光带，双手戴着加厚的动力拳套，指节发光。轻击：左右连拳；重击：蹲低后一记上勾拳；大招：拳套充能，一阵连打后一记重拳打出冲击环。' },
+  { id: 'shocker', build: buildShocker, poses: SHOCKER_POSES, moves: MOVES_SHOCKER, name: '电棍兵', tier: '人形', mobTier: 'grunt',
+    note: '小兵。灰黑装甲，手握电击警棍，棍身从拳头里横着伸出，像真正的警棍那样挥。轻击：从肩后抡下来；重击：双手举棍跳起来往下砸；大招：举棍蓄电火花四溅，正手、反手两棍，再跳起一记重砸，电光在对手身上炸开。' },
+  { id: 'gunner', build: buildGunner, poses: GUNNER_POSES, moves: MOVES_GUNNER, name: '枪兵', tier: '人形', mobTier: 'trooper',
+    note: '强化兵。藏青装甲加黄色条纹，前臂整个改装成一门能量炮（和手臂一体）。光弹沿着炮管方向平射出去。轻击：两发速射；重击：蓄能一发粗光弹；大招：五连发，再甩出一颗手雷。' },
+  { id: 'guard', build: buildGuard, poses: GUARD_POSES, moves: MOVES_GUARD, name: '盾卫', tier: '人形', mobTier: 'trooper',
+    note: '强化兵。藏青装甲，前手能量防暴盾（斜对着对手），后手握一根长棍，平时放低在盾后。轻击：举棍越过盾牌砸下；重击：盾击；大招：光点聚进盾牌、能量场亮起，整个人冲撞过去，再举棍越盾重砸，打出冲击环。' },
+  { id: 'blade', build: buildBlade, poses: BLADE_POSES, moves: MOVES_BLADE, name: '刃卫', tier: '人形', mobTier: 'elite',
+    note: '精英。暗红重甲，头盔两只大角和发光面甲，一袭下摆燃着橙光的长披风盖住身后，手持一把刃口燃烧的弯刀。轻击：一刀斩；重击：先从上往下一直劈到低处，再从下往上撩起；大招：压得很低长时间蓄力聚光，冲刺穿过对手再穿回来，背对对手垂刀而立，对手身上一道道刀光疯狂划过，最后一个大十字炸开。' }
 ];
 function Mover(P, poses) {
   this.P = P; this.poses = poses; this.cur = {}; this.from = {}; this.to = {}; this.t0 = 0; this.dur = 1; this.name = 'idle';
@@ -8676,8 +9227,7 @@ function create(id, opts) {
     hit: (k) => { if (o.onHit) o.onHit(k || 1); }
   };
   const P = M.build(mon);
-  /* app 补丁：精简模式（lite）下去掉所有发光滤镜，说明 v4 第五节要求的 */
-  if (o.lite){ mon.__lite = true; mon.querySelectorAll('[filter]').forEach((e) => e.removeAttribute('filter')); }
+  if (o.lite) { mon.querySelectorAll('[filter]').forEach((n) => n.removeAttribute('filter')); mon.__lite = true; }
   Kit.lightGlow(mon, 1);
   const fx = CardFX(svg, fxLayer, T);
   fx.shake = (k) => { if (o.reduced) return; if (o.onShake) o.onShake(k || 1); };
@@ -8711,7 +9261,7 @@ function create(id, opts) {
       if (held && k !== 'win' && k !== 'lose') { Kit.dimGlow(mon, false); await mv.go('idle', 300); held = null; }
       if (M.moves[k]) await M.moves[k](api);
       // a hit knocks pieces off it: rock chips, lava, crystal shards, feathers... whatever it is made of
-      else if (k === 'hit') { const c = local('torso', 250, 240); fx.burst(c.x, c.y, 50); fx.debris(c.x, c.y, { buildScree: 'rock', buildAshmoth: 'scale', buildDrillback: 'shellB', buildVoltail: 'shellT', buildRimeback: 'ice', buildRustwarden: 'rust', buildCorefang: 'lava', buildAbyssmaw: 'drop', buildPrismward: 'crystal', buildTwinhood: 'venom', buildGalecrest: 'feather', buildStarhorn: 'shellG', buildColossus: 'stone', buildNullwraith: 'void' }[M.build.name], -1); await mv.go('hit', 90); await api.wait(320); await mv.go('idle', 320); }
+      else if (k === 'hit') { const c = local('torso', 250, 240); fx.burst(c.x, c.y, 50); fx.debris(c.x, c.y, { buildScree: 'rock', buildAshmoth: 'scale', buildDrillback: 'shellB', buildVoltail: 'shellT', buildRimeback: 'ice', buildRustwarden: 'rust', buildCorefang: 'lava', buildAbyssmaw: 'drop', buildPrismward: 'crystal', buildTwinhood: 'venom', buildGalecrest: 'feather', buildStarhorn: 'shellG', buildColossus: 'stone', buildNullwraith: 'void', buildBrawler: 'armor', buildShocker: 'armor', buildGunner: 'armor', buildGuard: 'armor', buildBlade: 'armor' }[M.build.name], -1); await mv.go('hit', 90); await api.wait(320); await mv.go('idle', 320); }
       else if (k === 'win') { held = 'win'; await mv.go('win', 420); }
       // fall in two steps: knees buckle with the feet still down, then the body settles to the ground
       else if (k === 'lose') { held = 'lose'; Kit.dimGlow(mon, true); if (M.poses.loseMid) { await mv.go('loseMid', 380); await api.wait(160); await mv.go('lose', 440); } else await mv.go('lose', 620); }
@@ -8746,7 +9296,7 @@ function create(id, opts) {
       // the glowing parts are lifted by about as much as the scene darkens the monster, so they stay lit
       Kit.lightGlow(mon, Math.min(1.6, 1 / Math.max(0.4, L.bri * ((c[0] + c[1] + c[2]) / 3))));
       svg.querySelector('#' + tintId + ' feColorMatrix').setAttribute('values', `${c[0].toFixed(3)} 0 0 0 0 0 ${c[1].toFixed(3)} 0 0 0 0 0 ${c[2].toFixed(3)} 0 0 0 0 0 1 0`);
-      holder.style.filter = `url(#${tintId}) brightness(${L.bri}) saturate(${L.sat}) contrast(${L.con})`;
+      holder.style.filter = o.lite ? `brightness(${L.bri}) saturate(${L.sat}) contrast(${L.con})` : `url(#${tintId}) brightness(${L.bri}) saturate(${L.sat}) contrast(${L.con})`;
     },
     destroy() { alive = false; LIVE.delete(inst); svg.remove(); },
     _mv: mv,
@@ -8770,7 +9320,7 @@ if (typeof document !== 'undefined' && !document.getElementById('tm-style')) {
 }
 return {
   create,
-  list: () => MONSTERS.map((m) => ({ id: m.id, name: m.name, tier: TIER_KEY[m.tier], tierName: m.tier, note: m.note })),
+  list: () => MONSTERS.map((m) => ({ id: m.id, name: m.name, tier: TIER_KEY[m.tier], tierName: m.tier, mobTier: m.mobTier || null, note: m.note })),
   ACTIONS: ['light', 'heavy', 'skill', 'hit', 'win', 'lose']
 };
 })();
@@ -8883,17 +9433,9 @@ const BT = (() => {
       farThigh:ft, farShin:fs, nearThigh:nt, nearShin:ns, farAnkle:(p.farFootAngle || 0) - ft - fs, nearAnkle:(p.nearFootAngle || 0) - nt - ns};
   }
   const RIG_COLORS = {dark:"#175A63", main:"#1E6F7A", far:"#C5CBC4", near:"#EEF1EA", acc1:"#D58726", acc2:"#F2A23A", chest:"#2C8C98", neck:"#123E45"};
-  /* 武器画在“近处那只手”的小臂里，跟着手一起动 */
-  const WEAPONS = {
-    /* 握在拳头里：和小臂垂直，朝前伸出去 */
-    baton:`<rect x="66" y="181" width="52" height="7" rx="3.5" fill="#2A2E36"/><rect x="113" y="179.5" width="7" height="10" rx="2" fill="#5A606E"/>`,
-    sword:`<rect x="110" y="181" width="12" height="6" rx="2" fill="#5A3A1A"/><rect x="104" y="175" width="5" height="18" rx="2" fill="#8A6A3A"/><path d="M104 181.6 L104 186.4 L58 185.6 L49 184 L58 182.4 Z" fill="#DCE6F0"/>`,
-    gun:`<rect x="92" y="181" width="28" height="9" rx="2" fill="#2A2E36"/><rect x="108" y="188" width="8" height="12" rx="2" fill="#2A2E36"/><rect x="88" y="183" width="5" height="5" rx="1" fill="#5A606E"/>`
-  };
   function makeRig(pal, weapon){
     let src = RIG_SVG;
     if (pal) for (const k in RIG_COLORS) if (pal[k]) src = src.split(RIG_COLORS[k]).join(pal[k]);
-    if (weapon && WEAPONS[weapon]) src = src.replace('data-p="nearHand"/>', 'data-p="nearHand"/>' + WEAPONS[weapon]);
     const holder = document.createElement("div"); holder.innerHTML = src.trim();
     const svg = holder.firstElementChild; const joints = {};
     svg.querySelectorAll("[data-j]").forEach(g => { joints[g.dataset.j] = g; });
@@ -8940,7 +9482,7 @@ const BT = (() => {
     brawler:{name:"格斗型", light:"punch", heavy:"kick", skill:"wideBeam", hover:false, r:0.80, cm:180},
     blade:  {name:"剑士型", light:"thrust", heavy:"kesa", skill:"crescent", hover:false, r:0.83, cm:180},
     beam:   {name:"光线型", light:"laserThin", heavy:"laserThick", skill:"wideBeam", hover:true, r:1.10, cm:183},
-    storm:  {name:"电光型", light:"punch", heavy:"fireKick", skill:"stormBeam", hover:false, r:0.92, cm:185}
+    storm:  {name:"电光型", light:"punch", heavy:"fireKick", skill:"stormBeam", hover:false, r:0.852, cm:185}
   };
   const tplOf = id => TEMPLATES[MS_ALIAS[id] || id] ? (MS_ALIAS[id] || id) : null;
   /* 这套组合正好是哪个模板；对不上就是“自定义” */
@@ -8957,7 +9499,7 @@ const BT = (() => {
     const fail = "读不了这张图，请换一张 PNG 或 JPG。";
     const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error(fail)); r.readAsDataURL(file); });
     const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error(fail)); i.src = dataUrl; });
-    const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const scale = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     const ctx = c.getContext("2d", {willReadFrequently:true}); ctx.drawImage(img, 0, 0, w, h);
@@ -9065,8 +9607,10 @@ const BT = (() => {
   function metaOf(rec, giant){
     if (!rec) { const lo = rigLoadout(); return {loadout:lo, kh:1, hover:!!lo.hover, giant:false}; }
     const lo = loadoutOf(rec), t = TEMPLATES[tplMatch(lo)] || TEMPLATES[tplOf(rec.moveset) || "brawler"] || TEMPLATES.brawler;
-    const r = rec.r || t.r, cm = rec.cm || t.cm, big = !!(giant && rec.giantM);
-    return {loadout:lo, r, cm, kh: big ? (rec.giantM * r) / CITY_READY_M : ((cm / 100) * r) / READY_M, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
+    /* 没拖过滑块（rSet、cmSet 为假）就跟着模板走，不用导入时存下来的值 */
+    const custom = tplMatch(lo) === "custom";
+    const r = rec.rSet || (custom && rec.r) ? rec.r : t.r, cm = rec.cmSet || (custom && rec.cm) ? rec.cm : t.cm, big = !!(giant && rec.giantM);
+    return {loadout:lo, r, cm, kh: big ? (rec.giantM * r) / CITY_READY_M : ((cm / 100) * r) / READY_M, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowScale: rec.glowScale || 1, glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
   }
 
   /* ---------- 内置背景（量过一次：店门口的售货机 1.83 米定比例，近处车道的中间定脚的位置） ---------- */
@@ -9139,13 +9683,15 @@ const BT = (() => {
   const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
   /* 眼睛、胸灯：用遮罩取出原图这一块盖回去（颜色不受场景影响），再叠一次亮芯，最后两层光晕（贴着轮廓，不溢出） */
   async function addGlow(g, img, p, w, h){
-    const m = await loadImg(p.png); const t = canvasOf(w, h), tg = t.getContext("2d");
-    tg.drawImage(img, 0, 0); tg.globalCompositeOperation = "destination-in"; tg.drawImage(m, p.x, p.y);
+    const m0 = await loadImg(p.png), s = p.s || 1, m = {width:m0.width * s, height:m0.height * s}; const px = p.x * s, py = p.y * s;
+    const put = (gg) => gg.drawImage(m0, px, py, m.width, m.height);
+    const t = canvasOf(w, h), tg = t.getContext("2d");
+    tg.drawImage(img, 0, 0); tg.globalCompositeOperation = "destination-in"; put(tg);
     g.globalCompositeOperation = "source-over"; g.drawImage(t, 0, 0);
     const eye = p.kind === "eye";
     g.globalCompositeOperation = "lighter"; g.globalAlpha = eye ? 0.38 : 0.26; g.drawImage(t, 0, 0); g.globalAlpha = 1;
     const halo = canvasOf(w, h), hg = halo.getContext("2d");
-    hg.drawImage(m, p.x, p.y); hg.globalCompositeOperation = "source-in"; hg.fillStyle = p.color; hg.fillRect(0, 0, w, h);
+    put(hg); hg.globalCompositeOperation = "source-in"; hg.fillStyle = p.color; hg.fillRect(0, 0, w, h);
     const sz = Math.max(m.width, m.height); g.globalCompositeOperation = "lighter";
     g.filter = `blur(${(sz * 0.12 + 1).toFixed(1)}px)`; g.globalAlpha = eye ? 0.62 : 0.52; g.drawImage(halo, 0, 0);
     g.filter = `blur(${(sz * 0.42 + 2.5).toFixed(1)}px)`; g.globalAlpha = eye ? 0.24 : 0.22; g.drawImage(halo, 0, 0);
@@ -9153,8 +9699,9 @@ const BT = (() => {
   }
   /* 赛文的玻璃护目镜：上缘白色反光、下缘琥珀色加深、两道斜向高光、一个十字小闪光点。只反光，不发光 */
   async function addGlass(g, p, w, h){
-    const m = await loadImg(p.png), mw = m.width, mh = m.height;
-    const clip = c => { const cg = c.getContext("2d"); cg.globalCompositeOperation = "destination-in"; cg.drawImage(m, p.x, p.y); return c; };
+    const m0 = await loadImg(p.png), s0 = p.s || 1, mw = m0.width * s0, mh = m0.height * s0;
+    p = Object.assign({}, p, {x:p.x * s0, y:p.y * s0});
+    const clip = c => { const cg = c.getContext("2d"); cg.globalCompositeOperation = "destination-in"; cg.drawImage(m0, p.x, p.y, mw, mh); return c; };
     const a = canvasOf(w, h), ag = a.getContext("2d"); const gr = ag.createLinearGradient(0, p.y, 0, p.y + mh);
     gr.addColorStop(0, "rgba(255,255,255,.5)"); gr.addColorStop(0.3, "rgba(255,255,255,.12)"); gr.addColorStop(0.5, "rgba(255,255,255,0)"); gr.addColorStop(1, "rgba(255,255,255,0)");
     ag.fillStyle = gr; ag.fillRect(p.x, p.y, mw, mh); g.globalCompositeOperation = "screen"; g.drawImage(clip(a), 0, 0);
@@ -9205,8 +9752,12 @@ const BT = (() => {
   function glowMatch(json, poses){
     let best = null;
     for (const k of Object.keys(json || {})){
-      let n = 0; for (const pn of Object.keys(json[k] || {})){ const e = json[k][pn], q = poses && poses[pn]; if (e && q && Math.abs(e.w - q.w) <= 2 && Math.abs(e.h - q.h) <= 2) n++; }
-      if (n >= 3 && (!best || n > best.n)) best = {key:k, n};
+      const pairs = []; for (const pn of Object.keys(json[k] || {})){ const e = json[k][pn], q = poses && poses[pn]; if (e && q && e.w && e.h) pairs.push([e, q]); }
+      if (pairs.length < 3) continue;
+      /* 同一张姿势表，缩放的倍数处处一样：取中位数，再看每个姿势按这个倍数差不差 2 像素 */
+      const ks = pairs.map(([e, q]) => q.h / e.h).sort((a, b) => a - b), s = ks[Math.floor(ks.length / 2)];
+      let n = 0; for (const [e, q] of pairs) if (Math.abs(e.w * s - q.w) <= 2 && Math.abs(e.h * s - q.h) <= 2) n++;
+      if (n >= 3 && (!best || n > best.n)) best = {key:k, n, s};
     }
     return best;
   }
@@ -9217,7 +9768,7 @@ const BT = (() => {
     root.classList.add("bt-stage");
     root.innerHTML = `<img class="bt-scene" alt=""><img class="bt-scene bt-soft" alt="" aria-hidden="true"><div class="bt-vignette" aria-hidden="true"></div><div class="bt-shadows"></div>
       <div class="bt-hud"><div class="bt-hp" data-w="ghost"><div class="bt-name"></div><div class="bt-hpnum"></div><div class="bt-bar"><div class="bt-trail"></div><div class="bt-fill"></div></div><div class="bt-shields" aria-live="polite"></div></div>
-      <div class="bt-hp right" data-w="you"><div class="bt-name"></div><div class="bt-score"></div><div class="bt-bar bt-youbar" hidden><div class="bt-trail"></div><div class="bt-fill"></div></div></div></div>
+      <div class="bt-hp right" data-w="you"><div class="bt-name"></div><div class="bt-bar bt-youbar" hidden><div class="bt-trail"></div><div class="bt-fill"></div></div><div class="bt-score"></div></div></div>
       <div class="bt-fighter bt-ghost"><div class="bt-breath"><div class="bt-face"></div></div></div>
       <div class="bt-fighter bt-you"><div class="bt-breath"><div class="bt-face"></div></div></div>
       <img class="bt-scene bt-front" alt="" aria-hidden="true" hidden>
@@ -9266,7 +9817,7 @@ const BT = (() => {
         f.active = "idle"; f.rig = null; f.classList.remove("rigged");
       });
       A.custom = !!poses;
-      [you, ghost].forEach(f => { f.glow = poses ? meta.glow || null : null; f.glowId = poses && meta.glow ? meta.glowId || "g" : ""; });
+      [you, ghost].forEach(f => { f.glow = poses ? meta.glow || null : null; f.glowScale = meta.glowScale || 1; f.glowId = poses && meta.glow ? (meta.glowId || "g") + "@" + (meta.glowScale || 1) : ""; });
       requestAnimationFrame(() => { layout(); relight(true); });
     };
     /* 游戏模式：对手换成怪物（原创的 SVG），不翻转、不调冷色 */
@@ -9281,7 +9832,7 @@ const BT = (() => {
         img.style.height = (q.h / idle.h) * 100 + "%"; img.style.left = ((idle.ax - q.ax) / idle.w) * 100 + "%"; img.hidden = name !== "idle";
         face.appendChild(img); f.poseImgs[name] = Object.assign({img}, q);
       }
-      f.active = "idle"; f.rig = null; f.monster = m; f.glow = meta.glow || null; f.glowId = meta.glow ? meta.glowId || "e" : ""; A.shields = 0; paintShields();
+      f.active = "idle"; f.rig = null; f.monster = m; f.glow = meta.glow || null; f.glowScale = meta.glowScale || 1; f.glowId = meta.glow ? (meta.glowId || "e") + "@" + (meta.glowScale || 1) : ""; A.shields = 0; paintShields();
       requestAnimationFrame(() => { layout(); relight(true); });
     };
     A.setEnemy = m => {
@@ -9333,16 +9884,22 @@ const BT = (() => {
       const bar = root.querySelector(".bt-youbar"); if (!bar) return; bar.hidden = false;
       const pct = Math.max(0, Math.min(100, (v / (max || 100)) * 100)) + "%"; bar.querySelector(".bt-fill").style.width = pct; bar.querySelector(".bt-trail").style.width = pct;
     };
+    /* 代码怪物挪位置：改 foot 的偏移，每帧 layout() 一次 */
+    function slideCode(to, ms){
+      const from = A.cmDX || 0, t0 = performance.now();
+      return new Promise(res => { const step = now => { if (!A.cm){ A.cmDX = 0; res(); return; } const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3); A.cmDX = from + (to - from) * e; A.cm.layout(); if (k < 1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
+    }
+    A.slideCode = slideCode;
     /* 换对手之前，先把代码怪物收掉 */
-    A.dropCode = () => { if (A.cm){ try { A.cm.destroy(); } catch (e) {} A.cm = null; } ghost.hidden = false; ghost.classList.remove("codemon"); };
+    A.dropCode = () => { if (A.cm){ try { A.cm.destroy(); } catch (e) {} A.cm = null; } A.cmDX = 0; ghost.hidden = false; ghost.classList.remove("codemon"); };
     A.setEnemyCode = m => {
       A.dropCode(); ghost.getAnimations().forEach(a => a.cancel());
       ghost.hidden = true; ghost.monster = m; ghost.rig = null; ghost.poseImgs = null; ghost.classList.add("monster", "codemon"); ghost.classList.remove("still", "hover", "landed");
       A.shields = 0; paintShields();
       A.cm = TuokouMonsters.create(m.code, {
         host: stage,
-        foot: () => ({x: stage.clientWidth * A.spots[0], y: stage.clientHeight * (1 - A.groundPct / 100)}),
-        height: () => stage.clientHeight * A.charSize,
+        foot: () => ({x: stage.clientWidth * A.spots[0] + (A.cmDX || 0), y: stage.clientHeight * (1 - A.groundPct / 100)}),
+        height: () => stage.clientHeight * A.sizeNow,
         target: () => box(bodyOf(you)),
         onHit: power => { if (A._codeHit) A._codeHit(power); },
         onShake: k => shake(4 * k),
@@ -9934,9 +10491,14 @@ const BT = (() => {
     /* 对手出招打你（反击用）：对手是“昨天的你”时按你的招式，其他先用出拳 */
     A.enemyMove = async (kind, dmg, o) => {
       if (A.cm){
-        let first = true; A.lastDmg = 0;
+        let first = true; A.lastDmg = 0; const id = ghost.monster && ghost.monster.code;
         A._codeHit = power => { const d = first ? dmg : 0; first = false; hurt(you, 1, d, power > 1.2); };
-        try { await A.cm.play(kind); } finally { A._codeHit = null; }
+        /* 近战招：先冲到对手面前（怪物模块原地出招，位置是 app 给的 foot），打完再回去 */
+        const melee = isMelee(id, kind);
+        try {
+          if (melee){ const mb = A.cm.box(), tb = box(bodyOf(you)); const dx = Math.max(0, tb.x - (mb.x + mb.w) + Math.min(mb.w, tb.w) * 0.3); if (dx > 4) await slideCode(dx, 230); }
+          await A.cm.play(kind);
+        } finally { A._codeHit = null; if (melee && A.cm && A.cmDX) await slideCode(0, 280); }
         return;
       }
       const lo = (ghost.monster && ghost.monster.loadout) || (!ghost.monster ? A.loadout : TEMPLATES.brawler) || TEMPLATES.brawler; A.lastDmg = 0;
@@ -10008,9 +10570,14 @@ const BT = (() => {
     }
     A.layout = layout;
     A.setOpt = o => { Object.assign(A, o || {}); layout(); };
+    A.setKh = kh => { [you].concat(ghost.monster ? [] : [ghost]).forEach(f => f.style.setProperty("--kh", String(kh))); requestAnimationFrame(placeFighters); };
     /* 换地点、换人以后：重画姿势图（先画屏幕上正在显示的那个）；灯不受“光影”开关影响，照样画 */
     let lightRun = 0; A.lightKey = null;
-    function partsFor(f, name){ const e = f.glow && f.glow[name], q = f.poseImgs && f.poseImgs[name]; return e && q && Math.abs(e.w - q.w) <= 2 && Math.abs(e.h - q.h) <= 2 && e.parts && e.parts.length ? e.parts : null; }
+    function partsFor(f, name){
+      const e = f.glow && f.glow[name], q = f.poseImgs && f.poseImgs[name], s = f.glowScale || 1;
+      if (!(e && q && Math.abs(e.w * s - q.w) <= 2 && Math.abs(e.h * s - q.h) <= 2 && e.parts && e.parts.length)) return null;
+      return s === 1 ? e.parts : e.parts.map(p => Object.assign({}, p, {s}));
+    }
     function rigLight(L){
       const m = root.querySelector(`#${rigFid} feColorMatrix`); if (!m) return "";
       if (!L){ m.setAttribute("values", "1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0"); return ""; }
@@ -10140,19 +10707,34 @@ const BT = (() => {
     to:{name:"缠丝", en:"Tangler", c1:"#5A6E8A", c2:"#9FD8FF"}, order:{name:"乱序", en:"Scrambler", c1:"#8C704F", c2:"#FFB36B"},
     prep:{name:"迷途", en:"Stray", c1:"#4F6E8C", c2:"#8FF0FF"}, other:{name:"守门人", en:"Warden", c1:"#5E5E74", c2:"#E0E0FF"}
   };
-  const MOB_PAL = {
-    grunt:  {dark:"#2A2E38", main:"#363B47", far:"#6B7180", near:"#878D9C", acc1:"#4A4F5C", acc2:"#9AA0AD", chest:"#454B59", neck:"#1E222A"},
-    trooper:{dark:"#1E2B47", main:"#283A60", far:"#6F7D99", near:"#8C99B4", acc1:"#C9A83A", acc2:"#E8C84E", chest:"#36507D", neck:"#16203A"},
-    elite:  {dark:"#4E1822", main:"#6B2230", far:"#A99496", near:"#C9B5B7", acc1:"#E0553A", acc2:"#FF7A55", chest:"#8E2F40", neck:"#3A1018"}
-  };
-  /* 小兵（灰黑）→ 强化兵（藏青、黄色条纹）→ 精英（暗红）；武器：空手、短棍、小枪、剑 */
-  const MOBS = [
-    {tier:"grunt", name:"小兵", en:"Grunt", hp:18, weapon:null}, {tier:"grunt", name:"小兵", en:"Grunt", hp:18, weapon:"baton"},
-    {tier:"trooper", name:"强化兵", en:"Trooper", hp:26, weapon:"gun"}, {tier:"trooper", name:"强化兵", en:"Trooper", hp:26, weapon:"baton"},
-    {tier:"elite", name:"精英", en:"Elite", hp:36, weapon:"sword"}
-  ];
-  const W_NAME = {baton:"持棍", gun:"持枪", sword:"持剑"};
-  function mob(i){ const m = MOBS[Math.min(i, MOBS.length - 1)]; return Object.assign({id:"mob-" + m.tier, rigmon:true, pal:MOB_PAL[m.tier]}, m, {name:(W_NAME[m.weapon] || "空手") + m.name, max:m.hp, boss:false}); }
+  /* 人形小兵（monsters.js 第十二节，代码画的，和怪物同一个接口）：小兵档在拳斗兵、电棍兵里轮，强化兵档在枪兵、盾卫里轮，精英档是刃卫；血量照旧 */
+  const MOB_TIERS = ["grunt", "grunt", "trooper", "trooper", "elite"];
+  const MOB_IDS = {grunt:["brawler", "shocker"], trooper:["gunner", "guard"], elite:["blade"]};
+  const MOB_HP = {grunt:18, trooper:26, elite:36};
+  function mob(i){
+    const tier = MOB_TIERS[Math.min(i, MOB_TIERS.length - 1)], l = MOB_IDS[tier], id = l[(tier === "grunt" ? i : tier === "trooper" ? i - 2 : 0) % l.length];
+    const x = (typeof TuokouMonsters !== "undefined" ? TuokouMonsters.list() : []).find(m => m.id === id) || {name:id};
+    return {code:id, codemon:true, humanoid:true, name:x.name, en:"", note:x.note || "", hp:MOB_HP[tier], max:MOB_HP[tier], boss:false, tier};
+  }
+  /* 图鉴里的图：每只对手画一次，存成一张静态图（一屏同时放 19 只活的怪物，安卓手机会卡） */
+  const THUMBS = new Map();
+  function codeThumb(id){
+    if (THUMBS.has(id)) return THUMBS.get(id);
+    let url = ""; const host = document.createElement("div"); host.style.cssText = "position:fixed;left:-10000px;top:0;width:260px;height:230px"; document.body.appendChild(host);
+    try {
+      const m = TuokouMonsters.create(id, {host, foot:() => ({x:130, y:220}), height:() => 150, target:() => ({x:360, y:70, w:60, h:140}), lite:false});
+      m.layout(); const svg = host.querySelector("svg.tm-overlay");
+      if (svg){ const c = svg.cloneNode(true); c.setAttribute("xmlns", "http://www.w3.org/2000/svg"); c.setAttribute("width", "260"); c.setAttribute("height", "230"); c.setAttribute("viewBox", "0 0 260 230"); c.removeAttribute("style");
+        url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(c)); }
+      m.destroy();
+    } catch (e) {}
+    host.remove(); THUMBS.set(id, url); return url;
+  }
+  /* 哪些招是近战（要冲到对手面前打）：照说明第五、十二节每只的招式。喷火、风刃、射晶、石刺、光弹这些远程的不冲；
+     虚渊魔的重击是“消失，到对手面前斩”，模块自己处理 */
+  const MELEE = {scree:"LH", ashmoth:"L", drillback:"LH", voltail:"LH", rimeback:"LH", rustwarden:"LH", corefang:"L", abyssmaw:"LH", prismward:"L", twinhood:"LH", galecrest:"L", starhorn:"LH", colossus:"L", nullwraith:"L",
+    brawler:"LH", shocker:"LH", gunner:"", guard:"LH", blade:"LH"};
+  const isMelee = (id, kind) => (MELEE[id] || "").includes(kind === "light" ? "L" : kind === "heavy" ? "H" : "-");
   /* 14 只代码怪物（monsters.js）：3 小怪、3 精英、8 首领 */
   const ML = () => (typeof TuokouMonsters !== "undefined" ? TuokouMonsters.list() : []);
   const ids = tier => ML().filter(x => x.tier === tier).map(x => x.id);
@@ -10164,9 +10746,7 @@ const BT = (() => {
   function boss(tag, hp, img){
     if (typeof TuokouMonsters !== "undefined"){ const l = ids("boss"); const id = l.includes(img) ? img : l[0]; return Object.assign(codeMon(id, 80), {id:"boss", tag, hp, max:80, boss:true, img:id}); }
     const b = BOSSES[tag] || BOSSES.other; return Object.assign({id:"boss", tag, size:0.62, float:0, ar:"220 / 300"}, b, {svg: MON_ART.boss(b.c1, b.c2), hp, max:80, boss:true}); }
-  /* 图鉴用：一个摆好起手式的人形小怪 */
-  function mobHTML(i){ const m = mob(i); const r = makeRig(m.pal, m.weapon); poseTo(r, POSES.idle, 0); return r.svg.outerHTML; }
-  return {makeArena, processImage, rebuild, metaOf, rollGiant, rollPlace, placeName, PLACES, SCENES, LIGHTS, glowMatch, bakeCacheSize: () => bakeCache.size, msOf, loadoutOf, rigLoadout, tplMatch, tplOf, TEMPLATES, MOVE_LIST, SHEET10, POSE_NAMES, SHEET_ORDER, SHEET9, MOVESETS, monster, boss, mob, mobHTML, codeMon, minor, eliteMon, ids, BOSSES, MONSTERS, MOBS};
+  return {makeArena, processImage, rebuild, metaOf, rollGiant, rollPlace, placeName, PLACES, SCENES, LIGHTS, glowMatch, bakeCacheSize: () => bakeCache.size, msOf, loadoutOf, rigLoadout, tplMatch, tplOf, TEMPLATES, MOVE_LIST, SHEET10, POSE_NAMES, SHEET_ORDER, SHEET9, MOVESETS, monster, boss, mob, codeMon, codeThumb, minor, eliteMon, ids, BOSSES, MONSTERS, MOB_HP};
 })();
 
 /* ---------- 角色存储（IndexedDB，不放 localStorage：图片太大）：可以存好几个，选一个用 ---------- */
@@ -10299,7 +10879,7 @@ const GAME = {
     A.setYouHP(GAME.st.php, 100);
     GAME.next(true);
     if (r && r.hp != null && GAME.st.enemy){ GAME.st.enemy.hp = r.hp; A.setHP(r.hp, true, GAME.st.enemy.max); }
-    GAME.score(); GAME.meter(); GAME.say(`这一局：${giant ? "巨大化，" : ""}在${BT.placeName(giant, place)}打。`);
+    GAME.score(); GAME.meter();
     if (!L.gameTip){ const g = document.querySelector(".g-top"); if (g) g.insertAdjacentHTML("beforeend", `<div class="panel g-tip"><b>怎么打</b><p class="small" style="margin-top:4px">说完一句，你的角色就出招：完全对打得最重，3 秒内说出来还有暴击；只要开口说了，至少也能擦伤对手；一个字没说，对手加一层护盾，重练时说对就能打碎。被识别错了，就点“我说对了，是识别错了”，一样算你打中。每次第一次就说对，攒一格能量；攒满 5 格，下一张是大招卡，说对了就放大招。没看清，点“回放”。</p><button class="btn sm" data-act="g-tip-ok" style="margin-top:6px">知道了</button></div>`); }
   },
   score(){ const st = GAME.st; if (!st) return; const day = batDayRec(); st.A.setScore(`今天 ${st.todayBefore + st.sessionDmg}${day.hp ? ` / 昨天 ${day.hp}` : " 点"}`); },
@@ -10370,8 +10950,9 @@ const GAME = {
   onFix(entry, delta, shield){ const st = GAME.st; if (!st) return; st.chain = st.chain.then(async () => {
     if (!GAME.st || !st.A.root.isConnected) return; st.sessionDmg += delta; GAME.score();
     const e = st.enemy, weak = e.boss && entry.tag === e.tag ? 1.5 : 1, dmg = Math.max(1, Math.round(delta * weak));
-    GAME.say(`识别错了，算你打中：-${dmg}`); if (weak > 1) st.A.pop("弱点！", "weak");
-    await st.A.strike(dmg, {breaks: shield ? 1 : 0}); await GAME.afterHit();
+    GAME.say(`识别错了，按说对算：-${dmg}`); if (weak > 1) st.A.pop("弱点！", "weak");
+    st.last = [{kind:"hit", mv:"heavy", dmg, breaks: shield ? 1 : 0, label:`识别错了，按说对算：-${dmg}`, pops:[]}];
+    await st.A.move("heavy", dmg, {breaks: shield ? 1 : 0}); await GAME.afterHit();
   }).catch(() => {}); },
   say(t){ const el = document.getElementById("gSay"); if (el) el.textContent = t; },
   async afterHit(){
@@ -10413,7 +10994,7 @@ const GAME = {
       }
       let mult = weak, label; const pops = [];
       if (ev.k === "break") label = ev.shield ? "补说对了：打碎护盾" : "补说对了";
-      else label = entry.mis ? "识别错了，算你打中" : LBL[ev.lv] || "";
+      else label = entry.mis ? "识别错了，按说对算" : LBL[ev.lv] || "";
       /* 暴击：完全对，而且 3 秒内说出来（练得越熟越快，正是要练的） */
       if (ev.k === "hit" && ev.lv === "exact" && !entry.mis && entry.ms > 0 && entry.ms <= 3000){ mult *= 1.5; pops.push(["暴击！", "crit"]); label += "，暴击"; }
       const bonus = ev.k === "hit" && ok1 && st.combo >= 3 ? Math.min(3, st.combo - 2) : 0;
@@ -10606,7 +11187,8 @@ VIEWS.battle = {
         <p class="small muted" style="margin-top:4px">导入过的角色都存在这台手机上，可以随时换着用；不用的可以删掉，腾出空间。图片不会上传。</p>
         <div class="bt-chars">${row("rig", "原创小人", "", "")}${BAT_LIST.map(c => row(c.id, c.name, c.thumb, `<button class="btn sm ghost" data-act="bt-ren" data-v="${c.id}">改名</button><button class="btn sm ghost danger" data-act="bt-delc" data-v="${c.id}">删除</button>`)).join("")}</div>
         ${batMsHTML()}
-        <label class="btn primary block" style="text-align:center;margin-top:10px">导入新的姿势表<input type="file" accept="image/*" data-chg="bt-file" style="display:none"></label>
+        <label class="fld" style="margin-top:10px"><span>新导入的角色用哪个招式模板（和上面“正在用的角色”的设置分开）</span><select id="btImpTpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("")}</select></label>
+        <label class="btn primary block" style="text-align:center;margin-top:6px">导入新的姿势表<input type="file" accept="image/*" data-chg="bt-file" style="display:none"></label>
         <p class="small muted" style="margin-top:4px">纯绿背景、3 行 3 列，顺序是：起手、轻击、重击·蓄力 / 重击、技能·蓄力、技能 / 被打中、赢、输。10 姿势表在第 4 行再加一个技能·出手。以前的 2 行 3 列也可以（出拳当轻击，大招当技能）。</p>
         <label class="btn sm" style="margin-top:6px">导入发光部位（眼睛、胸灯）<input type="file" accept=".json,application/json" data-chg="glow-file" style="display:none"></label>
         <p class="small muted" style="margin-top:4px">用发光部位.json。app 会按姿势图的大小，自动对上是哪个角色${rec && rec.glow ? "（这个角色已经对上了）" : ""}。只存在这台手机上。</p>
@@ -10614,7 +11196,7 @@ VIEWS.battle = {
         ${rec ? `<div style="margin-top:10px;border-top:1px solid var(--line, #e2e2e2);padding-top:10px"><b class="small">调整正在用的角色</b>
           <div class="row-gap" style="margin-top:6px"><select id="btRepPose">${BT.SHEET_ORDER.map(k => `<option value="${k}">${BT.POSE_NAMES[k]}</option>`).join("")}</select>
           <label class="btn sm">用单人图替换或补上这个姿势<input type="file" accept="image/*" data-chg="bt-rep" style="display:none"></label></div>
-          <label class="fld"><span>替换图的大小 <b id="btRepVal">100%</b></span><input type="range" id="btRepSize" min="80" max="125" step="1" value="100" data-chg="bt-repsize"></label>
+          <label class="fld"><span>替换图的大小 <b id="btRepVal">100%</b></span><input type="range" id="btRepSize" min="80" max="125" step="1" value="100" data-chg="bt-repsize" data-out="btRepVal" data-unit="%"></label>
           <div class="row-gap" style="margin-top:8px"><button class="btn sm" data-act="bt-calib">设定大招光线的起点</button><button class="btn sm ghost danger" data-act="bt-del">删除这个角色</button></div></div>` : ""}
       </div>
       <div class="panel"><b>我导入的敌人</b>
@@ -10635,9 +11217,8 @@ VIEWS.battle = {
         <p class="small muted" style="margin-top:4px">游戏里会遇到的对手。小怪先出场，越往后越强；首领的弱点按你最近最常错的类型定，用这类句子打它伤害更高。点一只，在下面看它的动作。</p>
         <div id="btMonPrev" class="bt-monprev"></div>
         <div class="bt-acts">${[["light","轻击"],["heavy","重击"],["skill","技能"],["hit","被打中"],["win","胜利"],["lose","倒下"]].map(([k, t]) => `<button class="btn sm" data-act="mon-play" data-v="${k}">${t}</button>`).join("")}</div>
-        <p class="small" style="margin-top:10px"><b>人形小怪</b></p>
-        <div class="bt-gal">${BT.MOBS.map((m, i) => { const x = BT.mob(i); return `<div class="bt-gal-i"><div class="bt-gal-pic mob">${BT.mobHTML(i)}</div><b>${esc(x.name)}</b><span>${x.max} 血</span></div>`; }).join("")}</div>
-        ${typeof TuokouMonsters !== "undefined" ? [["minor", "小怪（24 血）"], ["elite", "精英（36 血）"], ["boss", "首领（80 血）"]].map(([t, h]) => `<p class="small" style="margin-top:10px"><b>${h}</b></p><div class="bt-mons">${TuokouMonsters.list().filter(m => m.tier === t).map(m => `<button class="bt-mon${m.id === BAT_MON ? " on" : ""}" data-act="mon-pick" data-v="${m.id}"><b>${esc(m.name)}</b><span>${esc(m.note || "")}</span></button>`).join("")}</div>`).join("") : ""}
+        ${typeof TuokouMonsters !== "undefined" ? [["mob", "人形小兵"], ["minor", "小怪"], ["elite", "精英"], ["boss", "首领"]].map(([t, h]) => `<p class="small" style="margin-top:10px"><b>${h}</b></p><div class="bt-cards">${TuokouMonsters.list().filter(m => m.tier === t).map(m => { const hp = t === "mob" ? BT.MOB_HP[m.mobTier] : ENE_HP[t]; const tn = t === "mob" ? ({grunt:"小兵", trooper:"强化兵", elite:"精英"})[m.mobTier] : ({minor:"小怪", elite:"精英", boss:"首领"})[t];
+          return `<button class="bt-card${m.id === BAT_MON ? " on" : ""}" data-act="mon-pick" data-v="${m.id}"><img class="bt-thumb" data-thumb="${m.id}" alt=""><b>${esc(m.name)}</b><span class="bt-card-tier">${tn} · ${hp} 血</span><span class="bt-card-note">${esc(m.note || "")}</span></button>`; }).join("")}</div>`).join("") : ""}
       </div>
       <div class="panel"><b>两种练法</b>
         <p class="small muted" style="margin-top:6px">首页的“开始”是学习模式，完全没有游戏；“游戏”里每说完一句马上出招，一路打小怪和首领，攒满能量放大招，练完再和昨天的自己比。两种模式都会记录每天的成绩，方便以后比较哪种对你更有用。</p>
@@ -10646,6 +11227,9 @@ VIEWS.battle = {
   async mount(){
     const mp = document.getElementById("btMonPrev");
     if (mp && typeof TuokouMonsters !== "undefined"){ BAT_MONA = BT.makeArena(mp); BAT_MONA.setChar(null, BT.metaOf(null)); BAT_MONA.setNames("", "你"); BAT_MONA.setScore(""); batMonShow(); }
+    /* 图鉴的图：一张一张画出来 */
+    const thumbs = [...document.querySelectorAll("img[data-thumb]")];
+    (async () => { for (const img of thumbs){ await new Promise(r => setTimeout(r, 0)); if (!img.isConnected) return; const u = BT.codeThumb(img.dataset.thumb); if (u) img.src = u; } })();
     const el = document.getElementById("btPrev"); if (!el) return;
     BAT_PREV = BT.makeArena(el); const rec = await batLoadChar();
     BAT_PREV.setChar(rec ? BT.rebuild(rec) : null, BT.metaOf(rec)); BAT_PREV.setNames("昨天的你", "你"); BAT_PREV.setScore("");
@@ -10655,17 +11239,17 @@ VIEWS.battle = {
 function batMsHTML(){
   const rec = BAT_CHAR, lo = rec ? BT.loadoutOf(rec) : BT.rigLoadout(), tpl = BT.tplMatch(lo), T = BT.TEMPLATES[tpl] || BT.TEMPLATES.brawler;
   const opt = (slot) => BT.MOVE_LIST[slot].map(([k, n]) => `<option value="${k}" ${lo[slot] === k ? "selected" : ""}>${n}</option>`).join("");
-  const r = rec ? Math.round((rec.r || T.r) * 100) : 0, cm = rec ? (rec.cm || T.cm) : 0;
-  return `<div class="bt-ms"><label class="fld"><span>${rec ? "这个角色的招式" : "原创小人的招式（新导入的角色也先用这个模板）"}</span><select id="btTpl" data-chg="bt-tpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${k === tpl ? "selected" : ""}>${t.name}：${BT.MOVE_LIST.light.find(x => x[0] === t.light)[1]}、${BT.MOVE_LIST.heavy.find(x => x[0] === t.heavy)[1]}、${BT.MOVE_LIST.skill.find(x => x[0] === t.skill)[1]}${t.hover ? "，悬浮" : ""}</option>`).join("")}${tpl === "custom" ? `<option value="custom" selected>自定义</option>` : ""}</select></label>
+  const mm = rec ? BT.metaOf(rec) : null; const r = rec ? Math.round(mm.r * 100) : 0, cm = rec ? mm.cm : 0;
+  return `<div class="bt-ms"><label class="fld"><span>${rec ? "正在用的角色的招式" : "原创小人的招式"}</span><select id="btTpl" data-chg="bt-tpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${k === tpl ? "selected" : ""}>${t.name}：${BT.MOVE_LIST.light.find(x => x[0] === t.light)[1]}、${BT.MOVE_LIST.heavy.find(x => x[0] === t.heavy)[1]}、${BT.MOVE_LIST.skill.find(x => x[0] === t.skill)[1]}${t.hover ? "，悬浮" : ""}</option>`).join("")}${tpl === "custom" ? `<option value="custom" selected>自定义</option>` : ""}</select></label>
     <details class="bt-custom"${tpl === "custom" ? " open" : ""}><summary>自定义：轻击、重击、技能分别选</summary>
       <div class="bt-slots"><label>轻击<select data-chg="bt-slot" data-slot="light">${opt("light")}</select></label><label>重击<select data-chg="bt-slot" data-slot="heavy">${opt("heavy")}</select></label><label>技能<select data-chg="bt-slot" data-slot="skill">${opt("skill")}</select></label></div>
       <label class="switch"><span>悬浮</span><input type="checkbox" data-chg="bt-hover" ${lo.hover ? "checked" : ""}></label></details>
     ${batPlaceHTML(rec)}
-    ${rec ? `<label class="fld"><span>身高 <b id="btCmVal">${cm} 厘米</b></span><input type="range" id="btCm" min="150" max="220" step="1" value="${cm}" data-chg="bt-cm"></label>
-    <label class="fld"><span>起手式高度 <b id="btRVal">${r}%</b>（站直身高的百分比；悬浮的角色会超过 100%）</span><input type="range" id="btR" min="70" max="115" step="1" value="${r}" data-chg="bt-r"></label>
+    ${rec ? `<label class="fld"><span>身高 <b id="btCmVal">${cm} 厘米</b></span><input type="range" id="btCm" min="150" max="220" step="1" value="${cm}" data-chg="bt-cm" data-out="btCmVal" data-unit=" 厘米" data-live="kh"></label>
+    <label class="fld"><span>起手式高度 <b id="btRVal">${r}%</b>（站直身高的百分比；悬浮的角色会超过 100%）</span><input type="range" id="btR" min="70" max="115" step="1" value="${r}" data-chg="bt-r" data-out="btRVal" data-unit="%" data-live="kh"></label>
     <label class="switch"><span>能巨大化</span><input type="checkbox" data-chg="bt-giant" ${rec.giantM ? "checked" : ""}></label>
     ${rec.giantM ? `<label class="fld"><span>大小</span><select data-chg="bt-size">${[["random", "每局随机"], ["normal", "总是普通大小（在街上打）"], ["giant", "总是巨大（在城市里打）"]].map(([k, t]) => `<option value="${k}" ${(rec.sizeMode || "random") === k ? "selected" : ""}>${t}</option>`).join("")}</select></label>
-    <label class="fld"><span>巨大时的身高 <b id="btGmVal">${rec.giantM} 米</b></span><input type="range" min="20" max="100" step="1" value="${rec.giantM}" data-chg="bt-gm"></label>` : ""}` : ""}</div>`;
+    <label class="fld"><span>巨大时的身高 <b id="btGmVal">${rec.giantM} 米</b></span><input type="range" min="20" max="100" step="1" value="${rec.giantM}" data-chg="bt-gm" data-out="btGmVal" data-unit=" 米" data-live="kh"></label>` : ""}` : ""}</div>`;
 }
 /* 地点：每局随机（默认），或者固定一个。普通大小和巨人各一个选项（能巨大化才显示巨人的） */
 function batPlaceHTML(rec){
@@ -10676,6 +11260,21 @@ CHG["bt-place"] = el => {
   L.placeMode = Object.assign({}, L.placeMode || {}, {[el.dataset.k]: el.value}); saveLocal();
   if (BAT_PREV){ const giant = el.dataset.k === "giant"; BAT_PREV.setOpt({giant, place: el.value === "random" ? BT.PLACES[el.dataset.k][0][0] : el.value}); const rec = BAT_CHAR; BAT_PREV.setChar(rec ? BT.rebuild(rec) : null, BT.metaOf(rec, giant)); }
 };
+/* 拖滑块的时候（input 事件）：数字马上变；身高、起手式高度、巨大身高顺便实时改预览里人物的大小。松手（change）才存 */
+const LIVE = {
+  kh(el){
+    const rec = BAT_CHAR; if (!rec || !BAT_PREV) return; const t = Object.assign({}, rec);
+    if (el.dataset.chg === "bt-cm"){ t.cm = Number(el.value); t.cmSet = true; }
+    if (el.dataset.chg === "bt-r"){ t.r = Number(el.value) / 100; t.rSet = true; }
+    if (el.dataset.chg === "bt-gm") t.giantM = Number(el.value);
+    BAT_PREV.setKh(BT.metaOf(t, !!(rec.giantM && rec.sizeMode === "giant")).kh);
+  }
+};
+document.addEventListener("input", e => {
+  const el = e.target; if (!el || el.type !== "range") return;
+  if (el.dataset.out){ const o = document.getElementById(el.dataset.out); if (o) o.textContent = el.value + (el.dataset.unit || ""); }
+  if (el.dataset.live && LIVE[el.dataset.live]) LIVE[el.dataset.live](el);
+});
 /* 改了招式、身高、大小以后：存下来，预览马上变 */
 async function batApply(rec, lo, rerender){
   if (rec){ rec.loadout = lo; await batSaveChar(rec); } else { L.rigLoadout = lo; saveLocal(); }
@@ -10697,8 +11296,8 @@ CHG["bt-gm"] = async el => { const v = document.getElementById("btGmVal"); if (v
 /* 发光部位.json：对每个导入过的角色和敌人，按姿势图的宽高自动对上；以后新导入的也会自动对 */
 async function glowApply(json, rec){
   const poses = BT.rebuild(Object.assign({}, rec, {repl:{}}));
-  const m = BT.glowMatch(json, poses); if (!m){ if (rec.glow){ delete rec.glow; delete rec.glowName; } return null; }
-  rec.glow = json[m.key]; rec.glowName = m.key; return m;
+  const m = BT.glowMatch(json, poses); if (!m){ if (rec.glow){ delete rec.glow; delete rec.glowName; delete rec.glowScale; } return null; }
+  rec.glow = json[m.key]; rec.glowName = m.key; rec.glowScale = Math.abs(m.s - 1) < 0.004 ? 1 : m.s; return m;
 }
 async function glowApplyAll(json){
   const hit = [];
@@ -10721,7 +11320,11 @@ ACT["bt-delc"] = async el => { const c = BAT_LIST.find(x => x.id === el.dataset.
   await batDelChar(c.id); UI.render(); toast("删掉了"); };
 /* 敌人图鉴的预览：一次只放一只怪物（安卓手机一屏放多只会卡） */
 let BAT_MON = "scree", BAT_MONA = null;
-function batMonShow(){ if (!BAT_MONA) return; const x = BT.codeMon(BAT_MON, 24); BAT_MONA.setEnemy(x); BAT_MONA.setNames(x.name, "你"); BAT_MONA.setHP(24, true, 24); }
+function batMonShow(){
+  if (!BAT_MONA) return; const info = TuokouMonsters.list().find(m => m.id === BAT_MON) || {};
+  const hp = info.tier === "mob" ? BT.MOB_HP[info.mobTier] : ENE_HP[info.tier] || 24; const x = BT.codeMon(BAT_MON, hp);
+  BAT_MONA.setEnemy(x); BAT_MONA.setNames(x.name, "你"); BAT_MONA.setHP(hp, true, hp);
+}
 CHG["ene-file"] = async el => {
   const f = el.files && el.files[0]; el.value = ""; if (!f) return; const note = $("#eneNote"); if (note) note.textContent = "正在处理……";
   try {
@@ -10745,7 +11348,7 @@ ACT["ene-see"] = async el => {
   const m = imgEnemy({info:e, rec}, e.tier, false, false); BAT_MONA.setEnemy(m); BAT_MONA.setNames(m.name, "你"); BAT_MONA.setHP(m.max, true, m.max);
   const mp = document.getElementById("btMonPrev"); if (mp) mp.scrollIntoView({block:"center", behavior:"smooth"});
 };
-ACT["mon-pick"] = el => { BAT_MON = el.dataset.v; document.querySelectorAll(".bt-mon").forEach(b => b.classList.toggle("on", b.dataset.v === BAT_MON)); batMonShow(); };
+ACT["mon-pick"] = el => { BAT_MON = el.dataset.v; document.querySelectorAll(".bt-card").forEach(b => b.classList.toggle("on", b.dataset.v === BAT_MON)); batMonShow(); const mp = document.getElementById("btMonPrev"); if (mp) mp.scrollIntoView({block:"center", behavior:"smooth"}); };
 ACT["mon-play"] = async el => {
   const A = BAT_MONA; if (!A) return; const k = el.dataset.v;
   if (k === "light" || k === "heavy" || k === "skill"){ A.clear(); await A.enemyMove(k, 0); return; }
@@ -10760,7 +11363,8 @@ CHG["bt-file"] = async el => {
     const poses = await BT.processImage(f);
     const n = Object.keys(poses).length;
     if (![6, 9, 10].includes(n)) throw new Error("这里要 10、9 或 6 个姿势的姿势表。只有 1 个人物的单人图，可以导入姿势表以后，用来替换或补上其中一个姿势。");
-    const tk = BT.tplOf((document.getElementById("btTpl") || {}).value || "brawler"), T = BT.TEMPLATES[tk || "brawler"];
+    /* 新角色的模板：用导入那里单独的选项（以前用的是“正在用的角色”的下拉框，一选就把正在用的角色改掉了） */
+    const tk = BT.tplOf((document.getElementById("btImpTpl") || {}).value || "brawler"), T = BT.TEMPLATES[tk || "brawler"];
     const lo = tk ? {light:T.light, heavy:T.heavy, skill:T.skill, hover:T.hover} : BT.rigLoadout();
     await batAddChar({v:3, sheet:poses, sheetType:n, loadout:lo, r:T.r, cm:T.cm, repl:{}, beam:{}, at:Date.now()});
     UI.render(); toast("导入好了：找到 6 个姿势，已经去掉了绿色背景，现在正在用它");
