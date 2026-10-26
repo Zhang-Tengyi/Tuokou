@@ -631,6 +631,16 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .bt-stage.hud-light .bt-bar{background:rgba(255,255,255,.22)}
 .misrec-btn{margin:2px 0 12px;min-height:44px;font-weight:700}
 
+/* ---------- 1.33：“对战角色”页的标签页，上面固定预览 ---------- */
+.bt-sticky{position:sticky;top:0;z-index:20;background:var(--bg,#fff);padding:4px 0 6px}
+.bt-sticky[hidden]{display:none}
+.bt-tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none;position:sticky;z-index:19;background:var(--bg,#fff)}
+.bt-tabs::-webkit-scrollbar{display:none}
+.bt-tab{flex:none;padding:7px 13px;border-radius:999px;border:1px solid var(--line,#e2e2e2);background:transparent;color:inherit;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer}
+.bt-tab.on{background:var(--ink,#16202E);color:var(--bg,#fff);border-color:var(--ink,#16202E)}
+.bt-pane[hidden]{display:none}
+.bt-allpanes .bt-pane[hidden]{display:block}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -651,7 +661,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.32.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.33.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -9625,7 +9635,8 @@ const BT = (() => {
     /* 没拖过滑块（rSet、cmSet 为假）就跟着模板走，不用导入时存下来的值 */
     const custom = tplMatch(lo) === "custom";
     const r = rec.rSet || (custom && rec.r) ? rec.r : t.r, cm = rec.cmSet || (custom && rec.cm) ? rec.cm : t.cm, big = !!(giant && rec.giantM);
-    return {loadout:lo, r, cm, kh: big ? (rec.giantM * r) / CITY_READY_M : ((cm / 100) * r) / READY_M, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowScale: rec.glowScale || 1, glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
+    const ready = big ? rec.giantM * r : 0;
+    return {loadout:lo, r, cm, kh: big ? ready / Math.max(CITY_READY_M, ready) : ((cm / 100) * r) / READY_M, giantReady: big ? Math.max(CITY_READY_M, ready) : 0, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowScale: rec.glowScale || 1, glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
   }
 
   /* ---------- 内置背景（量过一次：店门口的售货机 1.83 米定比例，近处车道的中间定脚的位置） ---------- */
@@ -9815,7 +9826,7 @@ const BT = (() => {
     /* 角色：poses 为空就用原创小人 */
     A.setChar = (poses, meta) => {
       A.dropCode(); A.clear(); ghost.monster = null; ghost.classList.remove("monster", "rigmon", "imgmon"); ghost.style.height = "";
-      meta = meta || {loadout:rigLoadout(), kh:1, hover:false}; A.loadout = meta.loadout || rigLoadout();
+      meta = meta || {loadout:rigLoadout(), kh:1, hover:false}; A.loadout = meta.loadout || rigLoadout(); A.giantReady = meta.giantReady || 0;
       [you, ghost].forEach(f => {
         /* 每个出场的人自己的身高（kh）和悬浮 */
         f.style.setProperty("--kh", String(poses ? meta.kh || 1 : 1)); f.classList.toggle("hover", !!meta.hover); f.classList.remove("landed");
@@ -10077,9 +10088,9 @@ const BT = (() => {
       await run(att, [{transform:"none"}, {transform:`translateX(${-dir * back}px)`}], {duration:windMs, easing:"ease-out"});
       if (token !== A.token) return;
       pose(att, o.hit, 140, "cubic-bezier(.3, 0, .6, 1)");
-      let dist;
-      if (att.rig) dist = Math.max(0, gapOf(a) - a.w * 0.12);
-      else { const a2 = box(bodyOf(att)); dist = Math.max(0, gapOf(a2) - back) + a2.w * 0.04; }
+      /* 冲到哪里：出招那一刻最前面的点（拳头、脚尖、刀刃）要打进对手身体四成，不是轮廓刚碰上就停 */
+      const fp = frontPoint(att), aimX = dir < 0 ? d.x + d.w * 0.6 : d.x + d.w * 0.4;
+      const dist = Math.max(0, dir * (aimX - fp.x) - back);
       await run(att, [{transform:`translateX(${-dir * back}px)`}, {transform:`translateX(${dir * dist}px)`}], {duration:o.dashMs || 140, easing:"cubic-bezier(.55, 0, .9, .45)"});
       if (token !== A.token) return;
       const hx = dir < 0 ? d.x + d.w * 0.85 : d.x + d.w * 0.15, hy = d.y + d.h * (o.hy || 0.3);
@@ -10507,6 +10518,78 @@ const BT = (() => {
       /* 切回起手式的同时，身上的光用 1.1 秒慢慢暗掉，中间不断、不闪（第十一节） */
       fadeHeld(1100); await pose(att, "idle", 300);
     }
+    /* 半月形光刃：凸的一面朝前、最前沿白亮；下面粗、上面细；后面拖着一束束金橙色的能量光带，底端一团亮光，沿路洒火星 */
+    function drawCrescent(ctx, x, y, H, dir, now, alpha, seed){
+      const R = H / 2, rx = H * 0.3, N = 28, outer = [], inner = [];
+      for (let i = 0; i <= N; i++){
+        const u = i / N, th = -Math.PI / 2 + Math.PI * u, ox = x + dir * Math.cos(th) * rx, oy = y + Math.sin(th) * R;
+        const w = H * (0.025 + 0.2 * Math.pow(u, 1.6)); outer.push([ox, oy]); inner.push([ox - dir * w, oy - w * 0.25 * Math.sin(th)]);
+      }
+      /* 能量光带：从光刃的后沿往后拖，下面（粗的那头）更密 */
+      ctx.lineCap = "round";
+      for (let k = 0; k < 14; k++){
+        const u = 0.1 + 0.88 * Math.pow(k / 13, 0.75), idx = Math.round(u * N), b = inner[idx];
+        const r1 = Math.sin(seed * 13.1 + k * 7.7) * 0.5 + 0.5, L = H * (0.7 + 1.0 * r1), amp = H * (0.03 + 0.06 * r1), M = 12;
+        let px = b[0], py = b[1];
+        for (let j = 1; j <= M; j++){
+          const f = j / M, nx = b[0] - dir * f * L, ny = b[1] + Math.sin(now / 110 + k * 1.7 + j * 0.65) * amp * f + (u - 0.5) * H * 0.18 * f;
+          ctx.globalAlpha = alpha * (1 - f) * 0.9; ctx.lineWidth = Math.max(0.8, H * (0.055 - 0.045 * f) * (0.6 + 0.6 * (1 - Math.abs(u - 0.75))));
+          ctx.strokeStyle = f < 0.3 ? "rgba(255,244,190,1)" : f < 0.65 ? "rgba(255,196,80,1)" : "rgba(255,138,30,1)";
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(nx, ny); ctx.stroke(); px = nx; py = ny;
+        }
+      }
+      /* 光刃本身：先画一层带光晕的，再画实的；渐变从最前沿的白到后沿的橙 */
+      const path = () => { ctx.beginPath(); outer.forEach(([a, b], i) => (i ? ctx.lineTo(a, b) : ctx.moveTo(a, b))); for (let i = N; i >= 0; i--) ctx.lineTo(inner[i][0], inner[i][1]); ctx.closePath(); };
+      const g = ctx.createLinearGradient(x + dir * rx, y, x - dir * (rx + H * 0.25), y);
+      g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.25, "rgba(255,246,190,1)"); g.addColorStop(0.6, "rgba(255,178,60,.95)"); g.addColorStop(1, "rgba(255,120,20,0)");
+      ctx.globalAlpha = alpha * 0.55; ctx.shadowColor = "rgba(255,170,40,.95)"; ctx.shadowBlur = H * 0.28; ctx.fillStyle = g; path(); ctx.fill();
+      ctx.shadowBlur = 0; ctx.globalAlpha = alpha; path(); ctx.fill();
+      ctx.globalAlpha = alpha; ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = Math.max(1.5, H * 0.018); ctx.beginPath(); outer.forEach(([a, b], i) => (i ? ctx.lineTo(a, b) : ctx.moveTo(a, b))); ctx.stroke();
+      const tip = outer[N]; blit(ctx, "fireHot", tip[0], tip[1], H * 0.42, alpha); blit(ctx, "fire", tip[0] - dir * H * 0.1, tip[1], H * 0.8, alpha * 0.6);
+    }
+    /* 剑气斩：压低的刀旁边聚橙色光点 → 上撩的弧光 → 一道半月形光刃拖着能量光带飞出画面，碰到对手连打 6 下 */
+    async function crescentGlow(att, def, dir, total){
+      const token = A.token; const face = faceOf(att);
+      pose(att, "low", 260); await wait(60);
+      const b0 = box(bodyOf(att)); motes(b0.x + b0.w * (dir < 0 ? 0.25 : 0.75), b0.y + b0.h * 0.78, 14, 650, "orange");
+      await run(face, [{filter:"drop-shadow(0 0 0 transparent)"}, {filter:"drop-shadow(0 0 14px rgba(255, 150, 40, .95))", offset:0.5}, {filter:"drop-shadow(0 0 20px rgba(255, 170, 60, 1))"}], {duration:650, easing:"ease-in-out"});
+      if (token !== A.token) return;
+      pose(att, "rise", 120); await wait(30);
+      const b1 = box(bodyOf(att)); arcSwoosh(b1.x + b1.w * (dir < 0 ? 0.22 : 0.78), b1.y + b1.h * 0.42, b1.h * 0.95, "rise", "rgba(255, 150, 40, .95)", dir); shake(5);
+      face.animate([{filter:"drop-shadow(0 0 16px rgba(255, 150, 40, .9))"}, {filter:"drop-shadow(0 0 0 transparent)"}], {duration:700});
+      const H = b1.h * 0.85, y = b1.y + b1.h * 0.5, SW = stage.clientWidth, x0 = dir < 0 ? b1.x + b1.w * 0.1 : b1.x + b1.w * 0.9;
+      const d = box(bodyOf(def)), hitX = d.x + d.w * 0.5, x1 = dir < 0 ? -H * 1.2 : SW + H * 1.2, T = 1150 * (window.__slowFx || 1), t0 = performance.now(), seed = Math.random() * 10;
+      const embers = []; let last = t0;
+      glow.add((ctx, now) => {
+        if (token !== A.token) return false;
+        const k = Math.min(1, (now - t0) / T), x = x0 + (x1 - x0) * k, dt = Math.min(0.05, (now - last) / 1000); last = now;
+        const alpha = Math.min(1, k * 6) * (k > 0.85 ? (1 - k) / 0.15 : 1);
+        ctx.globalAlpha = 0.35 * alpha; ctx.strokeStyle = "rgba(255,150,40,1)"; ctx.lineWidth = Math.max(1.5, H * 0.03); ctx.beginPath(); ctx.moveTo(x0, y + H * 0.08); ctx.lineTo(x, y + H * 0.08); ctx.stroke();
+        drawCrescent(ctx, x, y, H, dir, now, alpha, seed);
+        if (k < 1) for (let i = 0; i < 3; i++) embers.push({x:x - dir * H * 0.15, y:y + (Math.random() - 0.2) * H * 0.8, vx:-dir * (80 + Math.random() * 160), vy:(Math.random() - 0.5) * 60, t:0, max:0.3 + Math.random() * 0.35});   /* 光刃飞完就不再撒新的火星 */
+        for (let i = embers.length - 1; i >= 0; i--){ const p = embers[i]; p.t += dt; if (p.t > p.max){ embers.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; blit(ctx, "fireHot", p.x, p.y, H * 0.035, (1 - p.t / p.max) * alpha); }
+        return k < 1 || embers.length > 0;
+      });
+      await wait(Math.max(0, (T * Math.abs(hitX - x0)) / Math.abs(x1 - x0) - 30));
+      if (token !== A.token) return;
+      const hy = Math.min(Math.max(y, d.y + d.h * 0.2), d.y + d.h * 0.8), hx = d.x + d.w * (dir < 0 ? 0.6 : 0.4);
+      pose(def, "recoil", 90);
+      faceOf(def).animate([{filter:fil(def, "brightness(1.2)")}, {filter:fil(def, "brightness(2.8)")}, {filter:fil(def, "brightness(1.2)")}], {duration:160, iterations:4});
+      const push = def.animate([{transform:"none"}, {transform:`translateX(${dir * 26}px)`}], {duration:420, easing:"ease-out", fill:"forwards"});
+      shake(10); fireBurst(hx, hy, Math.min(220, d.w * 1.4));
+      for (const part of split(total, 6)){
+        if (token !== A.token) return;
+        if (def === ghost) A.lastSpecial += part; dealt(def, part);
+        damageNumber(hx + (Math.random() * 40 - 30), hy - 26 - Math.random() * 30, part);
+        burst(hx + (Math.random() * 20 - 10), hy + (Math.random() * 50 - 25), Math.min(90, d.w * 0.55));
+        await wait(70);
+      }
+      await wait(Math.max(0, T - (performance.now() - t0)));
+      if (token !== A.token) return;
+      push.cancel(); def.animate([{transform:`translateX(${dir * 26}px)`}, {transform:"none"}], {duration:320, easing:"ease-out"});
+      if (!def.classList.contains("still")) pose(def, "idle", 280);
+      await pose(att, "idle", 300);
+    }
     const punchFx = (x, y, d, dir) => { slash(x, y, dir); burst(x, y, Math.min(120, d.w * 0.8)); };
     const MOVES = {
       punch: (att, def, dir, dmg, o) => melee(att, def, dir, dmg, Object.assign({hit:"punch", effect:(x, y, d) => punchFx(x, y, d, dir)}, o)),
@@ -10519,7 +10602,7 @@ const BT = (() => {
       laserThin: (att, def, dir, dmg, o) => palmLaser(att, def, dir, dmg, false, o),
       laserThick: (att, def, dir, dmg, o) => palmLaser(att, def, dir, dmg, true, o),
       wideBeam: (att, def, dir, total) => (att.rig ? thinBeam(att, def, dir, total) : wideBeam(att, def, dir, total)),
-      crescent: (att, def, dir, total) => crescentWave(att, def, dir, total),
+      crescent: (att, def, dir, total) => crescentGlow(att, def, dir, total),
       /* 火焰踢：蓄力时小腿到脚着火，跟着腿走；命中时两道弧光（橙色、金黄）加一团火焰爆开，170ms 后火灭 */
       fireKick: async (att, def, dir, dmg, o) => {
         let flame = null;
@@ -10587,11 +10670,13 @@ const BT = (() => {
       if (!root.isConnected) return;
       const list = PLACES[A.giant ? "giant" : "human"], pe = list.find(p => p[0] === A.place) || list[0];
       const key = A.night ? pe[3] : pe[2]; const S0 = stage.getBoundingClientRect(); const sc = SCENES[key]; const m = sceneOf(sc);
+      if (A.giant && A.giantReady > m.readyM) m.readyM = A.giantReady;   /* 比 46 米高的巨人：镜头拉远，城市跟着变小 */
       stage.classList.toggle("giant", !!A.giant); stage.classList.toggle("soft", S.settings.bgSoft !== false);
       stage.style.setProperty("--bt-bg-blur", Math.max(1, S0.width / 520).toFixed(2) + "px");
       /* 画面里脚上方的部分不够、镜头拉不远的时候，就把人物画大，保证人物和场景的比例对 */
       const feetAt = sc.feetAt || FEET_AT;
-      const sizeNow = Math.max(A.charSize, sc.minSize || 0, (m.readyM * m.pxPerM * m.depth * (1 - feetAt)) / sc.footY); A.sizeNow = sizeNow;
+      /* 巨人最多占舞台的 78%：背景图的天空就那么高，镜头拉到底以后，再高的巨人也不再变大，不会大出画面 */
+      const sizeNow = Math.min(A.giant ? 0.78 : 9, Math.max(A.charSize, sc.minSize || 0, (m.readyM * m.pxPerM * m.depth * (1 - feetAt)) / sc.footY)); A.sizeNow = sizeNow;
       const winH = Math.min((m.readyM * m.pxPerM * m.depth) / sizeNow, sc.footY / (1 - feetAt));
       const k = S0.height / winH, dispH = k * sc.h, dispW = (dispH * sc.w) / sc.h;
       const bottomY = Math.min(sc.h, sc.footY + feetAt * winH);
@@ -10925,7 +11010,7 @@ const GAME = {
     const el = document.getElementById("gArena"); if (!el) return;
     const r0 = RUN.gameResume || null; const giant = r0 && r0.giant != null ? !!r0.giant : BT.rollGiant(BAT_CHAR);
     const place = r0 && r0.place ? r0.place : BT.rollPlace(giant);
-    const A = BT.makeArena(el); A.setOpt({charSize:0.54, bgShift:0, spots:[0.22, 0.78], showNum:true, giant, place});
+    const A = BT.makeArena(el); A.setOpt({charSize:0.62, bgShift:0, spots:[0.22, 0.78], showNum:true, giant, place});
     batLoadChar().then(c => { if (GAME.st && GAME.st.A === A){ const e = GAME.st.enemy; A.setChar(c ? BT.rebuild(c) : null, BT.metaOf(c, giant)); if (e){ A.setEnemy(e); A.setHP(e.hp, true, e.max); } } });
     A.setChar(BAT_CHAR ? BT.rebuild(BAT_CHAR) : null, BT.metaOf(BAT_CHAR, giant));
     S.game = S.game || {}; if (!S.game.boss){ S.game.boss = {tag:GAME.weakTag(), hp:80, img:GAME.bossImg()}; save(); }
@@ -11155,7 +11240,7 @@ async function batSummary(el){
   const gt = document.querySelector(".g-top"); if (gt) gt.remove();
   const box = el.querySelector(".summary"); if (!box){ GAME.stop(); return; }
   box.insertAdjacentHTML("afterbegin", `<div class="bt-wrap" id="btWrap"><div id="btArena"></div><div class="bt-below"><p class="small" id="btStatus" aria-live="polite"></p></div><div id="btPanel"></div></div>`);
-  const giant = !!(gs && gs.giant); const A = BT.makeArena($("#btArena")); A.setOpt({showNum:true, giant, place: gs ? gs.place : "street"}); const chr = await batLoadChar(); A.setChar(chr ? BT.rebuild(chr) : null, BT.metaOf(chr, giant));
+  const giant = !!(gs && gs.giant); const A = BT.makeArena($("#btArena")); A.setOpt({charSize:0.6, showNum:true, giant, place: gs ? gs.place : "street"}); const chr = await batLoadChar(); A.setChar(chr ? BT.rebuild(chr) : null, BT.metaOf(chr, giant));
   const enemy = gs && gs.enemy ? gs.enemy : (S.game && S.game.boss ? BT.boss(S.game.boss.tag, S.game.boss.hp, S.game.boss.img && !S.game.boss.img.startsWith("u:") ? S.game.boss.img : null) : BT.monster(0));
   A.setEnemy(enemy); A.setHP(enemy.hp, true, enemy.max); A.setNames(`${enemy.name} ${enemy.en}`, "你"); A.setScore(`今天 ${carried + plan.card} 点`);
   const R = BAT_RUN = {A, plan, day, carried, card:plan.card, special:0, entries, enemy, defeated: gs ? gs.defeated : 0, best: gs ? gs.best : 0, bossDown: gs ? gs.bossDown : false, startHP: enemy.hp};
@@ -11238,84 +11323,119 @@ async function batFinish(keepPanel){
 
 /* ---------- “对战角色”页：导入、预览、替换、校准、开关 ---------- */
 let BAT_PREV = null;
-VIEWS.battle = {
-  tab:"me",
-  render(){
-    const rec = BAT_CHAR; const day = (S.battle || {})[today()]; const ref = K.battleRef(S.battle || {}, today()); const cur = L.batActive || "rig";
-    const row = (id, name, thumb, extra) => `<div class="bt-char${cur === id ? " on" : ""}">${thumb ? `<img src="${thumb}" alt="">` : `<span class="bt-thumb-rig" aria-hidden="true"></span>`}<span class="bt-cname">${esc(name)}</span>
-      <span class="bt-cbtns">${cur === id ? `<em>正在用</em>` : `<button class="btn sm" data-act="bt-use" data-v="${id}">用这个</button>`}${extra || ""}</span></div>`;
-    return `<div class="wrap">${backBtn()}<h2>对战角色</h2>
-      <p class="muted small" style="margin:6px 0 10px">在“游戏”里，你的角色替你出招：你说得怎么样，就打出多少伤害。伤害只看你实际说出来的英语，你自己点的“秒出、有卡顿”不算进去，也不影响复习安排。</p>
-      <div id="btPrev"></div>
-      <div class="bt-acts">${[["light","轻击"],["heavy","重击"],["skill","技能"],["hit","被打中"],["win","赢了"],["lose","输了"]].map(([k, t]) => `<button class="btn sm" data-act="btp" data-v="${k}">${t}</button>`).join("")}</div>
-      <div class="panel" style="margin-top:12px"><b>我的角色</b>
-        <p class="small muted" style="margin-top:4px">导入过的角色都存在这台手机上，可以随时换着用；不用的可以删掉，腾出空间。图片不会上传。</p>
-        <div class="bt-chars">${row("rig", "原创小人", "", "")}${BAT_LIST.map(c => row(c.id, c.name, c.thumb, `<button class="btn sm ghost" data-act="bt-ren" data-v="${c.id}">改名</button><button class="btn sm ghost danger" data-act="bt-delc" data-v="${c.id}">删除</button>`)).join("")}</div>
-        ${batMsHTML()}
-        <label class="fld" style="margin-top:10px"><span>新导入的角色用哪个招式模板（和上面“正在用的角色”的设置分开）</span><select id="btImpTpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("")}</select></label>
-        <label class="btn primary block" style="text-align:center;margin-top:6px">导入新的姿势表<input type="file" accept="image/*" data-chg="bt-file" style="display:none"></label>
-        <p class="small muted" style="margin-top:4px">纯绿背景、3 行 3 列，顺序是：起手、轻击、重击·蓄力 / 重击、技能·蓄力、技能 / 被打中、赢、输。10 姿势表在第 4 行再加一个技能·出手。以前的 2 行 3 列也可以（出拳当轻击，大招当技能）。</p>
-        <label class="btn sm" style="margin-top:6px">导入发光部位（眼睛、胸灯）<input type="file" accept=".json,application/json" data-chg="glow-file" style="display:none"></label>
-        <p class="small muted" style="margin-top:4px">用发光部位.json。app 会按姿势图的大小，自动对上是哪个角色${rec && rec.glow ? "（这个角色已经对上了）" : ""}。只存在这台手机上。</p>
-        <p class="small" id="btNote" style="margin-top:6px"></p>
-        ${rec ? `<div style="margin-top:10px;border-top:1px solid var(--line, #e2e2e2);padding-top:10px"><b class="small">调整正在用的角色</b>
-          <div class="row-gap" style="margin-top:6px"><select id="btRepPose">${BT.SHEET_ORDER.map(k => `<option value="${k}">${BT.POSE_NAMES[k]}</option>`).join("")}</select>
-          <label class="btn sm">用单人图替换或补上这个姿势<input type="file" accept="image/*" data-chg="bt-rep" style="display:none"></label></div>
-          <label class="fld"><span>替换图的大小 <b id="btRepVal">100%</b></span><input type="range" id="btRepSize" min="80" max="125" step="1" value="100" data-chg="bt-repsize" data-out="btRepVal" data-unit="%"></label>
-          <div class="row-gap" style="margin-top:8px"><button class="btn sm" data-act="bt-calib">设定大招光线的起点</button><button class="btn sm ghost danger" data-act="bt-del">删除这个角色</button></div></div>` : ""}
-      </div>
-      <div class="panel"><b>我导入的敌人</b>
-        <p class="small muted" style="margin-top:4px">和导入角色一样的姿势表（纯绿背景，6、9 或 10 个姿势，人物朝左），app 会自动翻转，让它面对你。选它当哪一档：血量和出场位置跟着那一档走。当首领时，弱点照旧按你最近最常错的类型定；也可以把它固定给某种弱点。</p>
-        <div class="bt-chars">${ENE_LIST.map(e => `<div class="bt-char bt-ene">${e.thumb ? `<img src="${e.thumb}" alt="">` : ""}<div class="bt-ene-main"><span class="bt-cname">${esc(e.name)}</span>
-          <div class="bt-ene-opts"><select data-chg="ene-tier" data-v="${e.id}">${Object.entries(ENE_TIER).map(([k, t]) => `<option value="${k}" ${e.tier === k ? "selected" : ""}>${t}（${ENE_HP[k]} 血）</option>`).join("")}</select>
-          <select data-chg="ene-tpl" data-v="${e.id}" title="它打你时用的招式">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${(e.tpl || "brawler") === k ? "selected" : ""}>${t.name}</option>`).join("")}</select>
-          ${e.tier === "boss" ? `<select data-chg="ene-bind" data-v="${e.id}"><option value="">和其他首领轮流出场</option>${Object.keys(BT.BOSSES).map(t => `<option value="${t}" ${e.bind === t ? "selected" : ""}>固定当“${esc((TAGS[t] || TAGS.other).label)}”的首领</option>`).join("")}</select>` : ""}</div></div>
-          <span class="bt-cbtns"><button class="btn sm ghost" data-act="ene-see" data-v="${e.id}">看看</button><button class="btn sm ghost" data-act="ene-ren" data-v="${e.id}">改名</button><button class="btn sm ghost danger" data-act="ene-del" data-v="${e.id}">删除</button></span></div>`).join("") || `<p class="small muted">还没有导入敌人。</p>`}</div>
-        <label class="fld" style="margin-top:8px"><span>新敌人当哪一档</span><select id="eneTier">${Object.entries(ENE_TIER).map(([k, t]) => `<option value="${k}" ${k === "elite" ? "selected" : ""}>${t}（${ENE_HP[k]} 血）</option>`).join("")}</select></label>
-        <label class="btn block" style="text-align:center;margin-top:6px">导入敌人的姿势表<input type="file" accept="image/*" data-chg="ene-file" style="display:none"></label>
-        <p class="small" id="eneNote" style="margin-top:6px"></p>
-        <label class="switch" style="margin-top:6px"><span>只用我导入的敌人</span><input type="checkbox" data-chg="ene-only" ${L.enemyOnly ? "checked" : ""}></label>
-        <label class="switch"><span>让我的其他角色也来切磋</span><input type="checkbox" data-chg="rivals" ${L.rivals ? "checked" : ""}></label>
-        <p class="small muted" style="margin-top:4px">打开以后，你没在用的角色会以“劲敌”的身份出现：精英那一档偶尔出现，打完首领以后的加赛里也会出现，用它自己的招式和身高。</p>
-      </div>
-      <div class="panel"><b>敌人图鉴</b>
-        <p class="small muted" style="margin-top:4px">游戏里会遇到的对手。小怪先出场，越往后越强；首领的弱点按你最近最常错的类型定，用这类句子打它伤害更高。点一只，在下面看它的动作。</p>
-        <div id="btMonPrev" class="bt-monprev"></div>
-        <div class="bt-acts">${[["light","轻击"],["heavy","重击"],["skill","技能"],["hit","被打中"],["win","胜利"],["lose","倒下"]].map(([k, t]) => `<button class="btn sm" data-act="mon-play" data-v="${k}">${t}</button>`).join("")}</div>
-        ${typeof TuokouMonsters !== "undefined" ? [["mob", "人形小兵"], ["minor", "小怪"], ["elite", "精英"], ["boss", "首领"]].map(([t, h]) => `<p class="small" style="margin-top:10px"><b>${h}</b></p><div class="bt-cards">${TuokouMonsters.list().filter(m => m.tier === t).map(m => { const hp = t === "mob" ? BT.MOB_HP[m.mobTier] : ENE_HP[t]; const tn = t === "mob" ? ({grunt:"小兵", trooper:"强化兵", elite:"精英"})[m.mobTier] : ({minor:"小怪", elite:"精英", boss:"首领"})[t];
-          return `<button class="bt-card${m.id === BAT_MON ? " on" : ""}" data-act="mon-pick" data-v="${m.id}"><img class="bt-thumb" data-thumb="${m.id}" alt=""><b>${esc(m.name)}</b><span class="bt-card-tier">${tn} · ${hp} 血</span><span class="bt-card-note">${esc(m.note || "")}</span></button>`; }).join("")}</div>`).join("") : ""}
-      </div>
-      <div class="panel"><b>两种练法</b>
-        <p class="small muted" style="margin-top:6px">首页的“开始”是学习模式，完全没有游戏；“游戏”里每说完一句马上出招，一路打小怪和首领，攒满能量放大招，练完再和昨天的自己比。两种模式都会记录每天的成绩，方便以后比较哪种对你更有用。</p>
-        <p class="small" style="margin-top:6px">${day && day.sessions ? `今天的游戏：${day.sessions} 轮，${day.cards} 句，${day.dmg} 点。` : "今天还没玩过游戏。"}${ref ? `　${batRefLabel(ref)}：${S.battle[ref].dmg} 点。` : ""}</p></div></div>`;
-  },
-  async mount(){
-    const mp = document.getElementById("btMonPrev");
-    if (mp && typeof TuokouMonsters !== "undefined"){ BAT_MONA = BT.makeArena(mp); BAT_MONA.setChar(null, BT.metaOf(null)); BAT_MONA.setNames("", "你"); BAT_MONA.setScore(""); batMonShow(); }
-    /* 图鉴的图：一张一张画出来 */
-    const thumbs = [...document.querySelectorAll("img[data-thumb]")];
-    (async () => { for (let i = 0; i < thumbs.length; i += 4){ if (!thumbs[i].isConnected) return; await Promise.all(thumbs.slice(i, i + 4).map(async img => { const u = await BT.codeThumb(img.dataset.thumb); if (u && img.isConnected) img.src = u; })); } })();
-    const el = document.getElementById("btPrev"); if (!el) return;
-    BAT_PREV = BT.makeArena(el); const rec = await batLoadChar();
-    BAT_PREV.setChar(rec ? BT.rebuild(rec) : null, BT.metaOf(rec)); BAT_PREV.setNames("昨天的你", "你"); BAT_PREV.setScore("");
-  }
-};
-/* 招式和身高：导入新角色时用；正在用的角色也能改。原创小人只能选招式 */
-function batMsHTML(){
-  const rec = BAT_CHAR, lo = rec ? BT.loadoutOf(rec) : BT.rigLoadout(), tpl = BT.tplMatch(lo), T = BT.TEMPLATES[tpl] || BT.TEMPLATES.brawler;
-  const opt = (slot) => BT.MOVE_LIST[slot].map(([k, n]) => `<option value="${k}" ${lo[slot] === k ? "selected" : ""}>${n}</option>`).join("");
-  const mm = rec ? BT.metaOf(rec) : null; const r = rec ? Math.round(mm.r * 100) : 0, cm = rec ? mm.cm : 0;
-  return `<div class="bt-ms"><label class="fld"><span>${rec ? "正在用的角色的招式" : "原创小人的招式"}</span><select id="btTpl" data-chg="bt-tpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${k === tpl ? "selected" : ""}>${t.name}：${BT.MOVE_LIST.light.find(x => x[0] === t.light)[1]}、${BT.MOVE_LIST.heavy.find(x => x[0] === t.heavy)[1]}、${BT.MOVE_LIST.skill.find(x => x[0] === t.skill)[1]}${t.hover ? "，悬浮" : ""}</option>`).join("")}${tpl === "custom" ? `<option value="custom" selected>自定义</option>` : ""}</select></label>
+/* ---------- “对战角色”页：上面固定一个预览，下面一排标签，每个标签只显示一类设置 ---------- */
+const BT_TABS = [["chars", "角色"], ["moves", "招式"], ["body", "身材"], ["giant", "巨大化"], ["place", "地点"], ["enemies", "敌人"], ["gal", "图鉴"]];
+function batTabNow(){ const t = L.btTab || "chars"; return BT_TABS.some(x => x[0] === t) ? t : "chars"; }
+/* 预览跟着标签走：身材看普通大小；巨大化看巨人；地点看你选的地点 */
+function batPreviewMode(){
+  const rec = BAT_CHAR, t = batTabNow(), pm = L.placeMode || {};
+  if (t === "giant" && rec && rec.giantM) return {giant:true, place: pm.giant && pm.giant !== "random" ? pm.giant : "city"};
+  if (t === "place" && L.btPrevPlace && (!L.btPrevPlace.giant || (rec && rec.giantM))) return L.btPrevPlace;
+  return {giant:false, place: pm.human && pm.human !== "random" ? pm.human : "street"};
+}
+function batPreviewApply(){
+  if (!BAT_PREV) return; const m = batPreviewMode(), rec = BAT_CHAR;
+  BAT_PREV.setOpt({giant:m.giant, place:m.place}); BAT_PREV.setChar(rec ? BT.rebuild(rec) : null, BT.metaOf(rec, m.giant)); BAT_PREV.setNames("昨天的你", "你"); BAT_PREV.setScore("");
+}
+function batTplHTML(rec){
+  const lo = rec ? BT.loadoutOf(rec) : BT.rigLoadout(), tpl = BT.tplMatch(lo);
+  const opt = slot => BT.MOVE_LIST[slot].map(([k, n]) => `<option value="${k}" ${lo[slot] === k ? "selected" : ""}>${n}</option>`).join("");
+  const nm = (slot, id) => BT.MOVE_LIST[slot].find(x => x[0] === id)[1];
+  return `<label class="fld"><span>${rec ? "正在用的角色的招式" : "原创小人的招式"}</span><select id="btTpl" data-chg="bt-tpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${k === tpl ? "selected" : ""}>${t.name}：${nm("light", t.light)}、${nm("heavy", t.heavy)}、${nm("skill", t.skill)}${t.hover ? "，悬浮" : ""}</option>`).join("")}${tpl === "custom" ? `<option value="custom" selected>自定义</option>` : ""}</select></label>
     <details class="bt-custom"${tpl === "custom" ? " open" : ""}><summary>自定义：轻击、重击、技能分别选</summary>
       <div class="bt-slots"><label>轻击<select data-chg="bt-slot" data-slot="light">${opt("light")}</select></label><label>重击<select data-chg="bt-slot" data-slot="heavy">${opt("heavy")}</select></label><label>技能<select data-chg="bt-slot" data-slot="skill">${opt("skill")}</select></label></div>
       <label class="switch"><span>悬浮</span><input type="checkbox" data-chg="bt-hover" ${lo.hover ? "checked" : ""}></label></details>
-    ${batPlaceHTML(rec)}
-    ${rec ? `<label class="fld"><span>身高 <b id="btCmVal">${cm} 厘米</b></span><input type="range" id="btCm" min="150" max="220" step="1" value="${cm}" data-chg="bt-cm" data-out="btCmVal" data-unit=" 厘米" data-live="kh"></label>
-    <label class="fld"><span>起手式高度 <b id="btRVal">${r}%</b>（站直身高的百分比；悬浮的角色会超过 100%）</span><input type="range" id="btR" min="70" max="115" step="1" value="${r}" data-chg="bt-r" data-out="btRVal" data-unit="%" data-live="kh"></label>
-    <label class="switch"><span>能巨大化</span><input type="checkbox" data-chg="bt-giant" ${rec.giantM ? "checked" : ""}></label>
-    ${rec.giantM ? `<label class="fld"><span>大小</span><select data-chg="bt-size">${[["random", "每局随机"], ["normal", "总是普通大小（在街上打）"], ["giant", "总是巨大（在城市里打）"]].map(([k, t]) => `<option value="${k}" ${(rec.sizeMode || "random") === k ? "selected" : ""}>${t}</option>`).join("")}</select></label>
-    <label class="fld"><span>巨大时的身高 <b id="btGmVal">${rec.giantM} 米</b></span><input type="range" min="20" max="100" step="1" value="${rec.giantM}" data-chg="bt-gm" data-out="btGmVal" data-unit=" 米" data-live="kh"></label>` : ""}` : ""}</div>`;
+    <p class="small muted" style="margin-top:6px">点上面的“轻击、重击、技能”按钮，就能在预览里看到这一招。</p>`;
 }
+function batBodyHTML(rec){
+  if (!rec) return `<p class="small muted">原创小人的身材是固定的。导入自己的角色以后，可以在这里调身高和起手式高度。</p>`;
+  const mm = BT.metaOf(rec), r = Math.round(mm.r * 100), cm = mm.cm;
+  return `<p class="small muted">这里调的是普通大小（预览就是普通大小）。巨人的身高在“巨大化”里调。</p>
+    <label class="fld"><span>身高 <b id="btCmVal">${cm} 厘米</b></span><input type="range" id="btCm" min="150" max="220" step="1" value="${cm}" data-chg="bt-cm" data-out="btCmVal" data-unit=" 厘米" data-live="kh"></label>
+    <label class="fld"><span>起手式高度 <b id="btRVal">${r}%</b>（起手式是站直身高的百分之几：半蹲的格斗姿势 80% 左右，站直的 100%）</span><input type="range" id="btR" min="70" max="115" step="1" value="${r}" data-chg="bt-r" data-out="btRVal" data-unit="%" data-live="kh"></label>
+    <div style="margin-top:12px;border-top:1px solid var(--line, #e2e2e2);padding-top:10px"><b class="small">替换某一个姿势</b>
+      <div class="row-gap" style="margin-top:6px"><select id="btRepPose">${BT.SHEET_ORDER.map(k => `<option value="${k}">${BT.POSE_NAMES[k]}</option>`).join("")}</select>
+      <label class="btn sm">用单人图替换或补上这个姿势<input type="file" accept="image/*" data-chg="bt-rep" style="display:none"></label></div>
+      <label class="fld"><span>替换图的大小 <b id="btRepVal">100%</b></span><input type="range" id="btRepSize" min="80" max="125" step="1" value="100" data-chg="bt-repsize" data-out="btRepVal" data-unit="%"></label>
+      <div class="row-gap" style="margin-top:8px"><button class="btn sm" data-act="bt-calib">设定大招光线的起点</button><button class="btn sm ghost danger" data-act="bt-del">删除这个角色</button></div></div>`;
+}
+function batGiantHTML(rec){
+  if (!rec) return `<p class="small muted">原创小人不能巨大化。导入自己的角色以后，可以在这里打开。</p>`;
+  return `<label class="switch"><span>能巨大化</span><input type="checkbox" data-chg="bt-giant" ${rec.giantM ? "checked" : ""}></label>
+    ${rec.giantM ? `<p class="small muted" style="margin-top:4px">预览现在是巨人。巨人太高时，镜头会自动拉远，不会大出画面。</p>
+    <label class="fld"><span>大小</span><select data-chg="bt-size">${[["random", "每局随机"], ["normal", "总是普通大小"], ["giant", "总是巨大"]].map(([k, t]) => `<option value="${k}" ${(rec.sizeMode || "random") === k ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+    <label class="fld"><span>巨大时的身高 <b id="btGmVal">${rec.giantM} 米</b></span><input type="range" min="20" max="100" step="1" value="${rec.giantM}" data-chg="bt-gm" data-out="btGmVal" data-unit=" 米" data-live="kh"></label>` : `<p class="small muted" style="margin-top:4px">打开以后，这个角色有时会变成巨人，在城市、山林这些地方打。</p>`}`;
+}
+function batEnemiesHTML(){
+  return `<p class="small muted">和导入角色一样的姿势表（纯绿背景，6、9 或 10 个姿势，人物朝左），app 会自动翻转，让它面对你。选它当哪一档：血量和出场位置跟着那一档走。当首领时，弱点照旧按你最近最常错的类型定；也可以把它固定给某种弱点。</p>
+    <div class="bt-chars">${ENE_LIST.map(e => `<div class="bt-char bt-ene">${e.thumb ? `<img src="${e.thumb}" alt="">` : ""}<div class="bt-ene-main"><span class="bt-cname">${esc(e.name)}</span>
+      <div class="bt-ene-opts"><select data-chg="ene-tier" data-v="${e.id}">${Object.entries(ENE_TIER).map(([k, t]) => `<option value="${k}" ${e.tier === k ? "selected" : ""}>${t}（${ENE_HP[k]} 血）</option>`).join("")}</select>
+      <select data-chg="ene-tpl" data-v="${e.id}" title="它打你时用的招式">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${(e.tpl || "brawler") === k ? "selected" : ""}>${t.name}</option>`).join("")}</select>
+      ${e.tier === "boss" ? `<select data-chg="ene-bind" data-v="${e.id}"><option value="">和其他首领轮流出场</option>${Object.keys(BT.BOSSES).map(t => `<option value="${t}" ${e.bind === t ? "selected" : ""}>固定当“${esc((TAGS[t] || TAGS.other).label)}”的首领</option>`).join("")}</select>` : ""}</div></div>
+      <span class="bt-cbtns"><button class="btn sm ghost" data-act="ene-see" data-v="${e.id}">看看</button><button class="btn sm ghost" data-act="ene-ren" data-v="${e.id}">改名</button><button class="btn sm ghost danger" data-act="ene-del" data-v="${e.id}">删除</button></span></div>`).join("") || `<p class="small muted">还没有导入敌人。</p>`}</div>
+    <label class="fld" style="margin-top:8px"><span>新敌人当哪一档</span><select id="eneTier">${Object.entries(ENE_TIER).map(([k, t]) => `<option value="${k}" ${k === "elite" ? "selected" : ""}>${t}（${ENE_HP[k]} 血）</option>`).join("")}</select></label>
+    <label class="btn block" style="text-align:center;margin-top:6px">导入敌人的姿势表<input type="file" accept="image/*" data-chg="ene-file" style="display:none"></label>
+    <p class="small" id="eneNote" style="margin-top:6px"></p>
+    <label class="switch" style="margin-top:6px"><span>只用我导入的敌人</span><input type="checkbox" data-chg="ene-only" ${L.enemyOnly ? "checked" : ""}></label>
+    <label class="switch"><span>让我的其他角色也来切磋</span><input type="checkbox" data-chg="rivals" ${L.rivals ? "checked" : ""}></label>
+    <p class="small muted" style="margin-top:4px">打开以后，你没在用的角色会以“劲敌”的身份出现：精英那一档偶尔出现，打完首领以后的加赛里也会出现，用它自己的招式和身高。</p>`;
+}
+function batGalHTML(){
+  return `<p class="small muted">游戏里会遇到的对手。点一张卡片，在上面看它的动作。</p>
+    <div id="btMonPrev" class="bt-monprev"></div>
+    <div class="bt-acts">${[["light","轻击"],["heavy","重击"],["skill","技能"],["hit","被打中"],["win","胜利"],["lose","倒下"]].map(([k, t]) => `<button class="btn sm" data-act="mon-play" data-v="${k}">${t}</button>`).join("")}</div>
+    ${typeof TuokouMonsters !== "undefined" ? [["mob", "人形小兵"], ["minor", "小怪"], ["elite", "精英"], ["boss", "首领"]].map(([t, h]) => `<p class="small" style="margin-top:10px"><b>${h}</b></p><div class="bt-cards">${TuokouMonsters.list().filter(m => m.tier === t).map(m => { const hp = t === "mob" ? BT.MOB_HP[m.mobTier] : ({minor:24, elite:36, boss:80})[t]; const tn = t === "mob" ? ({grunt:"小兵", trooper:"强化兵", elite:"精英"})[m.mobTier] : ({minor:"小怪", elite:"精英", boss:"首领"})[t];
+      return `<button class="bt-card${m.id === BAT_MON ? " on" : ""}" data-act="mon-pick" data-v="${m.id}"><img class="bt-thumb" data-thumb="${m.id}" alt=""><b>${esc(m.name)}</b><span class="bt-card-tier">${tn} · ${hp} 血</span><span class="bt-card-note">${esc(m.note || "")}</span></button>`; }).join("")}</div>`).join("") : ""}`;
+}
+VIEWS.battle = {
+  tab:"me",
+  render(){
+    const rec = BAT_CHAR; const day = (S.battle || {})[today()]; const ref = K.battleRef(S.battle || {}, today()); const cur = L.batActive || "rig"; const tab = batTabNow(), all = !!window.__allPanes;
+    const row = (id, name, thumb, extra) => `<div class="bt-char${cur === id ? " on" : ""}">${thumb ? `<img src="${thumb}" alt="">` : `<span class="bt-thumb-rig" aria-hidden="true"></span>`}<span class="bt-cname">${esc(name)}</span>
+      <span class="bt-cbtns">${cur === id ? `<em>正在用</em>` : `<button class="btn sm" data-act="bt-use" data-v="${id}">用这个</button>`}${extra || ""}</span></div>`;
+    const panes = {
+      chars: `<div class="bt-chars">${row("rig", "原创小人", "", "")}${BAT_LIST.map(c => row(c.id, c.name, c.thumb, `<button class="btn sm ghost" data-act="bt-ren" data-v="${c.id}">改名</button><button class="btn sm ghost danger" data-act="bt-delc" data-v="${c.id}">删除</button>`)).join("")}</div>
+        <p class="small muted" style="margin-top:6px">导入过的角色都存在这台手机上，可以随时换着用。图片不会上传。</p>
+        <label class="fld" style="margin-top:10px"><span>新导入的角色用哪个招式模板</span><select id="btImpTpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("")}</select></label>
+        <label class="btn primary block" style="text-align:center;margin-top:6px">导入新的姿势表<input type="file" accept="image/*" data-chg="bt-file" style="display:none"></label>
+        <p class="small muted" style="margin-top:4px">纯绿背景、3 行 3 列：起手、轻击、重击·蓄力 / 重击、技能·蓄力、技能 / 被打中、赢、输。10 姿势表在第 4 行再加一个技能·出手。</p>
+        <label class="btn sm" style="margin-top:8px">导入发光部位（眼睛、胸灯）<input type="file" accept=".json,application/json" data-chg="glow-file" style="display:none"></label>
+        <p class="small muted" style="margin-top:4px">用发光部位.json，app 会按姿势图的大小自动对上是哪个角色${rec && rec.glow ? "（正在用的这个已经对上了）" : ""}。只存在这台手机上。</p>
+        <p class="small" id="btNote" style="margin-top:6px"></p>
+        <p class="small muted" style="margin-top:10px">首页的“开始”是学习模式，没有游戏；“游戏”里每说完一句马上出招。${day && day.sessions ? `今天的游戏：${day.sessions} 轮，${day.cards} 句，${day.dmg} 点。` : "今天还没玩过游戏。"}${ref ? `　${batRefLabel(ref)}：${S.battle[ref].dmg} 点。` : ""}</p>`,
+      moves: batTplHTML(rec), body: batBodyHTML(rec), giant: batGiantHTML(rec),
+      place: `${batPlaceHTML(rec)}<p class="small muted" style="margin-top:4px">选一个地点，预览就换到那里。默认每局随机。</p>`,
+      enemies: batEnemiesHTML(), gal: batGalHTML()
+    };
+    return `<div class="wrap bt-page${all ? " bt-allpanes" : ""}">${backBtn()}<h2>对战角色</h2>
+      <div class="bt-sticky" id="btTop"${tab === "gal" && !all ? " hidden" : ""}><div id="btPrev"></div>
+        <div class="bt-acts">${[["light","轻击"],["heavy","重击"],["skill","技能"],["hit","被打中"],["win","赢了"],["lose","输了"]].map(([k, t]) => `<button class="btn sm" data-act="btp" data-v="${k}">${t}</button>`).join("")}</div></div>
+      <div class="bt-tabs" role="tablist">${BT_TABS.map(([k, n]) => `<button class="bt-tab${k === tab ? " on" : ""}" data-act="bt-tab" data-v="${k}" role="tab" aria-selected="${k === tab}">${n}</button>`).join("")}</div>
+      ${BT_TABS.map(([k]) => `<div class="bt-pane panel" data-pane="${k}"${k === tab || all ? "" : " hidden"}>${panes[k]}</div>`).join("")}
+    </div>`;
+  },
+  async mount(){
+    const el = document.getElementById("btPrev");
+    if (el){ BAT_PREV = BT.makeArena(el); BAT_PREV.setOpt({charSize:0.6}); await batLoadChar(); batPreviewApply(); }
+    BAT_MONA = null; if (batTabNow() === "gal" || window.__allPanes) batGalInit();
+  }
+};
+/* 图鉴：一次只放一只活的怪物；卡片上的图一张一张画出来 */
+function batGalInit(){
+  const mp = document.getElementById("btMonPrev");
+  if (mp && typeof TuokouMonsters !== "undefined" && !BAT_MONA){ BAT_MONA = BT.makeArena(mp); BAT_MONA.setOpt({charSize:0.6}); BAT_MONA.setChar(null, BT.metaOf(null)); BAT_MONA.setNames("", "你"); BAT_MONA.setScore(""); batMonShow(); }
+  const thumbs = [...document.querySelectorAll("img[data-thumb]:not([src])")];
+  (async () => { for (let i = 0; i < thumbs.length; i += 4){ if (!thumbs[i].isConnected) return; await Promise.all(thumbs.slice(i, i + 4).map(async img => { const u = await BT.codeThumb(img.dataset.thumb); if (u && img.isConnected) img.src = u; })); } })();
+}
+ACT["bt-tab"] = el => {
+  const t = el.dataset.v; L.btTab = t; saveLocal(); const all = !!window.__allPanes;
+  document.querySelectorAll(".bt-tab").forEach(b => { const on = b.dataset.v === t; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
+  document.querySelectorAll(".bt-pane").forEach(pn => { pn.hidden = !all && pn.dataset.pane !== t; });
+  const top = document.getElementById("btTop"); if (top) top.hidden = !all && t === "gal";
+  if (t === "gal") batGalInit(); else { batPreviewApply(); if (BAT_PREV) BAT_PREV.layout(); }
+};
+
+/* 招式和身高：导入新角色时用；正在用的角色也能改。原创小人只能选招式 */
 /* 地点：每局随机（默认），或者固定一个。普通大小和巨人各一个选项（能巨大化才显示巨人的） */
 function batPlaceHTML(rec){
   const pm = L.placeMode || {}; const row = (k, label) => `<label class="fld"><span>${label}</span><select data-chg="bt-place" data-k="${k}"><option value="random" ${(pm[k] || "random") === "random" ? "selected" : ""}>每局随机</option>${BT.PLACES[k].map(([id, n]) => `<option value="${id}" ${pm[k] === id ? "selected" : ""}>${n}</option>`).join("")}</select></label>`;
@@ -11323,7 +11443,7 @@ function batPlaceHTML(rec){
 }
 CHG["bt-place"] = el => {
   L.placeMode = Object.assign({}, L.placeMode || {}, {[el.dataset.k]: el.value}); saveLocal();
-  if (BAT_PREV){ const giant = el.dataset.k === "giant"; BAT_PREV.setOpt({giant, place: el.value === "random" ? BT.PLACES[el.dataset.k][0][0] : el.value}); const rec = BAT_CHAR; BAT_PREV.setChar(rec ? BT.rebuild(rec) : null, BT.metaOf(rec, giant)); }
+  L.btPrevPlace = {giant: el.dataset.k === "giant", place: el.value === "random" ? BT.PLACES[el.dataset.k][0][0] : el.value}; saveLocal(); batPreviewApply();
 };
 /* 拖滑块的时候（input 事件）：数字马上变；身高、起手式高度、巨大身高顺便实时改预览里人物的大小。松手（change）才存 */
 const LIVE = {
@@ -11332,7 +11452,7 @@ const LIVE = {
     if (el.dataset.chg === "bt-cm"){ t.cm = Number(el.value); t.cmSet = true; }
     if (el.dataset.chg === "bt-r"){ t.r = Number(el.value) / 100; t.rSet = true; }
     if (el.dataset.chg === "bt-gm") t.giantM = Number(el.value);
-    BAT_PREV.setKh(BT.metaOf(t, !!(rec.giantM && rec.sizeMode === "giant")).kh);
+    BAT_PREV.setKh(BT.metaOf(t, batPreviewMode().giant).kh);
   }
 };
 document.addEventListener("input", e => {
@@ -11344,7 +11464,7 @@ document.addEventListener("input", e => {
 async function batApply(rec, lo, rerender){
   if (rec){ rec.loadout = lo; await batSaveChar(rec); } else { L.rigLoadout = lo; saveLocal(); }
   if (rerender){ UI.render(); return; }
-  if (BAT_PREV){ const g = !!(rec && rec.giantM && rec.sizeMode === "giant"); BAT_PREV.setOpt({giant:g}); BAT_PREV.setChar(rec ? BT.rebuild(rec) : null, BT.metaOf(rec, g)); }
+  batPreviewApply();
 }
 CHG["bt-tpl"] = async el => {
   const k = BT.tplOf(el.value); if (!k) return; const T = BT.TEMPLATES[k], rec = BAT_CHAR;
@@ -11387,7 +11507,7 @@ ACT["bt-delc"] = async el => { const c = BAT_LIST.find(x => x.id === el.dataset.
 let BAT_MON = "scree", BAT_MONA = null;
 function batMonShow(){
   if (!BAT_MONA) return; const info = TuokouMonsters.list().find(m => m.id === BAT_MON) || {};
-  const hp = info.tier === "mob" ? BT.MOB_HP[info.mobTier] : ENE_HP[info.tier] || 24; const x = BT.codeMon(BAT_MON, hp);
+  const hp = info.tier === "mob" ? BT.MOB_HP[info.mobTier] : ({minor:24, elite:36, boss:80})[info.tier] || 24; const x = BT.codeMon(BAT_MON, hp);
   BAT_MONA.setEnemy(x); BAT_MONA.setNames(x.name, "你"); BAT_MONA.setHP(hp, true, hp);
 }
 CHG["ene-file"] = async el => {
