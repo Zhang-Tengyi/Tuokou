@@ -616,6 +616,21 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .bt-card-tier{font-size:11.5px;color:var(--purple,#7b4dd6);font-weight:700}
 .bt-card-note{font-size:11.5px;color:var(--muted,#566274);line-height:1.45}
 
+/* ---------- 1.31：血条（深红、在最上面、左右对齐）、按背景明暗换字的颜色、“识别错了”按钮 ---------- */
+.bt-hud{top:7px}
+.bt-hp .bt-bar{height:9px}
+.bt-fill{background:#A3161F}
+.bt-trail{background:rgba(255,190,150,.9)}
+.bt-hpline{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-top:3px;font-size:.78rem;line-height:1.25}
+.bt-hp.right .bt-hpline{flex-direction:row}
+.bt-hpline .bt-name{margin:0;font-size:.8rem}
+.bt-hpnum,.bt-youhp{font-weight:800;font-variant-numeric:tabular-nums;font-size:.74rem;margin:0;min-height:0}
+.bt-youbar{margin:0}
+.bt-stage .bt-hp .bt-name,.bt-stage .bt-hpnum,.bt-stage .bt-youhp,.bt-stage .bt-score,.bt-stage .bt-shields{color:#16202E;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+.bt-stage.hud-light .bt-hp .bt-name,.bt-stage.hud-light .bt-hpnum,.bt-stage.hud-light .bt-youhp,.bt-stage.hud-light .bt-score,.bt-stage.hud-light .bt-shields{color:#F4F7FC;text-shadow:0 1px 2px rgba(0,0,0,.75)}
+.bt-stage.hud-light .bt-bar{background:rgba(255,255,255,.22)}
+.misrec-btn{margin:2px 0 12px;min-height:44px;font-weight:700}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -636,7 +651,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.30.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.31.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -3654,7 +3669,7 @@ class CardStage {
   }
   retryHTML(){
     if (this.phase !== "retry") return "";
-    return `<div class="panel" style="margin-top:14px;background:var(--amber-soft);border-color:transparent"><b>${this.hintMode === "flags" ? "意思对上了，但有几处可能有问题。按提示改一下，再说一次" : "差一点。按提示自己改，再说一次"}</b><ul class="fb" style="margin:6px 0 4px">${this.hints.map(h => `<li>${esc(h)}</li>`).join("")}</ul><p class="small muted">你刚才说的：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p><p class="small muted" style="margin-top:4px">这一步是让你自己改一次的机会，不算错。你其实说对了、是识别听错了，就点下面的按钮。</p><div class="row-gap" style="margin-top:6px"><button class="btn sm" data-act="c-retry-ok">我说对了，是识别错了</button></div></div>`;
+    return `<div class="panel" style="margin-top:14px;background:var(--amber-soft);border-color:transparent"><b>${this.hintMode === "flags" ? "意思对上了，但有几处可能有问题。按提示改一下，再说一次" : "差一点。按提示自己改，再说一次"}</b><ul class="fb" style="margin:6px 0 4px">${this.hints.map(h => `<li>${esc(h)}</li>`).join("")}</ul><p class="small muted">你刚才说的：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p><p class="small muted" style="margin-top:4px">这一步是让你自己改一次的机会，不算错。你其实说对了、是识别听错了，就点下面的按钮。</p><button class="btn block misrec-btn" data-act="c-retry-ok" style="margin-top:8px">我说对了，是识别错了</button></div>`;
   }
   suggest(){
     if (!this.cmp) return "";
@@ -3682,7 +3697,7 @@ class CardStage {
       if (cmp.restart && !this.misrec) h += `<p class="small muted" style="margin:-6px 0 10px">前面重说的部分没算，按后面那句判断。</p>`;
       if (this.mine && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">你的说法记下了，以后这样说也算对。</p>`;
       else if (this.tries && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">按提示自己改对了。改过一次的句子会早一点再出现。</p>`;
-      const mineRow = this.said ? `<div class="row-gap" style="margin:-2px 0 12px">${["r","t","f"].includes(c.t) ? `<button class="btn sm" data-act="c-mine">我确定这样也对</button>` : ""}<button class="btn sm" data-act="c-ask">拿不准，存起来问 Claude</button><button class="btn sm ghost" data-act="c-misrec">我说对了，是识别错了</button></div>` : "";
+      const mineRow = this.said ? `<div class="row-gap" style="margin:-2px 0 12px">${["r","t","f"].includes(c.t) ? `<button class="btn sm" data-act="c-mine">我确定这样也对</button>` : ""}<button class="btn sm" data-act="c-ask">拿不准，存起来问 Claude</button></div><button class="btn block misrec-btn" data-act="c-misrec">我说对了，是识别错了</button>` : "";
       if (meaning){
         const fl = this.flags.filter(f => !gcMsgs.has(f.msg));
         if (fl.length) h += `<ul class="fb">${fl.slice(0, 4).map(f => `<li>${esc(f.msg)}</li>`).join("")}</ul>`;
@@ -9762,13 +9777,15 @@ const BT = (() => {
     return best;
   }
 
+  /* 每个场景上部的明暗（算一次存起来）：暗 = 用白字 */
+  const TONE = new Map();
   /* ---------- 舞台：一个对战场景（结算页和“对战角色”页各用一个） ---------- */
   function makeArena(root){
     ensureWisp();
     root.classList.add("bt-stage");
     root.innerHTML = `<img class="bt-scene" alt=""><img class="bt-scene bt-soft" alt="" aria-hidden="true"><div class="bt-vignette" aria-hidden="true"></div><div class="bt-shadows"></div>
-      <div class="bt-hud"><div class="bt-hp" data-w="ghost"><div class="bt-name"></div><div class="bt-hpnum"></div><div class="bt-bar"><div class="bt-trail"></div><div class="bt-fill"></div></div><div class="bt-shields" aria-live="polite"></div></div>
-      <div class="bt-hp right" data-w="you"><div class="bt-name"></div><div class="bt-bar bt-youbar" hidden><div class="bt-trail"></div><div class="bt-fill"></div></div><div class="bt-score"></div></div></div>
+      <div class="bt-hud"><div class="bt-hp" data-w="ghost"><div class="bt-bar"><div class="bt-trail"></div><div class="bt-fill"></div></div><div class="bt-hpline"><span class="bt-name"></span><span class="bt-hpnum"></span></div><div class="bt-shields" aria-live="polite"></div></div>
+      <div class="bt-hp right" data-w="you"><div class="bt-bar bt-youbar" hidden><div class="bt-trail"></div><div class="bt-fill"></div></div><div class="bt-hpline"><span class="bt-youhp"></span><span class="bt-name"></span></div><div class="bt-score"></div></div></div>
       <div class="bt-fighter bt-ghost"><div class="bt-breath"><div class="bt-face"></div></div></div>
       <div class="bt-fighter bt-you"><div class="bt-breath"><div class="bt-face"></div></div></div>
       <img class="bt-scene bt-front" alt="" aria-hidden="true" hidden>
@@ -9870,7 +9887,7 @@ const BT = (() => {
       t.style.left = d.x + d.w * 0.5 + "px"; t.style.top = d.y - 6 + "px"; fx.appendChild(t);
       removeAfter(t.animate([{transform:"translate(-50%, 0) scale(.7)", opacity:0}, {transform:"translate(-50%, -6px) scale(1.08)", opacity:1, offset:0.25}, {transform:"translate(-50%, -26px) scale(1)", opacity:0}], {duration:900, easing:"ease-out"}), t);
     };
-    A.setNames = (g, y) => { root.querySelector('[data-w="ghost"] .bt-name').textContent = g; root.querySelector('[data-w="you"] .bt-name').textContent = y; };
+    A.setNames = (g, y) => { root.querySelector('[data-w="ghost"] .bt-name').textContent = g; root.querySelector('[data-w="you"] .bt-name').textContent = y === "你" ? youName() : y; };
     A.setScore = t => { root.querySelector(".bt-score").textContent = t; };
     A.setHP = (v, instant, max) => {
       if (max != null) A.max = Math.max(1, max);
@@ -9883,6 +9900,7 @@ const BT = (() => {
     A.setYouHP = (v, max) => {
       const bar = root.querySelector(".bt-youbar"); if (!bar) return; bar.hidden = false;
       const pct = Math.max(0, Math.min(100, (v / (max || 100)) * 100)) + "%"; bar.querySelector(".bt-fill").style.width = pct; bar.querySelector(".bt-trail").style.width = pct;
+      const t = root.querySelector(".bt-youhp"); if (t) t.textContent = `${Math.max(0, Math.round(v))}/${max || 100}`;
     };
     /* 代码怪物挪位置：改 foot 的偏移，每帧 layout() 一次 */
     function slideCode(to, ms){
@@ -9905,6 +9923,7 @@ const BT = (() => {
         onShake: k => shake(4 * k),
         lite: !!L.lite, z: 2
       });
+      try { A.cm.idle(); } catch (e) {}   /* 一出场就摆起手式，不先站直 */
       A.lightKey = null; requestAnimationFrame(() => relight(true));
     };
     /* 护盾：没说出来的句子，变成对手身上的护盾 */
@@ -10283,6 +10302,34 @@ const BT = (() => {
         });
       });
     }
+    /* 刃卫技能的刀光：一道弧形刀光扫过对手（橙色光晕 + 白色刀芯），扫过时洒火星；最后一刀交叉成大十字，闪一下 */
+    function bladeSlash(tb, n, last){
+      const token = A.token, t0 = performance.now(), cx = tb.x + tb.w / 2, cy = tb.y + tb.h * 0.45, L = Math.max(tb.w, tb.h) * 0.95;
+      const ang = [-0.55, 0.62, -1.1, 0.25, 1.05, -0.2][n % 6] + (Math.random() - 0.5) * 0.25;
+      const strokes = last ? [ang - 0.8, ang + 0.8] : [ang];
+      const sparks = [];
+      glow.add((ctx, now) => {
+        if (token !== A.token) return false;
+        const T = now - t0, draw = Math.min(1, T / 110), fade = T < 110 ? 1 : Math.max(0, 1 - (T - 110) / (last ? 520 : 300));
+        if (fade <= 0 && !sparks.length) return false;
+        for (const a of strokes){
+          const dx = Math.cos(a) * L / 2, dy = Math.sin(a) * L / 2, bend = L * 0.12;
+          const x0 = cx - dx, y0 = cy - dy, x1 = cx - dx + dx * 2 * draw, y1 = cy - dy + dy * 2 * draw;
+          const qx = (x0 + x1) / 2 - Math.sin(a) * bend, qy = (y0 + y1) / 2 + Math.cos(a) * bend;
+          const path = () => { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(qx, qy, x1, y1); };
+          ctx.lineCap = "round";
+          ctx.globalAlpha = 0.45 * fade; ctx.strokeStyle = "rgba(255,120,30,1)"; ctx.lineWidth = Math.max(10, L * 0.075); path(); ctx.stroke();
+          ctx.globalAlpha = 0.75 * fade; ctx.strokeStyle = "rgba(255,200,90,1)"; ctx.lineWidth = Math.max(5, L * 0.035); path(); ctx.stroke();
+          ctx.globalAlpha = fade; ctx.strokeStyle = "rgba(255,255,255,1)"; ctx.lineWidth = Math.max(2, L * 0.012); path(); ctx.stroke();
+          if (draw < 1 || T < 140) for (let i = 0; i < 3; i++) sparks.push({x:x1, y:y1, vx:(Math.random() - 0.5) * 420, vy:(Math.random() - 0.7) * 380, t:0, max:0.25 + Math.random() * 0.3, s:L * (0.03 + Math.random() * 0.03)});
+          blit(ctx, "fireHot", x1, y1, L * 0.16, 0.8 * fade);
+        }
+        if (last && T < 260) blit(ctx, "fireHot", cx, cy, L * (0.4 + T / 260), (1 - T / 260) * 0.9);
+        for (let i = sparks.length - 1; i >= 0; i--){ const p = sparks[i]; p.t += 0.016; if (p.t > p.max){ sparks.splice(i, 1); continue; } p.x += p.vx * 0.016; p.y += p.vy * 0.016; p.vy += 900 * 0.016; blit(ctx, "fireHot", p.x, p.y, p.s, 1 - p.t / p.max); }
+        return true;
+      });
+      if (last) shake(9); else if (n % 2 === 0) shake(3);
+    }
     const pulseOf = (now, rate, amp) => (reduced() ? 1 : 1 + Math.sin(now / rate) * amp);   /* 减少动态效果时，光不跳动 */
     /* 从 a 到 b 的一条锯齿线；amp 是最多偏开多远 */
     function jag(ax, ay, bx, by, amp, n){
@@ -10492,11 +10539,12 @@ const BT = (() => {
     A.enemyMove = async (kind, dmg, o) => {
       if (A.cm){
         let first = true; A.lastDmg = 0; const id = ghost.monster && ghost.monster.code;
-        A._codeHit = power => { const d = first ? dmg : 0; first = false; hurt(you, 1, d, power > 1.2); };
+        const fancy = id === "blade" && kind === "skill"; let cut = 0;
+        A._codeHit = power => { const d = first ? dmg : 0; first = false; hurt(you, 1, d, power > 1.2); if (fancy) bladeSlash(box(bodyOf(you)), cut++, power > 1.2); };
         /* 近战招：先冲到对手面前（怪物模块原地出招，位置是 app 给的 foot），打完再回去 */
         const melee = isMelee(id, kind);
         try {
-          if (melee){ const mb = A.cm.box(), tb = box(bodyOf(you)); const dx = Math.max(0, tb.x - (mb.x + mb.w) + Math.min(mb.w, tb.w) * 0.3); if (dx > 4) await slideCode(dx, 230); }
+          if (melee){ const mb = A.cm.box(), tb = box(bodyOf(you)); const dx = Math.max(0, tb.x + tb.w * 0.2 - (mb.x + mb.w)); if (dx > 4) await slideCode((A.cmDX || 0) + dx, 230); }
           await A.cm.play(kind);
         } finally { A._codeHit = null; if (melee && A.cm && A.cmDX) await slideCode(0, 280); }
         return;
@@ -10550,6 +10598,7 @@ const BT = (() => {
       const left = Math.min(0, Math.max(S0.width - dispW, S0.width / 2 - (sc.cx / sc.w) * dispW));
       const src = (typeof SCENE_SRC !== "undefined" && SCENE_SRC[key]) || "", fsrc = (typeof SCENE_FRONT !== "undefined" && SCENE_FRONT[key]) || "";
       if (src && sceneImg.getAttribute("src") !== src) sceneImg.src = src;
+      hudTone(key, src);
       const css = `left:${left}px;bottom:${-(sc.h - bottomY) * k}px;width:${dispW}px;height:${dispH}px;object-fit:fill`;
       sceneImg.style.cssText = css;
       if (src && softImg.getAttribute("src") !== src) softImg.src = src; softImg.style.cssText = css;
@@ -10570,6 +10619,13 @@ const BT = (() => {
     }
     A.layout = layout;
     A.setOpt = o => { Object.assign(A, o || {}); layout(); };
+    function hudTone(key, src){
+      const apply = dark => { stage.classList.toggle("hud-light", !!dark); stage.classList.toggle("hud-dark", !dark); };
+      if (TONE.has(key)){ apply(TONE.get(key)); return; }
+      const im = new Image(); im.onload = () => { try { const c = document.createElement("canvas"); c.width = 48; c.height = 32; const g = c.getContext("2d"); g.drawImage(im, 0, 0, 48, 32);
+        const d = g.getImageData(0, 0, 48, 11).data; let sum = 0; for (let i = 0; i < d.length; i += 4) sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        const dark = sum / (d.length / 4) / 255 < 0.55; TONE.set(key, dark); apply(dark); } catch (e) {} }; if (src) im.src = src;
+    }
     A.setKh = kh => { [you].concat(ghost.monster ? [] : [ghost]).forEach(f => f.style.setProperty("--kh", String(kh))); requestAnimationFrame(placeFighters); };
     /* 换地点、换人以后：重画姿势图（先画屏幕上正在显示的那个）；灯不受“光影”开关影响，照样画 */
     let lightRun = 0; A.lightKey = null;
@@ -10718,12 +10774,12 @@ const BT = (() => {
   }
   /* 图鉴里的图：每只对手画一次，存成一张静态图（一屏同时放 19 只活的怪物，安卓手机会卡） */
   const THUMBS = new Map();
-  function codeThumb(id){
+  async function codeThumb(id){
     if (THUMBS.has(id)) return THUMBS.get(id);
     let url = ""; const host = document.createElement("div"); host.style.cssText = "position:fixed;left:-10000px;top:0;width:260px;height:230px"; document.body.appendChild(host);
     try {
       const m = TuokouMonsters.create(id, {host, foot:() => ({x:130, y:220}), height:() => 150, target:() => ({x:360, y:70, w:60, h:140}), lite:false});
-      m.layout(); const svg = host.querySelector("svg.tm-overlay");
+      m.layout(); try { await m.idle(); } catch (e) {} const svg = host.querySelector("svg.tm-overlay");
       if (svg){ const c = svg.cloneNode(true); c.setAttribute("xmlns", "http://www.w3.org/2000/svg"); c.setAttribute("width", "260"); c.setAttribute("height", "230"); c.setAttribute("viewBox", "0 0 260 230"); c.removeAttribute("style");
         url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(c)); }
       m.destroy();
@@ -10732,9 +10788,9 @@ const BT = (() => {
   }
   /* 哪些招是近战（要冲到对手面前打）：照说明第五、十二节每只的招式。喷火、风刃、射晶、石刺、光弹这些远程的不冲；
      虚渊魔的重击是“消失，到对手面前斩”，模块自己处理 */
-  const MELEE = {scree:"LH", ashmoth:"L", drillback:"LH", voltail:"LH", rimeback:"LH", rustwarden:"LH", corefang:"L", abyssmaw:"LH", prismward:"L", twinhood:"LH", galecrest:"L", starhorn:"LH", colossus:"L", nullwraith:"L",
-    brawler:"LH", shocker:"LH", gunner:"", guard:"LH", blade:"LH"};
-  const isMelee = (id, kind) => (MELEE[id] || "").includes(kind === "light" ? "L" : kind === "heavy" ? "H" : "-");
+  const MELEE = {scree:"LH", ashmoth:"LS", drillback:"LHS", voltail:"LH", rimeback:"LH", rustwarden:"LH", corefang:"L", abyssmaw:"LHS", prismward:"L", twinhood:"LH", galecrest:"L", starhorn:"LH", colossus:"L", nullwraith:"L",
+    brawler:"LHS", shocker:"LHS", gunner:"", guard:"LHS", blade:"LHS"};
+  const isMelee = (id, kind) => (MELEE[id] || "").includes(kind === "light" ? "L" : kind === "heavy" ? "H" : "S");
   /* 14 只代码怪物（monsters.js）：3 小怪、3 精英、8 首领 */
   const ML = () => (typeof TuokouMonsters !== "undefined" ? TuokouMonsters.list() : []);
   const ids = tier => ML().filter(x => x.tier === tier).map(x => x.id);
@@ -10834,12 +10890,13 @@ function batRecord(stage){
   stage.batEntry = e; RUN.battle.push(e);
   if (RUN.game && GAME.st) GAME.onCard(e);
 }
-/* “识别错了”：每轮最多算 3 次，免得变成随手一点就有伤害 */
-function batMisOk(){ return (RUN.batMis || 0) < 3; }
+/* 舞台上写的名字：正在用的角色的名字（原创小人就写“你”） */
+function youName(){ const c = BAT_CHAR && BAT_LIST.find(x => x.id === L.batActive); return c ? c.name : "你"; }
+/* “识别错了”：不限次数（识别不准不是用户能控制的）；一轮里点得多，结算时提醒去换识别 */
+function batMisOk(){ return true; }
 /* 显示答案以后才点“识别错了”：按基本对补上这一击 */
 function batMisrec(stage){
   const e = stage && stage.batEntry; if (!e || e.mis) return;
-  if (!batMisOk()){ if (RUN.game) toast("这一轮“识别错了”已经算了 3 次，后面的就不再补伤害了"); return; }
   const before = K.battlePlan([e]); e.mis = true; RUN.batMis = (RUN.batMis || 0) + 1; const after = K.battlePlan([e]);
   if (RUN.game && GAME.st) GAME.onFix(e, after.card - before.card, before.shields > before.broke);
 }
@@ -11166,7 +11223,8 @@ async function batFinish(keepPanel){
   const b = S.game && S.game.boss ? BT.boss(S.game.boss.tag, S.game.boss.hp, S.game.boss.img && !S.game.boss.img.startsWith("u:") ? S.game.boss.img : null) : null;
   const bossLine = R.bossDown ? `这一轮打败了首领！下一个首领会换成你最近最常错的那类句子。` : b ? `首领「${b.name}」还剩 ${b.hp}/${b.max}（弱点：${(TAGS[b.tag] || TAGS.other).label}），下次游戏接着打。` : "";
   const won = target && o.won;
-  const html = `<div class="panel bt-result ${won ? "won" : ""}"><b>${won ? "超过了昨天的自己" : target ? "差一点" : "第一次的成绩"}</b><p class="small" style="margin-top:4px">${msg}</p>${bossLine ? `<p class="small muted" style="margin-top:4px">${bossLine}</p>` : ""}</div>`;
+  const misTip = (RUN.batMis || 0) >= 3 ? `<p class="small" style="margin-top:6px">这一轮点了 ${RUN.batMis} 次“识别错了”。这多半是识别的问题，不是你：可以在“我的 → 设置”里把识别换成 Whisper，模型选准一些的 small.en，或者说的时候离麦克风近一点。</p>` : "";
+  const html = `<div class="panel bt-result ${won ? "won" : ""}"><b>${won ? "超过了昨天的自己" : target ? "差一点" : "第一次的成绩"}</b><p class="small" style="margin-top:4px">${msg}</p>${bossLine ? `<p class="small muted" style="margin-top:4px">${bossLine}</p>` : ""}${misTip}</div>`;
   const p = $("#btPanel"); if (p){ if (keepPanel) p.insertAdjacentHTML("beforeend", html); else p.innerHTML = html; }
   if (won) await R.A.cheer();
 }
@@ -11229,7 +11287,7 @@ VIEWS.battle = {
     if (mp && typeof TuokouMonsters !== "undefined"){ BAT_MONA = BT.makeArena(mp); BAT_MONA.setChar(null, BT.metaOf(null)); BAT_MONA.setNames("", "你"); BAT_MONA.setScore(""); batMonShow(); }
     /* 图鉴的图：一张一张画出来 */
     const thumbs = [...document.querySelectorAll("img[data-thumb]")];
-    (async () => { for (const img of thumbs){ await new Promise(r => setTimeout(r, 0)); if (!img.isConnected) return; const u = BT.codeThumb(img.dataset.thumb); if (u) img.src = u; } })();
+    (async () => { for (let i = 0; i < thumbs.length; i += 4){ if (!thumbs[i].isConnected) return; await Promise.all(thumbs.slice(i, i + 4).map(async img => { const u = await BT.codeThumb(img.dataset.thumb); if (u && img.isConnected) img.src = u; })); } })();
     const el = document.getElementById("btPrev"); if (!el) return;
     BAT_PREV = BT.makeArena(el); const rec = await batLoadChar();
     BAT_PREV.setChar(rec ? BT.rebuild(rec) : null, BT.metaOf(rec)); BAT_PREV.setNames("昨天的你", "你"); BAT_PREV.setScore("");
