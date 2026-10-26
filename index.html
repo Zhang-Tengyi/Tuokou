@@ -664,7 +664,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.36.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.36.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -3454,7 +3454,7 @@ VIEWS.run = {
 };
 function showItem(){
   /* 每练完一张卡都存一次进度（退出、切页面、app 被关掉都不会丢） */
-  if (RUN && RUN.i > 0 && RUN.items && RUN.i < RUN.items.length && typeof saveResume === "function") setTimeout(() => { try { saveResume(); } catch (e) {} }, 0);
+  if (RUN && RUN.items && RUN.i < RUN.items.length && typeof saveResume === "function") setTimeout(() => { try { saveResume(); } catch (e) {} }, 0);
   if (RUN.stage && RUN.stage.leave) RUN.stage.leave();
   TTS.cancel();
   const it = RUN.items[RUN.i];
@@ -11641,11 +11641,12 @@ ACT["bt-del"] = async () => {
     try { BT.sweepArenas(); const t = UI.top && UI.top(), name = t && (t.name || t); if (name !== "run" && name !== "battle") BT.freeCaches(); } catch (e) {}
     try { if (typeof ASR !== "undefined" && ASR.w && !ASR.cur && !(ASR.q && ASR.q.length) && !(typeof whisperOn === "function" && whisperOn())){ ASR.w.terminate(); ASR.w = null; ASR.loadedId = null; } } catch (e) {}
   }, 0);
-  for (const k of ["nav", "replace", "back"]){ if (typeof UI[k] !== "function") continue; const f = UI[k]; UI[k] = function(v){ if (k === "back" || v !== "run") save1(); const r = f.apply(UI, arguments); tidy(); return r; }; }
+  for (const k of ["nav", "replace", "back", "onPop"]){ if (typeof UI[k] !== "function") continue; const f = UI[k]; UI[k] = function(v){ if (k === "back" || k === "onPop" || v !== "run") save1(); const r = f.apply(UI, arguments); tidy(); return r; }; }
   /* 点“开始”或“游戏”时，有没练完的一轮：问继续上次还是重新开始 */
   async function startChoice(){
     if (window.__startChoice === "new" || typeof resumeInfo !== "function" || !resumeInfo()) return false;
-    const c = await choose("上次还有一轮没练完", "", [["go", "继续上次"], ["new", "重新开始"]]);
+    const r = resumeInfo();
+    const c = await choose("上次还有一轮没练完", `<p class="small muted">上次的“${esc(r.title || "练习")}”还剩 ${r.items.length} 题。</p>`, [["go", "继续上次"], ["new", "重新开始"]]);
     if (c === "go"){ ACT["resume-go"](); return true; }
     if (c === "new"){ L.resume = null; saveLocal(); return false; }
     return true;
