@@ -641,6 +641,9 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .bt-pane[hidden]{display:none}
 .bt-allpanes .bt-pane[hidden]{display:block}
 
+/* 分块练：这一步先不用说的后半句，淡淡地显示 */
+.drill-rest{opacity:.32}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -661,7 +664,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.34.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.36.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2375,9 +2378,9 @@ function pickQuestions(ctx, n){
    - 没说出来不扣你的血，这张卡变成对手身上的一层护盾；同一张卡补说对了，打碎护盾，伤害按 70% 算。
      所以“第一次就说对”永远最划算，故意先说错再说对只会更亏。
    - 大招 = 这一轮卡片伤害的 40%：多练一轮才多打一段，拆成很多小轮也占不到便宜。 */
-const BAT_DMG = {exact:10, close:7, meaning:4, sound:5, graze:2, off:0};
+const BAT_DMG = {exact:10, close:8, meaning:8, sound:6, graze:2, off:0};
 const BAT_BREAK = 0.7, BAT_SPECIAL = 0.4;
-const BAT_RANK = {off:0, graze:0, meaning:1, sound:1, close:2, exact:3};
+const BAT_RANK = {off:0, graze:0, sound:1, meaning:2, close:2, exact:3};
 /* 这张卡第一次说得怎么样：
    - 点了“识别错了”（每轮最多 3 次）：按基本对算
    - 没对上，但开口说了：听起来很像 → sound（5）；否则 → 擦伤 graze（2）。开口尝试本身就有用（Kornell 等 2009）
@@ -3450,6 +3453,8 @@ VIEWS.run = {
   leave(){ if (RUN.stage && RUN.stage.leave) RUN.stage.leave(); RUN.stage = null; if (typeof GAME !== "undefined") GAME.stop(); }
 };
 function showItem(){
+  /* 每练完一张卡都存一次进度（退出、切页面、app 被关掉都不会丢） */
+  if (RUN && RUN.i > 0 && RUN.items && RUN.i < RUN.items.length && typeof saveResume === "function") setTimeout(() => { try { saveResume(); } catch (e) {} }, 0);
   if (RUN.stage && RUN.stage.leave) RUN.stage.leave();
   TTS.cancel();
   const it = RUN.items[RUN.i];
@@ -3606,7 +3611,7 @@ class CardStage {
       el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">${this.leech ? "分块练" : "跟着说 3 遍"}</span></div>
         <p class="muted small">${this.leech ? `这句错过 ${lapses} 次了，换个练法：一块一块加长，最后说整句。` : "先听慢速、再听正常速度跟着说，最后不听自己说。"}想不起来就点一下句子，偷看两秒。</p>
         <p style="margin-top:10px;font-weight:600">${this.drill < n ? `${this.drill + 1}/${n}　${esc(cur.label)}` : "练完了"}</p>
-        <div class="en${this.drill === 0 ? "" : " blur"}" id="drillText" data-act="c-peek" style="margin-top:8px">${esc(L.slashes ? K.thoughtGroups(cur.text).join(" / ") : cur.text)}</div>
+        <div class="en${this.drill === 0 ? "" : " blur"}" id="drillText" data-act="c-peek" style="margin-top:8px">${esc(L.slashes ? K.thoughtGroups(cur.text).join(" / ") : cur.text)}${cur.rest ? ` <span class="drill-rest">${esc(cur.rest)}</span>` : ""}</div>
         <div class="row-gap" style="margin-top:10px">${sayBtns(cur.text)}${slashBtn()}</div>
         <p class="small" style="margin-top:8px">发音提示：${esc(K.pronTip(cur.text))}　<button class="linkbtn small" data-act="nav" data-v="tips">更多说话技巧</button></p>
         ${L.quiet ? `<p class="small muted">不方便出声：跟着默念或做口型，比只在心里想记得牢。</p>` : ""}
@@ -3624,7 +3629,7 @@ class CardStage {
     if (!this.leech) return base;
     const ch = K.chunkSentence(t); if (ch.length < 2) return base;
     const cum = ch.map((_, i) => ch.slice(0, i + 1).join(" "));
-    return cum.slice(0, -1).map((x, i) => ({text:x, play:"slow", label:`先练前 ${i + 1} 块：听慢速，跟着说`})).concat([{text:t, play:"normal", label:"整句：听一遍，跟着说"}, {text:t, play:null, label:"不听了，自己说整句"}]);
+    return cum.slice(0, -1).map((x, i) => ({text:x, rest: t.slice(x.length).trim(), play:"slow", label: ch.length === 2 ? "先说前半句（后半句下一步加上）：听慢速，跟着说" : `先说前 ${i + 1} 块（后面的下一步加上）：听慢速，跟着说`})).concat([{text:t, play:"normal", label:"整句：听一遍，跟着说"}, {text:t, play:null, label:"不听了，自己说整句"}]);
   }
   startClock(){
     this.t0 = performance.now(); const ck = $("#clock");
@@ -3675,6 +3680,7 @@ class CardStage {
     }
     this.cmp = cmp || (this.phase === "retry" ? this.firstCmp : null);
     if (cmp){ if (cmp.exact){ Snd.good(); vib(15); } else if (this.mean && !this.flags.length){ Snd.good(); } else if (cmp.level === "off"){ Snd.bad(); vib([30,40,30]); } }
+    if (this.firstMean == null && this.phase === "retry") this.firstMean = !!this.mean;
     this.phase = "reveal"; this.render();
   }
   retryHTML(){
@@ -5300,16 +5306,14 @@ VIEWS.me = {
       <div class="sec-title">练习</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>每天最多几道新题</span><select data-chg="set" data-key="newPerDay" data-num="1">${[6,12,20].map(n => `<option value="${n}" ${s.newPerDay === n ? "selected" : ""}>${n} 道</option>`).join("")}</select></label>
         <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${!SR.ok ? "（这个浏览器不支持）" : SR.broken ? "（这台手机现在用不了）" : ""}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
-        <label class="switch"><span>角色光影随场景（按地点的光给角色调色）</span><input type="checkbox" data-chg="set" data-key="charLight" ${S.settings.charLight === false ? "" : "checked"}></label>
-        <label class="switch"><span>对战背景柔化（远处轻微虚化，四周一点暗角）</span><input type="checkbox" data-chg="set" data-key="bgSoft" ${S.settings.bgSoft === false ? "" : "checked"}></label>
-        <label class="fld"><span>查词典默认用（单词弹窗里的第二个按钮；第一个固定是牛津）</span><select data-chg="dict">${DICTS.map(d => `<option value="${d.id}" ${dictCur().id === d.id ? "selected" : ""}>${d.name}（${d.note}）</option>`).join("")}</select></label>
+        <label class="fld"><span>查词典默认用</span><select data-chg="dict">${DICTS.map(d => `<option value="${d.id}" ${dictCur().id === d.id ? "selected" : ""}>${d.name}（${d.note}）</option>`).join("")}</select></label>
         <label class="fld"><span>说英语时用什么识别</span><select data-chg="set" data-key="srEngine" data-rerender="1"><option value="device" ${S.settings.srEngine !== "whisper" ? "selected" : ""}>手机自带的识别：快，但口音重时容易听错</option><option value="whisper" ${S.settings.srEngine === "whisper" ? "selected" : ""} ${ASR.supported() ? "" : "disabled"}>Whisper：更准，说完要等几秒（只在安装版里能用）</option></select></label>
         ${S.settings.srEngine === "whisper" ? `<label class="fld" style="margin-top:0"><span>Whisper 用哪个模型</span><select data-chg="asrmodel" data-rerender="1"><option value="base" ${(L.asrModel || "base") === "base" ? "selected" : ""}>快：base.en（约 80 MB）</option><option value="small" ${L.asrModel === "small" ? "selected" : ""}>准一些：small.en（约 250 MB，慢一两秒）</option></select></label>` : ""}
         ${S.settings.srEngine === "whisper" ? `<p class="small muted" style="margin:-4px 0 8px">说完停一下，会自动结束录音。第一次用要下载约 80 MB 的模型（在“存储空间”里管理）。Whisper 偶尔会把很小的口误自动“修好”，所以语法检查可能漏掉个别错误。</p>` : ""}
-        <label class="fld"><span>给 Claude 的自我介绍（可选，AI 批改时会带上）</span><textarea rows="3" data-chg="profile" placeholder="比如：机械工程硕士，正在准备美国工程类岗位面试，口语大约 A2–B1">${esc(S.settings.profile || "")}</textarea></label>
+        <label class="fld"><span>给 Claude 的自我介绍（可选）</span><textarea rows="3" data-chg="profile" placeholder="比如：机械工程硕士，正在准备美国工程类岗位面试，口语大约 A2–B1">${esc(S.settings.profile || "")}</textarea></label>
         <label class="fld"><span>说话中间停顿</span><select data-chg="srlong"><option value="on" ${L.srLong !== false ? "selected" : ""}>停 2.5 秒才算说完（中间想一下也不会断）</option><option value="off" ${L.srLong === false ? "selected" : ""}>停一下就结束（手机默认）</option></select></label>
         <label class="fld"><span>停 2 秒自动检查</span><select data-chg="set" data-key="autoCheck">${[["smart","自动判断：语音说完自动查，打字时不查"],["on","一直开"],["off","关掉：每次自己点“检查”"]].map(([v, l]) => `<option value="${v}" ${(s.autoCheck || "smart") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
-        <label class="fld"><span>一天从几点开始算（熬夜时，凌晨的练习和日记还算前一天）</span><select data-chg="set" data-key="dayStart" data-num="1">${[0,2,4,6].map(h => `<option value="${h}" ${(+s.dayStart || 0) === h ? "selected" : ""}>${h ? "凌晨 " + h + " 点" : "半夜 12 点"}</option>`).join("")}</select></label>
+        <label class="fld"><span>一天从几点开始算</span><select data-chg="set" data-key="dayStart" data-num="1">${[0,2,4,6].map(h => `<option value="${h}" ${(+s.dayStart || 0) === h ? "selected" : ""}>${h ? "凌晨 " + h + " 点" : "半夜 12 点"}</option>`).join("")}</select></label>
         <div style="margin-top:8px">${swRow("lights","起步灯：灯灭再开口")}${swRow("autoSpeak","看答案时自动朗读")}${swRow("sound","提示音")}${swRow("vibrate","振动")}${swRow("cheat","来电模拟可以看小抄")}</div></div>
       <div class="sec-title">朗读</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>英文语音</span><select data-chg="local" data-key="enVoice">${opt(enV, L.enVoice)}</select></label>
@@ -5880,7 +5884,7 @@ VIEWS.storage = {
     return `<div class="wrap">${backBtn()}<h2>存储空间</h2><div class="panel" id="stInfo">正在计算……</div>
       ${ASR.supported() ? `<div class="panel"><h3>录音转文字的模型</h3><p class="small muted" style="margin:4px 0 6px">模型存在手机里，不联网也能用。不用的可以删掉，腾出空间。</p><div id="asrModels" class="small muted">正在查看手机里存了哪些模型……</div>
         <p class="small muted" style="margin-top:6px">只有下载过的模型才会出现“删除”。还没下载的模型不占空间。</p>
-        <label class="switch" style="margin-top:10px"><span>用显卡加速（可能更快；有的手机会出乱码，出乱码就关掉）</span><input type="checkbox" data-chg="asrgpu" ${L.asrGpu ? "checked" : ""}></label></div>`
+        <label class="switch" style="margin-top:10px"><span>用显卡加速（出乱码就关掉）</span><input type="checkbox" data-chg="asrgpu" ${L.asrGpu ? "checked" : ""}></label></div>`
         : `<div class="panel"><h3>录音转文字的模型</h3><p class="small muted" style="margin-top:4px">要在安装到手机上的版本里用。</p></div>`}
       <div class="panel"><h3>日记录音</h3><p class="small muted" style="margin:4px 0 10px">日记最多保留最近 60 篇。删录音不会删日记文字。</p><button class="btn block" data-act="st-clean30">删掉 30 天前的日记录音</button></div>
       <p class="small muted">进度和卡片都存在这台手机的浏览器里。换手机或清浏览器数据之前，先到“我的 → 备份”导出。</p></div>`;
@@ -9770,7 +9774,7 @@ const BT = (() => {
     const id = key + "|" + (mirror ? "m" : "n") + "|" + (parts ? partsId || "p" : "-") + "|" + src.length + ":" + src.slice(-48);
     if (!bakeCache.has(id)){
       bakeCache.set(id, bakePose(src, key === "off" ? null : LIGHTS[key], mirror, parts));
-      while (bakeCache.size > 64){ const [old, pr] = bakeCache.entries().next().value; bakeCache.delete(old); pr.then(u => URL.revokeObjectURL(u)).catch(() => {}); }
+      while (bakeCache.size > 32){ const [old, pr] = bakeCache.entries().next().value; bakeCache.delete(old); pr.then(u => URL.revokeObjectURL(u)).catch(() => {}); }
     }
     return bakeCache.get(id);
   }
@@ -9788,6 +9792,13 @@ const BT = (() => {
     return best;
   }
 
+  /* 内存：所有舞台记在这里；不在屏幕上的收掉。离开对战相关的页面时，把调好色的图、读过的图片、图鉴的图都清掉 */
+  const ARENAS = new Set();
+  function sweepArenas(){ for (const A of [...ARENAS]) if (!A.root.isConnected) A.dispose(); }
+  function freeCaches(){
+    for (const pr of bakeCache.values()) pr.then(u => URL.revokeObjectURL(u)).catch(() => {});
+    bakeCache.clear(); imgCache.clear(); THUMBS.clear();
+  }
   /* 每个场景上部的明暗（算一次存起来）：暗 = 用白字 */
   const TONE = new Map();
   /* ---------- 舞台：一个对战场景（结算页和“对战角色”页各用一个） ---------- */
@@ -9807,6 +9818,7 @@ const BT = (() => {
     /* 原创小人是 SVG 画的：用一个 feColorMatrix 叠环境色（每个舞台自己一个滤镜） */
     const rigFid = "btrl" + Math.random().toString(36).slice(2, 8);
     root.insertAdjacentHTML("beforeend", `<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="${rigFid}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0"/></filter></svg>`);
+    sweepArenas();
     const A = {root, you, ghost, max:100, hp:100, token:0, night:false, charSize:0.48, sizeNow:0.48, groundPct:12, shields:0, lastSpecial:0, bgShift:0, spots:[0.24, 0.76], place:"street"};
     const faceOf = f => f.querySelector(".bt-face");
     const spriteOf = f => (f === ghost && A.cm ? CODE_PROXY : f.rig ? f.rig.svg : f.poseImgs ? f.poseImgs[f.active].img : faceOf(f).firstElementChild);
@@ -10752,6 +10764,9 @@ const BT = (() => {
       A.litDone = run;
     }
     A.relight = relight;
+    /* 舞台不在屏幕上了：收掉代码怪物（它的动画不再在后台跑）、停掉特效 */
+    A.dispose = () => { try { A.dropCode(); } catch (e) {} A.token++; try { fx.replaceChildren(); } catch (e) {} ARENAS.delete(A); };
+    ARENAS.add(A);
     A.setNight = night => { A.night = !!night; stage.classList.toggle("night", A.night); layout(); };
     const onResize = () => { if (!root.isConnected){ window.removeEventListener("resize", onResize); return; } layout(); };
     window.addEventListener("resize", onResize);
@@ -10892,7 +10907,7 @@ const BT = (() => {
   function boss(tag, hp, img){
     if (typeof TuokouMonsters !== "undefined"){ const l = ids("boss"); const id = l.includes(img) ? img : l[0]; return Object.assign(codeMon(id, 80), {id:"boss", tag, hp, max:80, boss:true, img:id}); }
     const b = BOSSES[tag] || BOSSES.other; return Object.assign({id:"boss", tag, size:0.62, float:0, ar:"220 / 300"}, b, {svg: MON_ART.boss(b.c1, b.c2), hp, max:80, boss:true}); }
-  return {makeArena, processImage, rebuild, metaOf, rollGiant, rollPlace, placeName, PLACES, SCENES, LIGHTS, glowMatch, bakeCacheSize: () => bakeCache.size, msOf, loadoutOf, rigLoadout, tplMatch, tplOf, TEMPLATES, MOVE_LIST, SHEET10, POSE_NAMES, SHEET_ORDER, SHEET9, MOVESETS, monster, boss, mob, codeMon, codeThumb, minor, eliteMon, ids, BOSSES, MONSTERS, MOB_HP};
+  return {makeArena, processImage, rebuild, metaOf, rollGiant, rollPlace, placeName, PLACES, SCENES, LIGHTS, glowMatch, bakeCacheSize: () => bakeCache.size, sweepArenas, freeCaches, arenaCount: () => ARENAS.size, imgCacheSize: () => imgCache.size, msOf, loadoutOf, rigLoadout, tplMatch, tplOf, TEMPLATES, MOVE_LIST, SHEET10, POSE_NAMES, SHEET_ORDER, SHEET9, MOVESETS, monster, boss, mob, codeMon, codeThumb, minor, eliteMon, ids, BOSSES, MONSTERS, MOB_HP};
 })();
 
 /* ---------- 角色存储（IndexedDB，不放 localStorage：图片太大）：可以存好几个，选一个用 ---------- */
@@ -10980,11 +10995,21 @@ function batRecord(stage){
   const lv2 = stage.firstCmp && stage.cmp && stage.cmp !== stage.firstCmp ? stage.cmp.level : null;
   const spoke = !!String(stage.firstSaid || stage.said || "").trim();
   const it = RUN.items && RUN.items[RUN.i];
-  const e = {id:c.id, zh:c.zh, en:c.en, alt:c.alt || [], lv1: first ? first.level : "off", lv2, ms: stage.ms || 0, tag:c.tag, spoke, sound: !!(first && first.sound), special: !!(it && it.special)};
+  /* 卡片判成“意思对上了”（换了个说法）的，游戏也按意思对算，不当成擦伤 */
+  const retried = !!(stage.firstCmp && stage.cmp && stage.cmp !== stage.firstCmp);
+  const meanFirst = stage.firstMean != null ? stage.firstMean : (!retried && stage.mean);
+  const lvOf = (cmp, meant) => !cmp ? "off" : cmp.exact ? "exact" : meant ? "meaning" : cmp.level;
+  const e = {id:c.id, zh:c.zh, en:c.en, alt:c.alt || [], lv1: lvOf(first, meanFirst), lv2: retried ? lvOf(stage.cmp, stage.mean) : lv2, ms: stage.ms || 0, tag:c.tag, spoke, sound: !!(first && first.sound), special: !!(it && it.special)};
   if (stage.misrec && batMisOk()){ e.mis = true; RUN.batMis = (RUN.batMis || 0) + 1; }
   stage.batEntry = e; RUN.battle.push(e);
   if (RUN.game && GAME.st) GAME.onCard(e);
 }
+/* 暴击的时间（从卡片出来到识别确认你说完），分三段：
+   看到提示、想好怎么说 1.8 秒（从中文提示到开口说英语，学习者一般要一两秒）
+   + 说出来：每个词 0.45 秒（约每分钟 130 个词，中高级学习者流利时的语速）
+   + 识别确认说完了 1 秒（说完以后要等一小段安静）。十个词的句子 7.3 秒，五个词约 5 秒 */
+const CRIT_REACT = 1800, CRIT_PER_WORD = 450, CRIT_END = 1000;
+function critMs(e){ const n = String(e.en || "").split(/\s+/).filter(Boolean).length; return CRIT_REACT + CRIT_PER_WORD * n + CRIT_END; }
 /* 对手反击的伤害：档位底数 × 招式加成（轻击 ×1、重击 ×1.3、技能 ×1.6），四舍五入
    小兵 6 / 8 / 10，小怪 7 / 9 / 11，强化兵 8 / 10 / 13，精英和劲敌 10 / 13 / 16，首领 重击 18、技能 22 */
 const COUNTER_BASE = {grunt:6, minor:7, trooper:8, elite:10, boss:14};
@@ -11040,7 +11065,7 @@ const GAME = {
     GAME.next(true);
     if (r && r.hp != null && GAME.st.enemy){ GAME.st.enemy.hp = r.hp; A.setHP(r.hp, true, GAME.st.enemy.max); }
     GAME.score(); GAME.meter();
-    if (!L.gameTip){ const g = document.querySelector(".g-top"); if (g) g.insertAdjacentHTML("beforeend", `<div class="panel g-tip"><b>怎么打</b><p class="small" style="margin-top:4px">说完一句，你的角色就出招：完全对打得最重，3 秒内说出来还有暴击；只要开口说了，至少也能擦伤对手；一个字没说，对手加一层护盾，还会反击你：小兵打得轻，首领打得最重。重练时说对就能打碎护盾。被识别错了，就点“我说对了，是识别错了”，一样算你打中。每次第一次就说对，攒一格能量；攒满 5 格，下一张是大招卡，说对了就放大招。没看清，点“回放”。</p><button class="btn sm" data-act="g-tip-ok" style="margin-top:6px">知道了</button></div>`); }
+    if (!L.gameTip){ const g = document.querySelector(".g-top"); if (g) g.insertAdjacentHTML("beforeend", `<div class="panel g-tip"><b>怎么打</b><p class="small" style="margin-top:4px">说完一句，你的角色就出招：完全对、基本对、意思对（换了个说法）都出重击，完全对、而且看到就能开口、正常语速一口气说完（十个词的句子大约 7 秒），还有暴击；只要开口说了，至少也能擦伤对手；一个字没说，对手加一层护盾，还会反击你：小兵打得轻，首领打得最重。重练时说对就能打碎护盾。被识别错了，就点“我说对了，是识别错了”，和识别对了完全一样。每次第一次就说对，攒一格能量；攒满 5 格，下一张是大招卡，说对了就放大招。没看清，点“回放”。</p><button class="btn sm" data-act="g-tip-ok" style="margin-top:6px">知道了</button></div>`); }
   },
   score(){ const st = GAME.st; if (!st) return; const day = batDayRec(); st.A.setScore(`今天 ${st.todayBefore + st.sessionDmg}${day.hp ? ` / 昨天 ${day.hp}` : " 点"}`); },
   /* 连击、能量（5 格满了，下一张就是大招卡）、第几只 */
@@ -11111,7 +11136,13 @@ const GAME = {
   },
   onCard(entry){ const st = GAME.st; if (!st) return; GAME.focus(); st.chain = st.chain.then(() => GAME.play(entry)).catch(() => {}); },
   onFix(entry, delta, shield){ const st = GAME.st; if (!st) return; st.chain = st.chain.then(async () => {
-    if (!GAME.st || !st.A.root.isConnected) return; st.sessionDmg += delta; GAME.score();
+    if (!GAME.st || !st.A.root.isConnected) return;
+    /* 原来没算“说对”的：补上连击和能量；说得够快就补上暴击 */
+    const old = K.battleFirst(Object.assign({}, entry, {mis:false})), wasOk = ["exact", "close", "meaning", "sound"].includes(old);
+    if (!wasOk){ st.combo++; st.best = Math.max(st.best, st.combo); if (st.energy < 5){ st.energy++; if (st.energy >= 5) GAME.armSpecial(); } GAME.meter(); }
+    /* 暴击只加在打到对手身上的伤害里（和正常打中一样），和昨天比的成绩只算底数 */
+    const critBonus = entry.ms > 0 && entry.ms <= critMs(entry) ? 5 : 0; if (critBonus) st.A.pop("暴击！", "crit");
+    st.sessionDmg += delta; GAME.score(); delta += critBonus;
     const e = st.enemy, weak = e.boss && entry.tag === e.tag ? 1.5 : 1, dmg = Math.max(1, Math.round(delta * weak));
     GAME.say(`识别错了，按说对算：-${dmg}`); if (weak > 1) st.A.pop("弱点！", "weak");
     st.last = [{kind:"hit", mv:"heavy", dmg, breaks: shield ? 1 : 0, label:`识别错了，按说对算：-${dmg}`, pops:[]}];
@@ -11148,7 +11179,7 @@ const GAME = {
       }
       GAME.say("大招卡没说出来：能量清空了，再攒 5 格。正确说法看下面"); return;
     }
-    const LBL = {exact:"完全对", close:"基本对", meaning:"意思对", sound:"听着差不多（可能是识别听错了）", graze:"开口了，擦伤"};
+    const LBL = {exact:"完全对", close:"基本对", meaning:"意思对了，换了个说法", sound:"听起来很接近", graze:"开口了，擦伤"};
     for (const ev of plan.events){
       const e = st.enemy; const weak = e.boss && entry.tag === e.tag ? 1.5 : 1;
       if (ev.k === "shield"){
@@ -11158,14 +11189,14 @@ const GAME = {
       let mult = weak, label; const pops = [];
       if (ev.k === "break") label = ev.shield ? "补说对了：打碎护盾" : "补说对了";
       else label = entry.mis ? "识别错了，按说对算" : LBL[ev.lv] || "";
-      /* 暴击：完全对，而且 3 秒内说出来（练得越熟越快，正是要练的） */
-      if (ev.k === "hit" && ev.lv === "exact" && !entry.mis && entry.ms > 0 && entry.ms <= 3000){ mult *= 1.5; pops.push(["暴击！", "crit"]); label += "，暴击"; }
+      /* 暴击：完全对，而且说得快——反应时间 + 按句子长短的说话时间 + 识别确认的时间（critMs）。点了“识别错了”的也一样 */
+      if (ev.k === "hit" && ev.lv === "exact" && entry.ms > 0 && entry.ms <= critMs(entry)){ mult *= 1.5; pops.push(["暴击！", "crit"]); label += "，暴击"; }
       const bonus = ev.k === "hit" && ok1 && st.combo >= 3 ? Math.min(3, st.combo - 2) : 0;
       if (bonus) pops.push([`连击 ×${st.combo}`, "combo"]);
       if (weak > 1) pops.push(["弱点！", "weak"]);
       const dmg = Math.max(1, Math.round((ev.d + bonus) * mult));
       GAME.say(`${label}：-${dmg}`); pops.forEach(([t, c]) => A.pop(t, c));
-      const mv = ev.k === "hit" && ev.lv === "exact" ? "heavy" : "light";
+      const mv = ev.k === "hit" && ["exact", "close", "meaning"].includes(ev.lv) ? "heavy" : "light";   /* 说对了（完全对、基本对、意思对）出重击 */
       st.last.push({kind:"hit", mv, dmg, breaks: ev.shield ? 1 : 0, label:`${label}：-${dmg}`, pops});
       await A.move(mv, dmg, {breaks: ev.shield ? 1 : 0});
       await GAME.afterHit();
@@ -11178,7 +11209,7 @@ const GAME = {
   async counter(){
     const st = GAME.st; if (!st) return; const A = st.A, e = st.enemy;
     st.giveups++;
-    const kind = e.boss ? (st.giveups === 1 ? "heavy" : "skill") : (st.giveups === 1 ? "light" : st.giveups === 2 ? "heavy" : "skill");
+    const kind = st.giveups === 1 ? "light" : st.giveups === 2 ? "heavy" : "skill";   /* 首领也一样：轻击、重击、技能 */
     const dmg = counterDmg(e, kind);
     st.last.push({kind:"counter", mv:kind, label:`对手反击：你 -${dmg}`});
     await A.enemyMove(kind, dmg);
@@ -11339,7 +11370,7 @@ async function batFinish(keepPanel){
 /* ---------- “对战角色”页：导入、预览、替换、校准、开关 ---------- */
 let BAT_PREV = null;
 /* ---------- “对战角色”页：上面固定一个预览，下面一排标签，每个标签只显示一类设置 ---------- */
-const BT_TABS = [["chars", "角色"], ["moves", "招式"], ["body", "身材"], ["giant", "巨大化"], ["place", "地点"], ["enemies", "敌人"], ["gal", "图鉴"]];
+const BT_TABS = [["chars", "角色选择"], ["moves", "角色招式"], ["body", "角色大小"], ["giant", "巨大化"], ["place", "地点"], ["enemies", "敌人"], ["gal", "图鉴"]];
 function batTabNow(){ const t = L.btTab || "chars"; return BT_TABS.some(x => x[0] === t) ? t : "chars"; }
 /* 预览跟着标签走：身材看普通大小；巨大化看巨人；地点看你选的地点 */
 function batPreviewMode(){
@@ -11420,7 +11451,9 @@ VIEWS.battle = {
         <p class="small" id="btNote" style="margin-top:6px"></p>
         <p class="small muted" style="margin-top:10px">首页的“开始”是学习模式，没有游戏；“游戏”里每说完一句马上出招。${day && day.sessions ? `今天的游戏：${day.sessions} 轮，${day.cards} 句，${day.dmg} 点。` : "今天还没玩过游戏。"}${ref ? `　${batRefLabel(ref)}：${S.battle[ref].dmg} 点。` : ""}</p>`,
       moves: batTplHTML(rec), body: batBodyHTML(rec), giant: batGiantHTML(rec),
-      place: `${batPlaceHTML(rec)}<p class="small muted" style="margin-top:4px">选一个地点，预览就换到那里。默认每局随机。</p>`,
+      place: `${batPlaceHTML(rec)}<p class="small muted" style="margin-top:4px">选一个地点，预览就换到那里。默认每局随机。</p>
+        <label class="switch" style="margin-top:8px"><span>角色光影随场景</span><input type="checkbox" data-chg="bt-look" data-key="charLight" ${S.settings.charLight === false ? "" : "checked"}></label>
+        <label class="switch"><span>背景柔化</span><input type="checkbox" data-chg="bt-look" data-key="bgSoft" ${S.settings.bgSoft === false ? "" : "checked"}></label>`,
       enemies: batEnemiesHTML(), gal: batGalHTML()
     };
     return `<div class="wrap bt-page${all ? " bt-allpanes" : ""}">${backBtn()}<h2>对战角色</h2>
@@ -11443,6 +11476,7 @@ function batGalInit(){
   const thumbs = [...document.querySelectorAll("img[data-thumb]:not([src])")];
   (async () => { for (let i = 0; i < thumbs.length; i += 4){ if (!thumbs[i].isConnected) return; await Promise.all(thumbs.slice(i, i + 4).map(async img => { const u = await BT.codeThumb(img.dataset.thumb); if (u && img.isConnected) img.src = u; })); } })();
 }
+CHG["bt-look"] = el => { S.settings[el.dataset.key] = !!el.checked; save(); if (BAT_PREV){ BAT_PREV.layout(); BAT_PREV.relight(true); } };
 ACT["bt-tab"] = el => {
   const t = el.dataset.v; L.btTab = t; saveLocal(); const all = !!window.__allPanes;
   document.querySelectorAll(".bt-tab").forEach(b => { const on = b.dataset.v === t; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
@@ -11597,6 +11631,27 @@ ACT["bt-del"] = async () => {
   if (!await sheet("删除这个角色？", "删除以后换回默认的原创小人；对战记录不受影响。", "删除", true)) return;
   await batDelChar(id); UI.render(); toast("删掉了，换回了原创小人");
 };
+
+/* ---------- 没练完的一轮：切到任何别的页面都先存下来（以前只在点“退出”或 app 切到后台时存） ---------- */
+(function(){
+  const onRun = () => { const t = UI.top && UI.top(); return !!t && (t.name || t) === "run"; };
+  const save1 = () => { try { if (onRun() && RUN && RUN.items && RUN.i < RUN.items.length && typeof saveResume === "function") saveResume(); } catch (e) {} };
+  /* 切页面以后：收掉不在屏幕上的舞台；离开了对战相关的页面就清缓存；不用 Whisper、又没有转写任务时，把识别模型放掉（约 80 MB） */
+  const tidy = () => setTimeout(() => {
+    try { BT.sweepArenas(); const t = UI.top && UI.top(), name = t && (t.name || t); if (name !== "run" && name !== "battle") BT.freeCaches(); } catch (e) {}
+    try { if (typeof ASR !== "undefined" && ASR.w && !ASR.cur && !(ASR.q && ASR.q.length) && !(typeof whisperOn === "function" && whisperOn())){ ASR.w.terminate(); ASR.w = null; ASR.loadedId = null; } } catch (e) {}
+  }, 0);
+  for (const k of ["nav", "replace", "back"]){ if (typeof UI[k] !== "function") continue; const f = UI[k]; UI[k] = function(v){ if (k === "back" || v !== "run") save1(); const r = f.apply(UI, arguments); tidy(); return r; }; }
+  /* 点“开始”或“游戏”时，有没练完的一轮：问继续上次还是重新开始 */
+  async function startChoice(){
+    if (window.__startChoice === "new" || typeof resumeInfo !== "function" || !resumeInfo()) return false;
+    const c = await choose("上次还有一轮没练完", "", [["go", "继续上次"], ["new", "重新开始"]]);
+    if (c === "go"){ ACT["resume-go"](); return true; }
+    if (c === "new"){ L.resume = null; saveLocal(); return false; }
+    return true;
+  }
+  for (const k of ["start", "start-std", "start-game"]){ if (typeof ACT[k] !== "function") continue; const f = ACT[k]; ACT[k] = async function(el){ if (await startChoice()) return; return f.apply(this, arguments); }; }
+})();
 
 </script>
 </body>
