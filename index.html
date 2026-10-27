@@ -644,6 +644,12 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 /* 分块练：这一步先不用说的后半句，淡淡地显示 */
 .drill-rest{opacity:.32}
 
+/* 练哪些题库：可以多选的按钮 */
+.deck-pick{display:block}
+.deck-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.deck-chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line,#e2e2e2);background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:600;cursor:pointer;min-height:32px}
+.deck-chip.on{background:var(--ink,#16202E);color:var(--bg,#fff);border-color:var(--ink,#16202E)}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -664,7 +670,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.36.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.37.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2534,9 +2540,18 @@ function deckList(){
   const names = Array.from(new Set((S.custom || []).map(c => c.deck || "我的卡片").concat((S.customQ || []).map(q => q.deck)).filter(Boolean))).filter(n => n !== "daily" && n !== "core");
   return [{id:"all", label:"全部题库"}, {id:"core", label:"通用"}, {id:"daily", label:"日常生活"}].concat(names.map(n => ({id:"u:" + n, label:n})));
 }
-function curDeck(){ const d = S.settings.deck || "all"; return deckList().some(x => x.id === d) ? d : "all"; }
+/* 选了哪些题库：S.settings.decks（数组，空 = 全部）；以前只能选一个，存在 S.settings.deck，照样认 */
+function curDecks(){
+  const valid = new Set(deckList().map(x => x.id).filter(x => x !== "all"));
+  if (Array.isArray(S.settings.decks)) return S.settings.decks.filter(d => valid.has(d));
+  const d = S.settings.deck || "all"; return valid.has(d) ? [d] : [];
+}
+/* 给挑卡的地方用的一个 id：全部 "all"、一个就是它、好几个就是 "m:" + 列表 */
+function curDeck(){ const a = curDecks(); return !a.length ? "all" : a.length === 1 ? a[0] : "m:" + JSON.stringify(a); }
+function setDecks(a){ const all = deckList().length - 1; a = Array.from(new Set(a)); if (a.length >= all) a = []; S.settings.decks = a; S.settings.deck = a.length === 1 ? a[0] : "all"; }
 function deckPred(id){
   if (!id || id === "all") return () => true;
+  if (id.startsWith("m:")){ const ps = JSON.parse(id.slice(2)).map(deckPred); return c => ps.some(p => p(c)); }
   if (id === "core") return c => (c.deck || "core") === "core";
   if (id === "daily") return c => c.deck === "daily";
   const n = id.slice(2); return c => !!c.custom && (c.deck || "我的卡片") === n;
@@ -2544,13 +2559,16 @@ function deckPred(id){
 function deckQuestions(id){
   const cq = S.customQ || [];
   if (!id || id === "all") return CONTENT.QUESTIONS.concat(cq);
+  if (id.startsWith("m:")){ const seen = new Set(), out = []; for (const d of JSON.parse(id.slice(2))) for (const q of deckQuestions(d)) if (!seen.has(q.id)){ seen.add(q.id); out.push(q); } return out; }
   if (id === "core") return CONTENT.QUESTIONS;
   if (id === "daily") return [];
   const n = id.slice(2); return cq.filter(q => q.deck === n);
 }
+/* 练哪些题库：一排可以多选的按钮。点“全部”就是全部；点某几个就只练这几个；都不选、或者每个都选上，都等于全部 */
 function deckSelectHTML(){
-  const d = curDeck();
-  return `<label class="deck-pick"><span class="small muted">练哪个题库</span><select data-chg="deck" aria-label="选择题库">${deckList().map(x => `<option value="${esc(x.id)}" ${x.id === d ? "selected" : ""}>${esc(x.label)}</option>`).join("")}</select></label>`;
+  const a = curDecks(), all = !a.length;
+  const chip = (x, on) => `<button class="deck-chip${on ? " on" : ""}" data-act="deck-tog" data-v="${esc(x.id)}" aria-pressed="${on}">${esc(x.label)}</button>`;
+  return `<div class="deck-pick" role="group" aria-label="选择题库"><span class="small muted">练哪些题库（可以多选）</span><div class="deck-chips">${deckList().map(x => chip(x, x.id === "all" ? all : a.includes(x.id))).join("")}</div></div>`;
 }
 /* 参考回答：导入的（Claude 给的）优先，没有就用自带的 */
 function refFor(q){ if (!q) return ""; return ((S.refAns || {})[q.id] || (CONTENT.REF || {})[q.id] || "").trim(); }
@@ -3500,10 +3518,16 @@ function saveResume(){
 }
 function resumeInfo(){ const r = L.resume; if (!r || r.day !== today() || !r.items) return null; const items = r.items.filter(x => x.k === "iv" ? !!QBY[x.qid] : !!CAT.byId[x.id]); return items.length ? Object.assign({}, r, {items}) : null; }
 function resumeBanner(){ const r = resumeInfo(); if (!r) return ""; return `<div class="banner"><span>上次的“${esc(r.title || "练习")}”还剩 ${r.items.length} 题</span><span class="row-gap"><button class="btn sm primary" data-act="resume-go">接着练</button><button class="btn sm ghost" data-act="resume-drop">不用了</button></span></div>`; }
-ACT["resume-go"] = () => {
+/* 接着练：“开始”和“游戏”练的是同一批卡（只是有没有游戏画面和打斗），所以没练完的一轮只存一份。
+   game 不传：按上次的方式（首页横条）；传了：按这次点的按钮（“游戏” → 游戏模式，“开始” → 学习模式）。
+   上次就是游戏、这次也用游戏，才接着打上次那只敌人（血量、能量、连击都接着）；上次是学习模式，就从第一只敌人开始 */
+ACT["resume-go"] = (el, game) => {
   const r = resumeInfo(); if (!r){ L.resume = null; saveLocal(); UI.render(); return; }
-  RUN.nextGame = !!r.game; RUN.gameResume = r.game ? r.gameState : null;
-  RUN.items = r.items; RUN.i = 0; RUN.kind = r.kind; RUN.title = (r.title || "练习") + "（接着练）"; RUN.retries = r.retries || {};
+  const g = typeof game === "boolean" ? game : !!r.game;
+  RUN.nextGame = g; RUN.gameResume = g && r.game ? r.gameState : null;
+  const base = String(r.title || "练习").replace(/（接着练）/g, ""), title = g ? "游戏" : (base === "游戏" ? "练习" : base);
+  /* 学习模式的一轮改用游戏接着练：和新开一局游戏一样，只留卡片（听力、面试题平时照常会出现） */
+  RUN.items = g && !r.game && typeof gameItems === "function" ? gameItems(r.items) : r.items; RUN.i = 0; RUN.kind = r.kind; RUN.title = title + "（接着练）"; RUN.retries = r.retries || {};
   RUN.res = {good:0, hard:0, again:0, pb:0, ms:[], listenOk:0, listenN:0, iv:0}; RUN.t0 = Date.now(); RUN.weak = {}; RUN.limitMs = 0; RUN.timeUp = false; RUN.rest = []; RUN.exited = false; RUN.battle = []; RUN.batDone = false; RUN.game = !!RUN.nextGame; RUN.nextGame = false;
   L.resume = null; saveLocal(); UI.nav("run");
 };
@@ -4167,7 +4191,13 @@ CHG.set = el => {
   const k = el.dataset.key; let v = el.type === "checkbox" ? el.checked : el.value; if (el.dataset.num) v = +v;
   S.settings[k] = v; save(); if (k === "theme") applyTheme(); if (k === "inputMode" && v === "auto") srUnbreak(); if (el.dataset.rerender) UI.refresh();
 };
-CHG.deck = el => { S.settings.deck = el.value; save(); UI.refresh(); };
+CHG.deck = el => { setDecks(el.value === "all" ? [] : [el.value]); save(); UI.refresh(); };
+/* 练哪些题库：点一个按钮就加上或去掉它；点“全部”就是全部 */
+ACT["deck-tog"] = el => {
+  const v = el.dataset.v; let a = curDecks();
+  if (v === "all") a = []; else a = a.includes(v) ? a.filter(x => x !== v) : a.concat(v);
+  setDecks(a); save(); UI.refresh();
+};
 CHG.callDeck = el => { S.settings.callDeck = el.value; save(); };
 CHG.quiet = el => { L.quiet = el.checked; saveLocal(); UI.render(); };
 CHG.local = el => { const k = el.dataset.key; let v = el.type === "checkbox" ? el.checked : el.value; if (el.dataset.num) v = +v; L[k] = v; saveLocal(); };
@@ -5464,6 +5494,7 @@ ACT["deck-merge"] = async el => {
   for (const q of (S.customQ || [])) if (q.deck === name) q.deck = to;
   if (S.deckMeta && S.deckMeta[name]){ if (to !== "daily" && to !== "core" && !S.deckMeta[to]) S.deckMeta[to] = S.deckMeta[name]; delete S.deckMeta[name]; }
   if (S.settings.deck === "u:" + name) S.settings.deck = t;
+  if (Array.isArray(S.settings.decks)) setDecks(S.settings.decks.map(d => (d === "u:" + name ? t : d)));
   if (S.settings.callDeck === "u:" + name) S.settings.callDeck = to === "daily" || to === "core" ? "core" : t;
   rebuildQ(); rebuildCatalog(); save(true); toast(`并好了：现在都在“${label}”里`); UI.render();
 };
@@ -5476,6 +5507,7 @@ ACT["deck-del"] = async el => {
   S.customQ = (S.customQ || []).filter(q => q.deck !== name); qids.forEach(id => delete S.answers[id]);
   if (S.deckMeta) delete S.deckMeta[name];
   if (S.settings.deck === "u:" + name) S.settings.deck = "all";
+  if (Array.isArray(S.settings.decks)) setDecks(S.settings.decks.filter(d => d !== "u:" + name));
   if (S.settings.callDeck === "u:" + name) S.settings.callDeck = "core";
   rebuildQ(); rebuildCatalog(); save(true); toast("删掉了"); UI.render();
 };
@@ -11643,15 +11675,17 @@ ACT["bt-del"] = async () => {
   }, 0);
   for (const k of ["nav", "replace", "back", "onPop"]){ if (typeof UI[k] !== "function") continue; const f = UI[k]; UI[k] = function(v){ if (k === "back" || k === "onPop" || v !== "run") save1(); const r = f.apply(UI, arguments); tidy(); return r; }; }
   /* 点“开始”或“游戏”时，有没练完的一轮：问继续上次还是重新开始 */
-  async function startChoice(){
+  /* 点了哪个按钮，就用哪种方式接着练（同一批卡） */
+  async function startChoice(game){
     if (window.__startChoice === "new" || typeof resumeInfo !== "function" || !resumeInfo()) return false;
-    const r = resumeInfo();
-    const c = await choose("上次还有一轮没练完", `<p class="small muted">上次的“${esc(r.title || "练习")}”还剩 ${r.items.length} 题。</p>`, [["go", "继续上次"], ["new", "重新开始"]]);
-    if (c === "go"){ ACT["resume-go"](); return true; }
+    const r = resumeInfo(), was = r.game ? "游戏" : "学习模式";
+    const goLabel = game ? (r.game ? "接着打" : "用游戏接着练") : (r.game ? "用学习模式接着练" : "接着练");
+    const c = await choose("上次还有一轮没练完", `<p class="small muted">上次练到一半（${was}），还剩 ${r.items.length} 题。${!!r.game !== game ? (game ? "接着练的话，剩下的题用游戏模式练，从第一只敌人开始打。" : "接着练的话，剩下的题用学习模式练，不再打斗。") : ""}</p>`, [["go", goLabel], ["new", "重新开始"]]);
+    if (c === "go"){ ACT["resume-go"](null, game); return true; }
     if (c === "new"){ L.resume = null; saveLocal(); return false; }
     return true;
   }
-  for (const k of ["start", "start-std", "start-game"]){ if (typeof ACT[k] !== "function") continue; const f = ACT[k]; ACT[k] = async function(el){ if (await startChoice()) return; return f.apply(this, arguments); }; }
+  for (const k of ["start", "start-std", "start-game"]){ if (typeof ACT[k] !== "function") continue; const f = ACT[k]; ACT[k] = async function(el){ if (await startChoice(k === "start-game")) return; return f.apply(this, arguments); }; }
 })();
 
 </script>
