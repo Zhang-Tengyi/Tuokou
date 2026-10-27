@@ -670,7 +670,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.37.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.38.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -3282,13 +3282,17 @@ const UI = {
     if (v && v.leave) try { v.leave(e.params); } catch (err) { console.warn(err); }
     TTS.cancel(); SR.abort(); Rec.cancel(); Wake.off(); Act.stop(); AI.stop(); Player.stop();
   },
+  /* 重画：同一个页面（改了个设置、点了个按钮）就留在原来的位置；换到别的页面才回到顶部 */
   render(){
     const e = this.top(); const v = VIEWS[e.name] || VIEWS.home;
+    const key = e.name + "|" + JSON.stringify(e.params || {}), same = this._lastKey === key, y = window.scrollY;
     document.body.classList.toggle("full", !!v.full);
     this.root.innerHTML = v.render(e.params || {});
     $$(".tabbar button").forEach(b => b.setAttribute("aria-current", b.dataset.v === v.tab ? "page" : "false"));
-    window.scrollTo(0, 0);
+    window.scrollTo(0, same ? y : 0); this._lastKey = key;
     if (v.mount) try { v.mount(e.params || {}); } catch (err) { console.error(err); }
+    /* 页面里有些东西（预览舞台、图片）是画完以后才撑开的：等它撑开再回到原来的位置 */
+    if (same && y > 0){ const back = () => { if (this._lastKey === key && Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); }; requestAnimationFrame(back); setTimeout(back, 120); }
   },
   refresh(){ const e = this.top(); const v = e && VIEWS[e.name]; if (v && !v.noRefresh) this.render(); },
   histLen: 1, ignoreUntil: 0,
