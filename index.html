@@ -713,7 +713,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.53.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.53.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -6826,7 +6826,7 @@ CardFX.power = function (f, svg) {
     });
   };
   // a beam with a wide coloured glow, a bright band, a white core, energy streaming along it, sparks where it lands
-  f.beam = (a, b, ms, col, onTick, size) => {
+  f.beam = (a, b, ms, col, onTick, size, alive) => {
     const c = col || '#7CFF9A', g = el('g', {}, glowLayer), t0 = performance.now(), S = size || 1.6;
     const glow = el('path', { fill: 'none', stroke: c, 'stroke-width': 34, 'stroke-linecap': 'round', opacity: 0.35, filter: f.filter('soft') }, g);
     const band = el('path', { fill: 'none', stroke: c, 'stroke-width': 16, 'stroke-linecap': 'round', opacity: 0.85 }, g);
@@ -6836,8 +6836,8 @@ CardFX.power = function (f, svg) {
     const flow = [];
     f.run((now) => {
       const k = (now - t0) / ms;
-      if (k >= 1) { g.remove(); return false; }
-      const A = a(), B = b(), grow = Math.min(1, k / 0.1), x = A.x + (B.x - A.x) * grow, y = A.y + (B.y - A.y) * grow;
+      if (k >= 1 || (alive && !alive())) { g.remove(); return false; }
+      const A = a(), B = b(), grow = Math.min(1, (now - t0) / Math.min(ms * 0.1, 160)), x = A.x + (B.x - A.x) * grow, y = A.y + (B.y - A.y) * grow;
       const fade = k > 0.86 ? 1 - (k - 0.86) / 0.14 : 1, w = (1 + Math.sin(now / 26) * 0.14) * fade;
       const d = `M${A.x} ${A.y} L${x} ${y}`;
       glow.setAttribute('d', d); band.setAttribute('d', d); core.setAttribute('d', d);
@@ -9287,19 +9287,20 @@ const CLASH = (() => {
   const hold = async (m, c) => { while (c.on && m.P.svg.isConnected) await m.wait(100); };
   const boxPt = (m, part, ux, uy) => { const b = m.P.parts[part].getBBox(); return m.pt(part, b.x + b.w * ux, b.y + b.h * uy); };
   // 画在后面一层的光束：插在 front 部位所在那一支的前面（会被 front 部位、以及 fxLayer 里前面的光束挡住）；样子和 fx.beam 一样
-  const backBeam = (m, front, a, b, col, alive) => {
-    const fp = m.P.parts[front]; if (!fp) { m.fx.beam(a, b, LONG, col, null, null, alive); return; }
-    const g = el('g', {}); fp.parentNode.insertBefore(g, fp);
-    const glow = el('path', { fill: 'none', stroke: col, 'stroke-width': 22, 'stroke-linecap': 'round', opacity: 0.5, filter: m.fx.filter('soft') }, g);
-    const core = el('path', { fill: 'none', stroke: '#F4FFF0', 'stroke-width': 7, 'stroke-linecap': 'round' }, g);
-    const end = el('circle', { r: 26, fill: m.fx.grad('flash') }, g); end.style.filter = `drop-shadow(0 0 10px ${col})`;
-    const t0 = performance.now();
+  const backBeam = (m, front, a, b, col, alive, size) => {
+    const fp = m.P.parts[front]; if (!fp) { m.fx.beam(a, b, LONG, col, null, size || 2.2, alive); return; }
+    const g = el('g', {}); fp.parentNode.insertBefore(g, fp); const S = size || 2.2, t0 = performance.now();
+    const glow = el('path', { fill: 'none', stroke: col, 'stroke-width': 34 * S, 'stroke-linecap': 'round', opacity: 0.35, filter: m.fx.filter('soft') }, g);
+    const band = el('path', { fill: 'none', stroke: col, 'stroke-width': 16 * S, 'stroke-linecap': 'round', opacity: 0.85 }, g);
+    const core = el('path', { fill: 'none', stroke: '#FFFFFF', 'stroke-width': 6 * S, 'stroke-linecap': 'round' }, g);
+    const mouth = el('circle', { r: 18, fill: m.fx.grad('flash') }, g);
     m.fx.run((now) => {
       if (!alive() || !g.isConnected) { g.remove(); return false; }
-      const A = m.toG(g, a()), B = m.toG(g, b()), grow = Math.min(1, (now - t0) / 144), x = A.x + (B.x - A.x) * grow, y = A.y + (B.y - A.y) * grow;
-      const d = `M${A.x} ${A.y} L${x} ${y}`, w = 1 + Math.sin(now / 30) * 0.12;
-      glow.setAttribute('d', d); core.setAttribute('d', d); glow.setAttribute('stroke-width', 22 * w);
-      end.setAttribute('cx', x); end.setAttribute('cy', y); end.setAttribute('opacity', grow >= 1 ? 1 : 0); return true;
+      const A = m.toG(g, a()), B = m.toG(g, b()), grow = Math.min(1, (now - t0) / 160), x = A.x + (B.x - A.x) * grow, y = A.y + (B.y - A.y) * grow;
+      const d = `M${A.x} ${A.y} L${x} ${y}`, w = 1 + Math.sin(now / 26) * 0.14;
+      glow.setAttribute('d', d); band.setAttribute('d', d); core.setAttribute('d', d);
+      glow.setAttribute('stroke-width', 34 * w * S); band.setAttribute('stroke-width', 16 * w * S); core.setAttribute('stroke-width', 6 * w * S);
+      mouth.setAttribute('cx', A.x); mouth.setAttribute('cy', A.y); mouth.setAttribute('r', Math.max(0, (18 * w + 4) * Math.sqrt(S))); return true;
     });
   };
   return {
@@ -9310,7 +9311,7 @@ const CLASH = (() => {
       flare(ribs, { transform: 'translateX(0) scaleY(1)' }, { transform: 'translateX(-8px) scaleY(1.25)' }, 400);
       await m.wait(420); ready(); await go; if (!live(m, c)()) return;
       await m.go('skill', 160);
-      m.fx.beam(() => m.pt('torso', 258, 218), P, LONG, '#FF7A1A', null, null, live(m, c));
+      m.fx.beam(() => m.pt('torso', 258, 218), P, LONG, '#FF7A1A', null, 2.2, live(m, c));
       m.fx.fire(() => m.pt('torso', 262, 218), LONG, 140, 0.5, null, live(m, c));
       await hold(m, c);
       flare(ribs, { transform: 'translateX(-8px) scaleY(1.25)' }, { transform: 'translateX(0) scaleY(1)' }, 300); m.hot(false);
@@ -9321,7 +9322,8 @@ const CLASH = (() => {
       await m.go('skillWind', 360); flare(plates, { filter: 'brightness(1)' }, { filter: 'brightness(1.8) drop-shadow(0 0 8px #EDE6FF)' }, 520);
       await m.wait(520); ready(); await go; if (!live(m, c)()) return;
       await m.go('skill', 160);
-      ['#FF8AD8', '#FFD36A', '#7CF0FF', '#B9FF8A', '#C9A6FF'].forEach((col, i) => setTimeout(() => { if (live(m, c)()) m.fx.beam(() => m.pt('torso', 220, 204), toward(P, -4 + i * 2, -16 + i * 8), LONG, col, null, null, live(m, c)); }, i * 70));
+      /* 五道彩色光束：起点稍微错开，在交点附近上下分开，五种颜色都看得清（原版是扇形张开打到对手身上） */
+      ['#FF8AD8', '#FFD36A', '#7CF0FF', '#B9FF8A', '#C9A6FF'].forEach((col, i) => setTimeout(() => { if (live(m, c)()) m.fx.beam(() => m.pt('torso', 220, 192 + i * 6), toward(P, -8 + i * 4, (i - 2) * 30), LONG, col, null, 1.05, live(m, c)); }, i * 70));
       await hold(m, c);
       flare(plates, { filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }, 300);
     },
@@ -9332,7 +9334,7 @@ const CLASH = (() => {
       await m.wait(380); ready(); await go; if (!live(m, c)()) return;
       await m.go('skill', 150);
       backBeam(m, 'fHead', () => m.pt('bHead', 268, 81), toward(P, 0, -6), '#9CFF4A', live(m, c));
-      m.fx.beam(() => m.pt('fHead', 344, 131), toward(P, 0, 6), LONG, '#9CFF4A', null, null, live(m, c));
+      m.fx.beam(() => m.pt('fHead', 344, 131), toward(P, 0, 6), LONG, '#9CFF4A', null, 2.2, live(m, c));
       await hold(m, c);
       glands.forEach((g) => flare(g, { filter: 'brightness(2.2)' }, { filter: 'brightness(1)' }, 300));
     },
@@ -9354,7 +9356,7 @@ const CLASH = (() => {
       await m.go('skillWind', 300); flare(lure, { opacity: 0.45, transform: 'scale(1)' }, { opacity: 1, transform: 'scale(2.2)' }, 420);
       await m.wait(140); ready(); await go; if (!live(m, c)()) return;
       await m.go('skill', 260);
-      m.fx.beam(() => m.pt('lure', 364, 108), P, LONG, '#8CFFF0', null, null, live(m, c));
+      m.fx.beam(() => m.pt('lure', 364, 108), P, LONG, '#8CFFF0', null, 2.2, live(m, c));
       let last = 0; while (live(m, c)()) { if (performance.now() - last > 520) { last = performance.now(); m.fx.rings(m.pt('lure', 364, 108), P(), 2, '#8CFFF0', 520); } await m.wait(100); }
       flare(lure, { opacity: 1, transform: 'scale(2.2)' }, { opacity: 0.45, transform: 'scale(1)' }, 300);
     },
@@ -9362,7 +9364,7 @@ const CLASH = (() => {
     starhorn: async (m, P, c, ready, go) => {
       m.hot(true); await m.go('skillWind', 380); await m.wait(240); ready(); await go; if (!live(m, c)()) return;
       await m.go('skill', 200);
-      m.fx.beam(() => m.pt('head', 348, 66), P, LONG, '#FFD86A', null, null, live(m, c));
+      m.fx.beam(() => m.pt('head', 348, 66), P, LONG, '#FFD86A', null, 2.2, live(m, c));
       await hold(m, c); m.hot(false);
     },
     // 虚渊魔：身上的漩涡越转越快，从两只手射出光束；远处那只手的光束在身体后面一层
@@ -9372,7 +9374,7 @@ const CLASH = (() => {
       await m.go('skill', 200);
       /* 两只手的手尖（画图坐标：手腕往小臂方向再出去一点） */
       backBeam(m, 'torso', () => m.pt('fHand', 258, 294), toward(P, 0, -5), '#B48CFF', live(m, c));
-      m.fx.beam(() => m.pt('nHand', 282, 302), toward(P, 0, 5), LONG, '#B48CFF', null, null, live(m, c));
+      m.fx.beam(() => m.pt('nHand', 282, 302), toward(P, 0, 5), LONG, '#B48CFF', null, 2.2, live(m, c));
       await hold(m, c); if (spin) spin.cancel();
     },
     // 镇岳像（单独设计的发波动作）：蹲低、眼罩上的符文发亮，然后身体前倾、低头瞄准（eyeBeam 姿势），从两只眼睛射出光束；远处那只眼睛的光束被头挡住
@@ -9383,13 +9385,13 @@ const CLASH = (() => {
       await m.go('eyeBeam', 220);
       /* 眼罩（画图坐标 x 204–246、y 141.5–146.5）：远处那只眼睛在 214，近处那只在 240 */
       backBeam(m, 'head', () => m.pt('head', 214, 144), toward(P, 0, -4), '#FFD86A', live(m, c));
-      m.fx.beam(() => m.pt('head', 240, 144), toward(P, 0, 4), LONG, '#FFD86A', null, null, live(m, c));
+      m.fx.beam(() => m.pt('head', 240, 144), toward(P, 0, 4), LONG, '#FFD86A', null, 2.2, live(m, c));
       await hold(m, c);
       flare(visor, { filter: 'brightness(2.4)' }, { filter: 'brightness(1)' }, 300);
     },
     _default: async (m, P, c, ready, go) => {
       await m.go('skillWind', 360); ready(); await go; if (!live(m, c)()) return; await m.go('skill', 160);
-      m.fx.beam(() => boxPt(m, 'torso', 0.8, 0.35), P, LONG, '#FF9A3C', null, null, live(m, c)); await hold(m, c);
+      m.fx.beam(() => boxPt(m, 'torso', 0.8, 0.35), P, LONG, '#FF9A3C', null, 2.2, live(m, c)); await hold(m, c);
     }
   };
 })();
@@ -10399,7 +10401,11 @@ const BT = (() => {
       face.animate(big ? [off, on, off, on, off, on, off] : [off, on, off, on, off], {duration: big ? 620 : 300});
       const k = big ? 34 : 18; const tilt = def.rig || hasPose(def, "hit") ? 0 : dir * 4;
       def.animate([{transform:"none"}, {transform:`translateX(${dir * k}px) rotate(${tilt}deg)`, offset:0.3}, {transform:"none"}], {duration: big ? 620 : 340, easing:"ease-out"});
-      if (def.rig || hasPose(def, "hit")) pose(def, "recoil", 90).then(() => wait(big ? 480 : 220)).then(() => { if (!def.classList.contains("still")) pose(def, "idle", 280); });
+      if (def.rig || hasPose(def, "hit")){
+        if (def.active !== POSE_FOR.recoil && def.active !== "recoil") pose(def, "recoil", 90);
+        clearTimeout(def._backIdle); const tk = A.token;
+        def._backIdle = setTimeout(() => { if (tk === A.token && !def.classList.contains("still")) pose(def, "idle", 280); }, (big ? 480 : 220) + 90);
+      }
       /* 挨打的人已经换成“被打中”的姿势（往后仰），火花的落点按新姿势再贴一次，不然会落在他刚才站的地方 */
       if (pt && !(def === ghost && A.cm)) pt = snapHit(def, pt, dir, "near");
       sparksOn(def, big ? "heavy" : "light", pt); dealt(def, dmg);
@@ -11574,9 +11580,9 @@ const BT = (() => {
     const MOVES = {
       punch: (att, def, dir, dmg, o) => melee(att, def, dir, dmg, Object.assign({hit:"punch", effect:(x, y, d) => punchFx(x, y, d, dir)}, o)),
       kick: (att, def, dir, dmg, o) => melee(att, def, dir, dmg, Object.assign({wind:"kickWind", hit:"kick", big:true, hy:0.45, hold:180,
-        swing:(x, y, d) => arcSwoosh(x - dir * d.w * 0.1, y, d.h * 0.55, "kick", "rgba(150, 224, 238, .9)", dir), effect:(x, y, d) => burst(x, y, Math.min(170, d.w * 1.1))}, o)),
+        swing:(x, y, d) => arcSwoosh(x - dir * d.w * 0.1, y, d.h * 0.55, "kick", "rgba(150, 224, 238, .9)", dir), swingAt:120, effect:(x, y, d) => burst(x, y, Math.min(170, d.w * 1.1))}, o)),
       thrust: (att, def, dir, dmg, o) => melee(att, def, dir, dmg, Object.assign({hit:"punch", dashMs:120, hy:0.32,
-        swing:(x, y, d) => streak(dir < 0 ? x - d.w * 0.15 : x + d.w * 0.15, y, d.w * 1.3, dir), effect:(x, y, d) => burst(x, y, Math.min(90, d.w * 0.6))}, o)),
+        swing:(x, y, d) => streak(dir < 0 ? x - d.w * 0.15 : x + d.w * 0.15, y, d.w * 1.3, dir), swingAt:100, effect:(x, y, d) => burst(x, y, Math.min(90, d.w * 0.6))}, o)),
       kesa: (att, def, dir, dmg, o) => melee(att, def, dir, dmg, Object.assign({wind:"raise", windMs:230, hit:"chop", big:true, hy:0.38, hold:220, onWind:() => glint(att),
         swing:(x, y, d) => arcSwoosh(x + dir * d.w * 0.1, y, d.h * 0.85, "kesa", "rgba(255, 150, 40, .95)", dir), swingAt:30, effect:(x, y, d) => burst(x, y, Math.min(180, d.w * 1.2))}, o)),
       laserThin: (att, def, dir, dmg, o) => palmLaserV4(att, def, dir, dmg, false, o),
@@ -11595,7 +11601,7 @@ const BT = (() => {
         let flame = null;
         try {
           await melee(att, def, dir, dmg, Object.assign({wind:"kickWind", windMs:260, hit:"kick", big:true, hy:0.4, hold:220, onWind:() => { flame = legFire(att, dir); },
-            swing:(x, y, d) => { arcSwoosh(x - dir * d.w * 0.1, y, d.h * 0.6, "kick", "rgba(255, 110, 20, .95)", dir); arcSwoosh(x - dir * d.w * 0.14, y + d.h * 0.03, d.h * 0.5, "kick", "rgba(255, 210, 80, .9)", dir); },
+            swingAt:120, swing:(x, y, d) => { arcSwoosh(x - dir * d.w * 0.1, y, d.h * 0.6, "kick", "rgba(255, 110, 20, .95)", dir); arcSwoosh(x - dir * d.w * 0.14, y + d.h * 0.03, d.h * 0.5, "kick", "rgba(255, 210, 80, .9)", dir); },
             effect:(x, y, d) => { fireBurst(x, y, Math.min(230, d.w * 1.5)); if (flame) setTimeout(() => flame.stop(), 170); }}, o));
         } finally { if (flame) flame.stop(); }
       },
