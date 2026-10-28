@@ -662,9 +662,9 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 
 /* 被打中的火花（我的角色和昨天的你都有），画在被打的角色身上 */
 .bt-hflash{position:absolute;border-radius:50%;pointer-events:none;z-index:60;background:radial-gradient(circle,rgba(255,255,255,1) 0 18%,rgba(255,214,140,.9) 34%,rgba(255,140,40,.45) 55%,rgba(255,120,20,0) 72%);mix-blend-mode:screen}
-.bt-hstar{position:absolute;height:4px;border-radius:2px;pointer-events:none;z-index:61;transform-origin:50% 50%;mix-blend-mode:screen;background:linear-gradient(90deg,rgba(255,200,120,0),#FFFFFF 50%,rgba(255,200,120,0));box-shadow:0 0 10px rgba(255,190,90,.9)}
-.bt-hspark{position:absolute;height:5px;border-radius:3px;pointer-events:none;z-index:60;transform-origin:0 50%;background:linear-gradient(90deg,#FFF8E0,#FFC24A 22%,#FF7A1A 62%,rgba(255,110,20,0));box-shadow:0 0 10px rgba(255,130,30,1),0 0 3px #FFE0A0}
-.bt-hember{position:absolute;width:4px;height:4px;border-radius:50%;pointer-events:none;z-index:60;background:#FFD27A;box-shadow:0 0 6px #FF9A3C}
+.bt-hstar{position:absolute;height:2px;border-radius:1px;pointer-events:none;z-index:61;transform-origin:50% 50%;mix-blend-mode:screen;background:linear-gradient(90deg,rgba(255,200,120,0),#FFFFFF 50%,rgba(255,200,120,0));box-shadow:0 0 8px rgba(255,190,90,.9)}
+.bt-hspark{position:absolute;height:2.5px;border-radius:2px;pointer-events:none;z-index:60;transform-origin:0 50%;background:linear-gradient(90deg,#FFF8E0,#FFC24A 22%,#FF7A1A 62%,rgba(255,110,20,0));box-shadow:0 0 6px rgba(255,130,30,.95),0 0 2px #FFE0A0}
+.bt-hember{position:absolute;width:3px;height:3px;border-radius:50%;pointer-events:none;z-index:60;background:#FFD27A;box-shadow:0 0 5px #FF9A3C}
 
 /* 第十四到二十四节的新特效 */
 .bt-shockring{position:absolute;border-radius:50%;pointer-events:none;z-index:5;border:3px solid rgba(255,240,210,.9);box-shadow:0 0 14px rgba(255,200,120,.8)}
@@ -674,6 +674,9 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .bt-zmist{position:absolute;border-radius:50%;pointer-events:none;z-index:5;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(215,195,255,.6) 40%,rgba(160,120,255,0) 70%)}
 .bt-zline{position:absolute;height:6px;border-radius:3px;pointer-events:none;z-index:5;mix-blend-mode:screen;transform-origin:50% 50%;background:linear-gradient(90deg,rgba(160,90,255,0),rgba(175,105,255,.95) 16%,#FFFFFF 50%,rgba(175,105,255,.95) 84%,rgba(160,90,255,0));box-shadow:0 0 16px 5px rgba(170,90,255,.85),0 0 3px #FFFFFF}
 .bt-redwash{position:absolute;inset:0;pointer-events:none;z-index:3;mix-blend-mode:screen;background:radial-gradient(circle at var(--hx) var(--hy),rgba(255,120,100,.55),rgba(255,40,60,.32) 35%,rgba(200,20,40,.22) 70%)}
+
+/* 打出火花时的一点烟 */
+.bt-hsmoke{position:absolute;border-radius:50%;pointer-events:none;z-index:59;filter:blur(2px);background:radial-gradient(circle,rgba(190,186,180,.55),rgba(160,156,150,.3) 50%,rgba(140,136,130,0) 72%)}
 
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
@@ -695,7 +698,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.41.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.41.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -10194,7 +10197,7 @@ const BT = (() => {
     const split = (total, n) => Array.from({length:n}, (_, i) => Math.round((total * (i + 1)) / n) - Math.round((total * i) / n));
     /* 扣血：打的是对手就扣对手的血；打的是你，交给 A.onYouHit（以后掉血用） */
     function dealt(def, d){ if (!(d > 0)) return; A.lastDmg += d; if (def === ghost) A.setHP(A.hp - d); else if (A.onYouHit) A.onYouHit(d); }
-    function hurt(def, dir, dmg, big){
+    function hurt(def, dir, dmg, big, pt){
       if (def === ghost && A.cm){ A.cm.play("hit"); dealt(def, dmg); codeRecoil(big); return; }
       const face = faceOf(def);
       const on = {filter:fil(def, "brightness(3.2)")}, off = {filter:fil(def, "brightness(1)")};
@@ -10202,27 +10205,40 @@ const BT = (() => {
       const k = big ? 34 : 18; const tilt = def.rig || hasPose(def, "hit") ? 0 : dir * 4;
       def.animate([{transform:"none"}, {transform:`translateX(${dir * k}px) rotate(${tilt}deg)`, offset:0.3}, {transform:"none"}], {duration: big ? 620 : 340, easing:"ease-out"});
       if (def.rig || hasPose(def, "hit")) pose(def, "recoil", 90).then(() => wait(big ? 480 : 220)).then(() => { if (!def.classList.contains("still")) pose(def, "idle", 280); });
-      sparksOn(def, big); dealt(def, dmg);
+      sparksOn(def, big ? "heavy" : "light", pt); dealt(def, dmg);
     }
-    function sparksOn(f, big){
+    /* 被打中的火花：从打中的那个点（pt，舞台坐标）迸出来。普通攻击（light、heavy）快速迸一下，细而少；技能（skill）多一些、飞得远一些。
+       每次带几小团淡灰色的烟，往上飘、慢慢散开 */
+    const SPARK = {light:{n:8, L:[8, 18], D:[26, 56], S:0.45, star:1, ember:3, smoke:3},
+                   heavy:{n:12, L:[10, 22], D:[34, 70], S:0.6, star:2, ember:5, smoke:4},
+                   skill:{n:22, L:[10, 26], D:[40, 90], S:0.7, star:2, ember:8, smoke:6}};
+    function sparksOn(f, kind, pt){
       if (reduced()) return;
-      const fb = f.getBoundingClientRect(), bb = bodyOf(f).getBoundingClientRect();
-      const x = bb.left - fb.left + bb.width * 0.47, y = bb.top - fb.top + bb.height * 0.33, n = big ? 26 : 18;
-      const S = Math.min(200, bb.width * (big ? 1.05 : 0.8));
+      if (kind === true) kind = "heavy"; else if (!SPARK[kind]) kind = "light";
+      const c = SPARK[kind], fb = f.getBoundingClientRect(), bb = bodyOf(f).getBoundingClientRect(), S0 = stage.getBoundingClientRect();
+      const x = pt ? pt.x - (fb.left - S0.left) : bb.left - fb.left + bb.width * 0.47, y = pt ? pt.y - (fb.top - S0.top) : bb.top - fb.top + bb.height * 0.33;
+      const S = Math.min(170, bb.width * c.S), rnd = (a, b) => a + Math.random() * (b - a);
       const add = (cls, css) => { const d = document.createElement("div"); d.className = cls; d.style.cssText = css; f.appendChild(d); return d; };
       const flash = add("bt-hflash", `left:${x - S / 2}px;top:${y - S / 2}px;width:${S}px;height:${S}px`);
-      flash.animate([{transform:"scale(.25)", opacity:1}, {transform:"scale(1)", opacity:0.85, offset:0.35}, {transform:"scale(1.3)", opacity:0}], {duration:360, easing:"ease-out"}).finished.then(() => flash.remove());
-      const a0 = Math.random() * 180, nst = big ? 3 : 2;
-      for (let r = 0; r < nst; r++){ const ang = a0 + r * (180 / nst); const st = add("bt-hstar", `left:${x - S * 0.7}px;top:${y - 2}px;width:${S * 1.4}px;transform:rotate(${ang}deg)`);
-        st.animate([{transform:`rotate(${ang}deg) scaleX(.2)`, opacity:1}, {transform:`rotate(${ang}deg) scaleX(1)`, opacity:0}], {duration:260, easing:"ease-out"}).finished.then(() => st.remove()); }
-      for (let i = 0; i < n; i++){
-        const a = Math.random() * Math.PI * 2, L = 14 + Math.random() * 24, D = (big ? 85 : 60) + Math.random() * 60, dx = Math.cos(a) * D, dy = Math.sin(a) * D, fall = 30 + Math.random() * 40;
-        const sp = add("bt-hspark", `left:${x}px;top:${y - 2}px;width:${L}px`);
+      flash.animate([{transform:"scale(.25)", opacity:1}, {transform:"scale(1)", opacity:0.8, offset:0.3}, {transform:"scale(1.2)", opacity:0}], {duration: kind === "skill" ? 320 : 240, easing:"ease-out"}).finished.then(() => flash.remove());
+      const a0 = Math.random() * 180;
+      for (let r = 0; r < c.star; r++){ const ang = a0 + r * 60; const st = add("bt-hstar", `left:${x - S * 0.6}px;top:${y - 1}px;width:${S * 1.2}px;transform:rotate(${ang}deg)`);
+        st.animate([{transform:`rotate(${ang}deg) scaleX(.2)`, opacity:1}, {transform:`rotate(${ang}deg) scaleX(1)`, opacity:0}], {duration:200, easing:"ease-out"}).finished.then(() => st.remove()); }
+      for (let i = 0; i < c.n; i++){
+        const a = Math.random() * Math.PI * 2, L = rnd(c.L[0], c.L[1]), D = rnd(c.D[0], c.D[1]), dx = Math.cos(a) * D, dy = Math.sin(a) * D, fall = rnd(18, 40);
+        const sp = add("bt-hspark", `left:${x}px;top:${y - 1}px;width:${L}px`);
         sp.animate([{transform:`translate(0px,0px) rotate(${a}rad) scaleX(1)`, opacity:1}, {transform:`translate(${dx * 0.6}px,${dy * 0.6 + fall * 0.2}px) rotate(${Math.atan2(dy + fall * 0.5, dx)}rad) scaleX(.8)`, opacity:0.9, offset:0.5},
-          {transform:`translate(${dx}px,${dy + fall}px) rotate(${Math.atan2(dy + fall * 1.5, dx)}rad) scaleX(.3)`, opacity:0}], {duration:420 + Math.random() * 300, easing:"cubic-bezier(.15, .7, .5, 1)"}).finished.then(() => sp.remove());
+          {transform:`translate(${dx}px,${dy + fall}px) rotate(${Math.atan2(dy + fall * 1.5, dx)}rad) scaleX(.3)`, opacity:0}], {duration:rnd(300, kind === "skill" ? 620 : 480), easing:"cubic-bezier(.15, .7, .5, 1)"}).finished.then(() => sp.remove());
       }
-      for (let i = 0; i < (big ? 12 : 8); i++){ const a = Math.random() * Math.PI * 2, D = 20 + Math.random() * 50, e = add("bt-hember", `left:${x - 2}px;top:${y - 2}px`);
-        e.animate([{transform:"translate(0,0)", opacity:1}, {transform:`translate(${Math.cos(a) * D}px,${Math.sin(a) * D + 26}px)`, opacity:0}], {duration:500 + Math.random() * 400, easing:"ease-out"}).finished.then(() => e.remove()); }
+      for (let i = 0; i < c.ember; i++){ const a = Math.random() * Math.PI * 2, D = rnd(14, 40), e = add("bt-hember", `left:${x - 1.5}px;top:${y - 1.5}px`);
+        e.animate([{transform:"translate(0,0)", opacity:1}, {transform:`translate(${Math.cos(a) * D}px,${Math.sin(a) * D + 20}px)`, opacity:0}], {duration:rnd(400, 750), easing:"ease-out"}).finished.then(() => e.remove()); }
+      /* 一点烟：几小团淡灰色的烟往上飘、慢慢散开 */
+      for (let i = 0; i < c.smoke; i++){
+        const m = S * rnd(0.3, 0.55), ox = rnd(-0.25, 0.25) * S, oy = rnd(-0.15, 0.1) * S;
+        const sm = add("bt-hsmoke", `left:${x + ox - m / 2}px;top:${y + oy - m / 2}px;width:${m}px;height:${m}px`);
+        sm.animate([{transform:"translate(0,0) scale(.5)", opacity:0}, {transform:`translate(${rnd(-6, 6)}px,${-m * 0.2}px) scale(1)`, opacity:0.45, offset:0.2},
+          {transform:`translate(${rnd(-16, 16)}px,${-m * rnd(0.7, 1.2)}px) scale(1.7)`, opacity:0}], {duration:rnd(700, 1000), delay:rnd(30, 120), easing:"ease-out", fill:"backwards"}).finished.then(() => sm.remove());
+      }
     }
     /* 弧光：kind 有 kesa（从高处后方斩到低处前方）、rise（上撩）、kick（横扫）；画的是往左打的样子，往右打就镜像 */
     function arcSwoosh(cx, cy, size, kind, glow, dir){
@@ -10295,7 +10311,7 @@ const BT = (() => {
       /* 击中特效落在被打的人身上（第十四节）：不是对方图片的边缘 */
       const hx = d.x + d.w * (dir < 0 ? 0.6 : 0.4), hy = d.y + d.h * (o.hy || 0.32);
       o.effect(hx, hy, d); if (o.breaks && def === ghost) A.breakShields(o.breaks);
-      hurt(def, dir, dmg, !!o.big); damageNumber(hx - 10, hy - 30, dmg); shake(o.big ? 8 : 5);
+      hurt(def, dir, dmg, !!o.big, {x:hx, y:hy}); damageNumber(hx - 10, hy - 30, dmg); shake(o.big ? 8 : 5);
       if (att.rig) pose(att, "idle", 260); else wait(o.hold || 130).then(() => { if (!att.classList.contains("still")) pose(att, "idle"); });
       await leg([{transform:`translateX(${dir * dist}px)`}, {transform:"none"}], {duration:260, easing:"ease-out"});
       clearLegs();
@@ -10333,7 +10349,7 @@ const BT = (() => {
         }
         if (!def.classList.contains("still")) pose(def, "idle", 260);
       } else {
-        burst(hx, hy, Math.min(90, d.w * 0.6)); hurt(def, dir, dmg, false); damageNumber(hx - 10, hy - 30, dmg); shake(4); await wait(240);
+        burst(hx, hy, Math.min(90, d.w * 0.6)); hurt(def, dir, dmg, false, {x:hx, y:hy}); damageNumber(hx - 10, hy - 30, dmg); shake(4); await wait(240);
       }
       orb.animate([{opacity:1}, {opacity:0}], {duration:180, fill:"forwards"});
       await run(beam, [{transform:"scaleX(1) scaleY(1)", opacity:1}, {transform:"scaleX(1) scaleY(0)", opacity:0}], {duration: thick ? 220 : 160, fill:"forwards"});
@@ -10829,17 +10845,20 @@ const BT = (() => {
       const T = (x, y) => ({transform:`translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`});
       const N = 14, kf = []; for (let k = 0; k <= N; k++){ const u = (uL * k) / N; kf.push(T(dx * u, yAt(u))); }
       const flight = o.flyMs * uL; let slideMs = 0;
-      if (o.slide){ const v0 = Math.abs(dx) / o.flyMs; slideMs = Math.max(160, (3 * o.slide) / Math.max(0.05, v0)); }
+      /* 蹭地：起始速度等于飞行时往前的速度；o.slideK 是减速曲线一开始的斜率（3 = easeOutCubic，2 = easeOutQuad，减速更快） */
+      /* o.skidMs：蹭地最多用这么久——滑多远按落地时的速度定（速度慢就滑短一点），保证干脆地停住、又和飞行的速度接得上 */
+      let slideD = o.slide || 0;
+      if (o.slide){ const v0 = Math.max(0.05, Math.abs(dx) / o.flyMs), kq = o.slideK || 3; if (o.skidMs) slideD = Math.min(o.slide, (v0 * o.skidMs) / kq); slideMs = Math.max(o.slideMin || 160, (kq * slideD) / v0); }
       const total = flight + slideMs, xL = dx * uL;
       const keys = kf.map((k, n) => Object.assign({}, k, {offset:(flight * n / N) / total, easing:"linear"}));
-      if (o.slide){ keys[keys.length - 1].easing = "cubic-bezier(.33, 1, .68, 1)"; keys.push(Object.assign(T(xL + dir * o.slide, 0), {offset:1})); }
+      if (o.slide){ keys[keys.length - 1].easing = o.slideEase || "cubic-bezier(.33, 1, .68, 1)"; keys.push(Object.assign(T(xL + dir * slideD, 0), {offset:1})); }
       else keys[keys.length - 1].offset = 1;
       pose(att, o.air, 110);
       const later = (ms, fn) => setTimeout(() => { if (token === A.token) fn(); }, ms);
       if (o.strikeAt < 1) later(o.flyMs * o.strikeAt, () => pose(att, o.hit, 100));
       later(o.flyMs, () => {
         const d = box(bodyOf(def)); o.effect(tx, ty, d); if (o.breaks && def === ghost) A.breakShields(o.breaks);
-        hurt(def, dir, dmg, !!o.big); damageNumber(tx - 10, ty - 30, dmg); shake(o.big ? 10 : 6); if (o.ring) shockRing(tx, ty, d.h * 0.2);
+        hurt(def, dir, dmg, !!o.big, {x:tx, y:ty}); damageNumber(tx - 10, ty - 30, dmg); shake(o.big ? 10 : 6); if (o.ring) shockRing(tx, ty, d.h * 0.2);
       });
       if (o.land) later(Math.max(o.flyMs + 40, flight - 90), () => pose(att, o.land, 120));
       if (o.slide) later(flight - 10, () => { const fb = box(bodyOf(att)); dustAt(dir < 0 ? fb.x + fb.w * 0.4 : fb.x + fb.w * 0.6, fb.y + fb.h, fb.h, -dir); });
@@ -10847,7 +10866,7 @@ const BT = (() => {
       const anim = att.animate(keys, {duration:total, fill:"forwards"});
       await anim.finished.catch(() => {});
       if (token !== A.token){ anim.cancel(); return; }
-      const xe = o.slide ? xL + dir * o.slide : xL;
+      const xe = o.slide ? xL + dir * slideD : xL;
       await wait(o.hold || 150);
       if (token !== A.token){ anim.cancel(); return; }
       pose(att, "idle", 240);
@@ -10950,8 +10969,8 @@ const BT = (() => {
       const parts = split(total || 40, 10);
       for (let k = 0; k < parts.length; k++){
         if (token !== A.token) return;
-        burst(hx + (Math.random() - 0.5) * d.w * 0.3, hy + (Math.random() - 0.5) * d.h * 0.2, Math.min(190, d.w * 1.2));
-        if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, k === 0);
+        const bxp = hx + (Math.random() - 0.5) * d.w * 0.3, byp = hy + (Math.random() - 0.5) * d.h * 0.2; burst(bxp, byp, Math.min(190, d.w * 1.2));
+        if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, "skill", {x:bxp, y:byp});
         if (def === ghost) A.lastSpecial += parts[k]; dealt(def, parts[k]); damageNumber(hx - 10 + (Math.random() - 0.5) * 30, hy - 34, parts[k]);
         await wait(HOLD / parts.length);
       }
@@ -11007,7 +11026,7 @@ const BT = (() => {
         const HOLD = 800, parts = split(dmg, 6);
         pose(def, "recoil", 90); if (oo && oo.breaks && def === ghost) A.breakShields(oo.breaks);
         faceOf(def).animate([{filter:fil(def, "brightness(1.1)")}, {filter:fil(def, "brightness(2.4)")}, {filter:fil(def, "brightness(1.1)")}], {duration:220, iterations:Math.ceil(HOLD / 220)});
-        shake(7); if (!(def === ghost && A.cm)) sparksOn(def, true);
+        shake(7); if (!(def === ghost && A.cm)) sparksOn(def, "heavy", {x:hx, y:hy});
         for (const part of parts){
           await wait(HOLD / parts.length); if (token !== A.token) return;
           dealt(def, part); damageNumber(hx + (Math.random() * 40 - 30), hy - 26 - Math.random() * 24, part);
@@ -11016,7 +11035,7 @@ const BT = (() => {
         if (!def.classList.contains("still")) pose(def, "idle", 260);
       } else {
         burst(hx, hy, Math.min(90, d.w * 0.6)); if (oo && oo.breaks && def === ghost) A.breakShields(oo.breaks);
-        hurt(def, dir, dmg, false); damageNumber(hx - 10, hy - 30, dmg); shake(4); await wait(240);
+        hurt(def, dir, dmg, false, {x:hx, y:hy}); damageNumber(hx - 10, hy - 30, dmg); shake(4); await wait(240);
       }
       await wait(thick ? 160 : 60);
       await pose(att, "idle", 260);
@@ -11074,8 +11093,8 @@ const BT = (() => {
       const parts = split(total || 40, 12);
       for (let k = 0; k < parts.length; k++){
         if (token !== A.token) return;
-        burst(d.x + d.w * (0.25 + Math.random() * 0.6), d.y + d.h * (0.15 + Math.random() * 0.6), Math.min(230, d.w * 1.5));
-        if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, k === 0);
+        const bxp = d.x + d.w * (0.25 + Math.random() * 0.6), byp = d.y + d.h * (0.15 + Math.random() * 0.6); burst(bxp, byp, Math.min(230, d.w * 1.5));
+        if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, "skill", {x:bxp, y:byp});
         if (def === ghost) A.lastSpecial += parts[k]; dealt(def, parts[k]); damageNumber(hx - 10 + (Math.random() - 0.5) * 36, hy - 34, parts[k]);
         await wait(HOLD / parts.length);
       }
@@ -11096,7 +11115,7 @@ const BT = (() => {
       /* 迪迦的三招（第十四节）；原创小人没有姿势图，换成出拳、侧踢、它自己的青色大光线 */
       jumpChop: (att, def, dir, dmg, o) => (att.rig ? MOVES.punch(att, def, dir, dmg, o) : leapStrike(att, def, dir, dmg, Object.assign({crouchMs:110, air:"leap", hit:"jumpChop", hitPose:"light", flyMs:420, arc:0.42, strikeAt:0.74, deep:0.62, at:0.24, hold:170, dust:true,
         effect:(x, y, d) => { slash(x, y, dir); burst(x, y, Math.min(150, d.w)); }}, o || {}))),
-      flyKick: (att, def, dir, dmg, o) => (att.rig ? MOVES.kick(att, def, dir, dmg, o) : leapStrike(att, def, dir, dmg, Object.assign({crouchMs:240, air:"kick", hit:"kick", hitPose:"heavy", flyMs:320, arc:0.2, strikeAt:1, deep:0.36, at:0.2, slide:110, ring:true, land:"kickWind", hold:150, big:true,
+      flyKick: (att, def, dir, dmg, o) => (att.rig ? MOVES.kick(att, def, dir, dmg, o) : leapStrike(att, def, dir, dmg, Object.assign({crouchMs:240, air:"kick", hit:"kick", hitPose:"heavy", flyMs:320, arc:0.2, strikeAt:1, deep:0.36, at:0.2, slide:90, slideK:2, slideMin:120, skidMs:340, slideEase:"cubic-bezier(.5, 1, .89, 1)", ring:true, land:"kickWind", hold:110, big:true,
         effect:(x, y, d) => { punchFx(x, y, d, dir); burst(x, y, Math.min(210, d.w * 1.35)); }}, o || {}))),
       zepellion: (att, def, dir, total) => (att.rig ? specialWide(att, def, dir, total, RIG_BEAM) : zepellion(att, def, dir, total)),
       /* 大光线：初代、百慕拉的新画法；原创小人用 RIG_BEAM（第十五、十七节） */
