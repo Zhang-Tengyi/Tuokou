@@ -442,7 +442,9 @@ mark.opt{background:transparent;color:inherit;border-bottom:2px dashed #e0a100}
 .bt-ghost .bt-breath{animation-delay:-1.3s}
 .bt-fighter.still .bt-breath{animation:none}
 .bt-face{height:100%}
-.bt-ghost .bt-face{transform:scaleX(-1);filter:var(--bt-ghost-filter)}
+.bt-ghost .bt-face{transform:scaleX(-1)}
+/* 昨天的你的冷色在外层：图片这一层闪光、发光、褪光都不会把它盖掉 */
+.bt-ghost:not(.monster) .bt-breath{filter:var(--bt-ghost-filter)}
 .bt-sprite{height:100%;width:auto;display:block;user-select:none;-webkit-user-drag:none;pointer-events:none}
 svg.bt-sprite{aspect-ratio:220/300;overflow:visible}
 .bt-face.posed{position:relative}
@@ -650,6 +652,29 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .deck-chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line,#e2e2e2);background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:600;cursor:pointer;min-height:32px}
 .deck-chip.on{background:var(--ink,#16202E);color:var(--bg,#fff);border-color:var(--ink,#16202E)}
 
+/* 1.39：词典直接排好；三个选项用链接样式；打分说明 */
+.dict-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.dict-grid .btn{padding:7px 4px;font-size:13px}
+.opt-links{display:flex;flex-direction:column;align-items:flex-start;gap:0;margin:-2px 0 12px}
+.linklike{background:none;border:0;padding:8px 2px;min-height:40px;color:#2563EB;text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:15px;cursor:pointer;text-align:left}
+@media (prefers-color-scheme: dark){.linklike{color:#7FB2FF}}
+.rate-hint{margin-top:8px;line-height:1.5}
+
+/* 被打中的火花（我的角色和昨天的你都有），画在被打的角色身上 */
+.bt-hflash{position:absolute;border-radius:50%;pointer-events:none;z-index:60;background:radial-gradient(circle,rgba(255,255,255,1) 0 18%,rgba(255,214,140,.9) 34%,rgba(255,140,40,.45) 55%,rgba(255,120,20,0) 72%);mix-blend-mode:screen}
+.bt-hstar{position:absolute;height:4px;border-radius:2px;pointer-events:none;z-index:61;transform-origin:50% 50%;mix-blend-mode:screen;background:linear-gradient(90deg,rgba(255,200,120,0),#FFFFFF 50%,rgba(255,200,120,0));box-shadow:0 0 10px rgba(255,190,90,.9)}
+.bt-hspark{position:absolute;height:5px;border-radius:3px;pointer-events:none;z-index:60;transform-origin:0 50%;background:linear-gradient(90deg,#FFF8E0,#FFC24A 22%,#FF7A1A 62%,rgba(255,110,20,0));box-shadow:0 0 10px rgba(255,130,30,1),0 0 3px #FFE0A0}
+.bt-hember{position:absolute;width:4px;height:4px;border-radius:50%;pointer-events:none;z-index:60;background:#FFD27A;box-shadow:0 0 6px #FF9A3C}
+
+/* 第十四到二十四节的新特效 */
+.bt-shockring{position:absolute;border-radius:50%;pointer-events:none;z-index:5;border:3px solid rgba(255,240,210,.9);box-shadow:0 0 14px rgba(255,200,120,.8)}
+.bt-dust{position:absolute;border-radius:50%;pointer-events:none;z-index:2;filter:blur(3px);background:radial-gradient(circle,rgba(196,182,160,.85),rgba(170,156,136,.45) 55%,rgba(150,138,120,0) 72%)}
+.bt-zglow{position:absolute;border-radius:50%;pointer-events:none;z-index:5;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,255,255,.95) 0 10%,rgba(220,200,255,.7) 26%,rgba(150,110,255,.35) 48%,rgba(120,80,255,0) 70%)}
+.bt-zray{position:absolute;height:4px;transform-origin:0 50%;pointer-events:none;z-index:5;border-radius:3px;background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(205,170,255,.75) 40%,rgba(160,120,255,0));box-shadow:0 0 10px rgba(190,150,255,.8);mix-blend-mode:screen}
+.bt-zmist{position:absolute;border-radius:50%;pointer-events:none;z-index:5;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(215,195,255,.6) 40%,rgba(160,120,255,0) 70%)}
+.bt-zline{position:absolute;height:6px;border-radius:3px;pointer-events:none;z-index:5;mix-blend-mode:screen;transform-origin:50% 50%;background:linear-gradient(90deg,rgba(160,90,255,0),rgba(175,105,255,.95) 16%,#FFFFFF 50%,rgba(175,105,255,.95) 84%,rgba(160,90,255,0));box-shadow:0 0 16px 5px rgba(170,90,255,.85),0 0 3px #FFFFFF}
+.bt-redwash{position:absolute;inset:0;pointer-events:none;z-index:3;mix-blend-mode:screen;background:radial-gradient(circle at var(--hx) var(--hy),rgba(255,120,100,.55),rgba(255,40,60,.32) 35%,rgba(200,20,40,.22) 70%)}
+
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
 code{font-size:12.5px;background:var(--surface2);padding:1px 5px;border-radius:5px;word-break:break-all}
@@ -670,7 +695,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.38.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.41.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2385,7 +2410,7 @@ function pickQuestions(ctx, n){
      所以“第一次就说对”永远最划算，故意先说错再说对只会更亏。
    - 大招 = 这一轮卡片伤害的 40%：多练一轮才多打一段，拆成很多小轮也占不到便宜。 */
 const BAT_DMG = {exact:10, close:8, meaning:8, sound:6, graze:2, off:0};
-const BAT_BREAK = 0.7, BAT_SPECIAL = 0.4;
+const BAT_BREAK = 0.7, BAT_SPECIAL = 0.6;   /* 结算的大招：这一轮总伤害的 60%（以前 40%，用户想要大招更爽） */
 const BAT_RANK = {off:0, graze:0, sound:1, meaning:2, close:2, exact:3};
 /* 这张卡第一次说得怎么样：
    - 点了“识别错了”（每轮最多 3 次）：按基本对算
@@ -2394,21 +2419,24 @@ const BAT_RANK = {off:0, graze:0, sound:1, meaning:2, close:2, exact:3};
 function battleFirst(e){
   if (e.mis) return "exact";   /* 用户说对了、只是识别错了：按完全对算（不给暴击），每轮最多 3 次 */
   const lv = BAT_DMG[e.lv1] != null ? e.lv1 : "off";
-  if (lv === "off" && e.spoke) return e.sound ? "sound" : "graze";
+  if (lv === "off" && e.spoke) return "graze";   /* 卡片说“和参考差别较大”，游戏就是擦伤（以前另算“听起来很接近”，两边说法对不上） */
   return lv;
 }
 function battlePlan(entries){
   const events = []; let card = 0, shields = 0, broke = 0;
   for (const e of entries || []){
     const lv1 = battleFirst(e); const d1 = BAT_DMG[lv1];
-    if (lv1 === "off"){ shields++; events.push({k:"shield"}); }
-    else { events.push({k:"hit", d:d1, lv:lv1}); card += d1; }
     /* 第一次没说对、重练说对了：这张卡一共最多算 70%，所以第一次就说对永远最划算 */
     const lv2 = !e.mis && e.lv2 && BAT_DMG[e.lv2] && BAT_RANK[e.lv2] >= 1 ? e.lv2 : null;
-    if (lv2 && (lv1 === "off" || lv1 === "graze" || lv1 === "sound")){
-      const extra = Math.max(0, Math.round(BAT_DMG[lv2] * BAT_BREAK) - d1);
-      if (extra > 0 || lv1 === "off"){ events.push({k:"break", d:extra, lv:lv2, shield: lv1 === "off"}); card += extra; if (lv1 === "off") broke++; }
+    /* 第一次开口了但没说准（擦伤、听起来很接近），重练说对了：一张卡只出一招，取两次里大的那个 */
+    if (lv2 && (lv1 === "graze" || lv1 === "sound")){
+      const d = Math.max(d1, Math.round(BAT_DMG[lv2] * BAT_BREAK));
+      events.push({k:"hit", d, lv:lv2, retry:true}); card += d; continue;
     }
+    if (lv1 === "off"){ shields++; events.push({k:"shield"}); }
+    else { events.push({k:"hit", d:d1, lv:lv1}); card += d1; }
+    /* 第一次一个字没说（对手加了护盾），重练说对了：一击打碎护盾 */
+    if (lv2 && lv1 === "off"){ const extra = Math.round(BAT_DMG[lv2] * BAT_BREAK); events.push({k:"break", d:extra, lv:lv2, shield:true}); card += extra; broke++; }
   }
   return {events, card, shields, broke, n:(entries || []).length};
 }
@@ -3652,6 +3680,8 @@ class CardStage {
     }
   }
   drillSteps(){
+    /* 开口说了、只是没说对：听一遍正确的、自己说一遍就行；一个字没说出来的才走完整的三步 */
+    if (this.drillLite && !this.leech){ const t = this.target().en; return [{text:t, play:"normal", label:"听一遍正确的，跟着说"}, {text:t, play:null, label:"不听了，自己说一遍"}]; }
     const t = this.card.en;
     const base = [{text:t, play:"slow", label:"先听慢速，跟着说一遍"}, {text:t, play:"normal", label:"再听正常速度，跟着说一遍"}, {text:t, play:null, label:"不听了，自己说一遍"}];
     if (!this.leech) return base;
@@ -3713,7 +3743,7 @@ class CardStage {
   }
   retryHTML(){
     if (this.phase !== "retry") return "";
-    return `<div class="panel" style="margin-top:14px;background:var(--amber-soft);border-color:transparent"><b>${this.hintMode === "flags" ? "意思对上了，但有几处可能有问题。按提示改一下，再说一次" : "差一点。按提示自己改，再说一次"}</b><ul class="fb" style="margin:6px 0 4px">${this.hints.map(h => `<li>${esc(h)}</li>`).join("")}</ul><p class="small muted">你刚才说的：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p><p class="small muted" style="margin-top:4px">这一步是让你自己改一次的机会，不算错。你其实说对了、是识别听错了，就点下面的按钮。</p><button class="btn block misrec-btn" data-act="c-retry-ok" style="margin-top:8px">我说对了，是识别错了</button></div>`;
+    return `<div class="panel" style="margin-top:14px;background:var(--amber-soft);border-color:transparent"><b>${this.hintMode === "flags" ? "意思对上了，但有几处可能有问题。按提示改一下，再说一次" : "差一点。按提示自己改，再说一次"}</b><ul class="fb" style="margin:6px 0 4px">${this.hints.map(h => `<li>${esc(h)}</li>`).join("")}</ul><p class="small muted">你刚才说的：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p><p class="small muted" style="margin-top:4px">这一步是让你自己改一次的机会，不算错。你其实说对了、是识别听错了，就点下面的按钮。</p><div class="opt-links" style="margin-top:8px"><button class="linklike" data-act="c-retry-ok">我说对了，是识别错了</button></div></div>`;
   }
   suggest(){
     if (!this.cmp) return "";
@@ -3722,7 +3752,7 @@ class CardStage {
     if (this.cmp.exact && this.cmp.restart) return "hard";
     if (this.mean && !this.cmp.exact) return this.flags.length ? "again" : "hard";
     if (this.tries) return this.cmp.exact ? "hard" : "again";
-    if (this.cmp.exact) return this.ms && this.ms < 3500 ? "good" : "hard";
+    if (this.cmp.exact){ const lim = typeof critMs === "function" ? critMs({en:this.target().en}) : 3500; return this.ms && this.ms <= lim ? "good" : "hard"; }
     return this.cmp.level === "close" ? "hard" : "again";
   }
   revealHTML(){
@@ -3739,9 +3769,10 @@ class CardStage {
       if (this.altNote) h += `<p class="small" style="margin:-6px 0 10px">手机第一遍听成了：<span class="en">${esc(this.altNote.top)}</span>。候选里有你要说的那句，所以按它判断。${this.altNote.meantW.length ? `第一遍没听准的：${this.altNote.meantW.map((w, i) => `<span class="w" data-act="word" data-w="${esc(w)}">${esc(w)}</span>${this.altNote.heardW[i] ? `（听成了 ${esc(this.altNote.heardW[i])}）` : ""}`).join("、")}。点一下听听，下次这几个词说慢一点、清楚一点。` : ""}</p>`;
       if (gc && (gc.must.length || gc.opt.length)) h += gramBoxHTML(gc);
       if (cmp.restart && !this.misrec) h += `<p class="small muted" style="margin:-6px 0 10px">前面重说的部分没算，按后面那句判断。</p>`;
-      if (this.mine && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">你的说法记下了，以后这样说也算对。</p>`;
+      if (this.mine && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">你的说法记下了，以后这样说也算对。</p>${this._mineUndo ? `<div class="opt-links"><button class="linklike" data-act="c-mine-undo">点错了？撤销，重新选</button></div>` : ""}`;
       else if (this.tries && cmp.exact) h += `<p class="small muted" style="margin:-6px 0 10px">按提示自己改对了。改过一次的句子会早一点再出现。</p>`;
-      const mineRow = this.said ? `<div class="row-gap" style="margin:-2px 0 12px">${["r","t","f"].includes(c.t) ? `<button class="btn sm" data-act="c-mine">我确定这样也对</button>` : ""}<button class="btn sm" data-act="c-ask">拿不准，存起来问 Claude</button></div><button class="btn block misrec-btn" data-act="c-misrec">我说对了，是识别错了</button>` : "";
+      const mineRow = !this.said ? "" : this._mineUndo ? `<div class="opt-links"><button class="linklike" data-act="c-mine-undo">撤销“我确定这样也对”，重新选</button></div>`
+        : `<div class="opt-links"><button class="linklike" data-act="c-misrec">我说对了，是识别错了</button><button class="linklike" data-act="c-ask">拿不准，存起来问 Claude</button>${["r","t","f"].includes(c.t) ? `<button class="linklike" data-act="c-mine">我确定这样也对</button>` : ""}</div>`;
       if (meaning){
         const fl = this.flags.filter(f => !gcMsgs.has(f.msg));
         if (fl.length) h += `<ul class="fb">${fl.slice(0, 4).map(f => `<li>${esc(f.msg)}</li>`).join("")}</ul>`;
@@ -3775,7 +3806,8 @@ class CardStage {
       h += `<div class="rate">
         <button class="again ${sg==="again"?"sug":""}" data-act="c-rate" data-v="again">没说出来</button>
         <button class="hard ${sg==="hard"?"sug":""}" data-act="c-rate" data-v="hard">有卡顿</button>
-        <button class="good ${sg==="good"?"sug":""}" data-act="c-rate" data-v="good">秒出</button></div>`;
+        <button class="good ${sg==="good"?"sug":""}" data-act="c-rate" data-v="good">秒出</button></div>
+        <p class="small muted rate-hint">秒出：说对了，没卡。有卡顿：说出来了，但慢了或者有个小错。没说出来：说不出来，或者大部分不对。</p>`;
     }
     return h + "</div>";
   }
@@ -3787,6 +3819,7 @@ class CardStage {
     else if (r === "good"){ Snd.good(); vib(15); }
     if (r === "again" && (!this.retry || ((RUN.retries || {})[this.card.id] || 0) < 4)){
       const p = S.cards[this.card.id]; this.leech = !!(p && (p.lapses || 0) >= 3);
+      this.drillLite = !!(this.said && String(this.said).trim());
       this.phase = "drill"; this.drill = 0; this.drillPlayed = -1; this.render(); return;
     }
     setTimeout(() => { if (this.alive) nextItem(); }, res.pb ? 650 : 120);
@@ -3826,14 +3859,15 @@ ACT.word = el => {
   const bg = document.createElement("div"); bg.className = "sheet-bg";
   const ck = el.dataset.ck || "", cz = el.dataset.cz || "", cb = el.dataset.cb || "";
   const wl = w.toLowerCase(); const wc = CAT.cards.find(c => c.t === "w" && c.word && (String(c.word).toLowerCase() === wl || K.wordsMatch(String(c.word).toLowerCase(), wl)));
+  /* 这个搭配是不是已经在单词卡里了 */
+  const wcCk = !!(ck && CAT.cards.some(x => x.t === "w" && String(x.word || "").toLowerCase() === String(cb || ck).toLowerCase()));
   bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${ck ? `<div class="ck-box"><div class="small muted">这个词在固定搭配里，整体记、整体说更自然</div><div class="en" style="font-size:24px;margin-top:4px">${esc(ck)}</div>${cz ? `<div style="margin-top:2px">${esc(cz)}</div>` : ""}
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px"><button class="btn" data-x="cn">${ICON.speak}整体读</button><button class="btn" data-x="cs">慢速</button><button class="btn" data-x="cda">查牛津（权威）</button>${dictCur().id !== DICT_AUTH ? `<button class="btn" data-x="cd">查${esc(dictCur().name)}</button>` : ""}</div><button class="linkbtn small" data-x="dmore" data-for="cd" style="margin-top:6px">换个词典查搭配</button>${dictListHTML("cd")}</div><div class="small muted" style="margin-top:14px">单独这个词</div>` : ""}<div class="en" style="font-size:30px">${esc(w)}</div>${wc && wc.mean ? `<div style="margin-top:2px">${esc(wc.mean)}</div>` : ""}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn" data-x="n">${ICON.speak}正常读</button><button class="btn" data-x="s">慢速读</button><button class="btn" data-x="da">查牛津（权威）</button>${dictCur().id !== DICT_AUTH ? `<button class="btn" data-x="d">查${esc(dictCur().name)}</button>` : ""}<button class="btn ghost" data-x="c">关闭</button>${wc ? `<button class="btn" disabled style="grid-column:1/-1">已经在你的单词卡里</button>` : `<button class="btn" data-x="add" style="grid-column:1/-1">加到要学的词${ck ? "（这个搭配）" : ""}</button>`}</div>
-    <button class="linkbtn small" data-x="dmore" data-for="d" style="margin-top:8px">查不到？换个词典</button>${dictListHTML("d")}
-    <p class="small muted" style="margin-top:8px">会打开词典网页（要联网）。第一个是牛津高阶美式英语学习词典；第二个是你的默认词典（${esc(dictCur().name)}），在“我的 → 设置”里改。“换个词典”只查这一次。</p></div>`;
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px"><button class="btn" data-x="cn">${ICON.speak}整体读</button><button class="btn" data-x="cs">慢速</button></div><div class="dict-grid">${DICTS.map(d => `<button class="btn sm" data-x="dict" data-for="cd" data-v="${d.id}">${d.name}</button>`).join("")}</div>${wcCk ? "" : `<button class="btn sm" data-x="addck" style="margin-top:8px">把这个搭配加到要学的词</button>`}</div><div class="small muted" style="margin-top:14px">单独这个词</div>` : ""}<div class="en" style="font-size:30px">${esc(w)}</div>${wc && wc.mean ? `<div style="margin-top:2px">${esc(wc.mean)}</div>` : ""}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn" data-x="n">${ICON.speak}正常读</button><button class="btn" data-x="s">慢速读</button><button class="btn ghost" data-x="c">关闭</button>${wc ? `<button class="btn" disabled style="grid-column:1/-1">已经在你的单词卡里</button>` : `<button class="btn" data-x="add" style="grid-column:1/-1">把这个词加到要学的词</button>`}</div>
+    <div class="dict-grid" style="margin-top:10px">${DICTS.map(d => `<button class="btn sm" data-x="dict" data-for="d" data-v="${d.id}">${d.name}</button>`).join("")}</div></div>`;
   bg.addEventListener("click", e => {
     const b = e.target.closest("[data-x]"); if (e.target === bg || (b && b.dataset.x === "c")){ bg.remove(); return; } if (!b) return;
-    if (b.dataset.x === "add"){ const item = (cb || ck || w).trim(); S.wantWords = S.wantWords || [];
+    if (b.dataset.x === "add" || b.dataset.x === "addck"){ const item = (b.dataset.x === "addck" ? (cb || ck) : w).trim(); S.wantWords = S.wantWords || [];
       if (!S.wantWords.some(x => x.w.toLowerCase() === item.toLowerCase())){ const host = el.closest(".en, .rd-s, .card, .li"); S.wantWords.push({w:item, ctx:host ? host.textContent.replace(/\s+/g, " ").trim().slice(0, 200) : "", ts:Date.now()}); save(); }
       toast("加好了。联网后在“我的 → 待确认的说法”里发给 Claude，换成单词卡"); bg.remove(); return; }
     if (b.dataset.x === "cn") TTS.speak(ck, {rate:0.95}); else if (b.dataset.x === "cs") TTS.speak(ck, {rate:0.7});
@@ -3848,16 +3882,16 @@ ACT.word = el => {
   document.body.appendChild(bg);
 };
 /* ---------- 查词典：可以选词典；默认用上次用的那个 ---------- */
+/* 词典按权威顺序排：牛津学习词典（美式、英式）、剑桥、韦氏、柯林斯，再是中文的有道、必应，最后谷歌 */
 const DICTS = [
-  /* 第一个按钮固定用它：牛津学习词典是同类里资格最老、收词最多的（1948 年首版，第 10 版 18.5 万词），用它的美式英语版 */
-  {id:"oxam", name:"牛津美式学习词典", note:"最权威的学习词典，美式用法和发音", url:w => "https://www.oxfordlearnersdictionaries.com/search/american_english/?q=" + encodeURIComponent(w)},
-  {id:"youdao", name:"有道", note:"中文释义最全，短语、口语、新词都有", url:w => "https://dict.youdao.com/result?word=" + encodeURIComponent(w) + "&lang=en"},
-  {id:"bing", name:"必应词典", note:"中文释义，例句多", url:w => "https://cn.bing.com/dict/search?q=" + encodeURIComponent(w)},
-  {id:"cambridge", name:"剑桥英汉", note:"中文释义、音标、真人发音", url:w => "https://dictionary.cambridge.org/dictionary/english-chinese-simplified/" + encodeURIComponent(w.toLowerCase().replace(/[^a-z' -]/g, "").trim().replace(/\s+/g, "-"))},
-  {id:"oxford", name:"牛津学习词典", note:"英文解释，适合学习者", url:w => "https://www.oxfordlearnersdictionaries.com/search/english/?q=" + encodeURIComponent(w)},
-  {id:"mw", name:"韦氏", note:"美式用法和发音", url:w => "https://www.merriam-webster.com/dictionary/" + encodeURIComponent(w)},
-  {id:"collins", name:"柯林斯", note:"英文解释，例句多", url:w => "https://www.collinsdictionary.com/dictionary/english/" + encodeURIComponent(w.toLowerCase().trim().replace(/\s+/g, "-"))},
-  {id:"google", name:"谷歌搜索", note:"上面都查不到时用", url:w => "https://www.google.com/search?q=" + encodeURIComponent(w + " meaning")}
+  {id:"oxam", name:"牛津美式", url:w => "https://www.oxfordlearnersdictionaries.com/search/american_english/?q=" + encodeURIComponent(w)},
+  {id:"oxford", name:"牛津", url:w => "https://www.oxfordlearnersdictionaries.com/search/english/?q=" + encodeURIComponent(w)},
+  {id:"cambridge", name:"剑桥英汉", url:w => "https://dictionary.cambridge.org/dictionary/english-chinese-simplified/" + encodeURIComponent(w.toLowerCase().replace(/[^a-z' -]/g, "").trim().replace(/\s+/g, "-"))},
+  {id:"mw", name:"韦氏", url:w => "https://www.merriam-webster.com/dictionary/" + encodeURIComponent(w)},
+  {id:"collins", name:"柯林斯", url:w => "https://www.collinsdictionary.com/dictionary/english/" + encodeURIComponent(w.toLowerCase().trim().replace(/\s+/g, "-"))},
+  {id:"youdao", name:"有道", url:w => "https://dict.youdao.com/result?word=" + encodeURIComponent(w) + "&lang=en"},
+  {id:"bing", name:"必应", url:w => "https://cn.bing.com/dict/search?q=" + encodeURIComponent(w)},
+  {id:"google", name:"谷歌搜索", url:w => "https://www.google.com/search?q=" + encodeURIComponent(w + " meaning")}
 ];
 const DICT_AUTH = "oxam";
 const dictCur = () => DICTS.find(d => d.id === L.dict) || DICTS.find(d => d.id === "cambridge");
@@ -5340,7 +5374,6 @@ VIEWS.me = {
       <div class="sec-title">练习</div><div class="panel">
         <label class="fld" style="margin-top:0"><span>每天最多几道新题</span><select data-chg="set" data-key="newPerDay" data-num="1">${[6,12,20].map(n => `<option value="${n}" ${s.newPerDay === n ? "selected" : ""}>${n} 道</option>`).join("")}</select></label>
         <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${!SR.ok ? "（这个浏览器不支持）" : SR.broken ? "（这台手机现在用不了）" : ""}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
-        <label class="fld"><span>查词典默认用</span><select data-chg="dict">${DICTS.map(d => `<option value="${d.id}" ${dictCur().id === d.id ? "selected" : ""}>${d.name}（${d.note}）</option>`).join("")}</select></label>
         <label class="fld"><span>说英语时用什么识别</span><select data-chg="set" data-key="srEngine" data-rerender="1"><option value="device" ${S.settings.srEngine !== "whisper" ? "selected" : ""}>手机自带的识别：快，但口音重时容易听错</option><option value="whisper" ${S.settings.srEngine === "whisper" ? "selected" : ""} ${ASR.supported() ? "" : "disabled"}>Whisper：更准，说完要等几秒（只在安装版里能用）</option></select></label>
         ${S.settings.srEngine === "whisper" ? `<label class="fld" style="margin-top:0"><span>Whisper 用哪个模型</span><select data-chg="asrmodel" data-rerender="1"><option value="base" ${(L.asrModel || "base") === "base" ? "selected" : ""}>快：base.en（约 80 MB）</option><option value="small" ${L.asrModel === "small" ? "selected" : ""}>准一些：small.en（约 250 MB，慢一两秒）</option></select></label>` : ""}
         ${S.settings.srEngine === "whisper" ? `<p class="small muted" style="margin:-4px 0 8px">说完停一下，会自动结束录音。第一次用要下载约 80 MB 的模型（在“存储空间”里管理）。Whisper 偶尔会把很小的口误自动“修好”，所以语法检查可能漏掉个别错误。</p>` : ""}
@@ -9410,54 +9443,118 @@ const BT = (() => {
   const RIG_SVG = `<svg xmlns="${NS}" viewBox="0 0 220 300" class="bt-sprite bt-rig" role="img" aria-label="原创角色">
   <g data-j="root" style="transform-origin:110px 170px">
     <g data-j="farThigh" style="transform-origin:104px 170px">
-      <rect x="95" y="164" width="18" height="64" rx="8" fill="#175A63"/>
+      <path d="M92 166 Q92 158 104 158 Q116 158 116 166 L112 226 L96 226 Z" fill="#182544" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M93 172 L104 170 L102 214 L96 216 Z" fill="#B9C2D2" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M95 176 L99 175 L98 208 L96 209 Z" fill="#2FA7C9"/>
       <g data-j="farShin" style="transform-origin:104px 226px">
-        <rect x="96" y="224" width="16" height="58" rx="6" fill="#C5CBC4"/>
-        <rect x="96" y="236" width="16" height="5" fill="#D58726"/>
-        <g data-j="farAnkle" style="transform-origin:104px 280px"><path d="M96 274 L112 274 L113 292 L82 292 Q83 283 96 280 Z" fill="#C5CBC4"/></g>
-        <ellipse cx="104" cy="226" rx="9" ry="7" fill="#C5CBC4"/>
+        <path d="M94 228 L114 228 L112 258 L116 280 L92 280 L96 258 Z" fill="#B9C2D2" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M105 232 L113 232 L111 258 L114 278 L106 278 Z" fill="#000000" opacity="0.16"/>
+        <path d="M96 242 L112 240 L112 244 L96 246 Z" fill="#2FA7C9"/>
+        <path d="M98 250 L101 250 L100 272 L98 272 Z" fill="#FFFFFF" opacity="0.35"/>
+        <g data-j="farAnkle" style="transform-origin:104px 280px">
+          <path d="M93 271 L115 271 L117 292 L78 292 Q76 282 90 279 Z" fill="#B9C2D2" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M78 292 L117 292 L117 287 L79 287 Z" fill="#182544"/>
+          <path d="M82 285 L91 281 L92 283.5 L83 287.5 Z" fill="#2FA7C9"/>
+          <path d="M104 274 L114 274 L115 286 L105 286 Z" fill="#000000" opacity="0.14"/>
+        </g>
+        <path d="M92 220 L104 212 L116 220 L113 234 L104 230 L95 234 Z" fill="#B9C2D2" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M100 222 L104 219 L108 222 L104 226 Z" fill="#2FA7C9"/>
       </g>
     </g>
     <g data-j="nearThigh" style="transform-origin:116px 170px">
-      <rect x="107" y="164" width="18" height="64" rx="8" fill="#1E6F7A"/>
+      <path d="M104 166 Q104 158 116 158 Q128 158 128 166 L124 226 L108 226 Z" fill="#23345E" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M121 168 L127 168 L123 222 L118 222 Z" fill="#000000" opacity="0.18"/>
+      <path d="M105 172 L116 170 L114 214 L108 216 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M107 176 L111 175 L110 208 L108 209 Z" fill="#55E6FF"/>
+      <path d="M112 173 L115 172.5 L113.5 210 L111.5 210.5 Z" fill="#FFFFFF" opacity="0.5"/>
       <g data-j="nearShin" style="transform-origin:116px 226px">
-        <rect x="108" y="224" width="16" height="58" rx="6" fill="#EEF1EA"/>
-        <rect x="108" y="236" width="16" height="5" fill="#F2A23A"/>
-        <g data-j="nearAnkle" style="transform-origin:116px 280px"><path d="M108 274 L124 274 L125 292 L94 292 Q95 283 108 280 Z" fill="#EEF1EA"/></g>
-        <ellipse cx="116" cy="226" rx="9" ry="7" fill="#EEF1EA"/>
+        <path d="M106 228 L126 228 L124 258 L128 280 L104 280 L108 258 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M117 232 L125 232 L123 258 L126 278 L118 278 Z" fill="#000000" opacity="0.14"/>
+        <path d="M108 242 L124 240 L124 244 L108 246 Z" fill="#55E6FF"/>
+        <path d="M109 241 L123 239" stroke="#FFFFFF" stroke-width="0.8" opacity="0.8"/>
+        <path d="M110 250 L113 250 L112 272 L110 272 Z" fill="#FFFFFF" opacity="0.75"/>
+        <g data-j="nearAnkle" style="transform-origin:116px 280px">
+          <path d="M105 271 L127 271 L129 292 L90 292 Q88 282 102 279 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M90 292 L129 292 L129 287 L91 287 Z" fill="#23345E"/>
+          <path d="M94 285 L103 281 L104 283.5 L95 287.5 Z" fill="#55E6FF"/>
+          <circle cx="98" cy="284" r="5" fill="#8FF3FF" opacity="0.25"/>
+          <path d="M116 274 L126 274 L127 286 L117 286 Z" fill="#000000" opacity="0.12"/>
+        </g>
+        <path d="M104 220 L116 212 L128 220 L125 234 L116 230 L107 234 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M112 222 L116 219 L120 222 L116 226 Z" fill="#55E6FF"/>
+        <path d="M107 221 L116 215" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
       </g>
     </g>
     <g data-j="torso" style="transform-origin:110px 170px">
       <g data-j="farUpper" style="transform-origin:101px 101px">
-        <rect x="94" y="98" width="14" height="44" rx="7" fill="#175A63"/>
-        <ellipse cx="101" cy="102" rx="9" ry="7" fill="#C5CBC4"/>
+        <path d="M93 106 L109 106 L107 142 L95 142 Z" fill="#182544" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M84 104 L88 90 L104 86 L116 94 L113 110 L104 104 L92 106 L86 112 Z" fill="#B9C2D2" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M88 96 L104 90 L113 96" fill="none" stroke="#2FA7C9" stroke-width="2"/>
         <g data-j="farFore" style="transform-origin:101px 140px">
-          <rect x="95" y="138" width="12" height="38" rx="6" fill="#C5CBC4"/>
-          <rect x="95" y="168" width="12" height="5" fill="#D58726"/>
-          <rect x="94" y="175" width="14" height="15" rx="5" fill="#C5CBC4" data-p="farHand"/>
+          <path d="M94 138 L108 138 L112 172 L90 172 Z" fill="#B9C2D2" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M101 140 L108 140 L111 170 L102 170 Z" fill="#000000" opacity="0.14"/>
+          <path d="M91 156 L111 156 L111 160 L91 160 Z" fill="#2FA7C9"/>
+          <path d="M108 144 L116 150 L111 168 Z" fill="#182544" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M91 174 L111 174 Q113 182 110 190 L93 191 Q89 182 91 174 Z" fill="#B9C2D2" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round" data-p="farHand"/>
+          <path d="M92 179 L109 179 M92 184 L109 184" stroke="#0A1020" stroke-width="1" opacity="0.55"/>
         </g>
       </g>
-      <rect x="102" y="84" width="11" height="16" rx="3" fill="#123E45"/>
-      <path d="M96 98 L120 100 Q127 104 125 116 L121 150 L124 174 L98 174 L100 150 Q92 132 92 112 Q92 100 96 98 Z" fill="#1E6F7A"/>
-      <path d="M97 104 L114 106 L112 140 L101 140 Q96 126 97 104 Z" fill="#2C8C98"/>
-      <rect x="101" y="118" width="3" height="10" rx="1" fill="#F2A23A"/>
-      <rect x="106" y="113" width="3" height="20" rx="1" fill="#F2A23A"/>
-      <rect x="111" y="119" width="3" height="8" rx="1" fill="#F2A23A"/>
-      <rect x="98" y="150" width="26" height="8" rx="2" fill="#EEF1EA"/>
-      <rect x="103" y="151" width="6" height="6" rx="1" fill="#F2A23A"/>
+      <rect x="100" y="82" width="14" height="18" rx="3" fill="#111A2E" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M92 97 L123 99 Q132 104 129 120 L123 150 L126 176 L96 176 L100 150 Q86 132 86 112 Q86 99 92 97 Z" fill="#23345E" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M122 104 Q129 110 127 120 L122 150 L116 150 L119 118 Q120 108 116 104 Z" fill="#000000" opacity="0.2"/>
+      <path d="M88 103 L123 100 Q129 105 127 117 L113 141 L102 141 Q90 128 88 103 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M108 101 L127 117 L113 141 L108 141 Z" fill="#000000" opacity="0.12"/>
+      <path d="M90 104 L123 101" stroke="#FFFFFF" stroke-width="2" opacity="0.75"/>
+      <path d="M91 108 L104 136 M124 106 L111 136" stroke="#55E6FF" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M94 104 L100 118 L92 110 Z M118 102 L113 116 L122 108 Z" fill="#2E4A86" stroke="#0A1020" stroke-width="1.1" stroke-linejoin="round"/>
+      <circle cx="107" cy="118" r="12" fill="#8FF3FF" opacity="0.28"/>
+      <path d="M107 108.5 L115 113 L115 123 L107 127.5 L99 123 L99 113 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M107 111.5 L112.2 114.5 L112.2 121.5 L107 124.5 L101.8 121.5 L101.8 114.5 Z" fill="#55E6FF"/>
+      <path d="M107 113.5 L110 115.3 L110 119 L107 117.2 L104 119 L104 115.3 Z" fill="#E8FDFF"/>
+      <path d="M99 142 L120 142 L118 150 L101 150 Z" fill="#2E4A86" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M100 146 L119 146 M109.5 142 L109.5 150" stroke="#0A1020" stroke-width="1" opacity="0.5"/>
+      <path d="M95 150 L127 150 L127 160 L95 160 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M100 151.5 L110 151.5 L110 158.5 L100 158.5 Z" fill="#23345E" stroke="#0A1020" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M102 153 L108 153 L108 157 L102 157 Z" fill="#55E6FF"/>
+      <path d="M112 155 L125 155" stroke="#55E6FF" stroke-width="1.6"/>
+      <path d="M95 160 L108 160 L106 176 L97 178 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M98 163 L104 163 L103 172 L99 173 Z" fill="#2E4A86"/>
       <g data-j="head" style="transform-origin:107px 92px">
-        <ellipse cx="103" cy="70" rx="15" ry="17" fill="#1E6F7A"/>
-        <path d="M88 66 Q92 60 103 61 L103 74 Q94 76 89 72 Z" fill="#F2A23A"/>
-        <circle cx="110" cy="70" r="6" fill="#EEF1EA"/>
-        <circle cx="110" cy="70" r="2.5" fill="#F2A23A"/>
+        <path d="M86 66 C85 53 95 44 107 43 C119 42 126 51 126 63 C126 75 121 86 112 91 C104 95 94 92 89 85 C86 80 86 73 86 66 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M108 70 C118 70 125 66 126 60 C126.5 72 122 84 112 90.5 C108 92.5 104 93 100 92 C106 88 109 80 108 70 Z" fill="#23345E" stroke="#0A1020" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M115 46 C121 50 125 56 126 62 C123 58 119 55 113 53 Z" fill="#000000" opacity="0.12"/>
+        <path d="M90 52 C95 46 102 44 109 44" stroke="#FFFFFF" stroke-width="1.8" opacity="0.85" fill="none" stroke-linecap="round"/>
+        <path d="M92 47 C100 41.5 112 41 120 46" stroke="#55E6FF" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.9"/>
+        <ellipse cx="97" cy="64" rx="14" ry="7" fill="#8FF3FF" opacity="0.32"/>
+        <path d="M84.6 60.4 C92 56.4 104 55.8 112.4 58.6 L111.4 67.4 C103 69.6 92 69.8 85.4 67.6 C84.4 65.4 84.2 62.8 84.6 60.4 Z" fill="#7FEFFF" stroke="#0A1020" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M85.6 61.6 C92.6 58.6 103.6 58 111 60.4 L110.8 62.6 C103.4 61 92.8 61.4 85.8 64 Z" fill="#E8FDFF" opacity="0.95"/>
+        <path d="M84.4 58.8 C92 54 104.4 53.2 113 56.4" stroke="#0A1020" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <path d="M86 70 C93 72 103 72 110.6 69.8 L109 80 C104 87.6 96 89.6 90.6 86.2 C87.4 83.4 86 77.4 86 70 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M89.6 74.4 L98.6 75.2 M90.6 78.4 L98 79" stroke="#23345E" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M86.6 83 L91 89.4 L94.6 86.4" fill="#23345E" stroke="#0A1020" stroke-width="1.1" stroke-linejoin="round"/>
+        <circle cx="114.6" cy="66" r="6.4" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <circle cx="114.6" cy="66" r="3.4" fill="#23345E"/>
+        <circle cx="114.6" cy="66" r="1.9" fill="#55E6FF"/>
+        <path d="M118.6 61.4 L129.4 55 L126.4 65.6 L120.6 69.4 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M120.8 63.2 L127 59.4" stroke="#55E6FF" stroke-width="1.3"/>
       </g>
       <g data-j="nearUpper" style="transform-origin:115px 103px">
-        <rect x="108" y="100" width="14" height="44" rx="7" fill="#1E6F7A"/>
-        <ellipse cx="115" cy="104" rx="9" ry="7" fill="#EEF1EA"/>
+        <path d="M107 108 L124 108 L122 144 L109 144 Z" fill="#23345E" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M117 110 L124 110 L122 142 L117 142 Z" fill="#000000" opacity="0.2"/>
+        <path d="M98 106 L102 90 L119 85 L132 94 L128 112 L118 104 L106 106 L100 113 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M119 89 L132 94 L128 112 L118 104 Z" fill="#000000" opacity="0.12"/>
+        <path d="M102 96 L119 89 L130 96" fill="none" stroke="#55E6FF" stroke-width="2.2"/>
+        <path d="M103 92 L117 87" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8"/>
         <g data-j="nearFore" style="transform-origin:115px 142px">
-          <rect x="109" y="140" width="12" height="38" rx="6" fill="#EEF1EA"/>
-          <rect x="109" y="170" width="12" height="5" fill="#F2A23A"/>
-          <rect x="108" y="177" width="14" height="15" rx="5" fill="#EEF1EA" data-p="nearHand"/>
+          <path d="M108 140 L122 140 L126 174 L104 174 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M115 140 L122 140 L125 172 L116 172 Z" fill="#000000" opacity="0.13"/>
+          <path d="M105 156 L125 156 L125 160 L105 160 Z" fill="#55E6FF"/>
+          <path d="M106 155.4 L124 155.4" stroke="#FFFFFF" stroke-width="0.8" opacity="0.8"/>
+          <path d="M122 144 L131 150 L125 170 Z" fill="#23345E" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M110 144 L113 144 L112 154 L110 154 Z" fill="#FFFFFF" opacity="0.7"/>
+          <path d="M105 174 L125 174 Q127 182 124 190 L107 191 Q103 182 105 174 Z" fill="#E9EEF6" stroke="#0A1020" stroke-width="1.7" stroke-linejoin="round" data-p="nearHand"/>
+          <path d="M106 179 L123 179 M106 184 L123 184" stroke="#0A1020" stroke-width="1" opacity="0.55"/>
+          <path d="M107 176 L112 176" stroke="#FFFFFF" stroke-width="1.2" opacity="0.8"/>
         </g>
       </g>
     </g>
@@ -9497,7 +9594,7 @@ const BT = (() => {
     return {root:p.h, torso:p.torso, head:p.head, farUpper:p.farUpper, farFore:p.farFore, nearUpper:p.nearUpper, nearFore:p.nearFore,
       farThigh:ft, farShin:fs, nearThigh:nt, nearShin:ns, farAnkle:(p.farFootAngle || 0) - ft - fs, nearAnkle:(p.nearFootAngle || 0) - nt - ns};
   }
-  const RIG_COLORS = {dark:"#175A63", main:"#1E6F7A", far:"#C5CBC4", near:"#EEF1EA", acc1:"#D58726", acc2:"#F2A23A", chest:"#2C8C98", neck:"#123E45"};
+  const RIG_COLORS = {dark:"#182544", main:"#23345E", far:"#B9C2D2", near:"#E9EEF6", acc1:"#2FA7C9", acc2:"#55E6FF", chest:"#2E4A86", neck:"#111A2E"};
   function makeRig(pal, weapon){
     let src = RIG_SVG;
     if (pal) for (const k in RIG_COLORS) if (pal[k]) src = src.split(RIG_COLORS[k]).join(pal[k]);
@@ -9523,12 +9620,13 @@ const BT = (() => {
   const SHEET9 = ["idle", "light", "heavyWind", "heavy", "skillWind", "skill", "hit", "win", "lose"];
   const SHEET6 = ["idle", "light", "hit", "skill", "win", "lose"];
   const SHEET10 = SHEET9.concat(["skillMid"]);
-  const SHEET_ORDER = SHEET10;
-  const FALLBACK = {heavyWind:"idle", heavy:"light", skillWind:"skill", skillMid:"skill", light:"idle", skill:"idle", hit:"idle", win:"idle", lose:"idle"};
+  const SHEET11 = SHEET10.concat(["lightWind"]);
+  const SHEET_ORDER = SHEET11;
+  const FALLBACK = {heavyWind:"idle", heavy:"light", skillWind:"skill", skillMid:"skill", lightWind:"light", light:"idle", skill:"idle", hit:"idle", win:"idle", lose:"idle"};
   const OLD_NAME = {punch:"light", special:"skill"};
   const POSE_FOR = {idle:"idle", windup:"idle", punch:"light", palm:"light", kickWind:"heavyWind", raise:"heavyWind", palmsBack:"heavyWind", kick:"heavy", chop:"heavy", palms:"heavy",
-    charge:"skillWind", low:"skillWind", mid:"skillMid", fire:"skill", rise:"skill", recoil:"hit", win:"win", kneel:"lose"};
-  const POSE_NAMES = {idle:"起手", light:"轻击", heavyWind:"重击·蓄力", heavy:"重击", skillWind:"技能·蓄力", skillMid:"技能·出手", skill:"技能", hit:"被打中", win:"赢", lose:"输"};
+    charge:"skillWind", low:"skillWind", mid:"skillMid", fire:"skill", rise:"skill", recoil:"hit", win:"win", kneel:"lose", leap:"lightWind", jumpChop:"light"};
+  const POSE_NAMES = {idle:"起手", light:"轻击", heavyWind:"重击·蓄力", heavy:"重击", skillWind:"技能·蓄力", skillMid:"技能·出手", skill:"技能", lightWind:"轻击·起手", hit:"被打中", win:"赢", lose:"输"};
   /* 三套招式。r = 起手式高度 ÷ 站直身高（在用户的姿势表上量的），cm = 默认身高。说明里的 shodai / seven / bemular 分别对应 brawler / blade / beam */
   const MOVESETS = {
     brawler:{name:"格斗型", desc:"出拳、侧踢、十字手光线", light:"punch", heavy:"kick", skill:"wideBeam", r:0.802, cm:180},
@@ -9538,19 +9636,23 @@ const BT = (() => {
   const MS_ALIAS = {shodai:"brawler", seven:"blade", bemular:"beam", fighter:"brawler", sword:"blade"};
   /* 每个位置能选的招。以后有新特效，就在对应的位置加一招，不再加整套招式 */
   const MOVE_LIST = {
-    light:[["punch", "出拳"], ["thrust", "突刺"], ["laserThin", "细光线"]],
-    heavy:[["kick", "侧踢"], ["fireKick", "火焰踢"], ["kesa", "斩击"], ["laserThick", "粗光线"]],
-    skill:[["wideBeam", "十字手光线"], ["stormBeam", "电光十字光线"], ["crescent", "剑气斩"]]
+    light:[["punch", "出拳"], ["thrust", "突刺"], ["laserThin", "细光线"], ["jumpChop", "跳劈手刀"]],
+    heavy:[["kick", "侧踢"], ["fireKick", "火焰踢"], ["kesa", "斩击"], ["laserThick", "粗光线"], ["flyKick", "飞踢"]],
+    skill:[["wideBeam", "十字手光线"], ["stormBeam", "电光十字光线"], ["crescent", "剑气斩"], ["zepellion", "小臂光线"]]
   };
   /* 模板：一次把三个位置都填好（原来的三套招式；电光型是泽塔那一套）。r = 起手式高度 ÷ 站直身高 */
   const TEMPLATES = {
     brawler:{name:"格斗型", light:"punch", heavy:"kick", skill:"wideBeam", hover:false, r:0.80, cm:180},
     blade:  {name:"剑士型", light:"thrust", heavy:"kesa", skill:"crescent", hover:false, r:0.83, cm:180},
     beam:   {name:"光线型", light:"laserThin", heavy:"laserThick", skill:"wideBeam", hover:true, r:1.0, cm:183},
-    storm:  {name:"电光型", light:"punch", heavy:"fireKick", skill:"stormBeam", hover:false, r:0.852, cm:185}
+    storm:  {name:"电光型", light:"punch", heavy:"fireKick", skill:"stormBeam", hover:false, r:0.852, cm:185},
+    /* 迪迦那一套（第十四节）：起手式几乎站直，r 0.97 */
+    tiga:   {name:"迪迦型", light:"jumpChop", heavy:"flyKick", skill:"zepellion", hover:false, r:0.97, cm:180}
   };
   const tplOf = id => TEMPLATES[MS_ALIAS[id] || id] ? (MS_ALIAS[id] || id) : null;
   /* 这套组合正好是哪个模板；对不上就是“自定义” */
+  /* 模板的名字：直接写三招（不写“格斗型”这类笼统的叫法，放在 GitHub 上也通用） */
+  const tplLabel = t => { const n = (s, id) => (MOVE_LIST[s].find(x => x[0] === id) || [id, id])[1]; return `${n("light", t.light)} · ${n("heavy", t.heavy)} · ${n("skill", t.skill)}${t.hover ? "（悬浮）" : ""}`; };
   const tplMatch = lo => Object.keys(TEMPLATES).find(k => ["light", "heavy", "skill", "hover"].every(x => TEMPLATES[k][x] === lo[x])) || "custom";
   /* 旧记录（moveset）读出来变成 loadout 和 r */
   function loadoutOf(rec){
@@ -9595,7 +9697,7 @@ const BT = (() => {
       areas.push(area);
     }
     const big = []; for (let id = 1; id <= n; id++) if (areas[id] >= 0.004 * w * h) big.push(id);
-    if (![1, 6, 9, 10].includes(big.length)) throw new Error(`找到了 ${big.length} 个人物：请用只有 1 个人物的图，或者 3 行 3 列共 9 个姿势的姿势表（起手、轻击、重击·蓄力 / 重击、技能·蓄力、技能 / 被打中、赢、输），10 姿势表第 4 行再加一个技能·出手；以前的 2 行 3 列 6 姿势表也可以。背景要是纯绿色。`);
+    if (![1, 6, 9, 10, 11].includes(big.length)) throw new Error(`找到了 ${big.length} 个人物：请用只有 1 个人物的图，或者 3 行 3 列共 9 个姿势的姿势表（起手、轻击、重击·蓄力 / 重击、技能·蓄力、技能 / 被打中、赢、输），10 姿势表第 4 行再加一个技能·出手；以前的 2 行 3 列 6 姿势表也可以。背景要是纯绿色。`);
     const bb = {}; big.forEach(id => { bb[id] = {x0:w, y0:h, x1:-1, y1:-1}; });
     for (let i = 0; i < w * h; i++){ const b = bb[lab[i]]; if (!b) continue; const x = i % w, y = (i - x) / w; if (x < b.x0) b.x0 = x; if (x > b.x1) b.x1 = x; if (y < b.y0) b.y0 = y; if (y > b.y1) b.y1 = y; }
     /* 4. 姿势表的顺序：先按脚的高度分成上下两行，每行再从左到右 */
@@ -9605,7 +9707,7 @@ const BT = (() => {
       /* 按脚的高度每 3 个分一行，每行从左到右 */
       const byFeet = big.slice().sort((a, b) => bb[a].y1 - bb[b].y1); const rows = [];
       for (let i = 0; i < byFeet.length; i += 3) rows.push(byFeet.slice(i, i + 3).sort((a, b) => bb[a].x0 - bb[b].x0));
-      const names = big.length === 10 ? SHEET10 : big.length === 9 ? SHEET9 : SHEET6; order = rows.flat().map((id, i) => [names[i], id]);
+      const names = big.length === 11 ? SHEET11 : big.length === 10 ? SHEET10 : big.length === 9 ? SHEET9 : SHEET6; order = rows.flat().map((id, i) => [names[i], id]);
     }
     /* 5. 每个人物单独裁出来，记下脚、最前点、光线起点、各只脚的位置 */
     const poses = {};
@@ -9676,7 +9778,7 @@ const BT = (() => {
     const custom = tplMatch(lo) === "custom";
     const r = rec.rSet || (custom && rec.r) ? rec.r : t.r, cm = rec.cmSet || (custom && rec.cm) ? rec.cm : t.cm, big = !!(giant && rec.giantM);
     const ready = big ? rec.giantM * r : 0;
-    return {loadout:lo, r, cm, kh: big ? ready / Math.max(CITY_READY_M, ready) : ((cm / 100) * r) / READY_M, giantReady: big ? Math.max(CITY_READY_M, ready) : 0, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowScale: rec.glowScale || 1, glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
+    return {loadout:lo, r, cm, kh: big ? ready / Math.max(CITY_READY_M, ready) : ((cm / 100) * r) / READY_M, giantReady: big ? Math.max(CITY_READY_M, ready) : 0, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowScale: rec.glowScale || 1, glowName: rec.glowName || "", glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
   }
 
   /* ---------- 内置背景（量过一次：店门口的售货机 1.83 米定比例，近处车道的中间定脚的位置） ---------- */
@@ -9748,19 +9850,20 @@ const BT = (() => {
   function loadImg(src){ if (!imgCache.has(src)) imgCache.set(src, new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; })); return imgCache.get(src); }
   const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
   /* 眼睛、胸灯：用遮罩取出原图这一块盖回去（颜色不受场景影响），再叠一次亮芯，最后两层光晕（贴着轮廓，不溢出） */
-  async function addGlow(g, img, p, w, h){
+  async function addGlow(g, img, p, w, h, gk){
+    gk = gk || 1;   /* 迪迦的灯是别人的 0.55 倍（GLOW_K） */
     const m0 = await loadImg(p.png), s = p.s || 1, m = {width:m0.width * s, height:m0.height * s}; const px = p.x * s, py = p.y * s;
     const put = (gg) => gg.drawImage(m0, px, py, m.width, m.height);
     const t = canvasOf(w, h), tg = t.getContext("2d");
     tg.drawImage(img, 0, 0); tg.globalCompositeOperation = "destination-in"; put(tg);
     g.globalCompositeOperation = "source-over"; g.drawImage(t, 0, 0);
     const eye = p.kind === "eye";
-    g.globalCompositeOperation = "lighter"; g.globalAlpha = eye ? 0.38 : 0.26; g.drawImage(t, 0, 0); g.globalAlpha = 1;
+    g.globalCompositeOperation = "lighter"; g.globalAlpha = (eye ? 0.38 : 0.26) * gk; g.drawImage(t, 0, 0); g.globalAlpha = 1;
     const halo = canvasOf(w, h), hg = halo.getContext("2d");
     put(hg); hg.globalCompositeOperation = "source-in"; hg.fillStyle = p.color; hg.fillRect(0, 0, w, h);
     const sz = Math.max(m.width, m.height); g.globalCompositeOperation = "lighter";
-    g.filter = `blur(${(sz * 0.12 + 1).toFixed(1)}px)`; g.globalAlpha = eye ? 0.62 : 0.52; g.drawImage(halo, 0, 0);
-    g.filter = `blur(${(sz * 0.42 + 2.5).toFixed(1)}px)`; g.globalAlpha = eye ? 0.24 : 0.22; g.drawImage(halo, 0, 0);
+    g.filter = `blur(${(sz * 0.12 + 1).toFixed(1)}px)`; g.globalAlpha = (eye ? 0.62 : 0.52) * gk; g.drawImage(halo, 0, 0);
+    g.filter = `blur(${(sz * 0.42 + 2.5).toFixed(1)}px)`; g.globalAlpha = (eye ? 0.24 : 0.22) * gk; g.drawImage(halo, 0, 0);
     g.filter = "none"; g.globalAlpha = 1;
   }
   /* 赛文的玻璃护目镜：上缘白色反光、下缘琥珀色加深、两道斜向高光、一个十字小闪光点。只反光，不发光 */
@@ -9778,10 +9881,7 @@ const BT = (() => {
     cg.lineWidth = Math.max(1.4, mh * 0.2); cg.beginPath(); cg.moveTo(p.x + mw * 0.2, p.y + mh * 1.1); cg.lineTo(p.x + mw * 0.36, p.y - mh * 0.1); cg.stroke();
     cg.lineWidth = Math.max(0.8, mh * 0.08); cg.beginPath(); cg.moveTo(p.x + mw * 0.31, p.y + mh * 1.1); cg.lineTo(p.x + mw * 0.45, p.y - mh * 0.1); cg.stroke();
     g.globalCompositeOperation = "lighter"; g.globalAlpha = 0.45; g.drawImage(clip(c), 0, 0); g.globalAlpha = 1;
-    const sx = p.x + mw * 0.72, sy = p.y + mh * 0.18, r = Math.max(2.5, mh * 0.4); g.globalCompositeOperation = "lighter";
-    const sp = g.createRadialGradient(sx, sy, 0, sx, sy, r); sp.addColorStop(0, "rgba(255,255,255,.6)"); sp.addColorStop(0.35, "rgba(255,250,220,.2)"); sp.addColorStop(1, "rgba(255,250,220,0)");
-    g.fillStyle = sp; g.fillRect(sx - r, sy - r, r * 2, r * 2);
-    g.strokeStyle = "rgba(255,255,255,.45)"; g.lineWidth = 1; g.beginPath(); g.moveTo(sx - r * 0.9, sy); g.lineTo(sx + r * 0.9, sy); g.moveTo(sx, sy - r * 0.9); g.lineTo(sx, sy + r * 0.9); g.stroke();
+    /* 上沿的小十字闪光去掉了（第十四节） */
   }
   /* 重画一张姿势图：亮度、饱和度、对比度 → 正片叠底环境色 → 亮面 screen → 暗面 multiply → 边缘光 lighter → destination-in 保住轮廓 → 最后画角色自己的灯 */
   async function bakePose(src, L, mirror, parts){
@@ -9801,7 +9901,7 @@ const BT = (() => {
       g.globalCompositeOperation = "lighter"; g.globalAlpha = L.ra; g.filter = `blur(${(d * 0.45).toFixed(1)}px)`; g.drawImage(r, 0, 0); g.filter = "none"; g.globalAlpha = 1;
       g.globalCompositeOperation = "destination-in"; g.drawImage(img, 0, 0);
     } else g.drawImage(img, 0, 0);
-    for (const p of parts || []){ if (p.kind === "visor") await addGlass(g, p, w, h); else await addGlow(g, img, p, w, h); }
+    for (const p of parts || []){ if (p.kind === "visor") await addGlass(g, p, w, h); else await addGlow(g, img, p, w, h, p.gk || 1); }
     g.globalCompositeOperation = "source-over";
     const blob = await new Promise(res => c.toBlob(res, "image/png")); return URL.createObjectURL(blob);
   }
@@ -9815,6 +9915,7 @@ const BT = (() => {
     return bakeCache.get(id);
   }
   /* 发光部位.json（角色 → 姿势 → {w, h, parts}）：按姿势图的宽高对上是哪个角色；至少 3 个姿势对得上（相差不超过 2 像素） */
+  const GLOW_K = {tiga:0.55};
   function glowMatch(json, poses){
     let best = null;
     for (const k of Object.keys(json || {})){
@@ -9863,7 +9964,7 @@ const BT = (() => {
     const CODE_PROXY = document.createElement("i");
     const box = el => { if (el === CODE_PROXY && A.cm){ const b = A.cm.box(); return {x:b.x, y:b.y, w:b.w, h:b.h}; } const s = stage.getBoundingClientRect(), r = el.getBoundingClientRect(); return {x:r.left - s.left, y:r.top - s.top, w:r.width, h:r.height}; };
     const ghostFilter = () => getComputedStyle(document.documentElement).getPropertyValue("--bt-ghost-filter").trim();
-    const fil = (f, extra) => (f === ghost && !ghost.monster ? ghostFilter() + " " : "") + extra;
+    const fil = (f, extra) => extra;   /* 冷色在外层（.bt-breath）上，图片这一层的滤镜怎么变都不会盖掉它 */
     const removeAfter = (anim, el) => anim.finished.then(() => el.remove(), () => el.remove());
     function showPose(f, name){
       if (!f.poseImgs) return; let target = name; while (target && !f.poseImgs[target]) target = FALLBACK[target]; target = target || "idle"; if (target === f.active) return;
@@ -9874,7 +9975,7 @@ const BT = (() => {
     /* 角色：poses 为空就用原创小人 */
     A.setChar = (poses, meta) => {
       A.dropCode(); A.clear(); ghost.monster = null; ghost.classList.remove("monster", "rigmon", "imgmon"); ghost.style.height = "";
-      meta = meta || {loadout:rigLoadout(), kh:1, hover:false}; A.loadout = meta.loadout || rigLoadout(); A.giantReady = meta.giantReady || 0;
+      meta = meta || {loadout:rigLoadout(), kh:1, hover:false}; A.loadout = meta.loadout || rigLoadout(); A.giantReady = meta.giantReady || 0; A.rNow = meta.r || 0;
       [you, ghost].forEach(f => {
         /* 每个出场的人自己的身高（kh）和悬浮 */
         f.style.setProperty("--kh", String(poses ? meta.kh || 1 : 1)); f.classList.toggle("hover", !!meta.hover); f.classList.remove("landed");
@@ -9893,7 +9994,7 @@ const BT = (() => {
         f.active = "idle"; f.rig = null; f.classList.remove("rigged");
       });
       A.custom = !!poses;
-      [you, ghost].forEach(f => { f.glow = poses ? meta.glow || null : null; f.glowScale = meta.glowScale || 1; f.glowId = poses && meta.glow ? (meta.glowId || "g") + "@" + (meta.glowScale || 1) : ""; });
+      [you, ghost].forEach(f => { f.glow = poses ? meta.glow || null : null; f.glowScale = meta.glowScale || 1; f.glowName = meta.glowName || ""; f.segName = meta.loadout && meta.loadout.skill === "zepellion" ? "tiga" : ""; f.glowId = poses && meta.glow ? (meta.glowId || "g") + "@" + (meta.glowScale || 1) : ""; });
       requestAnimationFrame(() => { layout(); relight(true); });
     };
     /* 游戏模式：对手换成怪物（原创的 SVG），不翻转、不调冷色 */
@@ -9938,7 +10039,12 @@ const BT = (() => {
       if (A.cm){ const d = box(CODE_PROXY); burst(d.x + d.w / 2, d.y + d.h / 2, Math.min(220, d.w * 1.2)); shake(7); await A.cm.play("lose"); return; }
       const d = box(bodyOf(ghost)); burst(d.x + d.w / 2, d.y + d.h / 2, Math.min(220, d.w * 1.4)); shake(7);
       for (let i = 0; i < 6; i++){ const s = document.createElement("div"); s.className = "bt-spark"; s.style.left = d.x + d.w * (0.2 + Math.random() * 0.6) + "px"; s.style.top = d.y + d.h * (0.1 + Math.random() * 0.6) + "px"; fx.appendChild(s); removeAfter(s.animate([{transform:"scale(0)", opacity:0}, {transform:"scale(1.2) rotate(45deg)", opacity:1, offset:0.4}, {transform:"scale(.2) rotate(90deg)", opacity:0}], {duration:600, delay:i * 50, easing:"ease-out", fill:"both"}), s); }
-      await run(ghost, [{transform:"none", opacity:1}, {transform:"translateX(-12%) rotate(-14deg)", opacity:0.9, offset:0.4}, {transform:"translateX(-20%) translateY(8%) rotate(-30deg)", opacity:0}], {duration:620, easing:"ease-in", fill:"forwards"});
+      /* 跪倒、变灰，留在原地（以前是倒下淡出，看起来像直接消失了） */
+      ghost.classList.add("still"); land(ghost);
+      faceOf(ghost).animate([{filter:fil(ghost, "grayscale(0)")}, {filter:fil(ghost, loseFilter(ghost))}], {duration:560, fill:"forwards"});
+      if (ghost.rig) await pose(ghost, "kneel", 480, "ease-in");
+      else if (hasPose(ghost, "lose")) await pose(ghost, "kneel");
+      else await run(ghost, [{transform:"none"}, {transform:"translateY(6%) rotate(-16deg)"}], {duration:560, easing:"ease-in", fill:"forwards"});
     };
     /* 浮字：连击、弱点 */
     A.pop = (text, cls) => {
@@ -9961,6 +10067,13 @@ const BT = (() => {
       const pct = Math.max(0, Math.min(100, (v / (max || 100)) * 100)) + "%"; bar.querySelector(".bt-fill").style.width = pct; bar.querySelector(".bt-trail").style.width = pct;
       const t = root.querySelector(".bt-youhp"); if (t) t.textContent = `${Math.max(0, Math.round(v))}/${max || 100}`;
     };
+    /* 代码怪物挨打：往后退一下再回来，身上一闪（模块自己的“被打中”姿势变化很小、只有 0.09 秒，看着像没动） */
+    function codeRecoil(big){
+      const ov = root.querySelector("svg.tm-overlay"); if (ov) ov.animate([{filter:"brightness(1)"}, {filter:"brightness(2.1)"}, {filter:"brightness(1)"}], {duration:200});
+      const base = A.cmDX || 0, push = -(big ? 28 : 15), t0 = performance.now();
+      const step = now => { if (!A.cm) return; const k = (now - t0) / 380; if (k >= 1){ A.cmDX = base; A.cm.layout(); return; } const e = k < 0.3 ? k / 0.3 : 1 - (k - 0.3) / 0.7; A.cmDX = base + push * e; A.cm.layout(); requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }
     /* 代码怪物挪位置：改 foot 的偏移，每帧 layout() 一次 */
     function slideCode(to, ms){
       const from = A.cmDX || 0, t0 = performance.now();
@@ -10082,14 +10195,34 @@ const BT = (() => {
     /* 扣血：打的是对手就扣对手的血；打的是你，交给 A.onYouHit（以后掉血用） */
     function dealt(def, d){ if (!(d > 0)) return; A.lastDmg += d; if (def === ghost) A.setHP(A.hp - d); else if (A.onYouHit) A.onYouHit(d); }
     function hurt(def, dir, dmg, big){
-      if (def === ghost && A.cm){ A.cm.play("hit"); dealt(def, dmg); return; }
+      if (def === ghost && A.cm){ A.cm.play("hit"); dealt(def, dmg); codeRecoil(big); return; }
       const face = faceOf(def);
       const on = {filter:fil(def, "brightness(3.2)")}, off = {filter:fil(def, "brightness(1)")};
       face.animate(big ? [off, on, off, on, off, on, off] : [off, on, off, on, off], {duration: big ? 620 : 300});
       const k = big ? 34 : 18; const tilt = def.rig || hasPose(def, "hit") ? 0 : dir * 4;
       def.animate([{transform:"none"}, {transform:`translateX(${dir * k}px) rotate(${tilt}deg)`, offset:0.3}, {transform:"none"}], {duration: big ? 620 : 340, easing:"ease-out"});
       if (def.rig || hasPose(def, "hit")) pose(def, "recoil", 90).then(() => wait(big ? 480 : 220)).then(() => { if (!def.classList.contains("still")) pose(def, "idle", 280); });
-      dealt(def, dmg);
+      sparksOn(def, big); dealt(def, dmg);
+    }
+    function sparksOn(f, big){
+      if (reduced()) return;
+      const fb = f.getBoundingClientRect(), bb = bodyOf(f).getBoundingClientRect();
+      const x = bb.left - fb.left + bb.width * 0.47, y = bb.top - fb.top + bb.height * 0.33, n = big ? 26 : 18;
+      const S = Math.min(200, bb.width * (big ? 1.05 : 0.8));
+      const add = (cls, css) => { const d = document.createElement("div"); d.className = cls; d.style.cssText = css; f.appendChild(d); return d; };
+      const flash = add("bt-hflash", `left:${x - S / 2}px;top:${y - S / 2}px;width:${S}px;height:${S}px`);
+      flash.animate([{transform:"scale(.25)", opacity:1}, {transform:"scale(1)", opacity:0.85, offset:0.35}, {transform:"scale(1.3)", opacity:0}], {duration:360, easing:"ease-out"}).finished.then(() => flash.remove());
+      const a0 = Math.random() * 180, nst = big ? 3 : 2;
+      for (let r = 0; r < nst; r++){ const ang = a0 + r * (180 / nst); const st = add("bt-hstar", `left:${x - S * 0.7}px;top:${y - 2}px;width:${S * 1.4}px;transform:rotate(${ang}deg)`);
+        st.animate([{transform:`rotate(${ang}deg) scaleX(.2)`, opacity:1}, {transform:`rotate(${ang}deg) scaleX(1)`, opacity:0}], {duration:260, easing:"ease-out"}).finished.then(() => st.remove()); }
+      for (let i = 0; i < n; i++){
+        const a = Math.random() * Math.PI * 2, L = 14 + Math.random() * 24, D = (big ? 85 : 60) + Math.random() * 60, dx = Math.cos(a) * D, dy = Math.sin(a) * D, fall = 30 + Math.random() * 40;
+        const sp = add("bt-hspark", `left:${x}px;top:${y - 2}px;width:${L}px`);
+        sp.animate([{transform:`translate(0px,0px) rotate(${a}rad) scaleX(1)`, opacity:1}, {transform:`translate(${dx * 0.6}px,${dy * 0.6 + fall * 0.2}px) rotate(${Math.atan2(dy + fall * 0.5, dx)}rad) scaleX(.8)`, opacity:0.9, offset:0.5},
+          {transform:`translate(${dx}px,${dy + fall}px) rotate(${Math.atan2(dy + fall * 1.5, dx)}rad) scaleX(.3)`, opacity:0}], {duration:420 + Math.random() * 300, easing:"cubic-bezier(.15, .7, .5, 1)"}).finished.then(() => sp.remove());
+      }
+      for (let i = 0; i < (big ? 12 : 8); i++){ const a = Math.random() * Math.PI * 2, D = 20 + Math.random() * 50, e = add("bt-hember", `left:${x - 2}px;top:${y - 2}px`);
+        e.animate([{transform:"translate(0,0)", opacity:1}, {transform:`translate(${Math.cos(a) * D}px,${Math.sin(a) * D + 26}px)`, opacity:0}], {duration:500 + Math.random() * 400, easing:"ease-out"}).finished.then(() => e.remove()); }
     }
     /* 弧光：kind 有 kesa（从高处后方斩到低处前方）、rise（上撩）、kick（横扫）；画的是往左打的样子，往右打就镜像 */
     function arcSwoosh(cx, cy, size, kind, glow, dir){
@@ -10128,6 +10261,14 @@ const BT = (() => {
       return svg;
     }
     /* 近战：（可选的）蓄力姿势 → 冲刺 → 命中的姿势和特效 → 回位 */
+    /* 出招那张图最前面的点（拳头、脚、刀尖）在原地时会落在哪里（不用真的切过去）；翻转的一方按脸的中线镜像 */
+    function poseFront(f, name){
+      const q = f.poseImgs[name], fr = box(faceOf(f));
+      const ih = (fr.h * parseFloat(q.img.style.height)) / 100, iw = (ih * q.w) / q.h;
+      const x0 = fr.x + (fr.w * parseFloat(q.img.style.left || "0")) / 100, y0 = fr.y + fr.h - ih;
+      const lx = x0 - fr.x + (q.front.x / q.w) * iw;
+      return {x: mirrored(f) ? fr.x + fr.w - lx : fr.x + lx, y: y0 + (q.front.y / q.h) * ih};
+    }
     async function melee(att, def, dir, dmg, o){
       const token = A.token; const a = box(bodyOf(att)), d = box(bodyOf(def));
       const gapOf = r => (dir < 0 ? r.x - (d.x + d.w) : d.x - (r.x + r.w));
@@ -10135,24 +10276,36 @@ const BT = (() => {
       pose(att, o.wind || "windup", windMs); if (o.onWind) o.onWind();
       await run(att, [{transform:"none"}, {transform:`translateX(${-dir * back}px)`}], {duration:windMs, easing:"ease-out"});
       if (token !== A.token) return;
-      pose(att, o.hit, 140, "cubic-bezier(.3, 0, .6, 1)");
-      /* 冲到哪里：出招那一刻最前面的点（拳头、脚尖、刀刃）要打进对手身体四成，不是轮廓刚碰上就停 */
-      const fp = frontPoint(att), aimX = dir < 0 ? d.x + d.w * 0.6 : d.x + d.w * 0.4;
-      const dist = Math.max(0, dir * (aimX - fp.x) - back);
-      await run(att, [{transform:`translateX(${-dir * back}px)`}, {transform:`translateX(${dir * dist}px)`}], {duration:o.dashMs || 140, easing:"cubic-bezier(.55, 0, .9, .45)"});
-      if (token !== A.token) return;
-      const hx = dir < 0 ? d.x + d.w * 0.85 : d.x + d.w * 0.15, hy = d.y + d.h * (o.hy || 0.3);
+      pose(att, o.hit, 140, "cubic-bezier(.3, 0, .6, 1)"); if (o.onHit) o.onHit();
+      /* 冲多远：出招点要打进对方身体 62% 处（第十七节） */
+      const tx = dir < 0 ? d.x + d.w * 0.62 : d.x + d.w * 0.38, hitName = POSE_FOR[o.hit] || o.hit;
+      let dist;
+      if (att.rig){ const fp = frontPoint(att); dist = Math.max(0, dir * (tx - fp.x) - back); }   /* 原创小人：按出拳的那只手算 */
+      else if (att.poseImgs && att.poseImgs[hitName] && att.poseImgs[hitName].front){ const sp = poseFront(att, hitName), restX = sp.x + dir * back; dist = Math.max(0, (tx - restX) * dir); }
+      else { const a2 = box(bodyOf(att)); dist = Math.max(0, gapOf(a2) - back) + a2.w * 0.04; }
+      /* 三段动画（冲刺、补一下、走回原位）都留着，走回原位以后一起取消：不然冲刺的终点会留下来，两个人贴在一起（第十八节） */
+      const legs = []; const leg = (kf, opt) => { const an = att.animate(kf, Object.assign({fill:"forwards"}, opt)); legs.push(an); return an.finished.catch(() => {}); };
+      const clearLegs = () => legs.forEach(an => an.cancel());
+      await leg([{transform:`translateX(${-dir * back}px)`}, {transform:`translateX(${dir * dist}px)`}], {duration:o.dashMs || 140, easing:"cubic-bezier(.55, 0, .9, .45)"});
+      if (token !== A.token){ clearLegs(); return; }
+      /* 冲完再看一眼：出招点还没到对方身体里，就用 55 毫秒补一下，然后才出特效和伤害 */
+      { const fx0 = frontPoint(att).x;   /* 拳头、脚、刀尖（原创小人是出拳的那只手） */
+        const need = (tx - fx0) * dir; if (need > 3){ await leg([{transform:`translateX(${dir * dist}px)`}, {transform:`translateX(${dir * (dist + need)}px)`}], {duration:55, easing:"linear"}); dist += need; } }
+      if (token !== A.token){ clearLegs(); return; }
+      /* 击中特效落在被打的人身上（第十四节）：不是对方图片的边缘 */
+      const hx = d.x + d.w * (dir < 0 ? 0.6 : 0.4), hy = d.y + d.h * (o.hy || 0.32);
       o.effect(hx, hy, d); if (o.breaks && def === ghost) A.breakShields(o.breaks);
       hurt(def, dir, dmg, !!o.big); damageNumber(hx - 10, hy - 30, dmg); shake(o.big ? 8 : 5);
       if (att.rig) pose(att, "idle", 260); else wait(o.hold || 130).then(() => { if (!att.classList.contains("still")) pose(att, "idle"); });
-      await run(att, [{transform:`translateX(${dir * dist}px)`}, {transform:"none"}], {duration:260, easing:"ease-out"});
+      await leg([{transform:`translateX(${dir * dist}px)`}, {transform:"none"}], {duration:260, easing:"ease-out"});
+      clearLegs();
     }
     /* 红色掌心炮：细的单手（轻击），粗的双掌、持续打 6 下（重击） */
     async function palmLaser(att, def, dir, dmg, thick, o){
       const token = A.token; const face = faceOf(att);
       if (thick){
         pose(att, "palmsBack"); await wait(40);
-        await chargeIn(() => frontPoint(att), box(bodyOf(att)).h, 600, "red", "redHaze");
+        await chargeIn(() => handPoint(att), box(bodyOf(att)).h, 600, "red", "redHaze");
         if (token !== A.token) return;
       }
       pose(att, thick ? "palms" : "palm"); await wait(40);
@@ -10331,7 +10484,8 @@ const BT = (() => {
       blue:[[0, "rgba(255,255,255,1)"], [0.18, "rgba(215,248,255,.95)"], [0.45, "rgba(110,205,255,.45)"], [1, "rgba(40,120,255,0)"]],
       haze:[[0, "rgba(150,225,255,.55)"], [1, "rgba(60,150,255,0)"]],
       red:[[0, "rgba(255,255,255,1)"], [0.2, "rgba(255,215,225,.95)"], [0.5, "rgba(255,80,110,.5)"], [1, "rgba(255,30,60,0)"]],
-      redHaze:[[0, "rgba(255,120,140,.5)"], [1, "rgba(255,40,70,0)"]]
+      redHaze:[[0, "rgba(255,120,140,.5)"], [1, "rgba(255,40,70,0)"]],
+      white:[[0, "rgba(255,255,255,1)"], [0.25, "rgba(250,250,255,.9)"], [0.55, "rgba(232,236,255,.35)"], [1, "rgba(220,225,255,0)"]]
     };
     function spr(name){
       if (!SPR[name]){ const c = document.createElement("canvas"), n = 64, r = n / 2; c.width = c.height = n; const g = c.getContext("2d"), gr = g.createRadialGradient(r, r, 0, r, r, r); SPR_STOPS[name].forEach(([o, col]) => gr.addColorStop(o, col)); g.fillStyle = gr; g.fillRect(0, 0, n, n); SPR[name] = c; }
@@ -10643,6 +10797,291 @@ const BT = (() => {
       if (!def.classList.contains("still")) pose(def, "idle", 280);
       await pose(att, "idle", 300);
     }
+    /* ---------- 对战功能更新说明 v4 第十四到二十四节的新招式：出招方 att、挨打方 def、方向 dir 都从参数来，“昨天的你”也能用 ---------- */
+    /* 重击打中的那一点出一圈冲击环 */
+    function shockRing(x, y, R){
+      const r = document.createElement("div"); r.className = "bt-shockring";
+      r.style.cssText = `left:${x - R}px;top:${y - R}px;width:${R * 2}px;height:${R * 2}px`; fx.appendChild(r);
+      r.animate([{transform:"scale(.15) scaleX(.6)", opacity:1}, {transform:"scale(1) scaleX(.6)", opacity:0}], {duration:360, easing:"ease-out"}).finished.then(() => r.remove());
+    }
+    /* 脚下扬起的烟尘；d：往哪边扬 */
+    function dustAt(x, y, size, d){
+      if (reduced()) return;
+      for (let i = 0; i < 9; i++){
+        const p = document.createElement("div"); p.className = "bt-dust";
+        const S = size * (0.12 + Math.random() * 0.14), ox = (Math.random() - 0.3) * size * 0.25;
+        p.style.cssText = `left:${x + ox - S / 2}px;top:${y - S * 0.7}px;width:${S}px;height:${S * 0.75}px`; fx.appendChild(p);
+        const dx = d * size * (0.1 + Math.random() * 0.35), dy = -size * (0.05 + Math.random() * 0.16);
+        p.animate([{transform:"translate(0,0) scale(.4)", opacity:0.85}, {transform:`translate(${dx}px,${dy}px) scale(1.5)`, opacity:0}], {duration:600 + Math.random() * 500, delay:Math.random() * 200, easing:"ease-out", fill:"backwards"}).finished.then(() => p.remove());
+      }
+    }
+    /* 向前跳的攻击（跳劈手刀、飞踢）：从起跳到落地是同一个动画。路线 y(u) = dy·u − 4·Hk·u·(1−u)，u = 1 时正好打中，
+       打中后沿同一条曲线继续往前往下落地，全程匀速；飞踢落地后接着蹭地（起始速度等于飞行时往前的速度，慢慢减到零） */
+    async function leapStrike(att, def, dir, dmg, o){
+      const token = A.token;
+      pose(att, "kickWind", o.crouchMs); await wait(o.crouchMs);
+      if (token !== A.token) return;
+      const d0 = box(bodyOf(def)), bh = box(bodyOf(att)).h, hitName = POSE_FOR[o.hitPose] || o.hitPose;
+      const sp = att.poseImgs && att.poseImgs[hitName] && att.poseImgs[hitName].front ? poseFront(att, hitName) : frontPoint(att);
+      const tx = dir < 0 ? d0.x + d0.w * o.deep : d0.x + d0.w * (1 - o.deep), ty = d0.y + d0.h * o.at;
+      const dx = tx - sp.x, dy = ty - sp.y, Hk = bh * o.arc;
+      const yAt = u => dy * u - 4 * Hk * u * (1 - u), uL = Math.max(1.02, 1 - dy / (4 * Hk));
+      const T = (x, y) => ({transform:`translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`});
+      const N = 14, kf = []; for (let k = 0; k <= N; k++){ const u = (uL * k) / N; kf.push(T(dx * u, yAt(u))); }
+      const flight = o.flyMs * uL; let slideMs = 0;
+      if (o.slide){ const v0 = Math.abs(dx) / o.flyMs; slideMs = Math.max(160, (3 * o.slide) / Math.max(0.05, v0)); }
+      const total = flight + slideMs, xL = dx * uL;
+      const keys = kf.map((k, n) => Object.assign({}, k, {offset:(flight * n / N) / total, easing:"linear"}));
+      if (o.slide){ keys[keys.length - 1].easing = "cubic-bezier(.33, 1, .68, 1)"; keys.push(Object.assign(T(xL + dir * o.slide, 0), {offset:1})); }
+      else keys[keys.length - 1].offset = 1;
+      pose(att, o.air, 110);
+      const later = (ms, fn) => setTimeout(() => { if (token === A.token) fn(); }, ms);
+      if (o.strikeAt < 1) later(o.flyMs * o.strikeAt, () => pose(att, o.hit, 100));
+      later(o.flyMs, () => {
+        const d = box(bodyOf(def)); o.effect(tx, ty, d); if (o.breaks && def === ghost) A.breakShields(o.breaks);
+        hurt(def, dir, dmg, !!o.big); damageNumber(tx - 10, ty - 30, dmg); shake(o.big ? 10 : 6); if (o.ring) shockRing(tx, ty, d.h * 0.2);
+      });
+      if (o.land) later(Math.max(o.flyMs + 40, flight - 90), () => pose(att, o.land, 120));
+      if (o.slide) later(flight - 10, () => { const fb = box(bodyOf(att)); dustAt(dir < 0 ? fb.x + fb.w * 0.4 : fb.x + fb.w * 0.6, fb.y + fb.h, fb.h, -dir); });
+      else if (o.dust) later(flight - 10, () => { const fb = box(bodyOf(att)); dustAt(fb.x + fb.w * 0.5, fb.y + fb.h, fb.h * 0.6, -dir); dustAt(fb.x + fb.w * 0.5, fb.y + fb.h, fb.h * 0.5, dir); });
+      const anim = att.animate(keys, {duration:total, fill:"forwards"});
+      await anim.finished.catch(() => {});
+      if (token !== A.token){ anim.cancel(); return; }
+      const xe = o.slide ? xL + dir * o.slide : xL;
+      await wait(o.hold || 150);
+      if (token !== A.token){ anim.cancel(); return; }
+      pose(att, "idle", 240);
+      const back = att.animate([T(xe, 0), T(0, 0)], {duration:420, easing:"ease-out", fill:"forwards"});
+      await back.finished.catch(() => {});
+      anim.cancel(); back.cancel();
+    }
+    /* 小臂光线的聚能：36 道光芒和一层光雾从四周涌进胸口的灯，灯周围闪着紫色电光，沿双臂拉出一条紫色长光，聚满时放出一圈光环 */
+    function zepRays(x, y, size, ms, lineY, lineW){
+      const add = (cls, css) => { const d = document.createElement("div"); d.className = cls; d.style.cssText = css; fx.appendChild(d); return d; };
+      const G = size * 0.7, g = add("bt-zglow", `left:${x - G / 2}px;top:${y - G / 2}px;width:${G}px;height:${G}px`);
+      g.animate([{transform:"scale(.2)", opacity:0}, {transform:"scale(.75)", opacity:0.9, offset:0.7}, {transform:"scale(1)", opacity:1}], {duration:ms, easing:"ease-in", fill:"forwards"});
+      setTimeout(() => g.animate([{opacity:1}, {opacity:0}], {duration:260}).finished.then(() => g.remove()), ms + 120);
+      if (!reduced()){
+        for (let i = 0; i < 36; i++){
+          const a = Math.random() * 360, L = size * (0.22 + Math.random() * 0.25), R = size * (0.7 + Math.random() * 0.5), w = 2 + Math.random() * 3;
+          const r = add("bt-zray", `left:${x}px;top:${y - w / 2}px;width:${L}px;height:${w}px;transform:rotate(${a}deg) translateX(${R}px)`);
+          r.animate([{transform:`rotate(${a}deg) translateX(${R}px) scaleX(.6)`, opacity:0}, {transform:`rotate(${a}deg) translateX(${R * 0.5}px) scaleX(1)`, opacity:1, offset:0.45}, {transform:`rotate(${a}deg) translateX(0px) scaleX(.2)`, opacity:0}],
+            {duration:ms * (0.45 + Math.random() * 0.3), delay:Math.random() * ms * 0.45, easing:"ease-in", fill:"backwards"}).finished.then(() => r.remove());
+        }
+        for (let i = 0; i < 28; i++){
+          const a = Math.random() * Math.PI * 2, R = size * (0.45 + Math.random() * 0.6), m = 6 + Math.random() * 12, ddx = Math.cos(a) * R, ddy = Math.sin(a) * R * 0.8;
+          const d = add("bt-zmist", `left:${x - m / 2}px;top:${y - m / 2}px;width:${m}px;height:${m}px;transform:translate(${ddx}px,${ddy}px)`);
+          d.animate([{transform:`translate(${ddx}px,${ddy}px) scale(1.4)`, opacity:0}, {transform:`translate(${ddx * 0.45}px,${ddy * 0.45}px) scale(1)`, opacity:0.9, offset:0.5}, {transform:"translate(0px,0px) scale(.4)", opacity:0}],
+            {duration:ms * (0.5 + Math.random() * 0.35), delay:Math.random() * ms * 0.5, easing:"ease-in", fill:"backwards"}).finished.then(() => d.remove());
+        }
+      }
+      const token = A.token, t0 = performance.now();
+      glow.add((ctx, now) => {
+        if (token !== A.token) return false;
+        const t = now - t0; if (t > ms + 150) return false; const k = Math.min(1, t / ms);
+        ctx.lineCap = "round";
+        for (let n = 0; n < 3; n++){
+          const a = Math.random() * Math.PI * 2, r = size * (0.08 + Math.random() * 0.22 * (1 - k * 0.5));
+          const pts = jag(x + Math.cos(a) * r * 1.6, y + Math.sin(a) * r, x, y, size * 0.025, 6);
+          ctx.globalAlpha = 1; ctx.strokeStyle = `rgba(200,160,255,${0.5 + Math.random() * 0.4})`; ctx.lineWidth = 2.2;
+          ctx.beginPath(); pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.stroke();
+          ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 0.9; ctx.stroke();
+        }
+        return true;
+      });
+      setTimeout(() => {
+        if (token !== A.token) return;
+        const Rr = add("bt-zglow", `left:${x - size * 0.2}px;top:${y - size * 0.2}px;width:${size * 0.4}px;height:${size * 0.4}px;background:radial-gradient(circle, rgba(255,255,255,0) 52%, rgba(235,220,255,.95) 60%, rgba(170,120,255,.5) 68%, rgba(150,100,255,0) 76%)`);
+        Rr.animate([{transform:"scale(.4)", opacity:1}, {transform:"scale(2.4)", opacity:0}], {duration:420, easing:"ease-out"}).finished.then(() => Rr.remove());
+      }, ms - 120);
+      const ln = add("bt-zline", `left:${x - lineW / 2}px;top:${lineY - 3}px;width:${lineW}px;transform:scaleX(0)`);
+      ln.animate([{transform:"scaleX(0)", opacity:0.5}, {transform:"scaleX(1)", opacity:1, offset:0.45}, {transform:"scaleX(1.04)", opacity:1}], {duration:ms, easing:"ease-out", fill:"forwards"});
+      setTimeout(() => ln.animate([{opacity:1}, {opacity:0}], {duration:220}).finished.then(() => ln.remove()), ms + 80);
+    }
+    /* L 字那张图里竖起的那段小臂（按图片宽高的比例），换算成画面上的一段竖线；翻转的一方自动镜像 */
+    const BEAM_SEG = {tiga:{skill:{x:0.195, y0:0.17, y1:0.3}}};
+    function beamSeg(f, name){
+      const sp = (BEAM_SEG[f.glowName] || BEAM_SEG[f.segName] || {})[name]; const q = f.poseImgs && f.poseImgs[name];
+      if (!sp || !q) return null; const b = box(q.img); if (!b.w) return null;
+      return {x: b.x + (mirrored(f) ? 1 - sp.x : sp.x) * b.w, yTop: b.y + sp.y0 * b.h, yBot: b.y + sp.y1 * b.h};
+    }
+    /* 小臂光线：双拳抱腰 → 双手平举、光芒涌进胸口 → L 字，从竖起的整条小臂射出白色光条，带一层白色光雾，越往前越宽；全程纯白 */
+    async function zepellion(att, def, dir, total){
+      const token = A.token, face = faceOf(att);
+      pose(att, "charge"); await wait(700);
+      if (token !== A.token) return;
+      pose(att, "mid"); await wait(40);
+      const b = box(bodyOf(att));
+      zepRays(b.x + b.w * 0.5, b.y + b.h * 0.29, b.h, 1000, b.y + b.h * 0.215, b.w * 2.6);
+      await run(face, [{filter:"drop-shadow(0 0 0 transparent)"}, {filter:"drop-shadow(0 0 20px rgba(235, 235, 255, 1))"}], {duration:1000, easing:"ease-in-out"});
+      if (token !== A.token) return;
+      pose(att, "fire"); await wait(40);
+      const o = handPoint(att), size = box(bodyOf(att)).h;
+      holdGlow(face, "drop-shadow(0 0 16px rgba(255, 255, 255, .95))");
+      const seg = beamSeg(att, "skill"); if (seg){ o.x = seg.x; o.y = (seg.yTop + seg.yBot) / 2; }
+      const HOLD = 1700, t0 = performance.now(), band0 = seg ? (seg.yBot - seg.yTop) / 2 : size * 0.07, band1 = seg ? band0 * 1.7 : size * 0.2;
+      const d0 = box(bodyOf(def)), xEnd = dir < 0 ? d0.x - 30 : d0.x + d0.w + 30, span = Math.max(1, Math.abs(o.x - xEnd)); const streaks = [];
+      glow.add((ctx, now) => {
+        if (token !== A.token) return false;
+        const t = now - t0, on = t < HOLD, fade = on ? Math.min(1, t / 120) : Math.max(0, 1 - (t - HOLD) / 260);
+        if (!on && fade <= 0 && !streaks.length) return false;
+        if (on) for (let i = 0; i < 3; i++) streaks.push({x0:o.x + dir * Math.random() * 30, off:Math.random() * 2 - 1, len:26 + Math.random() * 120, th:1.4 + Math.random() * 4.2, a:0.55 + Math.random() * 0.45, v:1.7 + Math.random() * 1.3, born:now});
+        const g = ctx.createLinearGradient(o.x, 0, xEnd, 0);
+        g.addColorStop(0, `rgba(255,255,255,${0.55 * fade})`); g.addColorStop(0.6, `rgba(235,240,255,${0.3 * fade})`); g.addColorStop(1, `rgba(235,240,255,${0.12 * fade})`);
+        ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(o.x, o.y - band0); ctx.lineTo(xEnd, o.y - band1); ctx.lineTo(xEnd, o.y + band1); ctx.lineTo(o.x, o.y + band0); ctx.closePath(); ctx.fill();
+        ctx.lineCap = "round";
+        for (let k = streaks.length - 1; k >= 0; k--){
+          const q = streaks[k], x = q.x0 + dir * (now - q.born) * q.v;
+          if (dir < 0 ? x + q.len < xEnd - 40 : x - q.len > xEnd + 40){ streaks.splice(k, 1); continue; }
+          const p = Math.min(1, Math.max(0, Math.abs(o.x - x) / span)), y = o.y + q.off * (band0 + (band1 - band0) * p);
+          const xa = x, xb = dir < 0 ? Math.min(o.x, x + q.len) : Math.max(o.x, x - q.len);
+          ctx.globalAlpha = q.a * 0.35 * Math.max(fade, 0.4); ctx.strokeStyle = "rgb(225,232,255)"; ctx.lineWidth = q.th * 3.2; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(xb, y); ctx.stroke();
+          ctx.globalAlpha = q.a * Math.max(fade, 0.4); ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = q.th; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(xb, y); ctx.stroke();
+        }
+        if (seg){ ctx.save(); ctx.translate(o.x, o.y); ctx.scale(0.32, 1); blit(ctx, "white", 0, 0, band0 * 2.9 * (0.95 + Math.random() * 0.1), fade); ctx.restore(); }   /* 整条小臂一起亮 */
+        else blit(ctx, "white", o.x, o.y, size * 0.34 * (0.95 + Math.random() * 0.1), fade);
+        return true;
+      });
+      await wait(220); if (token !== A.token) return;
+      const d = box(bodyOf(def)); const hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7);
+      pose(def, "recoil", 90); shake(10);
+      const push = def.animate([{transform:"none"}, {transform:`translateX(${30 * dir}px)`}], {duration:HOLD, easing:"ease-out", fill:"forwards"});
+      faceOf(def).animate([{filter:fil(def, "brightness(1.15)")}, {filter:fil(def, "brightness(2.6)")}, {filter:fil(def, "brightness(1.15)")}], {duration:240, iterations:Math.ceil(HOLD / 240)});
+      const parts = split(total || 40, 10);
+      for (let k = 0; k < parts.length; k++){
+        if (token !== A.token) return;
+        burst(hx + (Math.random() - 0.5) * d.w * 0.3, hy + (Math.random() - 0.5) * d.h * 0.2, Math.min(190, d.w * 1.2));
+        if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, k === 0);
+        if (def === ghost) A.lastSpecial += parts[k]; dealt(def, parts[k]); damageNumber(hx - 10 + (Math.random() - 0.5) * 30, hy - 34, parts[k]);
+        await wait(HOLD / parts.length);
+      }
+      push.cancel(); if (!def.classList.contains("still")) pose(def, "idle", 260);
+      fadeHeld(800); await pose(att, "idle", 300);
+    }
+    /* 百慕拉的激光（第十五节）。轻击：三条细红激光，带粉白色的芯，停在对手身上，手上两圈红色光环往外扩散。
+       重击：先在掌心聚红光 → 白黄色大光球（四道转动的光芒，往外溅火星）→ 一道粗光线（白黄的芯、橙、很宽的红晕，里面能量条高速流动），穿过对手射到画面外，画面泛红约 1 秒 */
+    async function palmLaserV4(att, def, dir, dmg, thick, oo){
+      const token = A.token;
+      if (thick){ pose(att, "palms"); await wait(60); await chargeIn(() => handPoint(att), box(bodyOf(att)).h, 600, "red", "redHaze"); if (token !== A.token) return; }
+      pose(att, thick ? "palms" : "palm"); await wait(40);
+      const o = handPoint(att), size = box(bodyOf(att)).h, SW = stage.clientWidth;
+      const H = thick ? Math.max(20, size * 0.17) : Math.max(4, size * 0.018);
+      const dg = box(bodyOf(def)), xEnd = thick ? (dir < 0 ? -120 : SW + 120) : dg.x + dg.w * 0.5, t0 = performance.now(), LIFE = thick ? 1050 : 340, flow = [], embers = [];
+      if (thick){ const wash = document.createElement("div"); wash.className = "bt-redwash"; wash.style.setProperty("--hx", `${o.x}px`); wash.style.setProperty("--hy", `${o.y}px`); fx.appendChild(wash);
+        wash.animate([{opacity:0}, {opacity:1, offset:0.15}, {opacity:1, offset:0.8}, {opacity:0}], {duration:LIFE + 200}).finished.then(() => wash.remove()); }
+      glow.add((ctx, now) => {
+        if (token !== A.token) return false;
+        const t = now - t0; if (t > LIFE + 200) return false;
+        const grow = Math.min(1, t / (thick ? 120 : 80)), fade = t < LIFE ? 1 : Math.max(0, 1 - (t - LIFE) / 200), x1 = o.x + (xEnd - o.x) * grow;
+        ctx.lineCap = "round";
+        if (thick){
+          const fl = 0.92 + Math.random() * 0.12;
+          const ln = (w, col, a) => { ctx.globalAlpha = a * fade; ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(x1, o.y); ctx.stroke(); };
+          ln(H * 3.2 * fl, "rgba(255,40,50,1)", 0.32); ln(H * 2.0 * fl, "rgba(255,80,60,1)", 0.5); ln(H * 1.15 * fl, "rgba(255,190,110,1)", 0.85); ln(H * 0.55 * fl, "#FFF8E0", 1);
+          if (t < LIFE) for (let i = 0; i < 3; i++) flow.push({born:now, off:(Math.random() * 2 - 1) * 0.42, len:H * (1.5 + Math.random() * 3.5), v:2.4 + Math.random() * 1.6});
+          ctx.strokeStyle = "#FFFBEA";
+          for (let k = flow.length - 1; k >= 0; k--){
+            const q = flow[k], x = o.x + dir * (now - q.born) * q.v; if (dir < 0 ? x < x1 - 40 : x > x1 + 40){ flow.splice(k, 1); continue; }
+            ctx.globalAlpha = 0.85 * fade; ctx.lineWidth = H * 0.16; ctx.beginPath(); ctx.moveTo(x, o.y + q.off * H); ctx.lineTo(dir < 0 ? Math.min(o.x, x + q.len) : Math.max(o.x, x - q.len), o.y + q.off * H); ctx.stroke();
+          }
+          if (t < LIFE && Math.random() < 0.7) embers.push({born:now, x:o.x, y:o.y, vx:-dir * (Math.random() * 0.6 + 0.1) * (Math.random() < 0.5 ? 1 : -0.6), vy:(Math.random() - 0.5) * 0.8});
+          for (let k = embers.length - 1; k >= 0; k--){ const e = embers[k], a = (now - e.born) / 500; if (a >= 1){ embers.splice(k, 1); continue; } blit(ctx, "fireHot", e.x + e.vx * (now - e.born), e.y + e.vy * (now - e.born) + a * a * 30, H * 0.5, (1 - a) * fade); }
+          ctx.globalAlpha = 0.7 * fade; ctx.strokeStyle = "rgba(255,230,190,1)"; ctx.lineWidth = 2;
+          for (let r = 0; r < 4; r++){ const a = r * Math.PI / 4 + t / 900, L = H * (2.6 + Math.random() * 0.6); ctx.beginPath(); ctx.moveTo(o.x - Math.cos(a) * L, o.y - Math.sin(a) * L); ctx.lineTo(o.x + Math.cos(a) * L, o.y + Math.sin(a) * L); ctx.stroke(); }
+          blit(ctx, "fireHot", o.x, o.y, H * 6.5 * fl, fade); blit(ctx, "white", o.x, o.y, H * 3 * fl, fade);
+        } else {
+          for (const off of [-1, 0, 1]){
+            const y0 = o.y + off * size * 0.016;
+            ctx.globalAlpha = 0.5 * fade; ctx.strokeStyle = "rgba(255,40,60,1)"; ctx.lineWidth = H * 2.6; ctx.beginPath(); ctx.moveTo(o.x, y0); ctx.lineTo(x1, y0); ctx.stroke();
+            ctx.globalAlpha = 0.95 * fade; ctx.strokeStyle = "#FFD0D4"; ctx.lineWidth = H * 0.7; ctx.beginPath(); ctx.moveTo(o.x, y0); ctx.lineTo(x1, y0); ctx.stroke();
+          }
+          for (let r = 0; r < 2; r++){ const k = Math.min(1, t / (LIFE * (0.6 + r * 0.3))), R = size * (0.05 + r * 0.04 + k * 0.12);
+            ctx.globalAlpha = (1 - k) * 0.9 * fade; ctx.strokeStyle = "rgba(255,90,100,1)"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(o.x, o.y, R * 0.55, R, 0, 0, Math.PI * 2); ctx.stroke(); }
+          blit(ctx, "fire", o.x, o.y, size * 0.12, fade);
+        }
+        return true;
+      });
+      await wait(thick ? 140 : 80); if (token !== A.token) return;
+      const d = box(bodyOf(def)); const hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7);
+      if (thick){
+        const HOLD = 800, parts = split(dmg, 6);
+        pose(def, "recoil", 90); if (oo && oo.breaks && def === ghost) A.breakShields(oo.breaks);
+        faceOf(def).animate([{filter:fil(def, "brightness(1.1)")}, {filter:fil(def, "brightness(2.4)")}, {filter:fil(def, "brightness(1.1)")}], {duration:220, iterations:Math.ceil(HOLD / 220)});
+        shake(7); if (!(def === ghost && A.cm)) sparksOn(def, true);
+        for (const part of parts){
+          await wait(HOLD / parts.length); if (token !== A.token) return;
+          dealt(def, part); damageNumber(hx + (Math.random() * 40 - 30), hy - 26 - Math.random() * 24, part);
+          burst(hx + (Math.random() * 16 - 8), hy + (Math.random() * 30 - 15), Math.min(80, d.w * 0.5));
+        }
+        if (!def.classList.contains("still")) pose(def, "idle", 260);
+      } else {
+        burst(hx, hy, Math.min(90, d.w * 0.6)); if (oo && oo.breaks && def === ghost) A.breakShields(oo.breaks);
+        hurt(def, dir, dmg, false); damageNumber(hx - 10, hy - 30, dmg); shake(4); await wait(240);
+      }
+      await wait(thick ? 160 : 60);
+      await pose(att, "idle", 260);
+    }
+    /* 大光线（初代、百慕拉的技能，第十五节）：手上爆出一股能量，0.1 秒内冲出画面；光束不宽（出手处约 0.06 个身高，最宽 0.17）；
+       白色的芯、青蓝色的光、粉紫色的外晕是同一个形状、一层比一层宽，白色光条在里面流动；打中时对手身上到处炸开。
+       原创小人（RIG_BEAM）：宽 1.8 倍、它自己的青色、每 0.11 秒一个能量环沿光线往前冲 */
+    const RIG_BEAM = {wide:1.8, cyan:true, rings:true};
+    async function specialWide(att, def, dir, total, opt){
+      opt = opt || {};
+      const token = A.token, face = faceOf(att), size = box(bodyOf(att)).h, SW = stage.clientWidth;
+      pose(att, "charge"); await wait(60);
+      const c0 = handPoint(att); motes(c0.x, c0.y, 14, 700);
+      await run(face, [{filter:"drop-shadow(0 0 0 transparent)"}, {filter:"drop-shadow(0 0 16px rgba(150, 224, 238, .95))", offset:0.4}, {filter:"drop-shadow(0 0 20px rgba(150, 224, 238, 1))"}], {duration:700, easing:"ease-in-out"});
+      if (token !== A.token) return;
+      pose(att, "fire"); await wait(30);
+      const o = handPoint(att), xEnd = dir < 0 ? -120 : SW + 120, span = Math.max(1, Math.abs(o.x - xEnd));
+      const HOLD = 1600, t0 = performance.now(), h0 = size * 0.03 * (opt.wide || 1), h1 = size * 0.085 * (opt.wide || 1), rings = [], streaks = [];
+      holdGlow(face, "drop-shadow(0 0 18px rgba(170, 230, 255, 1))");
+      glow.add((ctx, now) => {
+        if (token !== A.token) return false;
+        const t = now - t0, on = t < HOLD, grow = Math.min(1, t / 110), fade = on ? 1 : Math.max(0, 1 - (t - HOLD) / 300);
+        if (!on && fade <= 0) return false;
+        const reach = o.x + (xEnd - o.x) * grow, pulse = 0.95 + Math.random() * 0.08;
+        const wAt = x => h0 + (h1 - h0) * Math.min(1, Math.max(0, Math.abs(o.x - x) / span));
+        const band = (k, c0, c1, a) => { const g = ctx.createLinearGradient(o.x, 0, reach, 0); g.addColorStop(0, c0); g.addColorStop(1, c1);
+          ctx.globalAlpha = a * fade; ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(o.x, o.y - wAt(o.x) * k); ctx.lineTo(reach, o.y - wAt(reach) * k * pulse); ctx.lineTo(reach, o.y + wAt(reach) * k * pulse); ctx.lineTo(o.x, o.y + wAt(o.x) * k); ctx.closePath(); ctx.fill(); };
+        if (opt.cyan){ band(2.6, "rgba(90,240,255,.5)", "rgba(30,150,255,.36)", 1); band(1.7, "rgba(200,255,255,.92)", "rgba(110,235,255,.66)", 0.9); }
+        else { band(2.6, "rgba(255,160,220,.55)", "rgba(60,140,255,.38)", 1); band(1.7, "rgba(210,245,255,.9)", "rgba(130,210,255,.65)", 0.9); }
+        band(1.0, "rgba(255,255,255,1)", "rgba(240,252,255,.95)", 1);
+        if (opt.rings){
+          if (on && (!rings.length || now - rings[rings.length - 1].born > 110)) rings.push({born:now});
+          for (let k = rings.length - 1; k >= 0; k--){
+            const x = o.x + dir * (now - rings[k].born) * 2.3; if (dir < 0 ? x < xEnd : x > xEnd){ rings.splice(k, 1); continue; }
+            const r = wAt(x) * 2.1, al = Math.min(1, Math.abs(o.x - x) / 60) * fade;
+            ctx.globalAlpha = 0.85 * al; ctx.strokeStyle = "rgba(170,250,255,1)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(x, o.y, r * 0.32, r, 0, 0, Math.PI * 2); ctx.stroke();
+            ctx.globalAlpha = 0.9 * al; ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 1.2; ctx.stroke();
+          }
+        }
+        if (on) for (let i = 0; i < 6; i++) streaks.push({born:now, off:Math.random() * 2 - 1, len:50 + Math.random() * 160, th:1.5 + Math.random() * 4, v:2.8 + Math.random() * 1.8});
+        ctx.lineCap = "round";
+        for (let k = streaks.length - 1; k >= 0; k--){
+          const q = streaks[k], x = o.x + dir * (now - q.born) * q.v; if (dir < 0 ? x < xEnd - 80 : x > xEnd + 80){ streaks.splice(k, 1); continue; }
+          const y = o.y + q.off * wAt(x) * 1.15;
+          ctx.globalAlpha = 0.75 * fade; ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = q.th; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(dir < 0 ? Math.min(o.x, x + q.len) : Math.max(o.x, x - q.len), y); ctx.stroke();
+        }
+        blit(ctx, "white", o.x, o.y, size * 0.32 * pulse, fade); blit(ctx, "blue", o.x, o.y, size * 0.55 * pulse, 0.55 * fade);
+        return true;
+      });
+      await wait(120); if (token !== A.token) return;
+      const d = box(bodyOf(def)); const hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7);
+      shake(11); pose(def, "recoil", 90);
+      const push = def.animate([{transform:"none"}, {transform:`translateX(${34 * dir}px)`}], {duration:HOLD, easing:"ease-out", fill:"forwards"});
+      faceOf(def).animate([{filter:fil(def, "brightness(1.2)")}, {filter:fil(def, "brightness(2.8)")}, {filter:fil(def, "brightness(1.2)")}], {duration:220, iterations:Math.ceil(HOLD / 220)});
+      const parts = split(total || 40, 12);
+      for (let k = 0; k < parts.length; k++){
+        if (token !== A.token) return;
+        burst(d.x + d.w * (0.25 + Math.random() * 0.6), d.y + d.h * (0.15 + Math.random() * 0.6), Math.min(230, d.w * 1.5));
+        if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, k === 0);
+        if (def === ghost) A.lastSpecial += parts[k]; dealt(def, parts[k]); damageNumber(hx - 10 + (Math.random() - 0.5) * 36, hy - 34, parts[k]);
+        await wait(HOLD / parts.length);
+      }
+      push.cancel(); if (!def.classList.contains("still")) pose(def, "idle", 260);
+      fadeHeld(800); await pose(att, "idle", 300);
+    }
     const punchFx = (x, y, d, dir) => { slash(x, y, dir); burst(x, y, Math.min(120, d.w * 0.8)); };
     const MOVES = {
       punch: (att, def, dir, dmg, o) => melee(att, def, dir, dmg, Object.assign({hit:"punch", effect:(x, y, d) => punchFx(x, y, d, dir)}, o)),
@@ -10652,9 +11091,16 @@ const BT = (() => {
         effect:(x, y, d) => { streak(dir < 0 ? x - d.w * 0.15 : x + d.w * 0.15, y, d.w * 1.3, dir); burst(x, y, Math.min(90, d.w * 0.6)); }}, o)),
       kesa: (att, def, dir, dmg, o) => melee(att, def, dir, dmg, Object.assign({wind:"raise", windMs:230, hit:"chop", big:true, hy:0.38, hold:220, onWind:() => glint(att),
         effect:(x, y, d) => { arcSwoosh(x + dir * d.w * 0.1, y, d.h * 0.85, "kesa", "rgba(255, 150, 40, .95)", dir); burst(x, y, Math.min(180, d.w * 1.2)); }}, o)),
-      laserThin: (att, def, dir, dmg, o) => palmLaser(att, def, dir, dmg, false, o),
-      laserThick: (att, def, dir, dmg, o) => palmLaser(att, def, dir, dmg, true, o),
-      wideBeam: (att, def, dir, total) => (att.rig ? thinBeam(att, def, dir, total) : wideBeam(att, def, dir, total)),
+      laserThin: (att, def, dir, dmg, o) => palmLaserV4(att, def, dir, dmg, false, o),
+      laserThick: (att, def, dir, dmg, o) => palmLaserV4(att, def, dir, dmg, true, o),
+      /* 迪迦的三招（第十四节）；原创小人没有姿势图，换成出拳、侧踢、它自己的青色大光线 */
+      jumpChop: (att, def, dir, dmg, o) => (att.rig ? MOVES.punch(att, def, dir, dmg, o) : leapStrike(att, def, dir, dmg, Object.assign({crouchMs:110, air:"leap", hit:"jumpChop", hitPose:"light", flyMs:420, arc:0.42, strikeAt:0.74, deep:0.62, at:0.24, hold:170, dust:true,
+        effect:(x, y, d) => { slash(x, y, dir); burst(x, y, Math.min(150, d.w)); }}, o || {}))),
+      flyKick: (att, def, dir, dmg, o) => (att.rig ? MOVES.kick(att, def, dir, dmg, o) : leapStrike(att, def, dir, dmg, Object.assign({crouchMs:240, air:"kick", hit:"kick", hitPose:"heavy", flyMs:320, arc:0.2, strikeAt:1, deep:0.36, at:0.2, slide:110, ring:true, land:"kickWind", hold:150, big:true,
+        effect:(x, y, d) => { punchFx(x, y, d, dir); burst(x, y, Math.min(210, d.w * 1.35)); }}, o || {}))),
+      zepellion: (att, def, dir, total) => (att.rig ? specialWide(att, def, dir, total, RIG_BEAM) : zepellion(att, def, dir, total)),
+      /* 大光线：初代、百慕拉的新画法；原创小人用 RIG_BEAM（第十五、十七节） */
+      wideBeam: (att, def, dir, total) => specialWide(att, def, dir, total, att.rig ? RIG_BEAM : {}),
       crescent: (att, def, dir, total) => crescentGlow(att, def, dir, total),
       /* 火焰踢：蓄力时小腿到脚着火，跟着腿走；命中时两道弧光（橙色、金黄）加一团火焰爆开，170ms 后火灭 */
       fireKick: async (att, def, dir, dmg, o) => {
@@ -10692,13 +11138,15 @@ const BT = (() => {
     A.strike = (dmg, o) => A.move("light", dmg, o);
     A.special = total => A.move("skill", total);
     /* 结束：赢的一方跳两下，输的一方跪下（有“输”的姿势就用它） */
+    /* 倒下：自带红灯（倒下那格有红色的灯）的角色只稍微压暗，不然红灯看不见；别的整个变灰 */
+    const loseFilter = f => { const e = f.glow && f.glow.lose; return e && (e.parts || []).some(p => /^#FF[0-5]/i.test(p.color || "")) ? "saturate(.85) brightness(.88)" : "grayscale(1) brightness(.7)"; };
     A.finish = async youWon => {
       const winner = youWon ? you : ghost, loser = youWon ? ghost : you; const fallDeg = youWon ? -16 : 16;
       loser.classList.add("still"); const l = faceOf(loser); land(loser);
       if (loser.rig) pose(loser, "kneel", 480, "ease-in");
       else if (hasPose(loser, "lose")) pose(loser, "kneel");
       else loser.animate([{transform:"none"}, {transform:`translateY(6%) rotate(${fallDeg}deg)`}], {duration:560, easing:"ease-in", fill:"forwards"});
-      l.animate([{filter:fil(loser, "grayscale(0)")}, {filter:fil(loser, "grayscale(1) brightness(.7)")}], {duration:560, fill:"forwards"});
+      l.animate([{filter:fil(loser, "grayscale(0)")}, {filter:fil(loser, loseFilter(loser))}], {duration:560, fill:"forwards"});
       if (youWon) A.setHP(0);
       if (A.cm){ if (youWon) A.cm.play("lose"); else A.cm.play("win"); }
       await wait(220);
@@ -10727,7 +11175,8 @@ const BT = (() => {
       stage.classList.toggle("giant", !!A.giant); stage.classList.toggle("soft", S.settings.bgSoft !== false);
       stage.style.setProperty("--bt-bg-blur", Math.max(1, S0.width / 520).toFixed(2) + "px");
       /* 画面里脚上方的部分不够、镜头拉不远的时候，就把人物画大，保证人物和场景的比例对 */
-      const feetAt = sc.feetAt || FEET_AT;
+      let feetAt = sc.feetAt || FEET_AT;
+      if (A.giant && A.rNow > 0.86) feetAt -= Math.min(0.08, (A.rNow - 0.86) * 0.6);
       /* 巨人最多占舞台的 78%：背景图的天空就那么高，镜头拉到底以后，再高的巨人也不再变大，不会大出画面 */
       const sizeNow = Math.min(A.giant ? 0.78 : 9, Math.max(A.charSize, sc.minSize || 0, (m.readyM * m.pxPerM * m.depth * (1 - feetAt)) / sc.footY)); A.sizeNow = sizeNow;
       const winH = Math.min((m.readyM * m.pxPerM * m.depth) / sizeNow, sc.footY / (1 - feetAt));
@@ -10770,7 +11219,8 @@ const BT = (() => {
     function partsFor(f, name){
       const e = f.glow && f.glow[name], q = f.poseImgs && f.poseImgs[name], s = f.glowScale || 1;
       if (!(e && q && Math.abs(e.w * s - q.w) <= 2 && Math.abs(e.h * s - q.h) <= 2 && e.parts && e.parts.length)) return null;
-      return s === 1 ? e.parts : e.parts.map(p => Object.assign({}, p, {s}));
+      const gk = GLOW_K[f.glowName] || 1;
+      return s === 1 && gk === 1 ? e.parts : e.parts.map(p => Object.assign({}, p, {s, gk}));
     }
     function rigLight(L){
       const m = root.querySelector(`#${rigFid} feColorMatrix`); if (!m) return "";
@@ -10943,7 +11393,7 @@ const BT = (() => {
   function boss(tag, hp, img){
     if (typeof TuokouMonsters !== "undefined"){ const l = ids("boss"); const id = l.includes(img) ? img : l[0]; return Object.assign(codeMon(id, 80), {id:"boss", tag, hp, max:80, boss:true, img:id}); }
     const b = BOSSES[tag] || BOSSES.other; return Object.assign({id:"boss", tag, size:0.62, float:0, ar:"220 / 300"}, b, {svg: MON_ART.boss(b.c1, b.c2), hp, max:80, boss:true}); }
-  return {makeArena, processImage, rebuild, metaOf, rollGiant, rollPlace, placeName, PLACES, SCENES, LIGHTS, glowMatch, bakeCacheSize: () => bakeCache.size, sweepArenas, freeCaches, arenaCount: () => ARENAS.size, imgCacheSize: () => imgCache.size, msOf, loadoutOf, rigLoadout, tplMatch, tplOf, TEMPLATES, MOVE_LIST, SHEET10, POSE_NAMES, SHEET_ORDER, SHEET9, MOVESETS, monster, boss, mob, codeMon, codeThumb, minor, eliteMon, ids, BOSSES, MONSTERS, MOB_HP};
+  return {makeArena, processImage, rebuild, metaOf, rollGiant, rollPlace, placeName, tplLabel, SHEET11, PLACES, SCENES, LIGHTS, glowMatch, bakeCacheSize: () => bakeCache.size, sweepArenas, freeCaches, arenaCount: () => ARENAS.size, imgCacheSize: () => imgCache.size, msOf, loadoutOf, rigLoadout, tplMatch, tplOf, TEMPLATES, MOVE_LIST, SHEET10, POSE_NAMES, SHEET_ORDER, SHEET9, MOVESETS, monster, boss, mob, codeMon, codeThumb, minor, eliteMon, ids, BOSSES, MONSTERS, MOB_HP};
 })();
 
 /* ---------- 角色存储（IndexedDB，不放 localStorage：图片太大）：可以存好几个，选一个用 ---------- */
@@ -11209,7 +11659,7 @@ const GAME = {
     if (entry.special){
       st.energy = 0; GAME.meter();
       if (ok1 || entry.mis){
-        const e = st.enemy; const dmg = Math.round(24 * (e.boss && entry.tag === e.tag ? 1.5 : 1));
+        const e = st.enemy; const dmg = Math.round(40 * (e.boss && entry.tag === e.tag ? 1.5 : 1));
         GAME.say(`大招！-${dmg}`); st.last.push({kind:"special", dmg, label:`大招！-${dmg}`});
         await A.special(dmg); await GAME.afterHit(); return;
       }
@@ -11224,9 +11674,9 @@ const GAME = {
       }
       let mult = weak, label; const pops = [];
       if (ev.k === "break") label = ev.shield ? "补说对了：打碎护盾" : "补说对了";
-      else label = entry.mis ? "识别错了，按说对算" : LBL[ev.lv] || "";
+      else label = ev.retry ? "重练说对了" : entry.mis ? "识别错了，按说对算" : LBL[ev.lv] || "";
       /* 暴击：完全对，而且说得快——反应时间 + 按句子长短的说话时间 + 识别确认的时间（critMs）。点了“识别错了”的也一样 */
-      if (ev.k === "hit" && ev.lv === "exact" && entry.ms > 0 && entry.ms <= critMs(entry)){ mult *= 1.5; pops.push(["暴击！", "crit"]); label += "，暴击"; }
+      if (ev.k === "hit" && ev.lv === "exact" && !ev.retry && entry.ms > 0 && entry.ms <= critMs(entry)){ mult *= 1.5; pops.push(["暴击！", "crit"]); label += "，暴击"; }
       const bonus = ev.k === "hit" && ok1 && st.combo >= 3 ? Math.min(3, st.combo - 2) : 0;
       if (bonus) pops.push([`连击 ×${st.combo}`, "combo"]);
       if (weak > 1) pops.push(["弱点！", "weak"]);
@@ -11375,6 +11825,7 @@ async function batJudge(said, alts){
     const sp = K.battleSpecial(R.card); R.special = sp; R.day.dmg += sp; save();
     const st = $("#btStatus"); if (st) st.textContent = `大招：-${sp}`;
     await R.A.special(sp); R.A.setScore(`今天 ${R.carried + R.card + sp} 点`);
+    { const stx = $("#btStatus"); if (stx) stx.innerHTML = `大招：-${sp} <button class="linkbtn small" data-act="bt-sp-replay">再看一遍</button>`; }
     if (R.enemy){
       R.enemy.hp = R.A.hp; if (R.enemy.boss && S.game && S.game.boss){ S.game.boss.hp = Math.max(0, Math.round(R.A.hp)); save(); }
       if (R.A.hp <= 0){ await R.A.knockout(); R.defeated++; if (R.enemy.boss){ R.bossDown = true; S.game.boss = null; S.game.bossWins = (S.game.bossWins || 0) + 1; save(); } }
@@ -11423,7 +11874,7 @@ function batTplHTML(rec){
   const lo = rec ? BT.loadoutOf(rec) : BT.rigLoadout(), tpl = BT.tplMatch(lo);
   const opt = slot => BT.MOVE_LIST[slot].map(([k, n]) => `<option value="${k}" ${lo[slot] === k ? "selected" : ""}>${n}</option>`).join("");
   const nm = (slot, id) => BT.MOVE_LIST[slot].find(x => x[0] === id)[1];
-  return `<label class="fld"><span>${rec ? "正在用的角色的招式" : "原创小人的招式"}</span><select id="btTpl" data-chg="bt-tpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${k === tpl ? "selected" : ""}>${t.name}：${nm("light", t.light)}、${nm("heavy", t.heavy)}、${nm("skill", t.skill)}${t.hover ? "，悬浮" : ""}</option>`).join("")}${tpl === "custom" ? `<option value="custom" selected>自定义</option>` : ""}</select></label>
+  return `<label class="fld"><span>${rec ? "正在用的角色的招式（一键套用三招）" : "原创小人的招式（一键套用三招）"}</span><select id="btTpl" data-chg="bt-tpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${k === tpl ? "selected" : ""}>${BT.tplLabel(t)}</option>`).join("")}${tpl === "custom" ? `<option value="custom" selected>自定义</option>` : ""}</select></label>
     <details class="bt-custom"${tpl === "custom" ? " open" : ""}><summary>自定义：轻击、重击、技能分别选</summary>
       <div class="bt-slots"><label>轻击<select data-chg="bt-slot" data-slot="light">${opt("light")}</select></label><label>重击<select data-chg="bt-slot" data-slot="heavy">${opt("heavy")}</select></label><label>技能<select data-chg="bt-slot" data-slot="skill">${opt("skill")}</select></label></div>
       <label class="switch"><span>悬浮</span><input type="checkbox" data-chg="bt-hover" ${lo.hover ? "checked" : ""}></label></details>
@@ -11452,7 +11903,7 @@ function batEnemiesHTML(){
   return `<p class="small muted">和导入角色一样的姿势表（纯绿背景，6、9 或 10 个姿势，人物朝左），app 会自动翻转，让它面对你。选它当哪一档：血量和出场位置跟着那一档走。当首领时，弱点照旧按你最近最常错的类型定；也可以把它固定给某种弱点。</p>
     <div class="bt-chars">${ENE_LIST.map(e => `<div class="bt-char bt-ene">${e.thumb ? `<img src="${e.thumb}" alt="">` : ""}<div class="bt-ene-main"><span class="bt-cname">${esc(e.name)}</span>
       <div class="bt-ene-opts"><select data-chg="ene-tier" data-v="${e.id}">${Object.entries(ENE_TIER).map(([k, t]) => `<option value="${k}" ${e.tier === k ? "selected" : ""}>${t}（${ENE_HP[k]} 血）</option>`).join("")}</select>
-      <select data-chg="ene-tpl" data-v="${e.id}" title="它打你时用的招式">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${(e.tpl || "brawler") === k ? "selected" : ""}>${t.name}</option>`).join("")}</select>
+      <select data-chg="ene-tpl" data-v="${e.id}" title="它打你时用的招式">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}" ${(e.tpl || "brawler") === k ? "selected" : ""}>${BT.tplLabel(t)}</option>`).join("")}</select>
       <select data-chg="ene-size" data-v="${e.id}" title="在哪种大小的局里出现">${[["both", "普通和巨大都出现"], ["normal", "只在普通大小"], ["giant", "只在巨大化"]].map(([k, t]) => `<option value="${k}" ${(e.size || "both") === k ? "selected" : ""}>${t}</option>`).join("")}</select>
       ${e.tier === "boss" ? `<select data-chg="ene-bind" data-v="${e.id}"><option value="">和其他首领轮流出场</option>${Object.keys(BT.BOSSES).map(t => `<option value="${t}" ${e.bind === t ? "selected" : ""}>固定当“${esc((TAGS[t] || TAGS.other).label)}”的首领</option>`).join("")}</select>` : ""}</div></div>
       <span class="bt-cbtns"><button class="btn sm ghost" data-act="ene-see" data-v="${e.id}">看看</button><button class="btn sm ghost" data-act="ene-ren" data-v="${e.id}">改名</button><button class="btn sm ghost danger" data-act="ene-del" data-v="${e.id}">删除</button></span></div>`).join("") || `<p class="small muted">还没有导入敌人。</p>`}</div>
@@ -11479,7 +11930,7 @@ VIEWS.battle = {
     const panes = {
       chars: `<div class="bt-chars">${row("rig", "原创小人", "", "")}${BAT_LIST.map(c => row(c.id, c.name, c.thumb, `<button class="btn sm ghost" data-act="bt-ren" data-v="${c.id}">改名</button><button class="btn sm ghost danger" data-act="bt-delc" data-v="${c.id}">删除</button>`)).join("")}</div>
         <p class="small muted" style="margin-top:6px">导入过的角色都存在这台手机上，可以随时换着用。图片不会上传。</p>
-        <label class="fld" style="margin-top:10px"><span>新导入的角色用哪个招式模板</span><select id="btImpTpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join("")}</select></label>
+        <label class="fld" style="margin-top:10px"><span>新导入的角色用哪个招式模板</span><select id="btImpTpl">${Object.entries(BT.TEMPLATES).map(([k, t]) => `<option value="${k}">${BT.tplLabel(t)}</option>`).join("")}</select></label>
         <label class="btn primary block" style="text-align:center;margin-top:6px">导入新的姿势表<input type="file" accept="image/*" data-chg="bt-file" style="display:none"></label>
         <p class="small muted" style="margin-top:4px">纯绿背景、3 行 3 列：起手、轻击、重击·蓄力 / 重击、技能·蓄力、技能 / 被打中、赢、输。10 姿势表在第 4 行再加一个技能·出手。</p>
         <label class="btn sm" style="margin-top:8px">导入发光部位（眼睛、胸灯）<input type="file" accept=".json,application/json" data-chg="glow-file" style="display:none"></label>
@@ -11513,6 +11964,8 @@ function batGalInit(){
   (async () => { for (let i = 0; i < thumbs.length; i += 4){ if (!thumbs[i].isConnected) return; await Promise.all(thumbs.slice(i, i + 4).map(async img => { const u = await BT.codeThumb(img.dataset.thumb); if (u && img.isConnected) img.src = u; })); } })();
 }
 CHG["bt-look"] = el => { S.settings[el.dataset.key] = !!el.checked; save(); if (BAT_PREV){ BAT_PREV.layout(); BAT_PREV.relight(true); } };
+/* 结算的大招：再看一遍（血条先补回去，放完再恢复） */
+ACT["bt-sp-replay"] = async () => { const R = BAT_RUN; if (!R || !R.A || !R.special) return; const hp0 = R.A.hp; R.A.clear(); R.A.setHP(Math.min(R.A.max, hp0 + R.special), true); await R.A.special(R.special); R.A.setHP(hp0, true); };
 ACT["bt-tab"] = el => {
   const t = el.dataset.v; L.btTab = t; saveLocal(); const all = !!window.__allPanes;
   document.querySelectorAll(".bt-tab").forEach(b => { const on = b.dataset.v === t; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
@@ -11600,7 +12053,7 @@ CHG["ene-file"] = async el => {
   const f = el.files && el.files[0]; el.value = ""; if (!f) return; const note = $("#eneNote"); if (note) note.textContent = "正在处理……";
   try {
     const poses = await BT.processImage(f); const n = Object.keys(poses).length;
-    if (![6, 9, 10].includes(n)) throw new Error("这里要 10、9 或 6 个姿势的姿势表。");
+    if (![6, 9, 10, 11].includes(n)) throw new Error("这里要 11、10、9 或 6 个姿势的姿势表。");
     const tier = ($("#eneTier") || {}).value || "elite"; const T = BT.TEMPLATES.brawler;
     await eneAdd({v:3, sheet:poses, sheetType:n, loadout:{light:T.light, heavy:T.heavy, skill:T.skill, hover:false}, r:T.r, cm:T.cm, repl:{}, beam:{}, at:Date.now()}, tier);
     UI.render(); toast(`导入好了：当${ENE_TIER[tier]}`);
@@ -11634,7 +12087,7 @@ CHG["bt-file"] = async el => {
   try {
     const poses = await BT.processImage(f);
     const n = Object.keys(poses).length;
-    if (![6, 9, 10].includes(n)) throw new Error("这里要 10、9 或 6 个姿势的姿势表。只有 1 个人物的单人图，可以导入姿势表以后，用来替换或补上其中一个姿势。");
+    if (![6, 9, 10, 11].includes(n)) throw new Error("这里要 11、10、9 或 6 个姿势的姿势表。只有 1 个人物的单人图，可以导入姿势表以后，用来替换或补上其中一个姿势。");
     /* 新角色的模板：用导入那里单独的选项（以前用的是“正在用的角色”的下拉框，一选就把正在用的角色改掉了） */
     const tk = BT.tplOf((document.getElementById("btImpTpl") || {}).value || "brawler"), T = BT.TEMPLATES[tk || "brawler"];
     const lo = tk ? {light:T.light, heavy:T.heavy, skill:T.skill, hover:T.hover} : BT.rigLoadout();
@@ -11690,6 +12143,24 @@ ACT["bt-del"] = async () => {
     return true;
   }
   for (const k of ["start", "start-std", "start-game"]){ if (typeof ACT[k] !== "function") continue; const f = ACT[k]; ACT[k] = async function(el){ if (await startChoice(k === "start-game")) return; return f.apply(this, arguments); }; }
+})();
+
+/* ---------- “我确定这样也对”点错了可以撤销：点之前记下这张卡的判断和“也对”的说法，撤销时原样恢复 ---------- */
+(function(){
+  if (typeof ACT["c-mine"] !== "function") return;
+  const f = ACT["c-mine"];
+  ACT["c-mine"] = async function(el){
+    const s = RUN.stage, id = s && s.card && s.card.id;
+    const snap = s ? {cmp:s.cmp, mine:s.mine, flags:s.flags, mean:s.mean, alts: S.myAlts && Array.isArray(S.myAlts[id]) ? S.myAlts[id].slice() : (S.myAlts ? S.myAlts[id] : undefined)} : null;
+    await f.apply(this, arguments);
+    /* 真的改成“对”了（有可能弹出“这句可能有问题”时选了不算），才给撤销 */
+    if (s && snap && s.mine && !snap.mine && RUN.stage === s){ s._mineUndo = snap; try { s.render(); } catch (e) {} }
+  };
+  ACT["c-mine-undo"] = () => {
+    const s = RUN.stage; if (!s || !s._mineUndo) return; const u = s._mineUndo, id = s.card.id; s._mineUndo = null;
+    if (S.myAlts){ if (u.alts === undefined) delete S.myAlts[id]; else S.myAlts[id] = u.alts; save(); if (typeof rebuildCatalog === "function") rebuildCatalog(); }
+    s.cmp = u.cmp; s.mine = u.mine; s.flags = u.flags; s.mean = u.mean; s.render(); toast("撤销了，可以重新选");
+  };
 })();
 
 </script>
