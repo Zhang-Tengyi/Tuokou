@@ -712,7 +712,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.47.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.48.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -9405,6 +9405,9 @@ function create(id, opts) {
       const r = P.root.getBoundingClientRect(), h = host.getBoundingClientRect();
       return { x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height };
     },
+    // 脱口 app 的对波用：停在某个姿势上（比如放技能的那一下），拿到某个部位在舞台上的位置（比如头、下巴）
+    holdPose(n) { try { mv.set(n); } catch (e) {} },
+    partBox(name) { const p = P.parts && P.parts[name]; if (!p) return null; const r = p.getBoundingClientRect(), h = host.getBoundingClientRect(); return { x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height }; },
     // take on a little of the scene's light: L = { tint: '#RRGGBB', ta, bri, sat, con } (the same table as the
     // characters use); null puts it back. Only the monster is tinted, not its effects.
     setLight(L) {
@@ -11171,7 +11174,8 @@ const BT = (() => {
     function clashFx(o){
       const token = A.token, sz = stage.clientHeight, parts = [], rings = []; let stop = false, lastRing = 0, lastShake = 0, burstAt = 0, burstBig = false, flashUntil = 0, grow = 0, ending = null, t0 = performance.now();
       const yh = () => handPoint(you);
-      const fh = () => { if (A.cm){ const b = A.cm.box(); return {x: b.x + b.w * 0.85, y: b.y + b.h * 0.36}; } return handPoint(ghost); };
+      /* 首领（代码怪物）的光线从下巴或头的前端射出来（会喷火的就像从嘴里喷出光线）；拿不到就用身体前端 */
+      const fh = () => { if (A.cm){ const pb = A.cm.partBox && (A.cm.partBox("jaw") || A.cm.partBox("head")); if (pb && pb.w) return {x: pb.x + pb.w * 0.9, y: pb.y + pb.h * 0.5}; const b = A.cm.box(); return {x: b.x + b.w * 0.85, y: b.y + b.h * 0.36}; } return handPoint(ghost); };
       const bodyC = f => { if (f === ghost && A.cm){ const b = A.cm.box(); return {x: b.x + b.w * 0.5, y: b.y + b.h * 0.42}; } const b = box(bodyOf(f)); return {x: b.x + b.w * 0.5, y: b.y + b.h * 0.38}; };
       const rgb = h => { const n = parseInt(String(h).replace("#", ""), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
       const Y = o.you.map(rgb), F = o.foe.map(rgb), WH = [255, 255, 255], col = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
@@ -11179,13 +11183,15 @@ const BT = (() => {
       const halo = (ctx, x, y, r, c, al) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col(c, al)); g.addColorStop(0.45, col(c, al * 0.45)); g.addColorStop(1, col(c, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
       const halo2 = (ctx, x, y, r, c, al) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col(WH, al)); g.addColorStop(0.28, col(mix(WH, c, 0.55), al * 0.8)); g.addColorStop(0.6, col(c, al * 0.45)); g.addColorStop(1, col(c, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
       const GL = document.createElement("canvas"); GL.width = GL.height = 32; { const g = GL.getContext("2d"), r = g.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.4, "rgba(255,255,255,.45)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 32, 32); }
-      const hasWind = f => (f === ghost && A.cm ? false : f.rig || hasPose(f, "skillWind"));
+      const hasWind = f => (f === ghost && A.cm ? !!A.cm.holdPose : f.rig || hasPose(f, "skillWind"));
       /* 对波时镜头拉远：人物等比例缩到八成，看到的场景多一些；结束后再拉回来（都是平滑过渡） */
-      const cs0 = A.charSize;
-      const zoomTo = (to, ms) => new Promise(res => { const from = A.charSize, z0 = performance.now();
-        const f = now => { if (token !== A.token){ res(); return; } const u = Math.min(1, (now - z0) / ms), e = u * u * (3 - 2 * u); A.setOpt({charSize: from + (to - from) * e}); if (u < 1) requestAnimationFrame(f); else res(); };
+      /* 对波时镜头拉远、两人站开：人物缩到一半，站到画面的 14% 和 86% 处（1.8 米的人隔开 6 米多；巨大化的按同样的比例）。对波预览一打开就是这样（o.noZoom） */
+      const cs0 = A.charSize, sp0 = (A.spots || [0.27, 0.73]).slice();
+      const zoomTo = (to, ms, sp) => new Promise(res => { if (o.noZoom){ res(); return; } const from = A.charSize, f0 = (A.spots || sp0).slice(), z0 = performance.now();
+        const f = now => { if (token !== A.token){ res(); return; } const u = Math.min(1, (now - z0) / ms), e = u * u * (3 - 2 * u);
+          A.setOpt({charSize: from + (to - from) * e, spots: sp ? [f0[0] + (sp[0] - f0[0]) * e, f0[1] + (sp[1] - f0[1]) * e] : A.spots}); if (u < 1) requestAnimationFrame(f); else res(); };
         requestAnimationFrame(f); });
-      zoomTo(cs0 * 0.8, 450);
+      zoomTo(cs0 * 0.5, 450, [0.14, 0.86]);
       /* 对波里用原版技能的画法（只是光线的终点换成对波的交点）：每个技能一个画法，同一套参数和配色；代码怪物的技能不是光线，用按它颜色画的通用光线 */
       const PST = {you:{flow:[], rings:[], cres:[], last:0}, foe:{flow:[], rings:[], cres:[], last:0}};
       const tq = (ctx, f, t, w0, w1, style) => { const dx = t.x - f.x, dy = t.y - f.y, Ln = Math.hypot(dx, dy) || 1, nx = -dy / Ln, ny = dx / Ln; ctx.fillStyle = style; ctx.beginPath(); ctx.moveTo(f.x + nx * w0, f.y + ny * w0); ctx.lineTo(t.x + nx * w1, t.y + ny * w1); ctx.lineTo(t.x - nx * w1, t.y - ny * w1); ctx.lineTo(f.x - nx * w0, f.y - ny * w0); ctx.closePath(); ctx.fill(); };
@@ -11236,12 +11242,13 @@ const BT = (() => {
       const safe = fn => { try { fn(); } catch (e) {} };   /* 哪个姿势出错也照样往下走，不会卡在“聚能” */
       const ready = (async () => {
         const wy = hasWind(you), wf = hasWind(ghost);
-        if (wy || wf){ if (wy) safe(() => pose(you, "charge")); if (wf) safe(() => pose(ghost, "charge")); await wait(650);
+        if (wy || wf){ if (wy) safe(() => pose(you, "charge")); if (wf) safe(() => (A.cm ? A.cm.holdPose("skillWind") : pose(ghost, "charge"))); await wait(650);
           if (token !== A.token) return;
           /* 第二段前摇（双手平举）：只有姿势表里有这一格的才做；原创小人没有这个姿势，只做第一段 */
           if (wy && !you.rig && hasPose(you, "skillMid")) safe(() => pose(you, "mid")); if (wf && !ghost.rig && hasPose(ghost, "skillMid")) safe(() => pose(ghost, "mid")); await wait(420); }
         if (token !== A.token) return;
         if (you.rig || hasPose(you, "skill")) safe(() => pose(you, "fire")); if (!A.cm && (ghost.rig || hasPose(ghost, "skill"))) safe(() => pose(ghost, "fire"));
+        if (A.cm && A.cm.holdPose) safe(() => A.cm.holdPose("skill"));   /* 首领保持它原本放技能的姿势（比如张着嘴） */
         await wait(40); const g0 = performance.now();
         await new Promise(r => { const f = now => { grow = Math.min(1, (now - g0) / 230); if (grow < 1 && token === A.token) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
         burstAt = performance.now(); shake(8);
@@ -11313,7 +11320,7 @@ const BT = (() => {
       return {
         ready,
         burst(){ burstAt = performance.now(); },
-        stop(){ stop = true; if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); zoomTo(cs0, 300); },
+        stop(){ stop = true; if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); if (A.cm) try { A.cm.idle(); } catch (e) {} zoomTo(cs0, 300, sp0); },
         /* 3：能量球推到输的一方身上炸开 → 赢的一方的光继续打一小段时间（伤害一下下往外跳）→ 输的一方倒下、赢的一方胜利（opts.fall） */
         async end(winner, dmg, opts){
           opts = opts || {}; const loser = winner === "you" ? "foe" : "you", L = loser === "you" ? you : ghost;
@@ -11324,8 +11331,8 @@ const BT = (() => {
           for (const part of parts2){ if (token !== A.token) return; const T = bodyC(L); dealt(L, part); damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part); if (!(L === ghost && A.cm)) sparksOn(L, "skill", T); await wait(150); }
           await wait(200); stop = true;
           if (opts.fall){ try { await A.finish(winner === "you"); } catch (e) {} }
-          else { if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); }
-          await zoomTo(cs0, 450);
+          else { if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); if (A.cm) try { A.cm.idle(); } catch (e) {} }
+          await zoomTo(cs0, 450, sp0);
         }
       };
     }
@@ -12659,13 +12666,16 @@ CHG.pressure = el => { S.settings.pressure = !!el.checked; save(); toast(el.chec
 let BAT_CLA = null; const CLS = {p:0, res:[], fx:null, busy:false, youC:null, foeC:null};
 function batClashHTML(){
   const mine = [["rig", "原创小人"]].concat(BAT_LIST.map(c => ["c:" + c.id, c.name || "角色"]));
-  const foes = TuokouMonsters.list().filter(m => m.tier !== "mob").map(m => ["m:" + m.id, m.name]).concat(BAT_LIST.map(c => ["c:" + c.id, (c.name || "角色") + "（你上传的）"]));
+  /* 对波只在对话首领战里出现，对手只会是首领：小怪、精英怪不放进来 */
+  const foes = TuokouMonsters.list().filter(m => m.tier === "boss").map(m => ["m:" + m.id, m.name]).concat(BAT_LIST.map(c => ["c:" + c.id, (c.name || "角色") + "（你上传的）"]));
+  const places = BT.PLACES.human.map(p => [p[0], p[1]]).concat(BT.PLACES.giant.map(p => [p[0], p[1] + "（巨大化）"]));
   const pick = (v, arr, d) => (arr.some(x => x[0] === v) ? v : d);
   const yv = pick(L.clYou, mine, L.batActive ? "c:" + L.batActive : "rig"), fv = pick(L.clFoe, foes, foes[0] ? foes[0][0] : "");
+  const pv = pick(L.clPlace, places, "street");
   const sel = (id, arr, v) => `<select id="${id}" data-chg="cl-pick">${arr.map(([k, t]) => `<option value="${esc(k)}" ${k === v ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`;
   return `<p class="small muted">选你的角色和对手，看两边的技能撞在一起是什么样。颜色按两边技能各自的颜色。</p>
-    <div class="row-gap" style="margin-top:8px"><label class="fld" style="flex:1;min-width:0"><span>你</span>${sel("clYou", mine, yv)}</label><label class="fld" style="flex:1;min-width:0"><span>对手</span>${sel("clFoe", foes, fv)}</label></div>
-    <label class="switch" style="margin-top:6px"><span>夜晚</span><input type="checkbox" id="clNight" data-chg="cl-pick" ${L.clNight ? "checked" : ""}></label>
+    <div class="row-gap" style="margin-top:8px"><label class="fld" style="flex:1;min-width:0"><span>对手（左边）</span>${sel("clFoe", foes, fv)}</label><label class="fld" style="flex:1;min-width:0"><span>你（右边）</span>${sel("clYou", mine, yv)}</label></div>
+    <div class="row-gap" style="margin-top:6px"><label class="fld" style="flex:1;min-width:0"><span>场景</span>${sel("clPlace", places, pv)}</label><label class="switch" style="flex:1"><span>夜晚</span><input type="checkbox" id="clNight" data-chg="cl-pick" ${L.clNight ? "checked" : ""}></label></div>
     <div class="bt-stage db-arena" id="clArena"></div>
     <p id="clRes" style="margin:6px 0">○ ○ ○</p>
     <div class="row-gap"><button class="btn primary" data-act="cl-ans" data-v="1">说对了</button><button class="btn" data-act="cl-ans" data-v="0">说错了</button><button class="btn" data-act="cl-auto">自动演示 3 句</button><button class="btn ghost" data-act="cl-reset">重新开始</button></div>
@@ -12676,12 +12686,17 @@ async function clRec(v){ if (!v || v === "rig") return null; const id = v.slice(
 async function batClashLoad(){
   const A = BAT_CLA; if (!A) return; clReset(true);
   const yv = ($("#clYou") || {}).value || "rig", fv = ($("#clFoe") || {}).value || "", night = !!($("#clNight") || {}).checked;
-  L.clYou = yv; L.clFoe = fv; L.clNight = night; saveLocal();
-  A.setOpt({charSize:0.6, place:"street", night, giant:false});
-  const yr = await clRec(yv); A.setChar(yr ? BT.rebuild(yr) : null, BT.metaOf(yr || null));
+  const yr = await clRec(yv), fr0 = fv.startsWith("c:") ? await clRec(fv) : null;
+  /* 巨大化的场景：两个都能巨大化才行（首领都能巨大化；你上传的角色要开了“能巨大化”）；不行就换回街道 */
+  let place = ($("#clPlace") || {}).value || "street", giant = BT.PLACES.giant.some(x => x[0] === place);
+  if (giant && !(yr && yr.giantM && (fv.startsWith("m:") || (fr0 && fr0.giantM)))){ giant = false; place = "street"; const ps = $("#clPlace"); if (ps) ps.value = "street"; toast("人物无法巨大化"); }
+  L.clYou = yv; L.clFoe = fv; L.clNight = night; L.clPlace = place; saveLocal();
+  /* 一打开就是对波的站位：人物缩到一半，两人站开（1.8 米的人隔开 6 米多） */
+  A.setOpt({charSize:0.3, spots:[0.14, 0.86], place, night, giant});
+  A.setChar(yr ? BT.rebuild(yr) : null, BT.metaOf(yr || null, giant));
   CLS.youC = yr ? (SKILL_COL[BT.loadoutOf(yr).skill] || SKILL_COL.wideBeam) : SKILL_COL.rig; CLS.youSkill = yr ? BT.loadoutOf(yr).skill : "rig"; CLS.foeSkill = "generic";
   if (fv.startsWith("m:")){ const id = fv.slice(2); A.setEnemy(BT.codeMon(id, 100)); CLS.foeC = MON_COL[id] || ["#FF5A3C", "#FFC46A"]; }
-  else if (fv){ const fr = await clRec(fv); if (fr){ const info = BAT_LIST.find(c => "c:" + c.id === fv) || {name:"对手"}; A.setEnemy(imgEnemy({info, rec:fr}, "elite", false, true)); CLS.foeC = SKILL_COL[BT.loadoutOf(fr).skill] || SKILL_COL.wideBeam; CLS.foeSkill = BT.loadoutOf(fr).skill; } }
+  else if (fv){ const fr = fr0; if (fr){ const info = BAT_LIST.find(c => "c:" + c.id === fv) || {name:"对手"}; A.setEnemy(imgEnemy({info, rec:fr}, "elite", giant, true)); CLS.foeC = SKILL_COL[BT.loadoutOf(fr).skill] || SKILL_COL.wideBeam; CLS.foeSkill = BT.loadoutOf(fr).skill; } }
   A.setNames("对手", youName()); A.setHP(100, true, 100);
 }
 function clReset(silent){
@@ -12691,7 +12706,7 @@ function clReset(silent){
 }
 ACT["cl-ans"] = async el => {
   const A = BAT_CLA; if (!A || CLS.busy || CLS.res.length >= 3) return;
-  if (!CLS.fx){ CLS.busy = true; CLS.fx = A.clash({you:CLS.youC || SKILL_COL.rig, foe:CLS.foeC || ["#FF5A3C", "#FFC46A"], getP:() => CLS.p, youSkill:CLS.youSkill || "rig", foeSkill:CLS.foeSkill || "generic"}); const m0 = $("#clMsg"); if (m0) m0.textContent = "双方都在聚能……"; await CLS.fx.ready; CLS.busy = false; }
+  if (!CLS.fx){ CLS.busy = true; CLS.fx = A.clash({you:CLS.youC || SKILL_COL.rig, foe:CLS.foeC || ["#FF5A3C", "#FFC46A"], getP:() => CLS.p, youSkill:CLS.youSkill || "rig", foeSkill:CLS.foeSkill || "generic", noZoom:true}); const m0 = $("#clMsg"); if (m0) m0.textContent = "双方都在聚能……"; await CLS.fx.ready; CLS.busy = false; }
   const ok = el.dataset.v === "1", step = CLS.res.length === 2 ? 0.5 : 1 / 3; CLS.res.push(ok); CLS.fx.burst(); CLS.busy = true;
   const from = CLS.p, to = Math.max(-1, Math.min(1, CLS.p + (ok ? step : -step))), t0 = performance.now();
   await new Promise(r => { const f = now => { const u = Math.min(1, (now - t0) / 420); CLS.p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
