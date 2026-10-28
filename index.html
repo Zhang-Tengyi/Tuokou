@@ -713,7 +713,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.52.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.52.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -11476,7 +11476,11 @@ const BT = (() => {
         if (ending){ const k = smooth((now - ending.t0) / 350), T = bodyC(ending.loser === "you" ? you : ghost); cx = cx + (T.x - cx) * k; cy = cy + (T.y - cy) * k; }
         CX.x = cx; CX.y = cy;   /* 原版光线的终点跟着交点走 */
         /* 中心白光的大小随两个人的距离变：离得近就小一点，两道原版光线才露得出来（最大还是原来那么大） */
-        const R = Math.min(sz * 0.42, Math.abs(b.x - a.x) * 0.36) * (0.92 + Math.random() * 0.16) * (ending && now - ending.t0 > 350 ? 1.15 : 1);
+        /* 白光的大小按两边人物的身高来定：普通大小的场景小一些，巨大化的按比例大一些（也不超过两人距离的三成） */
+        const bh = (box(bodyOf(you)).h + (A.cm ? A.cm.box().h : box(bodyOf(ghost)).h)) / 2;
+        const R = Math.min(sz * 0.42, Math.abs(b.x - a.x) * 0.3, bh * 0.5) * (0.92 + Math.random() * 0.16) * (ending && now - ending.t0 > 350 ? 1.15 : 1);
+        /* 能量球在输的一方身上炸开以后（gone）：白光、光晕、光芒、镜头光条都不再画，只剩炸开的粒子慢慢消失、赢的一方的光线继续打 */
+        const gone = !!(ending && now - ending.t0 > 470);
         const side = Math.sign(a.x - cx) || 1, day = !A.night, K = day ? 0.8 : 1, AVG = mix(Y[0], F[0], 0.5), live = grow >= 1;
         const emit = (kind, boost) => { boost = boost || 1; const ang = Math.random() * Math.PI * 2, mine = Math.cos(ang) * side > 0, pal = (mine ? Math.random() < 0.7 : Math.random() < 0.3) ? Y : F;
           const v = (kind === "petal" ? 0.08 + Math.random() * 0.22 : 0.14 + Math.random() * 0.5) * boost;
@@ -11494,15 +11498,16 @@ const BT = (() => {
           if (grow > 0){ paint("you", a, {x: a.x + (cx - a.x) * grow, y: a.y + (cy - a.y) * grow}); paint("foe", b, {x: b.x + (cx - b.x) * grow, y: b.y + (cy - b.y) * grow}); }
           ctx.restore(); return true;
         }
-        if (day){ const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, sz * 0.95); g.addColorStop(0, "rgba(8,12,28,.28)"); g.addColorStop(0.55, "rgba(8,12,28,.14)"); g.addColorStop(1, "rgba(8,12,28,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, SW, sz); ctx.fillStyle = "rgba(8,12,28,.04)"; ctx.fillRect(0, 0, SW, sz); }
-        ctx.globalCompositeOperation = day ? "source-over" : "lighter"; ctx.fillStyle = col(AVG, day ? 0.05 : 0.08); ctx.fillRect(0, 0, SW, sz);
+        if (day && !gone){ const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, sz * 0.95); g.addColorStop(0, "rgba(8,12,28,.28)"); g.addColorStop(0.55, "rgba(8,12,28,.14)"); g.addColorStop(1, "rgba(8,12,28,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, SW, sz); ctx.fillStyle = "rgba(8,12,28,.04)"; ctx.fillRect(0, 0, SW, sz); }
+        if (!gone){ ctx.globalCompositeOperation = day ? "source-over" : "lighter"; ctx.fillStyle = col(AVG, day ? 0.05 : 0.08); ctx.fillRect(0, 0, SW, sz); }
         ctx.globalCompositeOperation = "lighter";
-        { const gy = Math.max(a.y, b.y) + sz * 0.32, g = ctx.createRadialGradient(cx, gy, 0, cx, gy, R * 1.7); g.addColorStop(0, col(WH, 0.32 * K)); g.addColorStop(0.4, col(AVG, 0.2 * K)); g.addColorStop(1, col(AVG, 0));
+        if (!gone){ const gy = Math.max(a.y, b.y) + sz * 0.32, g = ctx.createRadialGradient(cx, gy, 0, cx, gy, R * 1.7); g.addColorStop(0, col(WH, 0.32 * K)); g.addColorStop(0.4, col(AVG, 0.2 * K)); g.addColorStop(1, col(AVG, 0));
           ctx.save(); ctx.translate(cx, gy); ctx.scale(1, 0.22); ctx.translate(-cx, -gy); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, gy, R * 1.7, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
         /* 两道光；结束时输的一方的光消失，只剩赢的一方的光打在他身上 */
         if (!ending || ending.loser !== "you" || now - ending.t0 < 350) paint("you", a, {x:cx, y:cy});
         if (!ending || ending.loser !== "foe" || now - ending.t0 < 350){ for (const b2 of fhs()) paint("foe", b2, {x:cx, y:cy}); }   /* 双冠龙：后面那个头的先画，前面那个头的盖在上面 */
         const hl = day ? halo2 : halo; ctx.globalCompositeOperation = day ? "source-over" : "lighter";
+        if (!gone){
         hl(ctx, cx + side * R * 0.28, cy, R * 1.15, Y[0], 0.55 * K); hl(ctx, cx - side * R * 0.28, cy, R * 1.15, F[0], 0.55 * K);
         hl(ctx, cx + side * R * 0.5, cy, R * 0.62, Y[0], 0.7 * K); hl(ctx, cx - side * R * 0.5, cy, R * 0.62, F[0], 0.7 * K);
         ctx.globalCompositeOperation = "lighter";
@@ -11517,6 +11522,7 @@ const BT = (() => {
           g.addColorStop(0, col(CL, 0)); g.addColorStop(Math.max(0.01, u - 0.3), col(CL, 0.35 * fl)); g.addColorStop(u, col(WH, 0.95 * fl)); g.addColorStop(Math.min(0.99, u + 0.3), col(CR, 0.35 * fl)); g.addColorStop(1, col(CR, 0));
           ctx.fillStyle = g; ctx.fillRect(0, cy - 1.5, SW, 3); ctx.globalAlpha = 0.3; ctx.fillRect(0, cy - 7, SW, 14); ctx.globalAlpha = 1; }
         if (!reduced()){ for (let i = 0; i < 9; i++) emit("dot"); for (let i = 0; i < 8; i++) emit("streak"); for (let i = 0; i < 2; i++) emit("petal"); }
+        }   /* !gone */
         if (burstAt){ const B = burstBig ? 2.6 : 1.7; for (let i = 0; i < (burstBig ? 130 : 70); i++) emit(Math.random() < 0.55 ? "streak" : "dot", B); for (let i = 0; i < (burstBig ? 24 : 10); i++) emit("petal", B * 0.8); flashUntil = now + (burstBig ? 420 : 240); burstAt = 0; shake(burstBig ? 14 : 9); burstBig = false; }
         if (now < flashUntil){ ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = col(WH, 0.32 * K * Math.min(1, (flashUntil - now) / 240)); ctx.fillRect(0, 0, SW, sz); }
         for (let i = parts.length - 1; i >= 0; i--){ const q = parts[i], k = (now - q.born) / q.life; if (k >= 1){ parts.splice(i, 1); continue; }
@@ -11526,7 +11532,7 @@ const BT = (() => {
           if (q.kind === "streak"){ const vx = q.vx, vy = q.vy + 2 * q.g * dt, sp = Math.hypot(vx, vy) || 1, L = 6 + sp * 60; ctx.strokeStyle = c; ctx.lineWidth = q.s * 0.7; ctx.beginPath(); ctx.moveTo(q.x + px, q.y + py); ctx.lineTo(q.x + px - (vx / sp) * L, q.y + py - (vy / sp) * L); ctx.stroke(); }
           else if (q.kind === "petal"){ ctx.save(); ctx.translate(q.x + px, q.y + py); ctx.rotate(q.rot + dt / 300); ctx.fillStyle = c; ctx.fillRect(-q.s / 2, -q.s / 4, q.s, q.s / 2); ctx.restore(); }
           else { ctx.fillStyle = c; ctx.fillRect(q.x + px - q.s / 2, q.y + py - q.s / 2, q.s, q.s); } }
-        if (now - lastRing > 360){ lastRing = now; rings.push({born:now, c:(Math.random() < 0.5 ? Y : F)[0], x:cx, y:cy, R}); }
+        if (!gone && now - lastRing > 360){ lastRing = now; rings.push({born:now, c:(Math.random() < 0.5 ? Y : F)[0], x:cx, y:cy, R}); }
         ctx.globalCompositeOperation = day ? "source-over" : "lighter";
         for (let i = rings.length - 1; i >= 0; i--){ const r = rings[i], k = (now - r.born) / 520; if (k >= 1){ rings.splice(i, 1); continue; }
           ctx.strokeStyle = col(mix(WH, r.c, smooth(k * 1.6)), 0.8 * (1 - k)); ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(r.x, r.y, r.R * 0.4 + r.R * 1.2 * k, (r.R * 0.4 + r.R * 1.2 * k) * 0.8, 0, 0, Math.PI * 2); ctx.stroke(); }
