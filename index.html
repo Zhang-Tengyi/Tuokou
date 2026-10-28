@@ -713,7 +713,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.49.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.52.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -1853,7 +1853,7 @@ function soundSim(a, b){
   const ka = tokens(a).map(sndKey).join(""), kb = tokens(b, true).map(sndKey).join("");
   if (!ka || !kb) return 0; return 1 - lev(ka, kb) / Math.max(ka.length, kb.length);
 }
-function compareSaid(target, alts, said){
+function compareSaid0(target, alts, said){
   const u0 = cmpTok(said, true);
   let best = null;
   for (const c of [target].concat(alts||[])){
@@ -2141,8 +2141,12 @@ function chunkSentence(en){
   if (parts.length >= 2){ while (parts.length > 3){ const i = parts.length - 2; parts.splice(i, 2, parts[i] + " " + parts[i+1]); } return parts; }
   const w = en.split(/\s+/);
   if (w.length <= 6) return [en];
-  const mid = Math.floor(w.length / 2); let best = mid, bd = 99;
-  for (let i = 2; i < w.length - 2; i++){ if (BOUND.has(w[i].toLowerCase().replace(/[^a-z']/g, "")) && Math.abs(i - mid) < bd){ bd = Math.abs(i - mid); best = i; } }
+  /* 找离中间最近的断点；不在 has to、need to、going to 这类组合中间断开；差不多远时优先在 and、because、when 这类连接词前面断 */
+  const TOV = new Set(["has","have","had","need","needs","needed","want","wants","wanted","going","used","able","ought","got","try","tries","tried","plan","plans","planned","like","likes","love","hope","hoped","start","started","decide","decided","seem","seems","expect","expected","learn","learned","would"]);
+  const CONJ = new Set(["and","but","so","because","when","where","since","after","before","while","although","if"]);
+  const mid = Math.floor(w.length / 2); let best = mid, bd = 99; const nm = x => String(x || "").toLowerCase().replace(/[^a-z']/g, "");
+  for (let i = 2; i < w.length - 2; i++){ const wl = nm(w[i]); if (!BOUND.has(wl)) continue; if (wl === "to" && TOV.has(nm(w[i - 1]))) continue;
+    const sc = Math.abs(i - mid) + (CONJ.has(wl) ? 0 : 0.5); if (sc < bd){ bd = sc; best = i; } }
   return [w.slice(0, best).join(" "), w.slice(best).join(" ")];
 }
 
@@ -2157,7 +2161,7 @@ function parseImport(text){
     const p = s.split(/\s*[|｜]\s*/);
     const kind = p[0];
     if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); if (/^(日常生活|daily)$/i.test(deck.trim())) deck = "daily"; else if (/^(通用|通用（诊断报告）|core)$/i.test(deck.trim())) deck = "core"; if (p[2] && /替换|replace/i.test(p[2]) && !res.meta.replace.includes(deck)) res.meta.replace.push(deck); return; }
-    if (kind==="面试日期" && /^\d{4}-\d{2}-\d{2}$/.test(p[1]||"")){ res.meta.date = p[1]; return; }
+    if (kind==="面试日期" && isRealDate(p[1])){ res.meta.date = p[1]; return; }
     if (kind==="面试官" && p[1]){ res.meta.who.push({deck, name:p[1], company:p[2]||""}); return; }
     if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
     else if ((kind==="词"||kind==="W") && p[1] && p[2] && p[3]){ const a = splitAlts(p[3]); res.cards.push({t:"w", word:p[1].trim(), mean:p[2].trim(), en:a[0], alt:a.slice(1), zh:(p[4]||"").trim(), tag:"vocab", note:p[5]||"", deck}); }
@@ -2170,7 +2174,7 @@ function parseImport(text){
     }
     else if ((kind==="追问"||kind==="FU") && p[1] && p[2]){ res.follow.push({qid:p[1].toUpperCase(), text:p[2].trim(), ans:p.slice(3).join(" | ").trim()}); }
     else if ((kind==="计划"||kind==="PLAN") && /^(替换|replace)$/i.test(String(p[1] || "").trim())){ res.planReplace = true; }
-    else if ((kind==="计划"||kind==="PLAN") && p[1] && p[3]){ if (/^\d{4}-\d{2}-\d{2}$/.test(p[1].trim())) res.plan.push({date:p[1].trim(), cue:(p[2]||"").trim(), text:p[3].trim(), act:(p[4]||"").trim()}); else res.bad.push(line); }
+    else if ((kind==="计划"||kind==="PLAN") && p[1] && p[3]){ if (isRealDate(p[1])) res.plan.push({date:p[1].trim(), cue:(p[2]||"").trim(), text:p[3].trim(), act:(p[4]||"").trim()}); else res.bad.push(line); }
     else if ((kind==="也对"||kind==="OK") && p[1] && p[2]){ res.alts.push({id:p[1].trim(), text:p.slice(2).join(" | ")}); }
     else if ((kind==="答"||kind==="A") && p[1] && p[2]){ res.answers.push({qid:p[1].toUpperCase(), text:p.slice(2).join(" | ")}); }
     else if ((kind==="要点"||kind==="K") && p[1] && p[2]){ res.keys.push({qid:p[1].toUpperCase(), keys:p.slice(2).join("；").split(/[；;、\n]/).map(x=>x.trim()).filter(Boolean)}); }
@@ -2494,10 +2498,32 @@ function battlePickOrder(entries){
   return out;
 }
 
-const CORE = {soundSim, sndKey, battlePlan, battleFirst, battleSpecial, battleTicks, battleBeats, battleRef, battleOutcome, battlePickOrder, BAT_DMG,TAGS,TYPE_LABEL,TENSE_NOTE,tagKey,dstr,dnum,nstr,splitAlts,shuffle,hash,buildCatalog,INTERVALS,MASTERED_BOX,srsRate,
+const CORE = {isRealDate, wordDiff, nearMiss, soundSim, sndKey, battlePlan, battleFirst, battleSpecial, battleTicks, battleBeats, battleRef, battleOutcome, battlePickOrder, BAT_DMG,TAGS,TYPE_LABEL,TENSE_NOTE,tagKey,dstr,dnum,nstr,splitAlts,shuffle,hash,buildCatalog,INTERVALS,MASTERED_BOX,srsRate,
   tokens,lcsOps,compareSaid,meaningCheck,speechFlags,hasWord,wordsMatch,speakEN,thoughtGroups,pronTip,splitSentences,chunkLex,findChunks,sayVariants,chunkSentence,hintNotes,classifySub,pastOf,regPast,lev,parseImport,checkWriting,checkPast,dayDone,computeStreak,tagAgg,
   buildSession,diversify,interleave,pickQuestions,IRR,SESSION_CFG};
 
+
+/* 按词比：错了几个词（最长公共子序列以外的词，多的、少的取大的） */
+function wordDiff(target, said){
+  const a = tokens(target), b = tokens(said, true), n = a.length, m = b.length;
+  const dp = Array.from({length:n + 1}, () => new Array(m + 1).fill(0));
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+  const l = dp[n][m]; return {n, m, errs: Math.max(n - l, m - l)};
+}
+/* 只差一点：错的词不超过 1 个，或者不超过全句的四分之一（短句子错一个词，比例上就显得“差别很大”，按词数算就不会） */
+function nearMiss(target, alts, said){
+  if (!String(said || "").trim()) return false;
+  return [target].concat(alts || []).some(t => { const d = wordDiff(t, said); return d.n > 0 && d.errs <= Math.max(1, Math.round(d.n * 0.25)); });
+}
+/* compareSaid 外面包一层：结果不变，只在“差别较大”但只差一点时加上 near 标记（卡片、游戏、补练都用它） */
+function compareSaid(t, alts, said){
+  const r = compareSaid0(t, alts, said);
+  if (r && r.level === "off" && !r.exact && nearMiss(t, alts, said)){ r.near = true; r.nearN = Math.min(...[t].concat(alts || []).map(x => wordDiff(x, said).errs)); }
+  return r;
+}
+
+/* 日期不光要长得像 2026-10-22，还要真的存在：13 月 40 日、2 月 30 日这种导入时跳过（不然这一项永远不会在哪一天出现） */
+function isRealDate(s){ s = String(s || "").trim(); if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false; const [y, m, d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m - 1, d)); return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d; }
 
 /* 脱口 · 基础设施：存储、语音、录音、云同步、AI 批改、导航 */
 "use strict";
@@ -3430,10 +3456,9 @@ VIEWS.home = {
         ${deckSelectHTML()}
         <div class="meta">${line}</div>
         <div class="seg" role="group" aria-label="练习时长">${seg}</div>
-        <div class="start-row"><button class="btn primary big" data-act="start">开始</button><button class="btn big game-start" data-act="start-game">游戏</button></div>
-        <button class="btn block db-start" data-act="db-open" style="margin-top:8px">对话首领战</button>
-        <label class="switch quiet-sw"><span>现在不方便说话（打字回答，跳过要开口的题）</span><input type="checkbox" data-chg="quiet" ${L.quiet ? "checked" : ""}></label>
-        ${L.quiet ? `<label class="switch quiet-sw"><span>播放声音（戴耳机时打开；关掉就不自动朗读、不响提示音，也跳过听力题）</span><input type="checkbox" data-chg="local" data-key="quietSound" ${L.quietSound ? "checked" : ""}></label>` : ""}
+        <div class="start-row"><button class="btn primary big" data-act="start" data-menu="1">练习</button><button class="btn big game-start" data-act="start-game" data-menu="1">游戏</button></div>
+        <label class="switch quiet-sw"><span>现在不方便说话（打字回答）</span><input type="checkbox" data-chg="quiet" ${L.quiet ? "checked" : ""}></label>
+        ${L.quiet ? `<label class="switch quiet-sw"><span>播放声音（关掉会跳过听力题）</span><input type="checkbox" data-chg="local" data-key="quietSound" ${L.quietSound ? "checked" : ""}></label>` : ""}
         <div class="meta">到期复习 ${c.due} 题，今天还有 ${c.newLeft} 道新题</div>${focusLine()}${planLine()}${todayLine()}
       </section>
       ${iv != null ? `<div class="countdown"><span class="num">${iv}</span><span>${iv === 0 ? "今天就是面试，稳住，先说结论" : "天后面试"}</span></div>` : ""}
@@ -3694,7 +3719,7 @@ class CardStage {
         <div class="dots">${steps.map((_, i) => `<i class="${i < this.drill ? "on" : ""}"></i>`).join("")}</div>
         ${SR.usable() && this.drill < n ? `<button class="mic" data-act="c-drill-mic" aria-label="说一遍">${ICON.mic}</button><div class="heard" id="heard">说一遍，说对了自动打勾</div>` : ""}
         ${this.drill < n ? `<button class="btn block" data-act="c-drill-tick">我说了一遍</button>` : `<button class="btn primary block big" data-act="c-drill-done">继续，这一轮还会再考你</button>`}
-        ${this.leech ? `<button class="btn ghost block" style="margin-top:6px" data-act="c-leech-claude">让 Claude 给个更好记的说法</button>` : ""}
+        ${this.leech ? `<button class="btn ghost block" style="margin-top:6px" data-act="c-leech-claude">总记不住？让 Claude 换个好记的说法</button>` : ""}
       </div>`;
       if (this.drill < n && cur.play && canAutoSpeak() && this.drillPlayed !== this.drill){ this.drillPlayed = this.drill; setTimeout(() => { if (this.alive && this.phase === "drill") sayTxt(cur.text, cur.play === "slow"); }, 250); }
     }
@@ -3766,6 +3791,7 @@ class CardStage {
     return `<div class="panel" style="margin-top:14px;background:var(--amber-soft);border-color:transparent"><b>${this.hintMode === "flags" ? "意思对上了，但有几处可能有问题。按提示改一下，再说一次" : "差一点。按提示自己改，再说一次"}</b><ul class="fb" style="margin:6px 0 4px">${this.hints.map(h => `<li>${esc(h)}</li>`).join("")}</ul><p class="small muted">你刚才说的：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p><p class="small muted" style="margin-top:4px">这一步是让你自己改一次的机会，不算错。你其实说对了、是识别听错了，就点下面的按钮。</p><button class="btn block misrec-btn" data-act="c-retry-ok" style="margin-top:8px">我说对了，是识别错了</button></div>`;
   }
   suggest(){
+    if (this.cmp && this.cmp.near && !this.cmp.exact) return "hard";   /* 只差一点：建议“有卡顿” */
     if (!this.cmp) return "";
     if (this.misrec) return "hard";
     if (this.cmp.free) return this.cmp.exact ? "good" : this.cmp.level === "close" ? "hard" : "again";
@@ -3781,8 +3807,8 @@ class CardStage {
     const timeChip = this.ms ? `<span class="time-chip num" id="timeChip">${fmt1(this.ms)} 秒</span>` : "";
     if (cmp){
       const meaning = this.mean && !cmp.exact;
-      const lab = this.misrec ? "按你说对算（识别有误）" : this.mine && cmp.exact ? "按你的说法算对" : cmp.free ? (cmp.exact ? "用上了，规则没查出问题" : cmp.level === "close" ? "用上了，有几处可能有问题" : "这句没用上要练的词") : meaning ? (this.flags.length ? "意思对上了，有几处可能有问题" : "意思对上了，说法和参考不一样") : {exact:"完全正确", close:"差一点", off:"和参考说法差别比较大"}[cmp.level];
-      h += `<div class="verdict ${meaning ? (this.flags.length ? "close" : "meaning") : cmp.level}">${lab}${this.tries ? "" : timeChip}</div>`;
+      const lab = this.misrec ? "按你说对算（识别有误）" : this.mine && cmp.exact ? "按你的说法算对" : cmp.free ? (cmp.exact ? "用上了，规则没查出问题" : cmp.level === "close" ? "用上了，有几处可能有问题" : "这句没用上要练的词") : meaning ? (this.flags.length ? "意思对上了，有几处可能有问题" : "意思对上了，说法和参考不一样") : (cmp.near ? `只差一点：有 ${cmp.nearN} 个词不一样` : {exact:"完全正确", close:"差一点", off:"和参考说法差别比较大"}[cmp.level]);
+      h += `<div class="verdict ${meaning ? (this.flags.length ? "close" : "meaning") : cmp.near ? "close" : cmp.level}">${lab}${this.tries ? "" : timeChip}</div>`;
       const gc = this.said && !this.misrec ? gramCheck(this.said, null) : null;
       const gcMsgs = new Set(gc ? gc.must.concat(gc.opt).map(i => i.msg) : []);
       if (this.said) h += `<p class="small muted" style="margin:-4px 0 10px">${this.misrec ? "识别成了" : "你说的"}：<span class="en" style="font-size:16px">${gc ? gc.html : esc(this.said)}</span></p>`;
@@ -3839,7 +3865,8 @@ class CardStage {
     else if (r === "good"){ Snd.good(); vib(15); }
     if (r === "again" && (!this.retry || ((RUN.retries || {})[this.card.id] || 0) < 4)){
       const p = S.cards[this.card.id]; this.leech = !!(p && (p.lapses || 0) >= 3);
-      this.drillLite = !!(this.said && String(this.said).trim());
+      /* 补练几步：只差一点（或者意思对了）练两步；差得多练三步——不再只看你有没有开口 */
+      this.drillLite = !!(this.said && String(this.said).trim()) && !!(this.cmp && (this.cmp.level !== "off" || this.cmp.near || this.mean));
       this.phase = "drill"; this.drill = 0; this.drillPlayed = -1; this.render(); return;
     }
     setTimeout(() => { if (this.alive) nextItem(); }, res.pb ? 650 : 120);
@@ -3889,7 +3916,7 @@ ACT.word = el => {
     const b = e.target.closest("[data-x]"); if (e.target === bg || (b && b.dataset.x === "c")){ bg.remove(); return; } if (!b) return;
     if (b.dataset.x === "add" || b.dataset.x === "addck"){ const item = (b.dataset.x === "addck" ? (cb || ck) : w).trim(); S.wantWords = S.wantWords || [];
       if (!S.wantWords.some(x => x.w.toLowerCase() === item.toLowerCase())){ const host = el.closest(".en, .rd-s, .card, .li"); S.wantWords.push({w:item, ctx:host ? host.textContent.replace(/\s+/g, " ").trim().slice(0, 200) : "", ts:Date.now()}); save(); }
-      toast("加好了。联网后在“我的 → 待确认的说法”里发给 Claude，换成单词卡"); bg.remove(); return; }
+      toast("加好了。联网后在“我的 → 问 Claude”里发给 Claude，换成单词卡"); bg.remove(); return; }
     if (b.dataset.x === "cn") TTS.speak(ck, {rate:0.95}); else if (b.dataset.x === "cs") TTS.speak(ck, {rate:0.7});
     else if (b.dataset.x === "dmore"){ const l = bg.querySelector(`.dict-list[data-for="${b.dataset.for}"]`); if (l) l.hidden = !l.hidden; return; }
     else if (b.dataset.x === "dict"){ openDict(b.dataset.for === "cd" ? (cb || ck) : w, b.dataset.v); bg.remove(); return; }
@@ -4007,7 +4034,7 @@ ACT["c-ask"] = () => {
   S.pending = S.pending || [];
   if (!S.pending.some(p => p.cid === c.id && p.said === s.said)) S.pending.push({cid:c.id, zh: c.t === "w" && s.freeUse ? "用“" + c.mean + "”（" + c.word + "）自己说一句" : c.t === "f" ? "改错：" + c.wrong : c.t === "e" ? t.add + "：" + t.hint : (c.zh || ""), ref:t.en, said:s.said, ts:Date.now()});
   if (S.pending.length > 60) S.pending = S.pending.slice(-60);
-  save(); toast(`存好了（共 ${S.pending.length} 句）。联网后在“我的 → 待确认的说法”一起发给 Claude`);
+  save(); toast(`存好了（共 ${S.pending.length} 句）。联网后在“我的 → 问 Claude”一起发给 Claude`);
 };
 ACT["c-retry-ok"] = () => {
   const s = RUN.stage; if (!(s instanceof CardStage) || s.phase !== "retry" || !s.firstCmp) return;
@@ -4160,12 +4187,12 @@ class IvStage {
       el.innerHTML = `<div class="card"><div class="kind"><span class="chip k">复盘</span>${this.ms ? `<span class="num" style="margin-left:auto;font-size:18px">${fmtSec(this.ms)}</span>` : ""}</div>
         <div class="en sm">${esc(this.variant)}</div><div class="small muted">${esc(q.zh)}</div>
         ${this.url ? `<audio controls src="${this.url}"></audio>` : ""}
-        ${this.blob && typeof ASR !== "undefined" && ASR.supported() ? `<div id="ivAsr" style="margin-top:8px">${(typeof soloAsrHTML === "function" && soloAsrHTML(q, this.recAt)) || `<button class="btn sm" data-act="iv-asr">把录音转成文字（查语法、找没用上的说法）</button>`}</div>` : ""}
+        ${this.blob && typeof ASR !== "undefined" && ASR.supported() ? `<div id="ivAsr" style="margin-top:8px">${(typeof soloAsrHTML === "function" && soloAsrHTML(q, this.recAt)) || `<button class="btn sm" data-act="iv-asr">把录音转成文字</button>`}</div>` : ""}
         <h3 style="margin-top:16px">${this.url ? "听回放，对照检查" : "回想一下，对照检查"}</h3>
         <div style="margin-top:6px">${checks.map((c,i) => `<label class="check"><input type="checkbox" data-i="${i}"><span>${c}</span></label>`).join("")}</div><p class="small muted" style="margin-top:6px">没打勾的会变成下一轮的重点。</p>
         ${(() => { const ref = refFor(q); const mine = a && a.text ? a.text.trim() : "";
           return `<div style="margin-top:10px">${slashBtn()}</div>` + ivRateHTML(q.id) + selfCheckHTML(q.id, "solo", 0, ((S.soloIssues || {})[q.id] || {}).k)
-            + (ref ? `<details style="margin-top:10px" open><summary>参考回答（对照你刚才说的）</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
+            + (ref ? `<details style="margin-top:10px" open><summary>参考回答</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div><button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button></details>` : "")
             + (mine && mine !== ref ? `<details style="margin-top:10px"><summary>我写好的回答</summary><div class="en sm" style="margin-top:6px">${esc(mine)}</div></details>` : "")
             + (!ref && !mine ? `<div class="note">${esc(q.tip)}</div>${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div></details>` : ""}` : ""); })()}
         <div class="row-gap" style="margin-top:16px"><button class="btn" data-act="iv-same">再说一遍</button>${nextT ? `<button class="btn" data-act="iv-redo">再答一次，压到 ${nextT} 秒</button>` : ""}<button class="btn primary" data-act="iv-done">完成</button></div></div>`;
@@ -4609,7 +4636,7 @@ VIEWS.ready = {
 ACT["ready-go"] = () => { const ids = readyInfo().list.filter(x => x.n < 3).map(x => x.q.id); ivRunQs(ids, "练还没达标的题"); };
 function ivRateHTML(qid){
   const arr = (S.soloRate || {})[qid] || []; const last = arr[arr.length - 1]; const cur = last && Date.now() - last.ts < 30 * 60e3 ? last.r : "";
-  return `<div class="small muted" style="margin-top:10px">这次说得怎么样？（算进电话初筛准备度）</div><div class="row-gap" style="margin-top:6px">${CR_RATE.map(([k, l]) => `<button class="btn sm${cur === k ? " primary" : ""}" data-act="iv-rate" data-q="${qid}" data-r="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
+  return `<div class="small muted" style="margin-top:10px">这次说得怎么样？</div><div class="row-gap" style="margin-top:6px">${CR_RATE.map(([k, l]) => `<button class="btn sm${cur === k ? " primary" : ""}" data-act="iv-rate" data-q="${qid}" data-r="${k}" aria-pressed="${cur === k}">${l}</button>`).join("")}</div>`;
 }
 ACT["iv-rate"] = el => {
   const qid = el.dataset.q, r = el.dataset.r; S.soloRate = S.soloRate || {}; const arr = S.soloRate[qid] || (S.soloRate[qid] = []); const last = arr[arr.length - 1];
@@ -4674,12 +4701,12 @@ function crRowsHTML(rec, urlFor, live){
     return `<div class="panel"><b>${esc(title)}</b>
       <div class="en sm" style="margin-top:6px">${wordsHTML(s.say)}</div>
       ${url ? `<audio controls src="${url}"></audio>` : `<p class="small muted" style="margin-top:6px">${live ? "没有录音" : "录音只保留最近 5 次模拟"}</p>`}
-      ${url && s.k === "q" && ASR.supported() ? `<button class="btn sm" style="margin-top:6px" data-act="cr-asr" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">把这段录音转成文字（查语法、找没用上的说法）</button>` : ""}
+      ${url && s.k === "q" && ASR.supported() ? `<button class="btn sm" style="margin-top:6px" data-act="cr-asr" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">把这段录音转成文字</button>` : ""}
       ${ref ? `<details style="margin-top:8px" ${s.k === "f" ? "open" : ""}><summary>参考回答</summary><div class="en sm" style="margin-top:6px;line-height:1.7">${wordsHTML(ref)}</div>${s.k === "q" ? `<button class="btn sm" style="margin-top:8px" data-act="nav" data-v="reader" data-q="${s.qid}" data-src="ref">跟读参考回答</button>` : ""}</details>` : ""}
       ${s.k === "q" ? `<div class="small muted" style="margin-top:10px">听完自己的录音，这题说得怎么样？</div>
         <div class="row-gap" style="margin-top:6px">${CR_RATE.map(([k, l]) => `<button class="btn sm${r === k ? " primary" : ""}" data-act="cr-rate" data-id="${rec.id}" data-q="${s.qid}" data-r="${k}" aria-pressed="${r === k}">${l}</button>`).join("")}</div>
         ${selfCheckHTML(s.qid, "call:" + rec.id, i, (rec.issues || {})[s.qid])}
-        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">你说的文字（转写好的会放在这里；也可以再说一遍、用键盘打字）</summary>
+        <details style="margin-top:8px" ${note ? "open" : ""}><summary class="small">你说的文字</summary>
           <textarea class="en" id="crn-${i}" rows="3" data-chg="crnote" data-id="${rec.id}" data-q="${s.qid}" placeholder="点“再说一遍，转成文字”，照着刚才的意思再说一遍；也可以用键盘打字">${esc(note)}</textarea>
           <div class="row-gap" style="margin-top:6px"><button class="btn sm primary" data-act="cr-say" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">再说一遍，转成文字</button><button class="btn sm" data-act="cr-check" data-id="${rec.id}" data-q="${s.qid}" data-i="${i}">检查我说的</button></div>
           <div id="crf-${i}"></div></details>
@@ -5067,7 +5094,7 @@ VIEWS.journal = {
       ${MIC.blocked ? `<div class="panel"><p class="small">这个版本不能录音。直接在下面的框里点键盘上的麦克风，把今天的事说一遍，一样能检查。</p></div>` :
       `<div class="panel center"><div class="timer num" id="jClock">0:00</div><div class="level" id="jLvl"><i></i></div>
         <button class="btn primary big block" id="jRec" data-act="j-rec">${ICON.mic}开始录音</button><div id="jAudio">${J.url ? `<audio controls src="${J.url}"></audio>` : ""}</div></div>`}
-      <div class="panel"><label class="fld" style="margin-top:0"><span>用键盘语音输入再说一遍，或者打字（可选，用来检查）</span>
+      <div class="panel"><label class="fld" style="margin-top:0"><span>用键盘语音输入再说一遍，或者打字</span>
         <textarea class="en" id="jText" placeholder="Today I...">${esc(L.jDraft || "")}</textarea></label>
         ${jWordsHTML()}
         <div class="row-gap" style="margin-top:10px"><button class="btn" data-act="j-check">检查过去式</button><button class="btn has-ai-only" data-act="j-ai">AI 标错</button><button class="btn" data-act="j-copy">复制给 Claude</button></div>
@@ -5150,7 +5177,7 @@ function interviewsPanelHTML(){
   const form = `<div id="ivsForm" style="margin-top:10px;border-top:1px solid var(--line, #e2e2e2);padding-top:10px"><b>${ed ? "修改这场面试" : "添加一场面试"}</b>
     <label class="fld"><span>名称</span><input type="text" id="ivsName" value="${esc(ed ? ed.name : "")}" placeholder="比如：TaylorMade 招聘经理面试"></label>
     <label class="fld"><span>日期</span><input type="date" id="ivsDate" value="${esc(ed ? ed.date : "")}"></label>
-    <label class="fld"><span>时间（可选，填了就能加日历提醒）</span><input type="time" id="ivsTime" value="${esc(ed ? ed.time || "" : "")}"></label>
+    <label class="fld"><span>时间（可选）</span><input type="time" id="ivsTime" value="${esc(ed ? ed.time || "" : "")}"></label>
     <label class="fld"><span>用哪个题库准备（可选）</span><select id="ivsDeck"><option value="">不指定</option>${decks.map(s => `<option value="${esc(s.id)}" ${ed && ed.deck === s.id ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label>
     <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="ivs-save">${ed ? "保存修改" : "添加"}</button><button class="btn ghost" data-act="ivs-cancel">取消</button></div></div>`;
   const n = up[0];
@@ -5235,7 +5262,7 @@ VIEWS.ivedit = {
           <div class="row-gap" style="margin-top:10px"><button class="btn primary sm" data-act="nav" data-v="reader" data-q="${q.id}" data-src="ref">跟读参考回答</button>${mine && mine !== ref ? `<button class="btn sm" data-act="ive-useref" data-q="${q.id}">用它替换我的回答</button>` : ""}</div>
           ${mine && mine !== ref ? `<p class="small muted" style="margin-top:8px">你的回答和参考回答不一样：对照着看，把参考回答里更自然的说法放进你的回答。用自己的话说，比背别人的稿子在面试里更自然。</p>` : ""}</div>`
           : `<div class="panel"><p class="small muted" style="margin:0">这题还没有参考回答。写好你的版本，点“复制给 Claude”，我帮你改成自然的说法，再给你导入码。</p></div>`; })()}
-      ${(q.follow || []).length ? `<div class="panel"><div class="small muted">面试官可能接着追问（技术面试会一层一层往下问）</div>${q.follow.map(f => { const fa = (S.followAns || {})[q.id + "|" + f]; return `<div class="say-line" style="margin-top:10px"><div class="en sm">${wordsHTML(f)}</div><div class="say-btns">${sayBtns(f)}</div></div>${fa ? `<details style="margin-top:4px"><summary class="small">参考回答</summary><div class="say-line" style="margin-top:6px"><div class="en sm">${wordsHTML(fa)}</div><div class="say-btns">${sayBtns(fa)}</div></div></details>` : ""}`; }).join("")}</div>` : ""}
+      ${(q.follow || []).length ? `<div class="panel"><div class="small muted">面试官可能接着追问</div>${q.follow.map(f => { const fa = (S.followAns || {})[q.id + "|" + f]; return `<div class="say-line" style="margin-top:10px"><div class="en sm">${wordsHTML(f)}</div><div class="say-btns">${sayBtns(f)}</div></div>${fa ? `<details style="margin-top:4px"><summary class="small">参考回答</summary><div class="say-line" style="margin-top:6px"><div class="en sm">${wordsHTML(fa)}</div><div class="say-btns">${sayBtns(fa)}</div></div></details>` : ""}`; }).join("")}</div>` : ""}
       <div class="panel"><div class="note" style="margin-top:0">${esc(q.tip)}</div>
         ${q.tpl ? `<details style="margin-top:8px"><summary>参考结构</summary><div class="en sm" style="margin-top:6px">${esc(q.tpl)}</div><button class="btn sm" style="margin-top:8px" data-act="ive-tpl" data-q="${q.id}">放进回答框</button></details>` : ""}</div>
       <label class="fld"><span>我的回答（英文）</span><textarea class="en" id="ansText" style="min-height:220px">${esc(a.text || "")}</textarea></label>
@@ -5319,7 +5346,7 @@ VIEWS.reader = {
       <p class="small muted" style="margin-top:6px">${mode === "line" ? "听一句，停下来你跟着说一遍。适合新的回答：先把句子记住。" : "一直放，你同步跟着说，像影子一样。适合已经熟的回答：练节奏和连读。"}</p>
       <div style="margin-top:6px">${slashBtn()}</div>
       <label class="switch" style="margin-top:6px"><span>慢速</span><input type="checkbox" data-chg="rdopt" data-key="rdSlow" ${L.rdSlow ? "checked" : ""}></label>
-      <label class="switch"><span>隐藏文字，只听着跟（熟了再开）</span><input type="checkbox" data-chg="rdopt" data-key="rdHide" ${L.rdHide ? "checked" : ""}></label>
+      <label class="switch"><span>隐藏文字，只听着跟</span><input type="checkbox" data-chg="rdopt" data-key="rdHide" ${L.rdHide ? "checked" : ""}></label>
       <p class="small" id="rdStatus" style="margin-top:8px">${RD.sents.length ? "点“开始”。点任意一句，从那句开始。" : (src === "mine" ? "你还没写这题的回答。" : "这题还没有参考回答。")}</p>
       <div class="rd-list${L.rdHide ? " rd-hide" : ""}">${RD.sents.map((s, i) => `<div class="rd-s en sm" data-act="rd-from" data-i="${i}">${show(s)}</div>`).join("")}</div>
       <div class="row-gap" style="margin-top:14px;justify-content:center"><button class="btn primary big" style="min-width:160px" data-act="rd-play" id="rdPlay" ${RD.sents.length ? "" : "disabled"}>开始</button></div>
@@ -5398,7 +5425,7 @@ VIEWS.me = {
         ${S.settings.srEngine === "whisper" ? `<label class="fld" style="margin-top:0"><span>Whisper 用哪个模型</span><select data-chg="asrmodel" data-rerender="1"><option value="base" ${(L.asrModel || "base") === "base" ? "selected" : ""}>快：base.en（约 80 MB）</option><option value="small" ${L.asrModel === "small" ? "selected" : ""}>准一些：small.en（约 250 MB，慢一两秒）</option></select></label>` : ""}
         ${S.settings.srEngine === "whisper" ? `<p class="small muted" style="margin:-4px 0 8px">说完停一下，会自动结束录音。第一次用要下载约 80 MB 的模型（在“存储空间”里管理）。Whisper 偶尔会把很小的口误自动“修好”，所以语法检查可能漏掉个别错误。</p>` : ""}
         <label class="fld"><span>给 Claude 的自我介绍（可选）</span><textarea rows="3" data-chg="profile" placeholder="比如：机械工程硕士，正在准备美国工程类岗位面试，口语大约 A2–B1">${esc(S.settings.profile || "")}</textarea></label>
-        <label class="fld"><span>说话中间停顿</span><select data-chg="srlong"><option value="on" ${L.srLong !== false ? "selected" : ""}>停 2.5 秒才算说完（中间想一下也不会断）</option><option value="off" ${L.srLong === false ? "selected" : ""}>停一下就结束（手机默认）</option></select></label>
+        <label class="fld"><span>说话中间停顿</span><select data-chg="srlong"><option value="on" ${L.srLong !== false ? "selected" : ""}>停 2.5 秒才算说完</option><option value="off" ${L.srLong === false ? "selected" : ""}>停一下就结束（手机默认）</option></select></label>
         <label class="fld"><span>停 2 秒自动检查</span><select data-chg="set" data-key="autoCheck">${[["smart","自动判断：语音说完自动查，打字时不查"],["on","一直开"],["off","关掉：每次自己点“检查”"]].map(([v, l]) => `<option value="${v}" ${(s.autoCheck || "smart") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
         <label class="fld"><span>一天从几点开始算</span><select data-chg="set" data-key="dayStart" data-num="1">${[0,2,4,6].map(h => `<option value="${h}" ${(+s.dayStart || 0) === h ? "selected" : ""}>${h ? "凌晨 " + h + " 点" : "半夜 12 点"}</option>`).join("")}</select></label>
         <div style="margin-top:8px">${swRow("lights","起步灯：灯灭再开口")}${swRow("autoSpeak","看答案时自动朗读")}${swRow("sound","提示音")}${swRow("vibrate","振动")}${swRow("cheat","来电模拟可以看小抄")}</div></div>
@@ -5409,7 +5436,7 @@ VIEWS.me = {
         <label class="fld"><span>英文语速</span><input type="range" min="0.7" max="1.2" step="0.05" value="${L.rate}" data-chg="local" data-key="rate" data-num="1"></label>
         <label class="fld"><span>中文语音（耳机模式用）</span><select data-chg="local" data-key="zhVoice">${opt(zhV, L.zhVoice)}</select></label>
         <button class="btn sm" style="margin-top:8px" data-act="say" data-lang="zh" data-text="我已经毕业了。">试听中文</button>
-        <div style="margin-top:10px"><label class="switch"><span>句子按意群显示斜杠（断句），慢速时一块一块读</span><input type="checkbox" data-chg="local" data-key="slashes" ${L.slashes ? "checked" : ""}></label>
+        <div style="margin-top:10px"><label class="switch"><span>句子按意群显示斜杠，慢速时一块一块读</span><input type="checkbox" data-chg="local" data-key="slashes" ${L.slashes ? "checked" : ""}></label>
         <label class="switch"><span>听力题换着用不同的声音</span><input type="checkbox" data-chg="local" data-key="voiceMix" ${L.voiceMix ? "checked" : ""}></label>
         <label class="switch"><span>也用英式、澳式等其他口音</span><input type="checkbox" data-chg="local" data-key="accentMix" ${L.accentMix ? "checked" : ""}></label></div>
         <p class="small muted" style="margin-top:6px">这台手机现在能用 ${TTS.list("en").length} 个英文声音。想换男声、女声：手机设置里搜“文字转语音”，首选引擎选“Google 语音识别和语音合成”，点它旁边的齿轮 → 安装语音数据 → 英语（美国），列表里有好几个声音，点一下能试听，选一个就行。没有齿轮的话，在手机的应用列表里找到“Google 语音识别和语音合成”（Speech Services by Google），打开它的设置。换完回来点“试听英文”听听。</p>
@@ -5829,7 +5856,7 @@ VIEWS.pending = {
       ${list.length ? `<div class="list">${list.map((p, i) => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(p.said)}</b><span>${esc(p.zh)}</span><span class="en" style="font-size:14px">参考：${esc(p.ref)}</span></div><button class="btn sm ghost" data-act="pend-del" data-i="${i}">删除</button></div>`).join("")}</div>
         <button class="btn primary block big" style="margin-top:14px" data-act="pend-copy">全部复制给 Claude（${list.length} 句）</button>
         <button class="btn ghost block" style="margin-top:6px" data-act="pend-clear">已经问过了，清空</button>` :
-        `<p class="muted">现在没有待确认的说法。练习时拿不准自己说得对不对，就点“拿不准，存起来问 Claude”。</p>`}
+        `<p class="muted">现在没有拿不准的说法。练习时拿不准自己说得对不对，就点“拿不准，存起来问 Claude”。</p>`}
       <h3 style="margin-top:22px">要学的词（${(S.wantWords || []).length}）</h3>
       <p class="muted small" style="margin:4px 0 10px">点单词时选“加到要学的词”，就会出现在这里。发给 Claude，换成单词卡：卡片会考你“看中文说英文”，还要你用这个词说一句话。光点开看一眼记不牢，自己想起来、用出来才记得住。</p>
       ${(S.wantWords || []).length ? `<div class="list">${S.wantWords.map((x, i) => `<div class="li"><div class="grow"><b class="en" style="font-size:16px">${esc(x.w)}</b>${x.ctx ? `<span class="en" style="font-size:13.5px">${esc(x.ctx)}</span>` : ""}</div><button class="btn sm ghost" data-act="ww-del" data-i="${i}">删除</button></div>`).join("")}</div>
@@ -5847,7 +5874,7 @@ VIEWS.pending = {
 ACT["ww-del"] = el => { (S.wantWords || []).splice(+el.dataset.i, 1); save(); UI.render(); };
 ACT["ww-copy"] = () => { const t = wwText(); if (t) sendToClaude(t); };
 ACT["pend-del"] = el => { (S.pending || []).splice(+el.dataset.i, 1); save(); UI.render(); };
-ACT["pend-clear"] = async () => { if (!await sheet("清空待确认的说法？", "建议先把 Claude 给的导入码导进来再清空。", "清空", true)) return; S.pending = []; save(); UI.render(); };
+ACT["pend-clear"] = async () => { if (!await sheet("清空拿不准的说法？", "建议先把 Claude 给的导入码导进来再清空。", "清空", true)) return; S.pending = []; save(); UI.render(); };
 CHG.profile = el => { S.settings.profile = el.value.slice(0, 600); save(); };
 CHG.dict = el => { L.dict = el.value; saveLocal(); toast("查词典默认用：" + dictCur().name); };
 CHG.asrmodel = el => { if (L.asrModel !== el.value){ L.asrModel = el.value; L.asrReady = false; saveLocal(); toast("换了模型：第一次用要重新下载"); } };
@@ -6078,7 +6105,7 @@ VIEWS.today = {
     return `<div class="wrap">${backBtn()}<h2>今天练过的</h2><p class="muted small" style="margin:6px 0 4px">${n ? `今天练了 ${n} 句。“没说出来”的那些，明天还会再考你；有空可以先听一遍、跟着说一遍。` : "今天还没练。"}</p>${n ? `<div style="text-align:right"><button class="btn sm ghost" data-act="hist-clear">清空今天的记录</button></div>` : ""}
       ${(() => { const off = ((+S.settings.dayStart) || 0) * 3600e3; const cs = (S.calls || []).filter(c => c.segs && dstr(new Date(c.ts - off)) === today()); return cs.length ? `<div class="sec-title">今天的模拟面试</div><div class="list">${cs.map(c => `<div class="li" style="gap:8px"><button class="linkrow grow" data-act="nav" data-v="callrev" data-id="${c.id}"><b>${esc(modName(c.mode))}</b><span>${esc(fmtWhen(c.ts))}，点开复盘</span></button><button class="btn sm ghost" data-act="call-del" data-id="${c.id}" aria-label="删除">删</button></div>`).join("")}</div>` : ""; })()}
       ${sec("没说出来，明天还会再来", groups.again)}${sec("有卡顿", groups.hard)}${sec("秒出", groups.good)}
-      ${mis.length ? `<div class="sec-title">常被识别错的词（多半是发音要练的地方）</div><div class="panel">${mis.map(([w, k]) => `<span class="chip" style="margin:4px 6px 4px 0"><span class="w" data-act="word" data-w="${esc(w)}">${esc(w)}</span>　${k} 次</span>`).join("")}<p class="small muted" style="margin-top:8px">点词听读音，再用慢速跟读几遍。</p></div>` : ""}</div>`;
+      ${mis.length ? `<div class="sec-title">常被识别错的词</div><div class="panel">${mis.map(([w, k]) => `<span class="chip" style="margin:4px 6px 4px 0"><span class="w" data-act="word" data-w="${esc(w)}">${esc(w)}</span>　${k} 次</span>`).join("")}<p class="small muted" style="margin-top:8px">点词听读音，再用慢速跟读几遍。</p></div>` : ""}</div>`;
   }
 };
 
@@ -6110,7 +6137,7 @@ VIEWS.plan = {
         <label class="fld"><span>什么时候：每天一定会碰到的时刻，或者具体时间</span><input type="text" id="plCue" value="${esc(ed ? ed.cue || "" : "")}" placeholder="比如：晚饭后、睡前、20:00"></label>
         <div class="chips" style="margin-top:6px">${["早上起床后","午饭后","晚饭后","睡前"].map(c => `<button class="chip" data-act="pl-cue" data-v="${c}">${c}</button>`).join("")}</div>
         <label class="fld"><span>做什么</span><input type="text" id="plText" value="${esc(ed ? ed.text : "")}" placeholder="比如：模拟一场电话初筛"></label>
-        <label class="fld"><span>链接到哪个练习（可选，链接了做完会自动打勾）</span><select id="plAct">${PLAN_ACTS.concat(ed && ed.act && !PLAN_ACTS.some(a => a[0] === ed.act) ? [[ed.act, planActLabel(ed.act)]] : []).map(([v, l]) => `<option value="${esc(v)}" ${ed && ed.act === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+        <label class="fld"><span>链接到哪个练习（可选）</span><select id="plAct">${PLAN_ACTS.concat(ed && ed.act && !PLAN_ACTS.some(a => a[0] === ed.act) ? [[ed.act, planActLabel(ed.act)]] : []).map(([v, l]) => `<option value="${esc(v)}" ${ed && ed.act === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
         <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="pl-add">${ed ? "保存修改" : "加上"}</button><button class="btn ghost" data-act="pl-cancel">取消</button></div></div>`;
     return `<div class="wrap">${backBtn()}<h2>我的计划</h2><button class="btn sm" data-act="pl-gen" style="margin-top:6px">生成推荐计划</button>
       <div class="seg" style="margin-top:10px">${tabs.map(([k, l]) => `<button data-act="pl-tab" data-v="${k}" aria-pressed="${tab === k}">${l}${G[k].length ? `<span class="seg-n">${G[k].length}</span>` : ""}</button>`).join("")}</div>
@@ -6352,12 +6379,12 @@ function CardFX(svg, fxLayer, target) {
     }
   };
   // a stream of fire from a moving point (the mouth) toward the target, for ms
-  f.fire = (from, ms, reach, spread) => {
+  f.fire = (from, ms, reach, spread, _ang, alive) => {
     const parts = [], t0 = performance.now();
     let last = t0;
     f.run((now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      if (now - t0 < ms) {
+      if (now - t0 < ms && (!alive || alive())) {
         const o = from();
         for (let i = 0; i < 4; i++) {
           const a = (Math.random() - 0.5) * (spread || 0.35), v = (reach || 260) * (1.6 + Math.random() * 0.6);
@@ -6372,7 +6399,7 @@ function CardFX(svg, fxLayer, target) {
         p.x += p.vx * dt; p.y += p.vy * dt; p.vy -= 60 * dt;
         p.c.setAttribute('cx', p.x); p.c.setAttribute('cy', p.y); p.c.setAttribute('r', Math.max(0, p.r0 + k * 26)); p.c.setAttribute('opacity', 1 - k);
       }
-      return now - t0 < ms || parts.length > 0;
+      return (now - t0 < ms && (!alive || alive())) || parts.length > 0;
     });
   };
   // a thing (an SVG group drawn at 0,0) thrown along an arc from a to b; calls onHit at the end
@@ -6472,7 +6499,7 @@ function CardFX(svg, fxLayer, target) {
     });
   };
   // a straight beam between two moving points
-  f.beam = (a, b, ms, col, onTick) => {
+  f.beam = (a, b, ms, col, onTick, _w, alive) => {
     const g = el('g', {}, fxLayer), t0 = performance.now();
     const glow = el('path', { fill: 'none', stroke: col || '#7CFF9A', 'stroke-width': 22, 'stroke-linecap': 'round', opacity: 0.5, filter: f.filter('soft') }, g);
     const core = el('path', { fill: 'none', stroke: '#F4FFF0', 'stroke-width': 7, 'stroke-linecap': 'round' }, g);
@@ -6482,8 +6509,8 @@ function CardFX(svg, fxLayer, target) {
     let tick = 0;
     f.run((now) => {
       const k = (now - t0) / ms;
-      if (k >= 1) { g.remove(); return false; }
-      const A = a(), B = b(), grow = Math.min(1, k / 0.12), x = A.x + (B.x - A.x) * grow, y = A.y + (B.y - A.y) * grow;
+      if (k >= 1 || (alive && !alive())) { g.remove(); return false; }
+      const A = a(), B = b(), grow = Math.min(1, (now - t0) / Math.min(ms * 0.12, 160)), x = A.x + (B.x - A.x) * grow, y = A.y + (B.y - A.y) * grow;
       const d = `M${A.x} ${A.y} L${x} ${y}`, w = 1 + Math.sin(now / 30) * 0.12;
       glow.setAttribute('d', d); core.setAttribute('d', d); glow.setAttribute('stroke-width', 22 * w);
       end.setAttribute('cx', x); end.setAttribute('cy', y); end.setAttribute('opacity', grow >= 1 ? 1 : 0);
@@ -9251,6 +9278,117 @@ const MOVES_BLADE = {
 const GROUND = 386, FOOT_X = 210, UNITS = 300;   // monster frame: feet at y 386 round x 210; 300 units = ready-stance height
 const TIER_SCALE = { '小怪': 1, '精英': 1.15, '首领': 1.35, '人形': 1 };
 const TIER_KEY = { '小怪': 'minor', '精英': 'elite', '首领': 'boss', '人形': 'mob' };
+// ----- 对波（脱口 app）：每只首领用它原版技能的特效，终点是对波的交点 P()，一直保持到对波结束 -----
+const CLASH = (() => {
+  const LONG = 6e5, on = (c) => () => c.on;
+  const toward = (P, dx, dy) => () => { const q = P(); return { x: q.x + (dx || 0), y: q.y + (dy || 0) }; };
+  const flare = (n, a, b, ms) => { if (n && n.animate) n.animate([a, b], { duration: ms || 400, fill: 'forwards' }); };
+  const hold = async (m, c) => { while (c.on) await m.wait(100); };
+  // 后面一层的光束（双冠龙后面那个头）：插在这个部位的图层后面，会被前面的部位和前面的光束挡住；样子和 fx.beam 一样
+  const backBeam = (m, part, a, b, col, alive) => {
+    const pg = m.P.parts[part]; if (!pg || !pg.parentNode) { m.fx.beam(a, b, LONG, col, null, null, alive); return; }
+    const g = el('g', {}); pg.parentNode.insertBefore(g, pg.nextSibling);
+    const glow = el('path', { fill: 'none', stroke: col, 'stroke-width': 22, 'stroke-linecap': 'round', opacity: 0.5, filter: m.fx.filter('soft') }, g);
+    const core = el('path', { fill: 'none', stroke: '#F4FFF0', 'stroke-width': 7, 'stroke-linecap': 'round' }, g);
+    const end = el('circle', { r: 26, fill: m.fx.grad('flash') }, g); end.style.filter = `drop-shadow(0 0 10px ${col})`;
+    const t0 = performance.now();
+    m.fx.run((now) => {
+      if (!alive() || !g.isConnected) { g.remove(); return false; }
+      const A = m.toG(g, a()), B = m.toG(g, b()), grow = Math.min(1, (now - t0) / 144), x = A.x + (B.x - A.x) * grow, y = A.y + (B.y - A.y) * grow;
+      const d = `M${A.x} ${A.y} L${x} ${y}`, w = 1 + Math.sin(now / 30) * 0.12;
+      glow.setAttribute('d', d); core.setAttribute('d', d); glow.setAttribute('stroke-width', 22 * w);
+      end.setAttribute('cx', x); end.setAttribute('cy', y); end.setAttribute('opacity', grow >= 1 ? 1 : 0); return true;
+    });
+  };
+  const boxPt = (m, part, ux, uy) => { const b = m.P.parts[part].getBBox(); return m.pt(part, b.x + b.w * ux, b.y + b.h * uy); };
+  return {
+    // 熔核龙：岩肋张开，胸口射出熔岩光束，同时喷火（原版）
+    corefang: async (m, P, c, ready, go) => {
+      const ribs = m.P.svg.querySelector('[data-ribs]');
+      m.hot(true); await m.go('skillWind', 380);
+      flare(ribs, { transform: 'translateX(0) scaleY(1)' }, { transform: 'translateX(-8px) scaleY(1.25)' }, 400);
+      await m.wait(420); ready(); await go; if (!c.on) return;
+      await m.go('skill', 160);
+      m.fx.beam(() => m.pt('torso', 258, 218), P, LONG, '#FF7A1A', null, null, on(c));
+      m.fx.fire(() => m.pt('torso', 262, 218), LONG, 140, 0.5, null, on(c));
+      await hold(m, c);
+      flare(ribs, { transform: 'translateX(-8px) scaleY(1.25)' }, { transform: 'translateX(0) scaleY(1)' }, 300); m.hot(false);
+    },
+    // 棱晶龙：胸甲聚光，分成五道彩色光束（原版），汇到交点
+    prismward: async (m, P, c, ready, go) => {
+      const plates = m.P.svg.querySelector('[data-plates]');
+      await m.go('skillWind', 360); flare(plates, { filter: 'brightness(1)' }, { filter: 'brightness(1.8) drop-shadow(0 0 8px #EDE6FF)' }, 520);
+      await m.wait(520); ready(); await go; if (!c.on) return;
+      await m.go('skill', 160);
+      ['#FF8AD8', '#FFD36A', '#7CF0FF', '#B9FF8A', '#C9A6FF'].forEach((col, i) => setTimeout(() => { if (c.on) m.fx.beam(() => m.pt('torso', 220, 204), toward(P, -4 + i * 2, -16 + i * 8), LONG, col, null, null, on(c)); }, i * 70));
+      await hold(m, c);
+      flare(plates, { filter: 'brightness(1.8)' }, { filter: 'brightness(1)' }, 300);
+    },
+    // 双冠龙：两个头抬起、毒腺发亮，两个嘴各射一道光束；后面那个头的光束被前面的头和前面的光束挡住
+    twinhood: async (m, P, c, ready, go) => {
+      const glands = m.P.svg.querySelectorAll('[data-gland]');
+      await m.go('skillWind', 340); glands.forEach((g) => flare(g, { filter: 'brightness(1)' }, { filter: 'brightness(2.2)' }, 400));
+      await m.wait(380); ready(); await go; if (!c.on) return;
+      await m.go('skill', 150);
+      backBeam(m, 'bHead', () => m.pt('bHead', 268, 81), toward(P, 0, -6), '#9CFF4A', on(c));
+      m.fx.beam(() => m.pt('fHead', 344, 131), toward(P, 0, 6), LONG, '#9CFF4A', null, null, on(c));
+      await hold(m, c);
+      glands.forEach((g) => flare(g, { filter: 'brightness(2.2)' }, { filter: 'brightness(1)' }, 300));
+    },
+    // 刃羽怪：照原版扇三下翅膀飞起来，然后一边悬停扇翅膀，一边不停地朝交点射原版的尖刺羽毛
+    galecrest: async (m, P, c, ready, go) => {
+      await m.go('skillWind', 260);
+      for (let i = 0; i < 3; i++) { await m.go('flapUp', 130, { dy: -40 - i * 55 }); m.fx.dust(() => ({ x: m.pt('torso', 200, 280).x, y: 380 }), 160, 110 - i * 30); await m.go('flapDown', 140, { dy: -70 - i * 55 }); }
+      await m.go('hover', 200); ready(); await go; if (!c.on) return;
+      const spike = () => { const g = el('g', {}); el('path', { d: 'M-18 -3 L14 -1.5 L22 0 L14 1.5 L-18 3 Z', fill: '#E9EEF4', stroke: '#131519', 'stroke-width': 1.4 }, g); el('path', { d: 'M-18 0 L22 0', stroke: '#8CC2FF', 'stroke-width': 1 }, g); return g; };
+      let last = 0;
+      while (c.on) { if (performance.now() - last > 270) { last = performance.now(); m.fx.volley(() => m.pt('head', 312, 160), P, 4, spike, 45); } await m.go('hoverSpit', 90); await m.go('hover', 90); }
+    },
+    // 渊口：甩出诱饵灯，灯越来越亮，从诱饵灯射出光束，照原版一圈圈发光环
+    abyssmaw: async (m, P, c, ready, go) => {
+      const lure = m.P.svg.querySelector('[data-lure]');
+      await m.go('skillWind', 300); flare(lure, { opacity: 0.45, transform: 'scale(1)' }, { opacity: 1, transform: 'scale(2.2)' }, 420);
+      await m.wait(140); ready(); await go; if (!c.on) return;
+      await m.go('skill', 260);
+      m.fx.beam(() => m.pt('lure', 364, 108), P, LONG, '#8CFFF0', null, null, on(c));
+      let last = 0; while (c.on) { if (performance.now() - last > 520) { last = performance.now(); m.fx.rings(m.pt('lure', 364, 108), P(), 2, '#8CFFF0', 520); } await m.wait(100); }
+      flare(lure, { opacity: 1, transform: 'scale(2.2)' }, { opacity: 0.45, transform: 'scale(1)' }, 300);
+    },
+    // 陨角甲：举起手臂，从头顶射出光束
+    starhorn: async (m, P, c, ready, go) => {
+      m.hot(true); await m.go('skillWind', 380); await m.wait(240); ready(); await go; if (!c.on) return;
+      await m.go('skill', 200);
+      m.fx.beam(() => boxPt(m, 'head', 0.6, 0.06), P, LONG, '#FFD86A', null, null, on(c));
+      await hold(m, c); m.hot(false);
+    },
+    // 虚渊魔：身上的漩涡越转越快，从手上射出光束
+    nullwraith: async (m, P, c, ready, go) => {
+      const sw = m.P.svg.querySelector('[data-swirl]'); const spin = sw && sw.animate ? sw.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 600, iterations: Infinity }) : null;
+      await m.go('skillWind', 360); await m.wait(200); ready(); await go; if (!c.on){ if (spin) spin.cancel(); return; }
+      await m.go('skill', 200);
+      m.fx.beam(() => boxPt(m, 'nHand', 0.75, 0.5), P, LONG, '#B48CFF', null, null, on(c));
+      await hold(m, c); if (spin) spin.cancel();
+    },
+    // 镇岳像（新设计）：蹲低、眼罩上的符文发亮，站直后从眼罩射出两道光束
+    colossus: async (m, P, c, ready, go) => {
+      const visor = m.P.svg.querySelector('[data-visor]');
+      flare(visor, { filter: 'brightness(1)' }, { filter: 'brightness(2.4) drop-shadow(0 0 6px #FFD86A)' }, 380);
+      await m.go('skillWind', 380); await m.wait(160); ready(); await go; if (!c.on) return;
+      await m.go('idle', 160);
+      const vb = visor && visor.getBBox ? visor.getBBox() : null;
+      const eye = (u) => () => (vb ? m.pt('head', vb.x + vb.w * u, vb.y + vb.h * 0.5) : boxPt(m, 'head', 0.7, 0.4));
+      m.fx.beam(eye(0.3), toward(P, 0, -4), LONG, '#FFD86A', null, null, on(c));
+      m.fx.beam(eye(0.7), toward(P, 0, 4), LONG, '#FFD86A', null, null, on(c));
+      await hold(m, c);
+      flare(visor, { filter: 'brightness(2.4)' }, { filter: 'brightness(1)' }, 300);
+    },
+    _default: async (m, P, c, ready, go) => {
+      await m.go('skillWind', 360); ready(); await go; if (!c.on) return; await m.go('skill', 160);
+      m.fx.beam(() => boxPt(m, 'torso', 0.8, 0.35), P, LONG, '#FF9A3C', null, null, on(c)); await hold(m, c);
+    }
+  };
+})();
+
 const MONSTERS = [
   { id: 'scree', build: buildScree, poses: SCREE_POSES, moves: MOVES_SCREE, name: '碎岩蜥', tier: '小怪',
     note: '用指节走路的岩石爬兽，背着一块裂开的巨岩。轻击：抬爪往下挠；重击：转身甩尾抽过去；大招：裂缝烧红，张嘴往前喷火。' },
@@ -9393,6 +9531,7 @@ function create(id, opts) {
       }
     }
   };
+  api.toG = (g, p) => { const q = svg.createSVGPoint(); q.x = p.x; q.y = p.y; return q.matrixTransform(g.getScreenCTM().inverse().multiply(place.getScreenCTM())); };
   let queue = Promise.resolve(), busy = 0, held = null, alive = true;
   async function run(k) {
     busy++;
@@ -9427,6 +9566,15 @@ function create(id, opts) {
     box() {
       const r = P.root.getBoundingClientRect(), h = host.getBoundingClientRect();
       return { x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height };
+    },
+    // 脱口 app 的对波：照首领原版技能的前摇做完 → ready() → 等 go（双方都准备好）→ 用原版的特效射向交点（getPt 给舞台坐标），一直保持到 stop()
+    clashSkill(getPt, go) {
+      const P0 = () => { const s = getPt(); return toLocal(s.x, s.y); };
+      const ctl = { on: true }; let rr; ctl.ready = new Promise((r) => { rr = r; });
+      const fn = CLASH[id] || CLASH._default;
+      (async () => { try { await fn(api, P0, ctl, rr, go || Promise.resolve()); } catch (e) { rr(); } })();
+      ctl.stop = () => { ctl.on = false; };
+      return ctl;
     },
     // 脱口 app 的对波用：停在某个姿势上（比如放技能的那一下），拿到某个部位在舞台上的位置（比如头、下巴）
     holdPose(n) { try { mv.set(n); } catch (e) {} },
@@ -10764,13 +10912,13 @@ const BT = (() => {
       const reach = dir < 0 ? o.x + 40 : SW - o.x + 40, span = Math.max(1, dir < 0 ? o.x : SW - o.x);
       const heightAt = x => h0 + (h1 - h0) * Math.min(1, Math.max(0, Math.abs(o.x - x) / span));
       let bolts = [], lastGen = 0, last = t0; const flow = [];
-      glow.add((ctx, now) => {
+      glow.add(clipCl(cl, dir, (ctx, now) => {
         if (token !== A.token) return false;
         const T = now - t0, dt = Math.min(0.05, (now - last) / 1000); last = now;
         if (T > EXT + HOLD + OUT) return false;
         const ext = 1 - Math.pow(1 - Math.min(1, T / EXT), 3);
         const sy = T > EXT + HOLD ? Math.max(0, 1 - (T - EXT - HOLD) / OUT) : 1;
-        const xEnd = cl ? o.x + dir * Math.min(reach * ext, Math.abs(cl.end().x - o.x)) : o.x + dir * reach * ext, hEnd = heightAt(xEnd), pulse = pulseOf(now, 38, 0.035);
+        const xEnd = cl && !cl.free ? o.x + dir * Math.min(reach * ext, Math.abs(cl.end().x - o.x)) : o.x + dir * reach * ext, hEnd = heightAt(xEnd), pulse = pulseOf(now, 38, 0.035);
         const cone = k => { ctx.beginPath(); ctx.moveTo(o.x, o.y - (h0 * k * sy * pulse) / 2); ctx.lineTo(xEnd, o.y - (hEnd * k * sy * pulse) / 2); ctx.lineTo(xEnd, o.y + (hEnd * k * sy * pulse) / 2); ctx.lineTo(o.x, o.y + (h0 * k * sy * pulse) / 2); ctx.closePath(); };
         ctx.globalAlpha = 1;
         for (const [k, col] of [[2.3, "rgba(120, 100, 255, .06)"], [1.75, "rgba(140, 150, 255, .08)"], [1.3, "rgba(130, 215, 255, .13)"], [1.05, "rgba(180, 235, 255, .18)"]]){ cone(k); ctx.fillStyle = col; ctx.fill(); }
@@ -10801,7 +10949,7 @@ const BT = (() => {
         /* 手上：一颗白色的星，加一道横向的光 */
         blit(ctx, "blue", o.x, o.y, h0 * 5.2 * pulse, sy); blit(ctx, "blue", o.x, o.y, h0 * 11, 0.7 * sy, h0 * 0.8);
         return true;
-      });
+      }));
       if (cl){ holdGlow(face, "drop-shadow(0 0 20px rgba(150, 230, 255, 1))"); cl.done.then(() => { HOLD = Math.max(0, performance.now() - t0 - EXT); }); await cl.done; await wait(OUT); fadeHeld(1100); return; }
       await wait(EXT); if (token !== A.token) return;
       const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.75 : 0.25), hy = Math.min(Math.max(o.y, d.y + d.h * 0.15), d.y + d.h * 0.85); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
@@ -10871,11 +11019,14 @@ const BT = (() => {
       face.animate([{filter:"drop-shadow(0 0 16px rgba(255, 150, 40, .9))"}, {filter:"drop-shadow(0 0 0 transparent)"}], {duration:700});
       const H = b1.h * 0.85, y = b1.y + b1.h * 0.5, SW = stage.clientWidth, x0 = dir < 0 ? b1.x + b1.w * 0.1 : b1.x + b1.w * 0.9;
       const d = box(bodyOf(def)), hitX = d.x + d.w * 0.5, x1 = dir < 0 ? -H * 1.2 : SW + H * 1.2, T = 1150 * (window.__slowFx || 1), t0 = performance.now(), seed = Math.random() * 10;
-      const embers = []; let last = t0;
+      const embers = []; let last = t0, frc = null, lastX = x0;
       glow.add((ctx, now) => {
         if (token !== A.token) return false;
         const ex = cl ? cl.end().x : x1, Tc = cl ? T * Math.abs(ex - x0) / Math.max(1, Math.abs(x1 - x0)) : T;
-        const k = Math.min(1, (now - t0) / Math.max(1, Tc)), x = x0 + (ex - x0) * k, dt = Math.min(0.05, (now - last) / 1000); last = now;
+        const k = Math.min(1, (now - t0) / Math.max(1, Tc)), dt = Math.min(0.05, (now - last) / 1000); last = now;
+        let x = x0 + (ex - x0) * k;
+        if (cl && cl.free){ if (!frc) frc = {t:now, x:lastX}; x = frc.x + (x1 - frc.x) * Math.min(1, (now - frc.t) / Math.max(1, T * Math.abs(x1 - frc.x) / Math.max(1, Math.abs(x1 - x0)))); }
+        lastX = x;
         const alpha = cl ? Math.min(1, k * 6) * (cl.live() ? 1 : Math.max(0, 1 - (now - (cl.endAt || now)) / 300)) : Math.min(1, k * 6) * (k > 0.85 ? (1 - k) / 0.15 : 1);
         ctx.globalAlpha = 0.35 * alpha; ctx.strokeStyle = "rgba(255,150,40,1)"; ctx.lineWidth = Math.max(1.5, H * 0.03); ctx.beginPath(); ctx.moveTo(x0, y + H * 0.08); ctx.lineTo(x, y + H * 0.08); ctx.stroke();
         drawCrescent(ctx, x, y, H, dir, now, alpha, seed);
@@ -11032,10 +11183,10 @@ const BT = (() => {
       holdGlow(face, "drop-shadow(0 0 16px rgba(255, 255, 255, .95))");
       const seg = beamSeg(att, "skill"); if (seg){ o.x = seg.x; o.y = (seg.yTop + seg.yBot) / 2; }
       let HOLD = cl ? 1e9 : 1700; const t0 = performance.now(), band0 = seg ? (seg.yBot - seg.yTop) / 2 : size * 0.07, band1 = seg ? band0 * 1.7 : size * 0.2;
-      const d0 = box(bodyOf(def)); let xEnd = dir < 0 ? d0.x - 30 : d0.x + d0.w + 30; const span = Math.max(1, Math.abs(o.x - xEnd)); const streaks = [];
-      glow.add((ctx, now) => {
+      const d0 = box(bodyOf(def)); let xEnd = dir < 0 ? d0.x - 30 : d0.x + d0.w + 30; const span = Math.max(1, Math.abs(o.x - xEnd)), xEnd0 = xEnd; const streaks = [];
+      glow.add(clipCl(cl, dir, (ctx, now) => {
         if (token !== A.token) return false;
-        if (cl) xEnd = cl.end().x;
+        if (cl) xEnd = cl.free ? xEnd0 : cl.end().x;
         const t = now - t0, on = t < HOLD, fade = on ? Math.min(1, t / 120) : Math.max(0, 1 - (t - HOLD) / 260);
         if (!on && fade <= 0 && !streaks.length) return false;
         if (on) for (let i = 0; i < 3; i++) streaks.push({x0:o.x + dir * Math.random() * 30, off:Math.random() * 2 - 1, len:26 + Math.random() * 120, th:1.4 + Math.random() * 4.2, a:0.55 + Math.random() * 0.45, v:1.7 + Math.random() * 1.3, born:now});
@@ -11054,7 +11205,7 @@ const BT = (() => {
         if (seg){ ctx.save(); ctx.translate(o.x, o.y); ctx.scale(0.32, 1); blit(ctx, "white", 0, 0, band0 * 2.9 * (0.95 + Math.random() * 0.1), fade); ctx.restore(); }   /* 整条小臂一起亮 */
         else blit(ctx, "white", o.x, o.y, size * 0.34 * (0.95 + Math.random() * 0.1), fade);
         return true;
-      });
+      }));
       if (cl){ cl.done.then(() => { HOLD = performance.now() - t0; }); await cl.done; fadeHeld(800); return; }
       await wait(220); if (token !== A.token) return;
       const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
@@ -11149,12 +11300,12 @@ const BT = (() => {
       if (token !== A.token) return;
       const cl = opt.cl; if (cl){ cl.ready(); await cl.go; if (token !== A.token) return; }   /* 对波：前摇做完，等对方也准备好，一起出手 */
       pose(att, "fire"); await wait(30);
-      const o = handPoint(att); let xEnd = dir < 0 ? -120 : SW + 120; const span = Math.max(1, Math.abs(o.x - xEnd));
+      const o = handPoint(att); let xEnd = dir < 0 ? -120 : SW + 120; const span = Math.max(1, Math.abs(o.x - xEnd)), xEnd0 = xEnd;
       let HOLD = cl ? 1e9 : 1600; const t0 = performance.now(), h0 = size * 0.03 * (opt.wide || 1), h1 = size * 0.085 * (opt.wide || 1), rings = [], streaks = [];
       holdGlow(face, "drop-shadow(0 0 18px rgba(170, 230, 255, 1))");
-      glow.add((ctx, now) => {
+      glow.add(clipCl(cl, dir, (ctx, now) => {
         if (token !== A.token) return false;
-        if (cl) xEnd = cl.end().x;   /* 对波：终点是对波的交点；粗细还是按原来到屏幕边的距离分布 */
+        if (cl) xEnd = cl.free ? xEnd0 : cl.end().x;   /* 对波：终点是对波的交点；粗细还是按原来到屏幕边的距离分布 */
         const t = now - t0, on = t < HOLD, grow = Math.min(1, t / 110), fade = on ? 1 : Math.max(0, 1 - (t - HOLD) / 300);
         if (!on && fade <= 0) return false;
         const reach = o.x + (xEnd - o.x) * grow, pulse = 0.95 + Math.random() * 0.08;
@@ -11182,7 +11333,7 @@ const BT = (() => {
         }
         blit(ctx, "white", o.x, o.y, size * 0.32 * pulse, fade); blit(ctx, "blue", o.x, o.y, size * 0.55 * pulse, 0.55 * fade);
         return true;
-      });
+      }));
       if (cl){ cl.done.then(() => { HOLD = performance.now() - t0; }); await cl.done; fadeHeld(800); return; }   /* 对波：不走原来的伤害，伤害由对波结果算 */
       await wait(120); if (token !== A.token) return;
       const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
@@ -11205,11 +11356,20 @@ const BT = (() => {
        2. 同时出手：两边在同一刻摆出放技能的姿势，两道光从手上伸出去，在中间撞上，开始对波；
        3. end(winner)：能量球被推到输的一方身上炸开，赢的一方的光继续打在他身上一小段时间（伤害一下下往外跳），然后输的一方倒下、赢的一方胜利（opts.fall）。
        中心永远是白色；四周炸散的光晕、粒子、光环从两边技能的颜色里取（靠哪边就偏哪边的颜色）；白天压暗一点、渐变自己算 */
+    /* 对波时原版光线只画到交点为止（流动的光条原版会飞出终点一小段，平时藏在对手身上，对波时会冒出交点）；赢了以后 cl.free，恢复原版 */
+    const clipCl = (cl, dir, cb) => (!cl ? cb : (ctx, now) => { if (cl.free) return cb(ctx, now); const e = cl.end().x, W2 = stage.clientWidth;
+      ctx.save(); ctx.beginPath(); if (dir < 0) ctx.rect(e - 4, -1e4, W2 + 2e4, 3e4); else ctx.rect(-1e4, -1e4, e + 4 + 1e4, 3e4); ctx.clip(); const r = cb(ctx, now); ctx.restore(); return r; });
     function clashFx(o){
       const token = A.token, sz = stage.clientHeight, parts = [], rings = []; let stop = false, lastRing = 0, lastShake = 0, burstAt = 0, burstBig = false, flashUntil = 0, grow = 0, ending = null, t0 = performance.now();
       const yh = () => handPoint(you);
       /* 首领（代码怪物）的光线从下巴或头的前端射出来（会喷火的就像从嘴里喷出光线）；拿不到就用身体前端 */
-      const fh = () => { if (A.cm){ const pb = A.cm.partBox && (A.cm.partBox("jaw") || A.cm.partBox("head")); if (pb && pb.w) return {x: pb.x + pb.w * 0.9, y: pb.y + pb.h * 0.5}; const b = A.cm.box(); return {x: b.x + b.w * 0.85, y: b.y + b.h * 0.36}; } return handPoint(ghost); };
+      /* 首领从哪里射光：[部位, 横向位置, 纵向位置]（按部位框的比例）；双冠龙两个嘴都射（后面的头先画） */
+      const BSRC = {corefang:[["torso", 0.8, 0.4]], abyssmaw:[["lure", 0.5, 0.5]], prismward:[["torso", 0.75, 0.35]], twinhood:[["bHead", 0.92, 0.6], ["fHead", 0.92, 0.6]],
+        galecrest:[["head", 0.9, 0.5]], starhorn:[["head", 0.6, 0.08]], colossus:[["head", 0.78, 0.42]], nullwraith:[["nHand", 0.75, 0.5]]};
+      const fhs = () => { if (!A.cm) return [handPoint(ghost)]; const out = [];
+        for (const [nm, ux, uy] of (BSRC[o.foeId] || [["jaw", 0.9, 0.5], ["head", 0.9, 0.5]])){ const pb = A.cm.partBox && A.cm.partBox(nm); if (pb && pb.w){ out.push({x: pb.x + pb.w * ux, y: pb.y + pb.h * uy}); if (!BSRC[o.foeId]) break; } }
+        if (!out.length){ const b = A.cm.box(); out.push({x: b.x + b.w * 0.85, y: b.y + b.h * 0.36}); } return out; };
+      const fh = () => { const L2 = fhs(); return L2[L2.length - 1]; };
       const bodyC = f => { if (f === ghost && A.cm){ const b = A.cm.box(); return {x: b.x + b.w * 0.5, y: b.y + b.h * 0.42}; } const b = box(bodyOf(f)); return {x: b.x + b.w * 0.5, y: b.y + b.h * 0.38}; };
       const rgb = h => { const n = parseInt(String(h).replace("#", ""), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
       const Y = o.you.map(rgb), F = o.foe.map(rgb), WH = [255, 255, 255], col = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
@@ -11288,17 +11448,19 @@ const BT = (() => {
       const mkCl = () => { const c = {_off:false, endAt:0, go, end: () => CX, live: () => !c._off, ready: arrive}; c.done = new Promise(r => { c.finish = () => { if (c._off) return; c._off = true; c.endAt = performance.now(); r(); }; }); return c; };
       const yOrig = ORIG[o.youSkill], fOrig = !A.cm ? ORIG[o.foeSkill] : null, clY = yOrig ? mkCl() : null, clF = fOrig ? mkCl() : null;
       if (clY) safe(() => yOrig(you, ghost, -1, clY)); if (clF) safe(() => fOrig(ghost, you, 1, clF));
+      /* 首领（代码怪物）：用它原版技能的特效（monsters.js 的 clashSkill），终点是交点 CX；前摇做完 ready，等 go 一起出手 */
+      const mcl = A.cm && A.cm.clashSkill ? A.cm.clashSkill(() => ({x: CX.x, y: CX.y}), go) : null; if (mcl) mcl.ready.then(arrive);
       const ready = (async () => {
         /* 没有原版技能的一方（代码怪物等）在这里做前摇：首领停在它自己放技能之前的姿势 */
-        const wy = !clY && hasWind(you), wf = !clF && hasWind(ghost);
-        if (!clY && !wy) arrive(); if (!clF && !wf) arrive();
+        const wy = !clY && hasWind(you), wf = !clF && !mcl && hasWind(ghost);
+        if (!clY && !wy) arrive(); if (!clF && !mcl && !wf) arrive();
         if (wy || wf){ if (wy) safe(() => pose(you, "charge")); if (wf) safe(() => (A.cm ? A.cm.holdPose("skillWind") : pose(ghost, "charge"))); await wait(650);
           if (token !== A.token) return;
           if (wy && !you.rig && hasPose(you, "skillMid")) safe(() => pose(you, "mid")); if (wf && !ghost.rig && hasPose(ghost, "skillMid")) safe(() => pose(ghost, "mid")); await wait(420);
           if (wy) arrive(); if (wf) arrive(); }
         await go; if (token !== A.token) return;   /* 双方都准备好：一起出手 */
         if (!clY && (you.rig || hasPose(you, "skill"))) safe(() => pose(you, "fire")); if (!clF && !A.cm && (ghost.rig || hasPose(ghost, "skill"))) safe(() => pose(ghost, "fire"));
-        if (A.cm && A.cm.holdPose) safe(() => A.cm.holdPose("skill"));   /* 首领保持它原本放技能的姿势（比如张着嘴） */
+        if (A.cm && A.cm.holdPose && !mcl) safe(() => A.cm.holdPose("skill"));   /* 首领保持它原本放技能的姿势（比如张着嘴） */
         await wait(60); glow.add(DRAW);   /* 中心的白光、粒子这些在两道原版光线之后画，盖在上面 */
         const g0 = performance.now();
         await new Promise(r => { const f = now => { grow = Math.min(1, (now - g0) / 230); if (grow < 1 && token === A.token) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
@@ -11309,6 +11471,8 @@ const BT = (() => {
         const t = now - t0, a = yh(), b = fh(), mid = (a.x + b.x) / 2, SW = stage.clientWidth;
         const p = Math.max(-1, Math.min(1, o.getP()));
         let cx = mid + (b.x - mid) * p * 0.85, cy = a.y + (b.y - a.y) * ((cx - a.x) / ((b.x - a.x) || 1)) + Math.sin(t / 40) * 2;
+        /* 原版光线是水平的：一边是原版光线、另一边是首领（光束能斜着射）时，交点放在原版光线的高度上，首领对准过来 */
+        if (clY && !clF) cy = a.y + Math.sin(t / 40) * 2; else if (clF && !clY) cy = b.y + Math.sin(t / 40) * 2;
         if (ending){ const k = smooth((now - ending.t0) / 350), T = bodyC(ending.loser === "you" ? you : ghost); cx = cx + (T.x - cx) * k; cy = cy + (T.y - cy) * k; }
         CX.x = cx; CX.y = cy;   /* 原版光线的终点跟着交点走 */
         /* 中心白光的大小随两个人的距离变：离得近就小一点，两道原版光线才露得出来（最大还是原来那么大） */
@@ -11321,7 +11485,7 @@ const BT = (() => {
         ctx.save(); ctx.lineCap = "round";
         const beam = (from, to, C) => { const w = sz * 0.05 * (0.94 + Math.random() * 0.12);
           for (const [lw, c, al, gl] of [[w * 2.6, C[0], day ? 0.42 : 0.32, !day], [w * 1.4, C[1], day ? 0.85 : 0.7, !day], [w * 0.5, WH, 1, true]]){ ctx.globalCompositeOperation = gl ? "lighter" : "source-over"; ctx.strokeStyle = col(c, al); ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke(); } };
-        const paint = (sd, f2, t2) => { if (sd === "you" ? clY : clF) return;   /* 原版技能自己画 */
+        const paint = (sd, f2, t2) => { if (sd === "you" ? clY : (clF || mcl)) return;   /* 原版技能自己画 */
           const k = sd === "you" ? o.youSkill : o.foeSkill; if (PAINT[k]){ ctx.save(); PAINT[k](ctx, f2, t2, now, PST[sd]); ctx.restore(); } else beam(f2, t2, sd === "you" ? Y : F); };
         if (!live){
           /* 前摇和出手：手上的光越聚越亮；出手后两道光从手上伸向中间 */
@@ -11337,7 +11501,7 @@ const BT = (() => {
           ctx.save(); ctx.translate(cx, gy); ctx.scale(1, 0.22); ctx.translate(-cx, -gy); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, gy, R * 1.7, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
         /* 两道光；结束时输的一方的光消失，只剩赢的一方的光打在他身上 */
         if (!ending || ending.loser !== "you" || now - ending.t0 < 350) paint("you", a, {x:cx, y:cy});
-        if (!ending || ending.loser !== "foe" || now - ending.t0 < 350) paint("foe", b, {x:cx, y:cy});
+        if (!ending || ending.loser !== "foe" || now - ending.t0 < 350){ for (const b2 of fhs()) paint("foe", b2, {x:cx, y:cy}); }   /* 双冠龙：后面那个头的先画，前面那个头的盖在上面 */
         const hl = day ? halo2 : halo; ctx.globalCompositeOperation = day ? "source-over" : "lighter";
         hl(ctx, cx + side * R * 0.28, cy, R * 1.15, Y[0], 0.55 * K); hl(ctx, cx - side * R * 0.28, cy, R * 1.15, F[0], 0.55 * K);
         hl(ctx, cx + side * R * 0.5, cy, R * 0.62, Y[0], 0.7 * K); hl(ctx, cx - side * R * 0.5, cy, R * 0.62, F[0], 0.7 * K);
@@ -11373,17 +11537,17 @@ const BT = (() => {
       return {
         ready,
         burst(){ burstAt = performance.now(); },
-        stop(){ stop = true; if (clY) clY.finish(); if (clF) clF.finish(); if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); if (A.cm) try { A.cm.idle(); } catch (e) {} zoomTo(cs0, 300, sp0); },
+        stop(){ stop = true; if (clY) clY.finish(); if (clF) clF.finish(); if (mcl) mcl.stop(); if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); if (A.cm) try { A.cm.idle(); } catch (e) {} zoomTo(cs0, 300, sp0); },
         /* 3：能量球推到输的一方身上炸开 → 赢的一方的光继续打一小段时间（伤害一下下往外跳）→ 输的一方倒下、赢的一方胜利（opts.fall） */
         async end(winner, dmg, opts){
           opts = opts || {}; const loser = winner === "you" ? "foe" : "you", L = loser === "you" ? you : ghost;
           ending = {loser, t0:performance.now()}; await wait(350); if (token !== A.token) return;
-          { const lc = loser === "you" ? clY : clF; if (lc) lc.finish(); }   /* 输的一方的原版光线收掉 */
+          { const lc = loser === "you" ? clY : clF, wc = loser === "you" ? clF : clY; if (lc) lc.finish(); if (wc) wc.free = true; if (loser === "foe" && mcl) mcl.stop(); }   /* 输的一方的原版光线收掉；赢的一方恢复原版（会穿过对手的照样穿过去） */
           burstBig = true; burstAt = performance.now();
           if (!(L === ghost && A.cm)) pose(L, "recoil", 90); else try { A.cm.play("hit"); } catch (e) {}
-          const parts2 = split(dmg || 0, 6);
-          for (const part of parts2){ if (token !== A.token) return; const T = bodyC(L); dealt(L, part); damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part); if (!(L === ghost && A.cm)) sparksOn(L, "skill", T); await wait(150); }
-          await wait(200); if (clY) clY.finish(); if (clF) clF.finish(); stop = true;
+          const parts2 = split(dmg || 0, 8);   /* 能量球炸开以后，赢的一方的光继续打在他身上约 1.5 秒 */
+          for (const part of parts2){ if (token !== A.token) return; const T = bodyC(L); dealt(L, part); damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part); if (!(L === ghost && A.cm)) sparksOn(L, "skill", T); await wait(190); }
+          await wait(200); if (clY) clY.finish(); if (clF) clF.finish(); if (mcl) mcl.stop(); stop = true;
           if (opts.fall){ try { await A.finish(winner === "you"); } catch (e) {} }
           else { if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); if (A.cm) try { A.cm.idle(); } catch (e) {} }
           await zoomTo(cs0, 450, sp0);
@@ -11793,7 +11957,7 @@ function batRecord(stage){
   /* 卡片判成“意思对上了”（换了个说法）的，游戏也按意思对算，不当成擦伤 */
   const retried = !!(stage.firstCmp && stage.cmp && stage.cmp !== stage.firstCmp);
   const meanFirst = stage.firstMean != null ? stage.firstMean : (!retried && stage.mean);
-  const lvOf = (cmp, meant) => !cmp ? "off" : cmp.exact ? "exact" : meant ? "meaning" : cmp.level;
+  const lvOf = (cmp, meant) => !cmp ? "off" : cmp.exact ? "exact" : meant ? "meaning" : cmp.near ? "close" : cmp.level;   /* 只差一点：按基本对算 */
   const e = {id:c.id, zh:c.zh, en:c.en, alt:c.alt || [], lv1: lvOf(first, meanFirst), lv2: retried ? lvOf(stage.cmp, stage.mean) : lv2, ms: stage.ms || 0, tag:c.tag, spoke, sound: !!(first && first.sound), special: !!(it && it.special)};
   if (stage.misrec && batMisOk()){ e.mis = true; RUN.batMis = (RUN.batMis || 0) + 1; }
   stage.batEntry = e; RUN.battle.push(e);
@@ -12195,7 +12359,7 @@ function batBodyHTML(rec){
   const mm = BT.metaOf(rec), r = Math.round(mm.r * 100), cm = mm.cm;
   return `<p class="small muted">这里调的是普通大小（预览就是普通大小）。巨人的身高在“巨大化”里调。</p>
     <label class="fld"><span>身高 <b id="btCmVal">${cm} 厘米</b></span><input type="range" id="btCm" min="150" max="220" step="1" value="${cm}" data-chg="bt-cm" data-out="btCmVal" data-unit=" 厘米" data-live="kh"></label>
-    <label class="fld"><span>起手式高度 <b id="btRVal">${r}%</b>（起手式是站直身高的百分之几：半蹲的格斗姿势 80% 左右，站直的 100%）</span><input type="range" id="btR" min="70" max="115" step="1" value="${r}" data-chg="bt-r" data-out="btRVal" data-unit="%" data-live="kh"></label>
+    <label class="fld"><span>起手式高度 <b id="btRVal">${r}%</b>（站直是 100%，半蹲约 80%）</span><input type="range" id="btR" min="70" max="115" step="1" value="${r}" data-chg="bt-r" data-out="btRVal" data-unit="%" data-live="kh"></label>
     <div style="margin-top:12px;border-top:1px solid var(--line, #e2e2e2);padding-top:10px"><b class="small">替换某一个姿势</b>
       <div class="row-gap" style="margin-top:6px"><select id="btRepPose">${BT.SHEET_ORDER.map(k => `<option value="${k}">${BT.POSE_NAMES[k]}</option>`).join("")}</select>
       <label class="btn sm">用单人图替换或补上这个姿势<input type="file" accept="image/*" data-chg="bt-rep" style="display:none"></label></div>
@@ -12454,7 +12618,15 @@ ACT["bt-del"] = async () => {
     if (c === "new"){ L.resume = null; saveLocal(); return false; }
     return true;
   }
-  for (const k of ["start", "start-std", "start-game"]){ if (typeof ACT[k] !== "function") continue; const f = ACT[k]; ACT[k] = async function(el){ if (await startChoice(k === "start-game")) return; return f.apply(this, arguments); }; }
+  /* 首页的“练习”“游戏”：先选普通还是对话（data-menu）；选了普通再看有没有没练完的一轮 */
+  for (const k of ["start", "start-std", "start-game"]){ if (typeof ACT[k] !== "function") continue; const f = ACT[k]; ACT[k] = async function(el){
+    const game = k === "start-game";
+    /* 自动测试的浏览器（navigator.webdriver）跳过这一步，除非测试自己要测它（__menuTest）；手机上照常弹出 */
+    if (el && el.dataset && el.dataset.menu && window.__startChoice !== "new" && !(navigator.webdriver && !window.__menuTest)){
+      const c = await choose(game ? "游戏" : "练习", "", [["std", game ? "普通" : "普通练习"], ["talk", game ? "对话首领战" : "对话"]]); if (!c) return;
+      if (c === "talk"){ dbOpen(game); return; }
+    }
+    if (await startChoice(game)) return; return f.apply(this, arguments); }; }
 })();
 
 /* ---------- “我确定这样也对”点错了可以撤销：点之前记下这张卡的判断和“也对”的说法，撤销时原样恢复 ---------- */
@@ -12537,37 +12709,40 @@ function dbQuestions(mode, persona){
   const mid = pool.filter(q => q !== first && q !== ask).sort(() => Math.random() - 0.5).slice(0, 2);
   return [first, ...mid, ask].filter(Boolean);
 }
-ACT["db-open"] = async () => {
-  const m = await choose("对话首领战：和谁打？", `<p class="small muted">对方一回合问你一个问题，伤害看你答到了多少要点。4/3/2 连击战：同一个故事限时越讲越短。</p>`, [["iv", "面试官"], ["cc", "Coffee chat"], ["432", "4/3/2 连击战"]]);
+/* 对话：game 为 true 是对话首领战（有舞台、血量、对波），false 是对话练习（只有问题、回答、分数和反馈）；题目和判分一样 */
+ACT["db-open"] = () => dbOpen(true);
+async function dbOpen(game){
+  const m = await choose(game ? "对话首领战：和谁打？" : "对话练习：和谁练？", "", [["iv", "面试官"], ["cc", "Coffee chat"], ["432", game ? "4/3/2 连击战" : "4/3/2 练习"]]);
   if (m === "cc"){
     const decks = [...new Set(Object.values(QBY || {}).filter(q => q && isCC(q) && dbRef(q)).map(q => q.deck))];
     if (!decks.length){ toast("先导入 Coffee chat 题库（要有参考回答）"); return; }
     const who = await choose("Coffee chat：和谁聊？", `<p class="small muted">每个“Coffee chat：某某”题库就是一种人。随机：每回合换一种人。</p>`, decks.map(d => [d, dbPersona(d)]).concat([["*", "随机（各种人）"]]));
-    if (who) dbStart("cc", who); return;
+    if (who) dbStart("cc", who, game); return;
   }
-  if (m) dbStart(m);
-};
+  if (m) dbStart(m, "", game);
+}
 /* 题库名“Coffee chat：校友”→“校友”；只叫“Coffee chat”的（第一个 Coffee chat 题库）→“工程师” */
 const dbPersona = d => { const s = String(d || ""); const k = s.search(/[：:]/); return k >= 0 ? s.slice(k + 1).trim() : (/社交/.test(s) ? "朋友" : "工程师"); };
-function dbStart(mode, persona){
+function dbStart(mode, persona, game){
   const qs = dbQuestions(mode, persona);
   if (!qs.length){ toast(mode === "cc" ? "先导入 Coffee chat 题库（要有参考回答）" : "先导入带参考回答的面试题，或者在模拟面试里存一个自己的回答"); return; }
-  DB.st = {mode, persona: persona || "", qs, i:0, you:100, rounds:[], busy:false, follow:null, fdone:{}, clashed:false, limits:[90, 60, 45], wpm:[]}; UI.nav("dboss");
+  DB.st = {mode, game: game !== false, persona: persona || "", qs, i:0, you:100, rounds:[], busy:false, follow:null, fdone:{}, clashed:false, limits:[90, 60, 45], wpm:[]}; UI.nav("dboss");
 }
 const dbWho = st => (st.mode === "cc" ? (st.persona && st.persona !== "*" ? dbPersona(st.persona) : (st.qs[st.i] ? dbPersona(st.qs[st.i].deck) : "对方")) : st.mode === "432" ? "对手" : "面试官");
 VIEWS.dboss = {
   render(){
     const st = DB.st; if (!st) return `<div class="wrap">${backBtn()}<p>没有在进行的对话首领战。</p></div>`;
-    const title = st.mode === "cc" ? "Coffee chat：" + (st.persona === "*" ? "各种人" : dbPersona(st.persona || (st.qs[0] || {}).deck)) : st.mode === "432" ? "4/3/2 连击战" : "面试官";
-    return `<div class="wrap db">${backBtn()}<h2>${st.mode === "432" ? "" : "对话首领战："}${title}</h2>
-      <div class="bt-stage db-arena" id="dbArena"></div>
-      <p class="small muted" id="dbHud" style="margin:6px 0">${youName()} <b id="dbYou">${st.you}</b> · ${dbWho(st)} <b id="dbBoss">100</b> · 第 <span id="dbRound">1</span>/${st.qs.length} ${st.mode === "432" ? "遍" : "回合"}</p>
+    const title = st.mode === "cc" ? "Coffee chat：" + (st.persona === "*" ? "各种人" : dbPersona(st.persona || (st.qs[0] || {}).deck)) : st.mode === "432" ? (st.game ? "4/3/2 连击战" : "4/3/2 练习") : "面试官";
+    return `<div class="wrap db">${backBtn()}<h2>${st.mode === "432" ? "" : st.game ? "对话首领战：" : "对话练习："}${title}</h2>
+      ${st.game ? `<div class="bt-stage db-arena" id="dbArena"></div>` : ""}
+      <p class="small muted" id="dbHud" style="margin:6px 0">${st.game ? `${youName()} <b id="dbYou">${st.you}</b> · ${dbWho(st)} <b id="dbBoss">100</b> · ` : ""}第 <span id="dbRound">1</span>/${st.qs.length} ${st.mode === "432" ? "遍" : st.game ? "回合" : "题"}</p>
       <div class="card db-q"><p class="small muted" id="dbWhoSay">${dbWho(st)}问：</p><p class="en" id="dbQ"></p>
         <div class="row-gap"><button class="linkbtn small" data-act="db-hear">再听一遍</button><button class="linkbtn small" data-act="db-zh">看中文</button></div><p class="small muted" id="dbZh" hidden></p></div>
       <div id="dbCtl"></div><div id="dbFb"></div></div>`;
   },
   mount(){
     const st = DB.st; if (!st) return;
+    if (!st.game){ DB.A = null; dbAsk(); return; }   /* 对话练习：没有舞台 */
     const A = DB.A = BT.makeArena($("#dbArena")); A.setOpt({charSize:0.6, place:"street"});
     A.setChar(BAT_CHAR ? BT.rebuild(BAT_CHAR) : null, BT.metaOf(BAT_CHAR || null));
     const boss = TuokouMonsters.list().filter(m => m.tier === "boss" && m.id !== "colossus").map(m => m.id);   /* 镇岳像只在巨大化里出现 */
@@ -12579,7 +12754,7 @@ VIEWS.dboss = {
 function dbAsk(){
   const st = DB.st, q = st.qs[st.i]; if (!q) return dbEnd();
   const text = st.follow ? st.follow.q : dbText(q);
-  if (st.mode === "cc" && st.persona === "*" && DB.A){ DB.A.setNames(dbWho(st), youName()); }   /* 随机：每回合换一种人 */
+  if (st.mode === "cc" && st.persona === "*" && DB.A && st.game){ DB.A.setNames(dbWho(st), youName()); }   /* 随机：每回合换一种人 */
   $("#dbWhoSay").textContent = st.follow ? `${dbWho(st)}追问：` : st.mode === "432" ? `第 ${st.i + 1} 遍，限时 ${st.limits[st.i]} 秒：尽量讲全、讲快` : `${dbWho(st)}问：`;
   $("#dbQ").textContent = text; const zh = $("#dbZh"); zh.textContent = st.follow ? "" : (q.zh || ""); zh.hidden = true; $("#dbRound").textContent = st.i + 1; $("#dbFb").innerHTML = "";
   $("#dbCtl").innerHTML = `<div class="db-mic"><button class="mic" id="dbMic" data-act="db-say" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="dbHeard">${st.mode === "432" ? `点一下开始说，限时 ${st.limits[st.i]} 秒（说完也可以自己点结束）` : "点一下开始说，说完再点一下"}</div></div>
@@ -12661,21 +12836,22 @@ async function dbResolve(said, secs){
   $("#dbCtl").innerHTML = `<p class="small muted">${said ? "你说的：" + esc(said) : "这一回合没开口"}</p>${said ? `<p class="small muted" id="dbJudging">正在看你答得怎么样……</p>` : ""}`;
   const sc = await dbJudge(said, q, ref, ask); const jg = $("#dbJudging"); if (jg) jg.remove();
   let dmg = 0, note = "", wpm = 0;
-  if (sc.words < 3){ const d = st.mode === "cc" ? 10 : 14; st.you = Math.max(0, st.you - d); note = "这一回合没开口，对方占了上风。哪怕先说一句“Let me think for a second”也好。"; try { await A.enemyMove("light", d); } catch (e) {} }
+  if (sc.words < 3){ const d = st.mode === "cc" ? 10 : 14; if (st.game){ st.you = Math.max(0, st.you - d); try { await A.enemyMove("light", d); } catch (e) {} } note = st.game ? "这一回合没开口，对方占了上风。哪怕先说一句“Let me think for a second”也好。" : "这一题没开口。哪怕先说一句“Let me think for a second”也好。"; }
   else {
     dmg = Math.round(6 + 30 * sc.cov) + (ask ? sc.questions * 4 : 0);
     if (st.mode === "432"){ wpm = secs > 3 ? Math.round(sc.words / (secs / 60)) : 0; st.wpm.push(wpm); const prev = st.wpm.length > 1 ? st.wpm[st.wpm.length - 2] : 0; if (prev && wpm > prev){ const b = Math.min(10, Math.round((wpm - prev) * 0.25)); dmg += b; note = `比上一遍每分钟多说了 ${wpm - prev} 个词，连击加成 +${b}。`; } }
     if (sc.needResult && !sc.result){ dmg = Math.round(dmg * 0.5); note = (note ? note + " " : "") + "没讲结果：对方加了护盾，伤害减半。讲项目最后一定要说结果（As a result, ...）。"; }
     const kind = sc.cov >= 0.7 ? "skill" : sc.cov >= 0.4 ? "heavy" : "light";
-    try { await A.move(kind, dmg); } catch (e) {}
+    if (st.game){ try { await A.move(kind, dmg); } catch (e) {} }
   }
   st.rounds.push({q: st.follow ? st.follow.q : dbText(q), said, cov:sc.cov, pts:sc.pts, dmg, note, wpm, secs: Math.round(secs || 0), questions: ask ? sc.questions : null});
-  $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp));
-  const more = A.hp > 0 && st.you > 0 && (st.i + 1 < st.qs.length || (!st.follow && dbFollow(q) && !st.fdone[q.id]));
+  if (st.game){ $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp)); }
+  const alive = !st.game || (A.hp > 0 && st.you > 0), more = alive && (st.i + 1 < st.qs.length || (!st.follow && dbFollow(q) && !st.fdone[q.id]));
+  if (!st.game) dmg = 0;   /* 对话练习：只看分数，不算伤害 */
   $("#dbFb").innerHTML = `<div class="card db-fb"><p><b>这一回合 ${Math.round(sc.cov * 100)} 分</b>${dmg ? `，伤害 ${dmg}` : ""}${ask ? `；你问了 ${sc.questions} 个问题` : ""}${st.mode === "432" && wpm ? `；每分钟 ${wpm} 个词` : ""}${sc.ai ? `<span class="small muted">（Claude 按意思判的）</span>` : ""}</p>${note ? `<p class="small">${esc(note)}</p>` : ""}${sc.fb ? `<p class="small">${esc(sc.fb)}</p>` : ""}
     ${(sc.sub || []).length ? `<p class="small muted" style="margin-top:4px">${sc.sub.map(x => `${esc(x.s)} ${x.v}`).join(" · ")}</p>` : ""}
     ${sc.pts.map(p => `<p class="small ${p.ok ? "" : "db-miss"}">${p.ok ? "✓" : "✗"} ${esc(p.s)}${p.tip ? `<span class="muted">：${esc(p.tip)}</span>` : ""}</p>`).join("")}
-    ${sc.rewrite ? `<p class="small muted" style="margin-top:6px">你可以这样说（按你自己的内容改的）：</p><p class="small en">${esc(sc.rewrite)}</p>` : ""}
+    ${sc.rewrite ? `<p class="small muted" style="margin-top:6px">你可以这样说：</p><p class="small en">${esc(sc.rewrite)}</p>` : ""}
     ${ref ? `<details style="margin-top:6px"><summary class="small muted">参考回答：一种说法（不用照背）</summary><p class="small en">${esc(ref)}</p></details>` : ""}
     ${said ? `<button class="btn sm" data-act="db-ask" style="margin-top:8px">存起来问 Claude</button>` : ""}
     <button class="btn primary block" data-act="db-next" style="margin-top:10px">${more ? "下一回合" : "看结果"}</button></div>`;
@@ -12683,10 +12859,11 @@ async function dbResolve(said, secs){
 }
 ACT["db-next"] = async () => {
   const st = DB.st; if (!st || st.busy) return; const q = st.qs[st.i];
-  if (DB.A.hp > 0 && DB.A.hp <= 30 && !st.clashed && st.mode !== "432" && st.you > 0){ await dbClash(); if (DB.A.hp <= 0 || st.you <= 0) return dbEnd(); }
-  if (!st.follow && st.mode !== "432" && dbFollow(q) && !st.fdone[q.id] && DB.A.hp > 0 && st.you > 0){ st.fdone[q.id] = true; st.follow = dbFollow(q); return dbAsk(); }
+  const alive = () => !st.game || (DB.A.hp > 0 && st.you > 0);
+  if (st.game && DB.A.hp > 0 && DB.A.hp <= 30 && !st.clashed && st.mode !== "432" && st.you > 0){ await dbClash(); if (DB.A.hp <= 0 || st.you <= 0) return dbEnd(); }
+  if (!st.follow && st.mode !== "432" && dbFollow(q) && !st.fdone[q.id] && alive()){ st.fdone[q.id] = true; st.follow = dbFollow(q); return dbAsk(); }
   st.follow = null; st.i++;
-  if (st.i < st.qs.length && DB.A.hp > 0 && st.you > 0) dbAsk(); else dbEnd();
+  if (st.i < st.qs.length && alive()) dbAsk(); else dbEnd();
 };
 /* 对波：连续 3 句快问快答（你已经会的句子），每句在暴击时间内说对，交点往对方那边推三分之一；说错、说慢就退回来三分之一 */
 function dbClashItems(mode){
@@ -12702,7 +12879,7 @@ function dbClashHint(p){ const say = o => (o.foe ? `首领挨 ${o.foe} 点` : `�
 async function dbClash(){
   const st = DB.st, A = DB.A; st.clashed = true; st.busy = true; let p = 0;
   const youC = BAT_CHAR ? (SKILL_COL[(A.loadout && A.loadout.skill) || "wideBeam"] || SKILL_COL.wideBeam) : SKILL_COL.rig;
-  const fx = A.clash({you:youC, foe:MON_COL[st.boss] || ["#FF5A3C", "#FFC46A"], getP:() => p, youSkill: BAT_CHAR ? ((A.loadout && A.loadout.skill) || "wideBeam") : "rig", foeSkill:"generic"});
+  const fx = A.clash({you:youC, foe:MON_COL[st.boss] || ["#FF5A3C", "#FFC46A"], getP:() => p, youSkill: BAT_CHAR ? ((A.loadout && A.loadout.skill) || "wideBeam") : "rig", foeSkill:"generic", foeId: st.boss});
   $("#dbCtl").innerHTML = `<div class="card db-clash"><p><b>对波！</b>双方都在聚能……</p></div>`; await fx.ready;
   const items = dbClashItems(st.mode), res = [];
   for (let k = 0; k < items.length; k++){
@@ -12729,16 +12906,16 @@ async function dbClash(){
   st.clashResult = p; $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp)); st.busy = false;
 }
 async function dbEnd(){
-  const st = DB.st, A = DB.A; if (!st) return; const won = A.hp <= 0 || (st.you > 0 && A.hp < 50);
-  try { if (A.hp <= 0) await A.knockout(); await A.finish(won); } catch (e) {}
+  const st = DB.st, A = DB.A; if (!st) return; const won = st.game && (A.hp <= 0 || (st.you > 0 && A.hp < 50));
+  if (st.game){ try { if (A.hp <= 0) await A.knockout(); await A.finish(won); } catch (e) {} }
   const avg = st.rounds.length ? Math.round(100 * st.rounds.reduce((s, r) => s + r.cov, 0) / st.rounds.length) : 0;
   const t432 = st.mode === "432" ? `<p class="small muted" style="margin-top:6px">${st.rounds.map((r, k) => `第 ${k + 1} 遍（${st.limits[k]} 秒）：讲到 ${Math.round(r.cov * 100)}%，每分钟 ${r.wpm || 0} 个词`).join("<br>")}</p>` : "";
-  $("#dbCtl").innerHTML = ""; $("#dbFb").innerHTML = `<div class="card"><h3>${won ? "赢了" : "这一场没拿下"}</h3><p>平均 ${avg} 分。</p>${t432}
+  $("#dbCtl").innerHTML = ""; $("#dbFb").innerHTML = `<div class="card"><h3>${st.game ? (won ? "赢了" : "这一场没拿下") : "练完了"}</h3><p>平均 ${avg} 分。</p>${t432}
     ${st.rounds.map((r, k) => `<p class="small" style="margin-top:8px"><b>${st.mode === "432" ? "第 " + (k + 1) + " 遍" : "第 " + (k + 1) + " 回合"}：${Math.round(r.cov * 100)}%</b>　${esc(r.q)}</p>${r.pts.filter(p => !p.ok).slice(0, 3).map(p => `<p class="small db-miss">✗ ${esc(p.s)}</p>`).join("")}`).join("")}
     <div class="row-gap" style="margin-top:12px"><button class="btn primary" data-act="db-again">再来一场</button><button class="btn" data-act="db-home">回首页</button></div></div>`;
   planAutoDone("dboss:" + st.mode);
 }
-ACT["db-again"] = () => { const m = DB.st && DB.st.mode; if (m) dbStart(m); };
+ACT["db-again"] = () => { const st = DB.st; if (st) dbStart(st.mode, st.persona, st.game); };
 ACT["db-home"] = () => { DB.st = null; UI.nav("home"); };
 CHG.pressure = el => { S.settings.pressure = !!el.checked; save(); toast(el.checked ? "加压模式开了" : "加压模式关了"); };
 
@@ -12754,7 +12931,7 @@ function batClashHTML(){
   const pv = pick(L.clPlace, places, "street");
   const sel = (id, arr, v) => `<select id="${id}" data-chg="cl-pick">${arr.map(([k, t]) => `<option value="${esc(k)}" ${k === v ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`;
   return `<p class="small muted">选你的角色和对手，看两边的技能撞在一起是什么样。颜色按两边技能各自的颜色。</p>
-    <div class="row-gap" style="margin-top:8px"><label class="fld" style="flex:1;min-width:0"><span>对手（左边）</span>${sel("clFoe", foes, fv)}</label><label class="fld" style="flex:1;min-width:0"><span>你（右边）</span>${sel("clYou", mine, yv)}</label></div>
+    <div class="row-gap" style="margin-top:8px"><label class="fld" style="flex:1;min-width:0"><span>对手</span>${sel("clFoe", foes, fv)}</label><label class="fld" style="flex:1;min-width:0"><span>你</span>${sel("clYou", mine, yv)}</label></div>
     <div class="row-gap" style="margin-top:6px"><label class="fld" style="flex:1;min-width:0"><span>场景</span>${sel("clPlace", places, pv)}</label><label class="switch" style="flex:1"><span>夜晚</span><input type="checkbox" id="clNight" data-chg="cl-pick" ${L.clNight ? "checked" : ""}></label></div>
     <div class="bt-stage db-arena" id="clArena"></div>
     <p id="clRes" style="margin:6px 0">○ ○ ○</p>
@@ -12775,7 +12952,8 @@ async function batClashLoad(){
   A.setOpt({charSize:0.3, spots:[0.14, 0.86], place, night, giant});
   A.setChar(yr ? BT.rebuild(yr) : null, BT.metaOf(yr || null, giant));
   CLS.youC = yr ? (SKILL_COL[BT.loadoutOf(yr).skill] || SKILL_COL.wideBeam) : SKILL_COL.rig; CLS.youSkill = yr ? BT.loadoutOf(yr).skill : "rig"; CLS.foeSkill = "generic";
-  if (fv.startsWith("m:")){ const id = fv.slice(2); A.setEnemy(BT.codeMon(id, 100)); CLS.foeC = MON_COL[id] || ["#FF5A3C", "#FFC46A"]; }
+  CLS.foeId = "";
+  if (fv.startsWith("m:")){ const id = fv.slice(2); A.setEnemy(BT.codeMon(id, 100)); CLS.foeC = MON_COL[id] || ["#FF5A3C", "#FFC46A"]; CLS.foeId = id; }
   else if (fv){ const fr = fr0; if (fr){ const info = BAT_LIST.find(c => "c:" + c.id === fv) || {name:"对手"}; A.setEnemy(imgEnemy({info, rec:fr}, "elite", giant, true)); CLS.foeC = SKILL_COL[BT.loadoutOf(fr).skill] || SKILL_COL.wideBeam; CLS.foeSkill = BT.loadoutOf(fr).skill; } }
   A.setNames("对手", youName()); A.setHP(100, true, 100);
 }
@@ -12786,7 +12964,7 @@ function clReset(silent){
 }
 ACT["cl-ans"] = async el => {
   const A = BAT_CLA; if (!A || CLS.busy || CLS.res.length >= 3) return;
-  if (!CLS.fx){ CLS.busy = true; CLS.fx = A.clash({you:CLS.youC || SKILL_COL.rig, foe:CLS.foeC || ["#FF5A3C", "#FFC46A"], getP:() => CLS.p, youSkill:CLS.youSkill || "rig", foeSkill:CLS.foeSkill || "generic", noZoom:true}); const m0 = $("#clMsg"); if (m0) m0.textContent = "双方都在聚能……"; await CLS.fx.ready; CLS.busy = false; }
+  if (!CLS.fx){ CLS.busy = true; CLS.fx = A.clash({you:CLS.youC || SKILL_COL.rig, foe:CLS.foeC || ["#FF5A3C", "#FFC46A"], getP:() => CLS.p, youSkill:CLS.youSkill || "rig", foeSkill:CLS.foeSkill || "generic", foeId:CLS.foeId, noZoom:true}); const m0 = $("#clMsg"); if (m0) m0.textContent = "双方都在聚能……"; await CLS.fx.ready; CLS.busy = false; }
   const ok = el.dataset.v === "1", step = CLS.res.length === 2 ? 0.5 : 1 / 3; CLS.res.push(ok); CLS.fx.burst(); CLS.busy = true;
   const from = CLS.p, to = Math.max(-1, Math.min(1, CLS.p + (ok ? step : -step))), t0 = performance.now();
   await new Promise(r => { const f = now => { const u = Math.min(1, (now - t0) / 420); CLS.p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
