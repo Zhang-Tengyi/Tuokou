@@ -682,7 +682,7 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .dict-h + .dict-grid{margin-top:4px}
 
 /* 对话首领战 */
-.db-arena{height:230px;margin-top:8px}
+.db-arena{height:auto;aspect-ratio:4/3;margin-top:8px}   /* 和游戏里的舞台一样的比例 */
 .db-q .en{font-size:17px;margin:4px 0 6px}
 .db-miss{color:#B42318}
 @media (prefers-color-scheme: dark){.db-miss{color:#FF8A80}}
@@ -710,7 +710,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.45.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.46.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -11160,65 +11160,84 @@ const BT = (() => {
       push.cancel(); if (!def.classList.contains("still")) pose(def, "idle", 260);
       fadeHeld(800); await pose(att, "idle", 300);
     }
-    /* 对波：两道光在中间顶住。中心永远是白色；四周炸散的光晕、粒子、光环从两边技能的颜色里取（靠哪边就偏哪边的颜色）。
-       o.you、o.foe：两边的两个主色（#RRGGBB）；o.getP()：交点的位置，-1 推到你脸上，+1 推到对手脸上 */
+    /* 对波（v1.46.0 重新编排）：
+       1. 前摇：两边同时开始技能前摇；没有前摇的（代码怪物）站着起手式等，等双方都准备好；
+       2. 同时出手：两边在同一刻摆出放技能的姿势，两道光从手上伸出去，在中间撞上，开始对波；
+       3. end(winner)：能量球被推到输的一方身上炸开，赢的一方的光继续打在他身上一小段时间（伤害一下下往外跳），然后输的一方倒下、赢的一方胜利（opts.fall）。
+       中心永远是白色；四周炸散的光晕、粒子、光环从两边技能的颜色里取（靠哪边就偏哪边的颜色）；白天压暗一点、渐变自己算 */
     function clashFx(o){
-      const token = A.token, t0 = performance.now(), sz = stage.clientHeight, parts = [], rings = []; let stop = false, lastRing = 0, lastShake = 0, burstAt = 0, flashUntil = 0;
-      if (you.rig || hasPose(you, "skill")) pose(you, "fire");
+      const token = A.token, sz = stage.clientHeight, parts = [], rings = []; let stop = false, lastRing = 0, lastShake = 0, burstAt = 0, burstBig = false, flashUntil = 0, grow = 0, ending = null, t0 = performance.now();
       const yh = () => handPoint(you);
       const fh = () => { if (A.cm){ const b = A.cm.box(); return {x: b.x + b.w * 0.85, y: b.y + b.h * 0.36}; } return handPoint(ghost); };
-      if (!A.cm && (ghost.rig || hasPose(ghost, "skill"))) pose(ghost, "fire");
+      const bodyC = f => { if (f === ghost && A.cm){ const b = A.cm.box(); return {x: b.x + b.w * 0.5, y: b.y + b.h * 0.42}; } const b = box(bodyOf(f)); return {x: b.x + b.w * 0.5, y: b.y + b.h * 0.38}; };
       const rgb = h => { const n = parseInt(String(h).replace("#", ""), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
       const Y = o.you.map(rgb), F = o.foe.map(rgb), WH = [255, 255, 255], col = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
       const mix = (a, b, t) => [0, 1, 2].map(i => Math.round(a[i] + (b[i] - a[i]) * t)), smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
       const halo = (ctx, x, y, r, c, al) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col(c, al)); g.addColorStop(0.45, col(c, al * 0.45)); g.addColorStop(1, col(c, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
-      /* 白天用：中心白、往外渐变成两边的颜色（不叠加发光，要自己算出这个渐变） */
       const halo2 = (ctx, x, y, r, c, al) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col(WH, al)); g.addColorStop(0.28, col(mix(WH, c, 0.55), al * 0.8)); g.addColorStop(0.6, col(c, al * 0.45)); g.addColorStop(1, col(c, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
-      /* 粒子身上的白色辉光：离中心越近越亮，像被中心的白光照亮 */
       const GL = document.createElement("canvas"); GL.width = GL.height = 32; { const g = GL.getContext("2d"), r = g.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.4, "rgba(255,255,255,.45)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 32, 32); }
+      const hasWind = f => (f === ghost && A.cm ? false : f.rig || hasPose(f, "skillWind"));
+      /* 1–2：前摇（同时开始，没有前摇的等着），然后同时出手，两道光伸出去撞上 */
+      const safe = fn => { try { fn(); } catch (e) {} };   /* 哪个姿势出错也照样往下走，不会卡在“聚能” */
+      const ready = (async () => {
+        const wy = hasWind(you), wf = hasWind(ghost);
+        if (wy || wf){ if (wy) safe(() => pose(you, "charge")); if (wf) safe(() => pose(ghost, "charge")); await wait(650);
+          if (token !== A.token) return;
+          /* 第二段前摇（双手平举）：只有姿势表里有这一格的才做；原创小人没有这个姿势，只做第一段 */
+          if (wy && !you.rig && hasPose(you, "skillMid")) safe(() => pose(you, "mid")); if (wf && !ghost.rig && hasPose(ghost, "skillMid")) safe(() => pose(ghost, "mid")); await wait(420); }
+        if (token !== A.token) return;
+        if (you.rig || hasPose(you, "skill")) safe(() => pose(you, "fire")); if (!A.cm && (ghost.rig || hasPose(ghost, "skill"))) safe(() => pose(ghost, "fire"));
+        await wait(40); const g0 = performance.now();
+        await new Promise(r => { const f = now => { grow = Math.min(1, (now - g0) / 230); if (grow < 1 && token === A.token) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
+        burstAt = performance.now(); shake(8);
+      })();
       glow.add((ctx, now) => {
         if (token !== A.token || stop) return false;
-        const t = now - t0, a = yh(), b = fh(), p = Math.max(-1, Math.min(1, o.getP())), mid = (a.x + b.x) / 2, SW = stage.clientWidth;
-        const cx = mid + (b.x - mid) * p * 0.85, cy = a.y + (b.y - a.y) * ((cx - a.x) / ((b.x - a.x) || 1)) + Math.sin(t / 40) * 2, R = sz * 0.42 * (0.92 + Math.random() * 0.16);
-        const side = Math.sign(a.x - cx) || 1, day = !A.night, K = day ? 0.8 : 1, AVG = mix(Y[0], F[0], 0.5);
-        /* 粒子三种：dot 小碎片、streak 沿着飞的方向拉长的光条、petal 慢慢翻转着往下飘落的大碎片；往哪边飞，七成用那一边的颜色 */
+        const t = now - t0, a = yh(), b = fh(), mid = (a.x + b.x) / 2, SW = stage.clientWidth;
+        const p = Math.max(-1, Math.min(1, o.getP()));
+        let cx = mid + (b.x - mid) * p * 0.85, cy = a.y + (b.y - a.y) * ((cx - a.x) / ((b.x - a.x) || 1)) + Math.sin(t / 40) * 2;
+        if (ending){ const k = smooth((now - ending.t0) / 350), T = bodyC(ending.loser === "you" ? you : ghost); cx = cx + (T.x - cx) * k; cy = cy + (T.y - cy) * k; }
+        const R = sz * 0.42 * (0.92 + Math.random() * 0.16) * (ending && now - ending.t0 > 350 ? 1.15 : 1);
+        const side = Math.sign(a.x - cx) || 1, day = !A.night, K = day ? 0.8 : 1, AVG = mix(Y[0], F[0], 0.5), live = grow >= 1;
         const emit = (kind, boost) => { boost = boost || 1; const ang = Math.random() * Math.PI * 2, mine = Math.cos(ang) * side > 0, pal = (mine ? Math.random() < 0.7 : Math.random() < 0.3) ? Y : F;
           const v = (kind === "petal" ? 0.08 + Math.random() * 0.22 : 0.14 + Math.random() * 0.5) * boost;
           parts.push({kind, x:cx, y:cy, vx:Math.cos(ang) * v, vy:Math.sin(ang) * v - 0.05, s: kind === "petal" ? 4 + Math.random() * 6 : 2 + Math.random() * 3.5, c:pal[Math.random() < 0.6 ? 0 : 1], born:now,
             life: kind === "petal" ? 1100 + Math.random() * 900 : 380 + Math.random() * 520, rot:Math.random() * 6.28, g: kind === "petal" ? 0.00032 : 0.00012}); };
         ctx.save(); ctx.lineCap = "round";
-        /* 白天：先把交点周围压暗一点，光晕亮度收到八成，彩色外层、粒子、光环用正常画法，颜色和细节才看得清 */
+        const beam = (from, to, C) => { const w = sz * 0.05 * (0.94 + Math.random() * 0.12);
+          for (const [lw, c, al, gl] of [[w * 2.6, C[0], day ? 0.42 : 0.32, !day], [w * 1.4, C[1], day ? 0.85 : 0.7, !day], [w * 0.5, WH, 1, true]]){ ctx.globalCompositeOperation = gl ? "lighter" : "source-over"; ctx.strokeStyle = col(c, al); ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke(); } };
+        if (!live){
+          /* 前摇和出手：手上的光越聚越亮；出手后两道光从手上伸向中间 */
+          const k = Math.min(1, t / 1100); ctx.globalCompositeOperation = "lighter";
+          if (hasWind(you) || grow > 0) halo(ctx, a.x, a.y, sz * (0.05 + 0.08 * k), Y[0], 0.8); if (hasWind(ghost) || grow > 0) halo(ctx, b.x, b.y, sz * (0.05 + 0.08 * k), F[0], 0.8);
+          if (grow > 0){ beam(a, {x: a.x + (cx - a.x) * grow, y: a.y + (cy - a.y) * grow}, Y); beam(b, {x: b.x + (cx - b.x) * grow, y: b.y + (cy - b.y) * grow}, F); }
+          ctx.restore(); return true;
+        }
         if (day){ const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, sz * 0.95); g.addColorStop(0, "rgba(8,12,28,.28)"); g.addColorStop(0.55, "rgba(8,12,28,.14)"); g.addColorStop(1, "rgba(8,12,28,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, SW, sz); ctx.fillStyle = "rgba(8,12,28,.04)"; ctx.fillRect(0, 0, SW, sz); }
-        /* 1. 整个画面染上两边的颜色；地面被照亮 */
         ctx.globalCompositeOperation = day ? "source-over" : "lighter"; ctx.fillStyle = col(AVG, day ? 0.05 : 0.08); ctx.fillRect(0, 0, SW, sz);
         ctx.globalCompositeOperation = "lighter";
         { const gy = Math.max(a.y, b.y) + sz * 0.32, g = ctx.createRadialGradient(cx, gy, 0, cx, gy, R * 1.7); g.addColorStop(0, col(WH, 0.32 * K)); g.addColorStop(0.4, col(AVG, 0.2 * K)); g.addColorStop(1, col(AVG, 0));
           ctx.save(); ctx.translate(cx, gy); ctx.scale(1, 0.22); ctx.translate(-cx, -gy); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, gy, R * 1.7, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
-        /* 2. 两道光：主色外晕、第二色、白芯（白天彩色外层不叠加发光）；光头在撞上之前各自鼓成一团 */
-        const beam = (from, C) => { const w = sz * 0.05 * (0.94 + Math.random() * 0.12);
-          for (const [lw, c, al, gl] of [[w * 2.6, C[0], day ? 0.42 : 0.32, !day], [w * 1.4, C[1], day ? 0.85 : 0.7, !day], [w * 0.5, WH, 1, true]]){ ctx.globalCompositeOperation = gl ? "lighter" : "source-over"; ctx.strokeStyle = col(c, al); ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(cx, cy); ctx.stroke(); } };
-        beam(a, Y); beam(b, F);
+        /* 两道光；结束时输的一方的光消失，只剩赢的一方的光打在他身上 */
+        if (!ending || ending.loser !== "you" || now - ending.t0 < 350) beam(a, {x:cx, y:cy}, Y);
+        if (!ending || ending.loser !== "foe" || now - ending.t0 < 350) beam(b, {x:cx, y:cy}, F);
         const hl = day ? halo2 : halo; ctx.globalCompositeOperation = day ? "source-over" : "lighter";
         hl(ctx, cx + side * R * 0.28, cy, R * 1.15, Y[0], 0.55 * K); hl(ctx, cx - side * R * 0.28, cy, R * 1.15, F[0], 0.55 * K);
         hl(ctx, cx + side * R * 0.5, cy, R * 0.62, Y[0], 0.7 * K); hl(ctx, cx - side * R * 0.5, cy, R * 0.62, F[0], 0.7 * K);
-        /* 3. 一圈慢慢转的柔和光芒 */
         ctx.globalCompositeOperation = "lighter";
         for (let i = 0; i < 14; i++){ const an = (i / 14) * Math.PI * 2 + now / 2600 + Math.sin(i * 7.3) * 0.3, len = R * (1.3 + 0.7 * Math.abs(Math.sin(now / 300 + i * 2.1))), wd = R * 0.09 * (0.6 + (i % 3) * 0.3), c = i % 2 ? Y[0] : F[0];
           const g = ctx.createLinearGradient(cx, cy, cx + Math.cos(an) * len, cy + Math.sin(an) * len); g.addColorStop(0, col(WH, 0.45 * K)); g.addColorStop(0.35, col(mix(WH, c, 0.5), 0.28 * K)); g.addColorStop(1, col(c, 0));
           ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(cx + Math.cos(an + Math.PI / 2) * wd, cy + Math.sin(an + Math.PI / 2) * wd); ctx.lineTo(cx + Math.cos(an) * len, cy + Math.sin(an) * len); ctx.lineTo(cx + Math.cos(an - Math.PI / 2) * wd, cy + Math.sin(an - Math.PI / 2) * wd); ctx.closePath(); ctx.fill(); }
-        /* 4. 白色核心：一大团带尖刺、边缘毛糙的白光，外面再罩两层白光 */
         for (const [sc, al] of [[1.15, 0.35], [1, 0.9]]){ const n = 44; ctx.fillStyle = col(WH, al); ctx.beginPath();
           for (let i = 0; i <= n; i++){ const an = (i / n) * Math.PI * 2, r = R * sc * (0.5 + 0.14 * Math.random() + (i % 4 === 0 ? 0.2 * Math.random() : 0)), x = cx + Math.cos(an) * r, yy = cy + Math.sin(an) * r * 0.85; i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); }
           ctx.closePath(); ctx.fill(); }
         halo(ctx, cx, cy, R * (day ? 0.68 : 0.75), WH, day ? 0.96 : 1); halo(ctx, cx, cy, R * 0.35, WH, 1);
-        /* 5. 横穿画面的镜头光条：靠首领那头偏首领的颜色，靠你那头偏你的颜色 */
         { const fl = 0.75 + Math.random() * 0.25, u = Math.max(0.05, Math.min(0.95, cx / SW)), CL = side > 0 ? F[0] : Y[0], CR = side > 0 ? Y[0] : F[0], g = ctx.createLinearGradient(0, 0, SW, 0);
           g.addColorStop(0, col(CL, 0)); g.addColorStop(Math.max(0.01, u - 0.3), col(CL, 0.35 * fl)); g.addColorStop(u, col(WH, 0.95 * fl)); g.addColorStop(Math.min(0.99, u + 0.3), col(CR, 0.35 * fl)); g.addColorStop(1, col(CR, 0));
           ctx.fillStyle = g; ctx.fillRect(0, cy - 1.5, SW, 3); ctx.globalAlpha = 0.3; ctx.fillRect(0, cy - 7, SW, 14); ctx.globalAlpha = 1; }
-        /* 6. 粒子；交点被推动的那一下：猛地爆闪，喷出一大波粒子，画面重重一震 */
         if (!reduced()){ for (let i = 0; i < 9; i++) emit("dot"); for (let i = 0; i < 8; i++) emit("streak"); for (let i = 0; i < 2; i++) emit("petal"); }
-        if (burstAt){ for (let i = 0; i < 70; i++) emit(Math.random() < 0.55 ? "streak" : "dot", 1.7); for (let i = 0; i < 10; i++) emit("petal", 1.4); flashUntil = now + 240; burstAt = 0; shake(9); }
-        if (now < flashUntil){ ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = col(WH, 0.32 * K * (flashUntil - now) / 240); ctx.fillRect(0, 0, SW, sz); }
+        if (burstAt){ const B = burstBig ? 2.6 : 1.7; for (let i = 0; i < (burstBig ? 130 : 70); i++) emit(Math.random() < 0.55 ? "streak" : "dot", B); for (let i = 0; i < (burstBig ? 24 : 10); i++) emit("petal", B * 0.8); flashUntil = now + (burstBig ? 420 : 240); burstAt = 0; shake(burstBig ? 14 : 9); burstBig = false; }
+        if (now < flashUntil){ ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = col(WH, 0.32 * K * Math.min(1, (flashUntil - now) / 240)); ctx.fillRect(0, 0, SW, sz); }
         for (let i = parts.length - 1; i >= 0; i--){ const q = parts[i], k = (now - q.born) / q.life; if (k >= 1){ parts.splice(i, 1); continue; }
           const dt = now - q.born, px = q.vx * dt, py = q.vy * dt + q.g * dt * dt, far = smooth((Math.hypot(px, py) - sz * 0.05) / (sz * 0.34)), lit = (1 - far) * (1 - k);
           if (lit > 0.03){ ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.min(1, lit * 0.9); const gs = q.s * 4.5; ctx.drawImage(GL, q.x + px - gs / 2, q.y + py - gs / 2, gs, gs); ctx.globalAlpha = 1; }
@@ -11234,7 +11253,23 @@ const BT = (() => {
         if (now - lastShake > 300){ lastShake = now; shake(2); }
         return true;
       });
-      return {stop(){ stop = true; if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); }, burst(){ burstAt = performance.now(); }};
+      return {
+        ready,
+        burst(){ burstAt = performance.now(); },
+        stop(){ stop = true; if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); },
+        /* 3：能量球推到输的一方身上炸开 → 赢的一方的光继续打一小段时间（伤害一下下往外跳）→ 输的一方倒下、赢的一方胜利（opts.fall） */
+        async end(winner, dmg, opts){
+          opts = opts || {}; const loser = winner === "you" ? "foe" : "you", L = loser === "you" ? you : ghost;
+          ending = {loser, t0:performance.now()}; await wait(350); if (token !== A.token) return;
+          burstBig = true; burstAt = performance.now();
+          if (!(L === ghost && A.cm)) pose(L, "recoil", 90); else try { A.cm.play("hit"); } catch (e) {}
+          const parts2 = split(dmg || 0, 6);
+          for (const part of parts2){ if (token !== A.token) return; const T = bodyC(L); dealt(L, part); damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part); if (!(L === ghost && A.cm)) sparksOn(L, "skill", T); await wait(150); }
+          await wait(200); stop = true;
+          if (opts.fall){ try { await A.finish(winner === "you"); } catch (e) {} }
+          else { if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); }
+        }
+      };
     }
     A.clash = o => clashFx(o);
     const punchFx = (x, y, d, dir) => { slash(x, y, dir); burst(x, y, Math.min(120, d.w * 0.8)); };
@@ -12285,7 +12320,7 @@ ACT["bt-del"] = async () => {
   const save1 = () => { try { if (onRun() && RUN && RUN.items && RUN.i < RUN.items.length && typeof saveResume === "function") saveResume(); } catch (e) {} };
   /* 切页面以后：收掉不在屏幕上的舞台；离开了对战相关的页面就清缓存；不用 Whisper、又没有转写任务时，把识别模型放掉（约 80 MB） */
   const tidy = () => setTimeout(() => {
-    try { BT.sweepArenas(); const t = UI.top && UI.top(), name = t && (t.name || t); if (name !== "run" && name !== "battle") BT.freeCaches(); } catch (e) {}
+    try { BT.sweepArenas(); const t = UI.top && UI.top(), name = t && (t.name || t); if (name !== "run" && name !== "battle" && name !== "dboss") BT.freeCaches(); } catch (e) {}
     try { if (typeof ASR !== "undefined" && ASR.w && !ASR.cur && !(ASR.q && ASR.q.length) && !(typeof whisperOn === "function" && whisperOn())){ ASR.w.terminate(); ASR.w = null; ASR.loadedId = null; } } catch (e) {}
   }, 0);
   for (const k of ["nav", "replace", "back", "onPop"]){ if (typeof UI[k] !== "function") continue; const f = UI[k]; UI[k] = function(v){ if (k === "back" || k === "onPop" || v !== "run") save1(); const r = f.apply(UI, arguments); tidy(); return r; }; }
@@ -12374,8 +12409,8 @@ const dbFollow = q => { const f = (q.follow || []).find(t => S.followAns && S.fo
 const SKILL_COL = {wideBeam:["#8EE6FF", "#C99BFF"], rig:["#5EF0FF", "#2E9BFF"], stormBeam:["#7FB8FF", "#E8F3FF"], crescent:["#FFC24A", "#FF7A1A"], zepellion:["#F4F0FF", "#B48CFF"], laserThick:["#FF4040", "#FFB070"]};
 const MON_COL = {corefang:["#FF6A2A", "#FFD27A"], abyssmaw:["#B04CFF", "#FF4FA8"], prismward:["#6CF6FF", "#FFFFFF"], twinhood:["#7CFF6A", "#E9FF8A"], galecrest:["#6CE0FF", "#B8F3FF"], starhorn:["#FFD84A", "#FFF3B0"], nullwraith:["#9A6CFF", "#FF5FD2"]};
 const DB = {st:null, A:null};
-function dbQuestions(mode){
-  const pool = Object.values(QBY || {}).filter(q => q && q.id && (mode === "cc" ? isCC(q) : mode === "432" ? true : !isCC(q)) && dbRef(q));
+function dbQuestions(mode, persona){
+  const pool = Object.values(QBY || {}).filter(q => q && q.id && (mode === "cc" ? isCC(q) && (!persona || persona === "*" || q.deck === persona) : mode === "432" ? true : !isCC(q)) && dbRef(q));
   if (!pool.length) return [];
   if (mode === "432"){ const long = pool.filter(q => dbRef(q).split(/(?<=[.?!])\s+/).length >= 3); const pick = (long.find(q => /as a result/i.test(dbRef(q))) ? long.filter(q => /as a result/i.test(dbRef(q))) : long.length ? long : pool); const q = pick[Math.floor(Math.random() * pick.length)]; return [q, q, q]; }
   const first = pool.find(q => /yourself|about you|your background/i.test(dbText(q))) || pool[0];
@@ -12384,19 +12419,27 @@ function dbQuestions(mode){
   return [first, ...mid, ask].filter(Boolean);
 }
 ACT["db-open"] = async () => {
-  const m = await choose("对话首领战：和谁打？", `<p class="small muted">对方一回合问你一个问题，伤害看你答到了多少要点。4/3/2 连击战：同一个故事限时越讲越短。</p>`, [["iv", "面试官"], ["cc", "Coffee chat：一位工程师"], ["432", "4/3/2 连击战"]]);
+  const m = await choose("对话首领战：和谁打？", `<p class="small muted">对方一回合问你一个问题，伤害看你答到了多少要点。4/3/2 连击战：同一个故事限时越讲越短。</p>`, [["iv", "面试官"], ["cc", "Coffee chat（选和谁聊）"], ["432", "4/3/2 连击战"]]);
+  if (m === "cc"){
+    const decks = [...new Set(Object.values(QBY || {}).filter(q => q && isCC(q) && dbRef(q)).map(q => q.deck))];
+    if (!decks.length){ toast("先导入 Coffee chat 题库（要有参考回答）"); return; }
+    const who = decks.length === 1 ? decks[0] : await choose("Coffee chat：和谁聊？", `<p class="small muted">每个“Coffee chat：某某”题库就是一种人。随机：每回合换一种人。</p>`, decks.map(d => [d, dbPersona(d)]).concat([["*", "随机（各种人）"]]));
+    if (who) dbStart("cc", who); return;
+  }
   if (m) dbStart(m);
 };
-function dbStart(mode){
-  const qs = dbQuestions(mode);
+/* 题库名“Coffee chat：校友”→“校友”；只叫“Coffee chat”的（第一个 Coffee chat 题库）→“工程师” */
+const dbPersona = d => { const s = String(d || ""); const k = s.search(/[：:]/); return k >= 0 ? s.slice(k + 1).trim() : (/社交/.test(s) ? "朋友" : "工程师"); };
+function dbStart(mode, persona){
+  const qs = dbQuestions(mode, persona);
   if (!qs.length){ toast(mode === "cc" ? "先导入 Coffee chat 题库（要有参考回答）" : "先导入带参考回答的面试题，或者在模拟面试里存一个自己的回答"); return; }
-  DB.st = {mode, qs, i:0, you:100, rounds:[], busy:false, follow:null, fdone:{}, clashed:false, limits:[90, 60, 45], wpm:[]}; UI.nav("dboss");
+  DB.st = {mode, persona: persona || "", qs, i:0, you:100, rounds:[], busy:false, follow:null, fdone:{}, clashed:false, limits:[90, 60, 45], wpm:[]}; UI.nav("dboss");
 }
-const dbWho = st => (st.mode === "cc" ? "工程师" : st.mode === "432" ? "对手" : "面试官");
+const dbWho = st => (st.mode === "cc" ? (st.persona && st.persona !== "*" ? dbPersona(st.persona) : (st.qs[st.i] ? dbPersona(st.qs[st.i].deck) : "对方")) : st.mode === "432" ? "对手" : "面试官");
 VIEWS.dboss = {
   render(){
     const st = DB.st; if (!st) return `<div class="wrap">${backBtn()}<p>没有在进行的对话首领战。</p></div>`;
-    const title = st.mode === "cc" ? "Coffee chat" : st.mode === "432" ? "4/3/2 连击战" : "面试官";
+    const title = st.mode === "cc" ? "Coffee chat：" + (st.persona === "*" ? "各种人" : dbPersona(st.persona || (st.qs[0] || {}).deck)) : st.mode === "432" ? "4/3/2 连击战" : "面试官";
     return `<div class="wrap db">${backBtn()}<h2>${st.mode === "432" ? "" : "对话首领战："}${title}</h2>
       <div class="bt-stage db-arena" id="dbArena"></div>
       <p class="small muted" id="dbHud" style="margin:6px 0">${youName()} <b id="dbYou">${st.you}</b> · ${dbWho(st)} <b id="dbBoss">100</b> · 第 <span id="dbRound">1</span>/${st.qs.length} ${st.mode === "432" ? "遍" : "回合"}</p>
@@ -12417,6 +12460,7 @@ VIEWS.dboss = {
 function dbAsk(){
   const st = DB.st, q = st.qs[st.i]; if (!q) return dbEnd();
   const text = st.follow ? st.follow.q : dbText(q);
+  if (st.mode === "cc" && st.persona === "*" && DB.A){ DB.A.setNames(dbWho(st), youName()); }   /* 随机：每回合换一种人 */
   $("#dbWhoSay").textContent = st.follow ? `${dbWho(st)}追问：` : st.mode === "432" ? `第 ${st.i + 1} 遍，限时 ${st.limits[st.i]} 秒：尽量讲全、讲快` : `${dbWho(st)}问：`;
   $("#dbQ").textContent = text; const zh = $("#dbZh"); zh.textContent = st.follow ? "" : (q.zh || ""); zh.hidden = true; $("#dbRound").textContent = st.i + 1; $("#dbFb").innerHTML = "";
   $("#dbCtl").innerHTML = `<div class="row-gap" style="margin-top:10px"><button class="btn primary" id="dbMic" data-act="db-say">🎤 开始回答</button>${st.mode === "432" ? "" : `<button class="btn" data-act="db-typeopen">打字回答</button>`}<button class="btn ghost" data-act="db-skip">跳过</button></div>
@@ -12480,6 +12524,7 @@ async function dbClash(){
   const st = DB.st, A = DB.A; st.clashed = true; st.busy = true; let p = 0;
   const youC = BAT_CHAR ? (SKILL_COL[(A.loadout && A.loadout.skill) || "wideBeam"] || SKILL_COL.wideBeam) : SKILL_COL.rig;
   const fx = A.clash({you:youC, foe:MON_COL[st.boss] || ["#FF5A3C", "#FFC46A"], getP:() => p});
+  $("#dbCtl").innerHTML = `<div class="card db-clash"><p><b>对波！</b>双方都在聚能……</p></div>`; await fx.ready;
   const items = dbClashItems(st.mode), res = [];
   for (let k = 0; k < items.length; k++){
     const c = items[k], lim = critMs({en:c.en});
@@ -12498,11 +12543,10 @@ async function dbClash(){
     await new Promise(r => { const step = now => { const u = Math.min(1, (now - ta) / 420); p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(step); else r(); }; requestAnimationFrame(step); });
   }
   $("#dbCtl").innerHTML = `<p class="small muted">对波结果：${res.map(r => r ? "✓" : "✗").join(" ")}</p>`;
-  await new Promise(r => setTimeout(r, 300)); fx.stop();
-  /* 按交点最后停在哪里算伤害：越靠近对方，对方挨得越多（最多 30）；越靠近你，你挨得越多（最多 15） */
-  const out = dbClashOut(p);
-  if (out.foe){ try { await A.move(out.foe >= 20 ? "skill" : "heavy", out.foe); } catch (e) {} }
-  else if (out.you){ st.you = Math.max(0, st.you - out.you); try { await A.enemyMove(out.you >= 10 ? "skill" : "heavy", out.you); } catch (e) {} }
+  /* 按交点最后停在哪里算伤害（越靠近对方，对方挨得越多，最多 30；越靠近你，你挨得越多，最多 15）；能量球在输的一方身上炸开，被打倒才倒下 */
+  const out = dbClashOut(p), youWin = out.foe > 0, fall = youWin ? A.hp - out.foe <= 0 : st.you - out.you <= 0;
+  await fx.end(youWin ? "you" : "foe", youWin ? out.foe : out.you, {fall});
+  if (!youWin) st.you = Math.max(0, st.you - out.you);
   st.clashResult = p; $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp)); st.busy = false;
 }
 async function dbEnd(){
@@ -12530,7 +12574,7 @@ function batClashHTML(){
   return `<p class="small muted">选你的角色和对手，看两边的技能撞在一起是什么样。颜色按两边技能各自的颜色。</p>
     <div class="row-gap" style="margin-top:8px"><label class="fld" style="flex:1;min-width:0"><span>你</span>${sel("clYou", mine, yv)}</label><label class="fld" style="flex:1;min-width:0"><span>对手</span>${sel("clFoe", foes, fv)}</label></div>
     <label class="switch" style="margin-top:6px"><span>夜晚</span><input type="checkbox" id="clNight" data-chg="cl-pick" ${L.clNight ? "checked" : ""}></label>
-    <div class="bt-stage" id="clArena" style="height:240px;margin-top:8px"></div>
+    <div class="bt-stage db-arena" id="clArena"></div>
     <p id="clRes" style="margin:6px 0">○ ○ ○</p>
     <div class="row-gap"><button class="btn primary" data-act="cl-ans" data-v="1">说对了</button><button class="btn" data-act="cl-ans" data-v="0">说错了</button><button class="btn" data-act="cl-auto">自动演示 3 句</button><button class="btn ghost" data-act="cl-reset">重新开始</button></div>
     <p class="small muted" id="clMsg" style="margin-top:6px">前两句各推三分之一，最后一句推二分之一；伤害按交点最后停在哪里算。</p>`;
@@ -12555,20 +12599,20 @@ function clReset(silent){
 }
 ACT["cl-ans"] = async el => {
   const A = BAT_CLA; if (!A || CLS.busy || CLS.res.length >= 3) return;
-  if (!CLS.fx) CLS.fx = A.clash({you:CLS.youC || SKILL_COL.rig, foe:CLS.foeC || ["#FF5A3C", "#FFC46A"], getP:() => CLS.p});
+  if (!CLS.fx){ CLS.busy = true; CLS.fx = A.clash({you:CLS.youC || SKILL_COL.rig, foe:CLS.foeC || ["#FF5A3C", "#FFC46A"], getP:() => CLS.p}); const m0 = $("#clMsg"); if (m0) m0.textContent = "双方都在聚能……"; await CLS.fx.ready; CLS.busy = false; }
   const ok = el.dataset.v === "1", step = CLS.res.length === 2 ? 0.5 : 1 / 3; CLS.res.push(ok); CLS.fx.burst(); CLS.busy = true;
   const from = CLS.p, to = Math.max(-1, Math.min(1, CLS.p + (ok ? step : -step))), t0 = performance.now();
   await new Promise(r => { const f = now => { const u = Math.min(1, (now - t0) / 420); CLS.p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(f); else r(); }; requestAnimationFrame(f); });
   const rr = $("#clRes"); if (rr) rr.textContent = [0, 1, 2].map(i => (i < CLS.res.length ? (CLS.res[i] ? "✓" : "✗") : "○")).join(" ");
   if (CLS.res.length === 3){
-    await new Promise(r => setTimeout(r, 300)); if (CLS.fx){ CLS.fx.stop(); CLS.fx = null; } const out = dbClashOut(CLS.p), m = $("#clMsg");
+    const out = dbClashOut(CLS.p), m = $("#clMsg");
     if (m) m.textContent = out.foe ? `推到了对手那边：对手挨 ${out.foe} 点` : `被推到了你这边：你挨 ${out.you} 点`;
-    try { if (out.foe) await A.move(out.foe >= 20 ? "skill" : "heavy", out.foe); else await A.enemyMove(out.you >= 10 ? "skill" : "heavy", out.you); } catch (e) {}
+    const fx = CLS.fx; CLS.fx = null; if (fx) await fx.end(out.foe ? "you" : "foe", out.foe || out.you, {fall:true});
   }
   CLS.busy = false;
 };
-ACT["cl-auto"] = async () => { clReset(); for (let i = 0; i < 3; i++){ await ACT["cl-ans"]({dataset:{v: Math.random() < 0.67 ? "1" : "0"}}); await new Promise(r => setTimeout(r, 700)); } };
-ACT["cl-reset"] = () => clReset();
+ACT["cl-auto"] = async () => { await batClashLoad(); for (let i = 0; i < 3; i++){ await ACT["cl-ans"]({dataset:{v: Math.random() < 0.67 ? "1" : "0"}}); await new Promise(r => setTimeout(r, 700)); } };
+ACT["cl-reset"] = () => batClashLoad();   /* 把双方都放回去（倒下的站起来） */
 CHG["cl-pick"] = () => batClashLoad();
 
 </script>
