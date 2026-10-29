@@ -715,7 +715,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.54.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.54.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -5443,7 +5443,7 @@ VIEWS.me = {
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="sec-title">内容和数据</div><div class="sec-title">学习资料</div><div class="list">${liRow("tips","说话技巧","重音、语调、断句、连读、难发的音")}${liRow("grammar","语法要点","时态、-s、-ed、be 动词、语序")}</div><div class="sec-title">设置和工具</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("battle","对战角色","练完一轮，和昨天的你打一场；可以导入你自己的角色")}${liRow("asr","录音转文字", BUILD.pwa ? "在手机上识别录音，转好了会提醒你" : "要在安装到手机上的版本里用")}${liRow("pending","问 Claude", ((S.pending || []).length) + " 句说法，" + ((S.wantWords || []).length) + " 个词，" + ((S.dbAsk || []).length) + " 条回答")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
+        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("battle","对战角色","练完一轮，和昨天的你打一场；可以导入你自己的角色")}${liRow("asr","录音转文字", BUILD.pwa ? "在手机上识别录音，转好了会提醒你" : "要在安装到手机上的版本里用")}${liRow("dblog","对话记录", ((S.dbLog || []).length) + " 场")}${liRow("pending","问 Claude", ((S.pending || []).length) + " 句说法，" + ((S.wantWords || []).length) + " 个词，" + ((S.dbAsk || []).length) + " 条回答")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
         ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
         ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
@@ -12754,7 +12754,7 @@ function dbQuestions(mode, persona){
 /* 对话：game 为 true 是对话首领战（有舞台、血量、对波），false 是对话练习（只有问题、回答、分数和反馈）；题目和判分一样 */
 ACT["db-open"] = () => dbOpen(true);
 async function dbOpen(game){
-  const m = await choose(game ? "对话首领战：和谁打？" : "对话练习：和谁练？", "", [["iv", "面试官"], ["cc", "Coffee chat"], ["432", game ? "4/3/2 连击战" : "4/3/2 练习"]]);
+  const m = await choose(game ? "对话首领战：和谁打？" : "对话练习：和谁练？", "", [["iv", "面试官"], ["cc", "Coffee chat"], ["432", game ? "三遍提速战（同一题讲三遍：90、60、45 秒）" : "三遍提速练习（同一题讲三遍：90、60、45 秒）"]]);
   if (m === "cc"){
     const decks = [...new Set(Object.values(QBY || {}).filter(q => q && isCC(q) && dbRef(q)).map(q => q.deck))];
     if (!decks.length){ toast("先导入 Coffee chat 题库（要有参考回答）"); return; }
@@ -12768,13 +12768,15 @@ const dbPersona = d => { const s = String(d || ""); const k = s.search(/[：:]/)
 function dbStart(mode, persona, game){
   const qs = dbQuestions(mode, persona);
   if (!qs.length){ toast(mode === "cc" ? "先导入 Coffee chat 题库（要有参考回答）" : "先导入带参考回答的面试题，或者在模拟面试里存一个自己的回答"); return; }
-  DB.st = {mode, game: game !== false, persona: persona || "", qs, i:0, you:100, rounds:[], busy:false, follow:null, fdone:{}, clashed:false, limits:[90, 60, 45], wpm:[]}; UI.nav("dboss");
+  S.dbLog = (S.dbLog || []).filter(x => Date.now() - x.ts < 90 * 864e5).slice(-39);
+  const log = {ts:Date.now(), mode, game: game !== false, persona: persona || "", rounds:[]}; S.dbLog.push(log); save();
+  DB.st = {log, mode, game: game !== false, persona: persona || "", qs, i:0, you:100, rounds:[], busy:false, follow:null, fdone:{}, clashed:false, limits:[90, 60, 45], wpm:[]}; UI.nav("dboss");
 }
 const dbWho = st => (st.mode === "cc" ? (st.persona && st.persona !== "*" ? dbPersona(st.persona) : (st.qs[st.i] ? dbPersona(st.qs[st.i].deck) : "对方")) : st.mode === "432" ? "对手" : "面试官");
 VIEWS.dboss = {
   render(){
     const st = DB.st; if (!st) return `<div class="wrap">${backBtn()}<p>没有在进行的对话首领战。</p></div>`;
-    const title = st.mode === "cc" ? "Coffee chat：" + (st.persona === "*" ? "各种人" : dbPersona(st.persona || (st.qs[0] || {}).deck)) : st.mode === "432" ? (st.game ? "4/3/2 连击战" : "4/3/2 练习") : "面试官";
+    const title = st.mode === "cc" ? "Coffee chat：" + (st.persona === "*" ? "各种人" : dbPersona(st.persona || (st.qs[0] || {}).deck)) : st.mode === "432" ? (st.game ? "三遍提速战" : "三遍提速练习") : "面试官";
     return `<div class="wrap db">${backBtn()}<h2>${st.mode === "432" ? "" : st.game ? "对话首领战：" : "对话练习："}${title}</h2>
       ${st.game ? `<div class="bt-stage db-arena" id="dbArena"></div>` : ""}
       <p class="small muted" id="dbHud" style="margin:6px 0">${st.game ? `${youName()} <b id="dbYou">${st.you}</b> · ${dbWho(st)} <b id="dbBoss">100</b> · ` : ""}第 <span id="dbRound">1</span>/${st.qs.length} ${st.mode === "432" ? "遍" : st.game ? "回合" : "题"}</p>
@@ -12801,9 +12803,9 @@ function dbAsk(){
   $("#dbQ").textContent = text; const zh = $("#dbZh"); zh.textContent = st.follow ? "" : (q.zh || ""); zh.hidden = true; $("#dbRound").textContent = st.i + 1; $("#dbFb").innerHTML = "";
   $("#dbCtl").innerHTML = `<div class="db-mic"><button class="mic" id="dbMic" data-act="db-say" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="dbHeard">${st.mode === "432" ? `点一下开始说，限时 ${st.limits[st.i]} 秒（说完也可以自己点结束）` : "点一下开始说，说完再点一下"}</div></div>
     <div class="row-gap" style="margin-top:8px">${st.mode === "432" ? "" : `<button class="btn sm" data-act="db-typeopen">打字回答</button>`}<button class="btn sm ghost" data-act="db-skip">跳过</button></div><div id="dbType" hidden><textarea id="dbText" rows="4" style="width:100%;margin-top:8px" placeholder="把你的回答打出来"></textarea><button class="btn primary" data-act="db-typed" style="margin-top:6px">交上去</button></div>`;
-  st.t0 = performance.now(); ACT["db-hear"]();
+  st.t0 = performance.now(); ACT["db-hear"]("auto");
 }
-ACT["db-hear"] = () => { const st = DB.st; if (st && st.qs[st.i]) try { speak(st.follow ? st.follow.q : dbText(st.qs[st.i]), 0.95); } catch (e) {} };
+ACT["db-hear"] = el => { const st = DB.st; if (!st || !st.qs[st.i]) return; if (el === "auto" && typeof canAutoSpeak === "function" && !canAutoSpeak()) return; try { TTS.speak(st.follow ? st.follow.q : dbText(st.qs[st.i]), {rate:0.95}); } catch (e) {} };
 ACT["db-zh"] = () => { const z = $("#dbZh"); if (z) z.hidden = !z.hidden; };
 ACT["db-typeopen"] = () => { const t = $("#dbType"); if (t) t.hidden = false; };
 ACT["db-skip"] = () => dbResolve("", 0);
@@ -12842,13 +12844,25 @@ ${keys ? "要点：" + keys + "\n" : ""}按真实交流的效果分项打分（�
     } catch (e) {}
   }
   /* 离线：按沟通要素判（不看用词像不像）。面试和 Coffee chat 的细则分开；没做到的每一项都给一句怎么改 */
-  const sw = new Set(dbWords(said)), topic = new Set(dbWords(qt).concat(dbWords(ref))), hit = [...sw].filter(w => topic.has(w)).length, S0 = String(said);
-  /* 闲聊的回答很少和问题用同样的词：Coffee chat 里说了一句完整的话（4 个词以上）就算回答到了 */
-  const relevance = cc && words >= 4 ? Math.max(0.8, hit >= 1 ? 1 : 0.8) : hit >= 3 ? 1 : hit >= 1 ? 0.6 : 0;
-  const lenOk = cc ? (words < 8 ? words / 8 : words <= 70 ? 1 : Math.max(0.6, 1 - (words - 70) / 120)) : (words < 25 ? words / 25 : words <= 160 ? 1 : Math.max(0.6, 1 - (words - 160) / 200));
-  const specific = /\d|for example|for instance|such as|\b(I|we) (designed|built|made|tested|worked|used|found|learned|led|wrote|developed|created|watched|went|played|visited)\b/i.test(S0) || (S0.match(/\b[A-Z][a-zA-Z]+/g) || []).length >= 3 ? 1 : 0;
-  const engage = /how about you|what about you|and you\b|\?/i.test(S0) || base.questions > 0 ? 1 : 0;
-  const natural = /\b(thanks|thank you|that's great|that sounds|i'd love|i really|actually|honestly|pretty|definitely)\b/i.test(S0) ? 1 : 0.4;
+  /* sure、yeah、well、sorry 这类口头词什么回答里都可能有，不算“说到同一件事” */
+  const FILL = new Set(["sure", "yeah", "yes", "well", "okay", "ok", "right", "um", "uh", "sorry", "thank", "thanks", "oh", "hmm", "like", "actually", "really"]);
+  const sw = new Set(dbWords(said)), swc = [...sw].filter(w => !FILL.has(w)), topic = new Set(dbWords(qt).concat(dbWords(ref)).filter(w => !FILL.has(w))), hit = swc.filter(w => topic.has(w)).length, S0 = String(said);
+  /* 回答到了问题：要和问题、参考回答说到一块（共同的关键词）；周末、近况这类闲聊题，说了自己的情况就算 */
+  const smallTalk = /weekend|lately|up to|plans|holiday|how are you|how's it going|how is it going|how have you been/i.test(qt);
+  let relevance = hit >= 2 ? 1 : hit === 1 ? 0.5 : 0;
+  if (relevance < 0.8 && smallTalk && words >= 5 && /\b(i|i'm|i've|it was|we|my)\b/i.test(S0)) relevance = 0.8;
+  const lenOk = cc ? (words < 12 ? words / 12 : words <= 70 ? 1 : Math.max(0.6, 1 - (words - 70) / 120)) : (words < 25 ? words / 25 : words <= 160 ? 1 : Math.max(0.6, 1 - (words - 160) / 200));
+  /* 讲得具体：数字、专有名词（句首的大写和 I 不算）、做过的具体的事 */
+  const named = (S0.match(/[^.?!\s]\s+[A-Z][a-zA-Z0-9]+/g) || []).filter(w => !/\sI$/.test(w)).length;
+  const specific = /\d/.test(S0) || named >= 1 || /\b(I|we)('ve| have)?\s+(designed|built|made|tested|worked on|studied|played|watched|went|finished|graduated|developed|created|led|wrote|redesigned|helped|ran|fixed)\b/i.test(S0) ? 1 : 0;
+  /* 把话题抛回去：要真的问对方一个问题（How about you? / Do you…? / What … you …?） */
+  const engage = /\b(how|what) about you\b|\band you\?|\b(do|did|have|are|were|would|could|can) you\b[^.?!]*\?|\b(what|how|where|when|why|which)\b[^.?!]*\byou\b[^.?!]*\?/i.test(S0) ? 1 : 0;
+  /* 说得通顺：同一个词、短语连着说两遍，口头禅和道歉多（well、like、sorry、um……），都扣 */
+  const tl = S0.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").split(/\s+/).filter(Boolean);
+  let repeats = 0; for (let k = 0; k + 1 < tl.length; k++){ if (tl[k] === tl[k + 1] && !["very", "really", "so", "that"].includes(tl[k])) repeats++; if (k + 3 < tl.length && tl[k] + " " + tl[k + 1] === tl[k + 2] + " " + tl[k + 3]) repeats++; }
+  const fillers = (S0.match(/\b(well|um+|uh+|like|sorry|you know|i mean)\b/gi) || []).length;
+  const fluent = fillers <= 1 && !repeats ? 1 : fillers <= 2 && repeats <= 1 ? 0.5 : 0;
+  const natural = /\b(thanks|thank you|that's great|that sounds|i'd love|i really|actually|honestly|pretty|definitely)\b/i.test(S0) && fluent > 0 ? 1 : fluent;
   const structure = /\b(first|then|after that|so|because|as a result|in the end|finally)\b/i.test(S0) ? 1 : 0.4;
   const pts0 = String(ref || "").split(/(?<=[.?!])\s+/).filter(x => dbWords(x).length);
   const loose = pts0.length ? pts0.filter(x => { const w = [...new Set(dbWords(x))]; return w.filter(y => sw.has(y)).length / w.length >= 0.2; }).length / pts0.length : 0;
@@ -12857,7 +12871,7 @@ ${keys ? "要点：" + keys + "\n" : ""}按真实交流的效果分项打分（�
     {s:"讲得具体（一个例子或细节）", v:specific, w:0.15, tip:"加一个具体的东西，比如一个项目、一次经历、一个数字"},
     {s:`长短合适（${words} 个词；两到四句最好）`, v:lenOk, w:0.15, tip: words < 8 ? "多说一两句" : "太长了，coffee chat 一次说两到四句就好"},
     {s:"把话题抛回给对方", v:engage, w:0.2, tip:"结尾加一句 How about you? 或者问对方一个具体的问题"},
-    {s:"说得自然、有礼貌", v:natural, w:0.1, tip:"可以加 That sounds great / Thanks for asking / Actually 这类口头的说法"},
+    {s:"说得自然、通顺", v:natural, w:0.1, tip: fluent < 1 ? "少一点 well / like / sorry 和重复，想好一句再说" : "可以加 That sounds great / Thanks for asking / Actually 这类口头的说法"},
     {s:"意思和参考回答接近（不用照背）", v:loose, w:0.15, tip:"看一下参考回答里讲了哪几件事"}
   ] : [
     {s:"回答到了问题", v:relevance, w:0.25, tip:"第一句就直接回答问的是什么"},
@@ -12865,11 +12879,14 @@ ${keys ? "要点：" + keys + "\n" : ""}按真实交流的效果分项打分（�
     {s:`长短合适（${words} 个词）`, v:lenOk, w:0.15, tip: words < 25 ? "讲得太短了，按情境、行动、结果讲完整" : "太长了，挑最重要的两三件事讲"},
     ...(base.needResult ? [{s:"讲了结果", v:base.result ? 1 : 0, w:0.15, tip:"最后一定要讲结果：As a result, …"}] : []),
     {s:"有条理（先、然后、所以……）", v:structure, w:0.1, tip:"用 First / Then / So / As a result 把几件事串起来"},
+    {s:"说得通顺（没有重复、口头禅不多）", v:fluent, w:0.1, tip:"少一点 well / like / sorry 和重复，卡住了就停一下再说"},
     {s:"意思和参考回答接近（不用照背）", v:loose, w:0.15, tip:"看一下参考回答里讲了哪几件事"}
   ];
   if (ask && !cc) crit.push({s:"问了对方问题", v:engage, w:0.2, tip:"准备两三个问题：团队、项目、对新人的建议"});
   const tw = crit.reduce((a, c) => a + c.w, 0); res.cov = crit.reduce((a, c) => a + c.w * c.v, 0) / tw;
   if (words < 8) res.cov = Math.min(res.cov, 0.3);   /* 太短：最多 30 分 */
+  if (relevance === 0) res.cov = Math.min(res.cov, 0.2);   /* 和问题完全无关：最多 20 分 */
+  else if (relevance <= 0.5 && loose < 0.2) res.cov = Math.min(res.cov, 0.45);   /* 只沾到一点边、意思也不接近：最多 45 分 */
   res.pts = crit.map(c => ({s:c.s, ok:c.v >= 0.8, tip:c.v >= 0.8 ? "" : c.tip}));
   return res;
 }
@@ -12888,6 +12905,9 @@ async function dbResolve(said, secs){
     if (st.game){ try { await A.move(kind, dmg); } catch (e) {} }
   }
   st.rounds.push({q: st.follow ? st.follow.q : dbText(q), said, cov:sc.cov, pts:sc.pts, dmg, note, wpm, secs: Math.round(secs || 0), questions: ask ? sc.questions : null});
+  if (st.log){ st.log.rounds.push({q: st.follow ? st.follow.q : dbText(q), who: dbWho(st), said, score: Math.round(sc.cov * 100)}); }
+  try { dayRec().sec += Math.min(240, Math.max(10, Math.round((performance.now() - (st.t0 || performance.now())) / 1000))); } catch (e) {}   /* 对话练习的时间也算进每天的练习时间 */
+  save();
   if (st.game){ $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp)); }
   const alive = !st.game || (A.hp > 0 && st.you > 0), more = alive && (st.i + 1 < st.qs.length || (!st.follow && dbFollow(q) && !st.fdone[q.id]));
   if (!st.game) dmg = 0;   /* 对话练习：只看分数，不算伤害 */
@@ -12971,6 +12991,7 @@ async function dbEnd(){
   $("#dbCtl").innerHTML = ""; $("#dbFb").innerHTML = `<div class="card"><h3>${st.game ? (ko ? "赢了：把它打倒了" : dead ? "输了：你被打倒了" : `这场没打倒它（它还剩 ${Math.max(1, Math.round(A.hp))} 血）`) : "练完了"}</h3><p>平均 ${avg} 分。</p>${t432}
     ${st.rounds.map((r, k) => `<p class="small" style="margin-top:8px"><b>${st.mode === "432" ? "第 " + (k + 1) + " 遍" : "第 " + (k + 1) + " 回合"}：${Math.round(r.cov * 100)}%</b>　${esc(r.q)}</p>${r.pts.filter(p => !p.ok).slice(0, 3).map(p => `<p class="small db-miss">✗ ${esc(p.s)}</p>`).join("")}`).join("")}
     <div class="row-gap" style="margin-top:12px"><button class="btn primary" data-act="db-again">再来一场</button><button class="btn" data-act="db-home">回首页</button></div></div>`;
+  if (st.log){ st.log.done = true; st.log.result = st.game ? (ko ? "赢" : dead ? "输" : "没打倒") : ""; save(); }
   planAutoDone("dboss:" + st.mode);
 }
 ACT["db-again"] = () => { const st = DB.st; if (st) dbStart(st.mode, st.persona, st.game); };
@@ -13057,6 +13078,19 @@ ACT["dbc-say"] = async el => {
   cl.recording = false; micState(btn, null);
   if (!cl.stopAt) cl.stopAt = (r && r.endAt) || performance.now();
   cl.resolve({said:((r && r.text) || "").trim(), endAt:(r && r.endAt) || cl.stopAt});
+};
+
+/* 对话记录：每一场的题、你的回答、分数（最多 40 场，三个月以前的自动删掉） */
+VIEWS.dblog = {
+  render(){
+    const L0 = (S.dbLog || []).slice().reverse();
+    const name = x => (x.mode === "cc" ? "Coffee chat" + (x.persona && x.persona !== "*" ? "：" + dbPersona(x.persona) : "：各种人") : x.mode === "432" ? "三遍提速" : "面试官") + (x.game ? "（游戏）" : "（练习）");
+    const d2 = t => { const d = new Date(t); return `${d.getMonth() + 1} 月 ${d.getDate()} 日 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+    return `<div class="wrap">${backBtn()}<h2>对话记录</h2><p class="muted small">每一场自动保存，每答完一回合就存。最多留最近 40 场，三个月以前的自动删掉。</p>
+      ${L0.length ? L0.map(x => { const avg = x.rounds.length ? Math.round(x.rounds.reduce((a, r) => a + r.score, 0) / x.rounds.length) : 0;
+        return `<details class="card" style="margin-top:10px"><summary><b>${esc(name(x))}</b>　${d2(x.ts)}<br><span class="small muted">${x.rounds.length} 题，平均 ${avg} 分${x.result ? "，" + esc(x.result) : ""}${x.done ? "" : "（没练完）"}</span></summary>
+          ${x.rounds.map(r => `<p class="small" style="margin-top:8px"><b>${r.score} 分</b>　${esc(r.who || "")}问：${esc(r.q)}</p><p class="small en">${esc(r.said || "（没开口）")}</p>`).join("")}</details>`; }).join("") : `<p class="muted small" style="margin-top:12px">还没有记录。</p>`}</div>`;
+  }
 };
 
 </script>
