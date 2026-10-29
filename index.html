@@ -713,7 +713,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.53.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.53.2"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -8641,7 +8641,7 @@ function buildColossus(svg) {
 }
 const COLOSSUS_POSES = {
   idle: {},
-  eyeBeam: { torso: 10, head: 14, nUpper: -28, nFore: 34, fUpper: -22, fFore: 28, nThigh: -10, fThigh: 8, dx: 6, dy: 6 },
+  eyeBeam: { torso: 10, head: 14, nUpper: 16, nFore: -32, fUpper: 12, fFore: -26, nThigh: -10, fThigh: 8, dx: 6, dy: 6 },
   lightWind: { torso: -6, nUpper: -30, nFore: 30, dx: -8 },
   light: { torso: 10, head: 4, nUpper: -70, nFore: -10, nThigh: -8, fThigh: 6, dx: 36 },
   heavyWind: { torso: -10, head: -8, nUpper: -170, nFore: -10, fUpper: -160, fFore: -8, dy: -4 },
@@ -9384,8 +9384,9 @@ const CLASH = (() => {
       await m.go('skillWind', 380); await m.wait(160); ready(); await go; if (!live(m, c)()) return;
       await m.go('eyeBeam', 220);
       /* 眼罩（画图坐标 x 204–246、y 141.5–146.5）：远处那只眼睛在 214，近处那只在 240 */
+      /* 远处那只眼睛的光束在头的后面一层；近处那只在头的上面、近处胳膊的下面（被胳膊挡住） */
       backBeam(m, 'head', () => m.pt('head', 214, 144), toward(P, 0, -4), '#FFD86A', live(m, c));
-      m.fx.beam(() => m.pt('head', 240, 144), toward(P, 0, 4), LONG, '#FFD86A', null, 2.2, live(m, c));
+      backBeam(m, 'nUpper', () => m.pt('head', 240, 144), toward(P, 0, 4), '#FFD86A', live(m, c));
       await hold(m, c);
       flare(visor, { filter: 'brightness(2.4)' }, { filter: 'brightness(1)' }, 300);
     },
@@ -11563,12 +11564,15 @@ const BT = (() => {
           ending = {loser, t0:performance.now()}; await wait(350); if (token !== A.token) return;
           { const lc = loser === "you" ? clY : clF, wc = loser === "you" ? clF : clY; if (lc) lc.finish(); if (wc) wc.free = true; if (loser === "foe" && mcl) mcl.stop(); }   /* 输的一方的原版光线收掉；赢的一方恢复原版（会穿过对手的照样穿过去） */
           burstBig = true; burstAt = performance.now();
-          if (!(L === ghost && A.cm)) pose(L, "recoil", 90); else try { A.cm.play("hit"); } catch (e) {}
+          /* 首领的动作是排队播放的：上一个受击动作没播完就不再叫新的，免得光线打完、胜利姿势都摆了，它还在把排着队的受击一个个播完 */
+          let hitBusy = false; const cmHit = () => { if (hitBusy || !A.cm) return; hitBusy = true; Promise.resolve(A.cm.play("hit")).catch(() => {}).then(() => { hitBusy = false; }); };
+          if (!(L === ghost && A.cm)) pose(L, "recoil", 90); else cmHit();
           const parts2 = split(dmg || 0, 8);   /* 能量球炸开以后，赢的一方的光继续打在他身上约 1.5 秒 */
-          for (const part of parts2){ if (token !== A.token) return; const T = bodyC(L); dealt(L, part); damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part);
-            if (L === ghost && A.cm){ try { A.cm.play("hit"); } catch (e) {} } else sparksOn(L, "skill", T);   /* 首领：原版的受击动作 */
+          for (const [pi, part] of parts2.entries()){ if (token !== A.token) return; const T = bodyC(L); dealt(L, part); damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part);
+            if (L === ghost && A.cm){ if (pi <= 3) cmHit(); } else sparksOn(L, "skill", T);   /* 首领：原版的受击动作（不排队；受击动作约 1 秒长，只在前 0.8 秒里触发，最后一次和光线差不多一起结束） */
             await wait(190); }
           await wait(200); if (clY) clY.finish(); if (clF) clF.finish(); if (mcl) mcl.stop(); stop = true;
+          for (let k = 0; k < 12 && hitBusy; k++) await wait(50);   /* 等最后一次受击播完，再倒下、胜利 */
           if (opts.fall){ try { await A.finish(winner === "you"); } catch (e) {} }
           else { if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); if (A.cm) try { A.cm.idle(); } catch (e) {} }
           await zoomTo(cs0, 450, sp0);
@@ -11950,7 +11954,7 @@ async function eneDel(id){ await IDB.del("battle:enemy:" + id); ENE_LIST = ENE_L
    角色（来切磋的）看它自己的设置：没开“能巨大化”只在普通大小，选了“只在巨大化”只在巨人的局；默认敌人里人形小兵只在普通大小、镇岳像只在巨大化 */
 const sizeOk = (size, giant) => (size === "normal" ? !giant : size === "giant" ? giant : true);
 const charSizeOk = (rec, giant) => (giant ? !!rec.giantM && rec.sizeMode !== "normal" : !(rec.giantM && rec.sizeMode === "giant"));
-const CODE_SIZE = {colossus:"giant"};
+const CODE_SIZE = {};   /* 镇岳像以前只在巨大化里出现，现在普通大小和巨大化都可以 */
 /* 一局开始前，把导入的敌人和来切磋的角色读好（图片读取要时间；没读好的那一刻先用原来的敌人） */
 async function eneLoadAll(){
   await ENE_READY; const out = [];
@@ -12769,7 +12773,7 @@ VIEWS.dboss = {
     if (!st.game){ DB.A = null; dbAsk(); return; }   /* 对话练习：没有舞台 */
     const A = DB.A = BT.makeArena($("#dbArena")); A.setOpt({charSize:0.6, place:"street"});
     A.setChar(BAT_CHAR ? BT.rebuild(BAT_CHAR) : null, BT.metaOf(BAT_CHAR || null));
-    const boss = TuokouMonsters.list().filter(m => m.tier === "boss" && m.id !== "colossus").map(m => m.id);   /* 镇岳像只在巨大化里出现 */
+    const boss = TuokouMonsters.list().filter(m => m.tier === "boss").map(m => m.id);
     st.boss = boss[Math.floor(Math.random() * boss.length)]; if (st.boss) A.setEnemy(BT.codeMon(st.boss, 100));
     A.setNames(dbWho(st), youName()); A.setHP(100, true, 100);
     dbAsk();
