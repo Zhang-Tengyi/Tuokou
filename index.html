@@ -713,7 +713,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.53.2"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.53.3"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -6798,13 +6798,13 @@ CardFX.power = function (f, svg) {
     f.shake(k || 1);
   };
   // fire: a dense stream along a direction (radians), with a white-hot mouth glow and embers
-  f.fire = (from, ms, reach, spread, dir) => {
+  f.fire = (from, ms, reach, spread, dir, alive) => {
     const parts = [], t0 = performance.now();
     let last = t0;
     const mouth = el('circle', { r: 16, fill: f.grad('flash') }, glowLayer);
     f.run((now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      const on = now - t0 < ms, o = from(), base = typeof dir === 'function' ? dir() : dir || 0;
+      const on = (now - t0 < ms && (!alive || alive())), o = from(), base = typeof dir === 'function' ? dir() : dir || 0;
       mouth.setAttribute('cx', o.x); mouth.setAttribute('cy', o.y); mouth.setAttribute('r', Math.max(0, on ? 16 + Math.sin(now / 30) * 4 : 0));
       if (on) {
         for (let i = 0; i < 7; i++) {
@@ -9584,6 +9584,8 @@ function create(id, opts) {
       ctl.stop = () => { ctl.on = false; };
       return ctl;
     },
+    // 脱口 app：光线这种持续攻击时的受击——只做受击动作开头那一小段（崩一点碎片、摆一下受击姿势），不排队、不回起手式；光线打完再 play('hit') 完整播一次
+    flinch() { if (!alive) return; try { const c = local('torso', 250, 240); fx.burst(c.x, c.y, 28); mv.go('hit', 70, { dx: -3 - Math.random() * 5 }); } catch (e) {} },
     // 脱口 app 的对波用：停在某个姿势上（比如放技能的那一下），拿到某个部位在舞台上的位置（比如头、下巴）
     holdPose(n) { try { mv.set(n); } catch (e) {} },
     partBox(name) { const p = P.parts && P.parts[name]; if (!p) return null; const r = p.getBoundingClientRect(), h = host.getBoundingClientRect(); return { x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height }; },
@@ -10342,6 +10344,8 @@ const BT = (() => {
     }
     A.clear = clearPose;
     /* ---------- 特效 ---------- */
+    /* 一段时间里一直轻轻晃（技能从击中到攻击结束） */
+    const shakeFor = (ms, px) => { const tk = A.token, t0 = performance.now(); const f = () => { if (tk !== A.token || performance.now() - t0 > ms) return; shake(px || 3); setTimeout(f, 90); }; f(); };
     function shake(px){ if (reduced()) return; stage.animate([{transform:"none"}, {transform:`translate(${px}px, ${-px / 2}px)`}, {transform:`translate(${-px}px, ${px / 2}px)`}, {transform:`translate(${px / 2}px, 0)`}, {transform:"none"}], {duration:220}); }
     function slash(x, y, dir){
       const s = Math.max(70, Math.min(130, stage.clientWidth * 0.18));
@@ -10394,9 +10398,11 @@ const BT = (() => {
     }
     const split = (total, n) => Array.from({length:n}, (_, i) => Math.round((total * (i + 1)) / n) - Math.round((total * i) / n));
     /* 扣血：打的是对手就扣对手的血；打的是你，交给 A.onYouHit（以后掉血用） */
-    function dealt(def, d){ if (!(d > 0)) return; A.lastDmg += d; if (def === ghost) A.setHP(A.hp - d); else if (A.onYouHit) A.onYouHit(d); }
+    function dealt(def, d){
+      /* 首领被连续扣血（光线这种持续攻击）：每扣一次快速受击一下（只做受击开头那一小段）；最后一次之后 0.3 秒完整播一次受击（被打死的话，倒下排在它后面） */
+      if (def === ghost && A.cm && !A._noFlinch && A.cm.flinch && d > 0){ A.cm.flinch(); clearTimeout(A._cmFinal); const tk = A.token; A._cmFinal = setTimeout(() => { if (tk === A.token && A.cm) A.cm.play("hit"); }, 300); } if (!(d > 0)) return; A.lastDmg += d; if (def === ghost) A.setHP(A.hp - d); else if (A.onYouHit) A.onYouHit(d); }
     function hurt(def, dir, dmg, big, pt){
-      if (def === ghost && A.cm){ A.cm.play("hit"); dealt(def, dmg); codeRecoil(big); return; }
+      if (def === ghost && A.cm){ A.cm.play("hit"); A._noFlinch = true; dealt(def, dmg); A._noFlinch = false; codeRecoil(big); return; }   /* 近身一下：完整受击一次（扣血那一下不再另外快速受击） */
       const face = faceOf(def);
       const on = {filter:fil(def, "brightness(3.2)")}, off = {filter:fil(def, "brightness(1)")};
       face.animate(big ? [off, on, off, on, off, on, off] : [off, on, off, on, off], {duration: big ? 620 : 300});
@@ -10965,7 +10971,7 @@ const BT = (() => {
         return true;
       }));
       if (cl){ holdGlow(face, "drop-shadow(0 0 20px rgba(150, 230, 255, 1))"); cl.done.then(() => { HOLD = Math.max(0, performance.now() - t0 - EXT); }); await cl.done; await wait(OUT); fadeHeld(1100); return; }
-      await wait(EXT); if (token !== A.token) return;
+      await wait(EXT); if (token !== A.token) return; shakeFor(HOLD, 3);
       const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.75 : 0.25), hy = Math.min(Math.max(o.y, d.y + d.h * 0.15), d.y + d.h * 0.85); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
       burst(hx, hy, Math.min(220, d.w * 1.4)); shake(10); pose(def, "recoil", 90);
       const ticks = split(total || 40, 14); const dface = faceOf(def);
@@ -11050,7 +11056,7 @@ const BT = (() => {
         return cl ? (cl.live() || now - (cl.endAt || now) < 300 || embers.length > 0) : (k < 1 || embers.length > 0);
       });
       if (cl){ await cl.done; await wait(320); return; }
-      await wait(Math.max(0, (T * Math.abs(hitX - x0)) / Math.abs(x1 - x0) - 30));
+      await wait(Math.max(0, (T * Math.abs(hitX - x0)) / Math.abs(x1 - x0) - 30)); shakeFor(450, 4);
       if (token !== A.token) return;
       let hy = Math.min(Math.max(y, d.y + d.h * 0.2), d.y + d.h * 0.8), hx = d.x + d.w * (dir < 0 ? 0.6 : 0.4); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
       pose(def, "recoil", 90);
@@ -11221,7 +11227,7 @@ const BT = (() => {
         return true;
       }));
       if (cl){ cl.done.then(() => { HOLD = performance.now() - t0; }); await cl.done; fadeHeld(800); return; }
-      await wait(220); if (token !== A.token) return;
+      await wait(220); if (token !== A.token) return; shakeFor(HOLD - 220, 3);
       const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
       pose(def, "recoil", 90); shake(10);
       const push = def.animate([{transform:"none"}, {transform:`translateX(${30 * dir}px)`}], {duration:HOLD, easing:"ease-out", fill:"forwards"});
@@ -11349,7 +11355,7 @@ const BT = (() => {
         return true;
       }));
       if (cl){ cl.done.then(() => { HOLD = performance.now() - t0; }); await cl.done; fadeHeld(800); return; }   /* 对波：不走原来的伤害，伤害由对波结果算 */
-      await wait(120); if (token !== A.token) return;
+      await wait(120); if (token !== A.token) return; shakeFor(HOLD - 120, 3);
       const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
       shake(11); pose(def, "recoil", 90);
       const push = def.animate([{transform:"none"}, {transform:`translateX(${34 * dir}px)`}], {duration:HOLD, easing:"ease-out", fill:"forwards"});
@@ -11565,14 +11571,15 @@ const BT = (() => {
           { const lc = loser === "you" ? clY : clF, wc = loser === "you" ? clF : clY; if (lc) lc.finish(); if (wc) wc.free = true; if (loser === "foe" && mcl) mcl.stop(); }   /* 输的一方的原版光线收掉；赢的一方恢复原版（会穿过对手的照样穿过去） */
           burstBig = true; burstAt = performance.now();
           /* 首领的动作是排队播放的：上一个受击动作没播完就不再叫新的，免得光线打完、胜利姿势都摆了，它还在把排着队的受击一个个播完 */
-          let hitBusy = false; const cmHit = () => { if (hitBusy || !A.cm) return; hitBusy = true; Promise.resolve(A.cm.play("hit")).catch(() => {}).then(() => { hitBusy = false; }); };
-          if (!(L === ghost && A.cm)) pose(L, "recoil", 90); else cmHit();
+          const cmFlinch = () => { if (A.cm && A.cm.flinch) A.cm.flinch(); };
+          if (!(L === ghost && A.cm)) pose(L, "recoil", 90); else cmFlinch();
+          shakeFor(1700, 3);
           const parts2 = split(dmg || 0, 8);   /* 能量球炸开以后，赢的一方的光继续打在他身上约 1.5 秒 */
-          for (const [pi, part] of parts2.entries()){ if (token !== A.token) return; const T = bodyC(L); dealt(L, part); damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part);
-            if (L === ghost && A.cm){ if (pi <= 3) cmHit(); } else sparksOn(L, "skill", T);   /* 首领：原版的受击动作（不排队；受击动作约 1 秒长，只在前 0.8 秒里触发，最后一次和光线差不多一起结束） */
+          for (const [pi, part] of parts2.entries()){ if (token !== A.token) return; const T = bodyC(L); A._noFlinch = true; dealt(L, part); A._noFlinch = false; damageNumber(T.x - 10 + (Math.random() - 0.5) * 30, T.y - 30, part);
+            if (L === ghost && A.cm) cmFlinch(); else sparksOn(L, "skill", T);   /* 首领：光线打的时候一直快速受击（只做受击开头那一小段） */
             await wait(190); }
           await wait(200); if (clY) clY.finish(); if (clF) clF.finish(); if (mcl) mcl.stop(); stop = true;
-          for (let k = 0; k < 12 && hitBusy; k++) await wait(50);   /* 等最后一次受击播完，再倒下、胜利 */
+          if (L === ghost && A.cm){ try { await A.cm.play("hit"); } catch (e) {} }   /* 光线打完：完整播一次受击，然后才倒下、胜利 */
           if (opts.fall){ try { await A.finish(winner === "you"); } catch (e) {} }
           else { if (!you.classList.contains("still")) pose(you, "idle", 260); if (!A.cm && !ghost.classList.contains("still")) pose(ghost, "idle", 260); if (A.cm) try { A.cm.idle(); } catch (e) {} }
           await zoomTo(cs0, 450, sp0);
@@ -11621,7 +11628,7 @@ const BT = (() => {
       if (A.cm){
         let first = true; A.lastDmg = 0; const id = ghost.monster && ghost.monster.code;
         const fancy = id === "blade" && kind === "skill"; let cut = 0;
-        A._codeHit = power => { const d = first ? dmg : 0; first = false; hurt(you, 1, d, power > 1.2); if (fancy) bladeSlash(box(bodyOf(you)), cut++, power > 1.2); };
+        A._codeHit = power => { const d = first ? dmg : 0; first = false; hurt(you, 1, d, power > 1.2); if (fancy) bladeSlash(box(bodyOf(you)), cut++, power > 1.2); if (kind === "skill") shakeFor(320, 3); };
         /* 近战招：先冲到对手面前（怪物模块原地出招，位置是 app 给的 foot），打完再回去 */
         const melee = isMelee(id, kind);
         try {
@@ -11638,7 +11645,7 @@ const BT = (() => {
     A.special = total => A.move("skill", total);
     /* 结束：赢的一方跳两下，输的一方跪下（有“输”的姿势就用它） */
     /* 倒下：自带红灯（倒下那格有红色的灯）的角色只稍微压暗，不然红灯看不见；别的整个变灰 */
-    const loseFilter = f => { const e = f.glow && f.glow.lose; return e && (e.parts || []).some(p => /^#FF[0-5]/i.test(p.color || "")) ? "saturate(.85) brightness(.88)" : "grayscale(1) brightness(.7)"; };
+    const loseFilter = f => "grayscale(1) brightness(.7)";   /* 输了都变灰：迪迦这种有红色指示灯的也一样（发光部位是另外画在上面一层的，红灯照样亮） */
     A.finish = async youWon => {
       const winner = youWon ? you : ghost, loser = youWon ? ghost : you; const fallDeg = youWon ? -16 : 16;
       loser.classList.add("still"); const l = faceOf(loser); land(loser);
