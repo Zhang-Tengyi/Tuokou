@@ -717,7 +717,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.55.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.56.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -1527,6 +1527,17 @@ const D_CARDS = [
   ["dm25","chat","回头聊！","Talk soon!",""],
   ["dm26","chat","保重！","Take care!",""],
   ["dm27","chat","我对这个不太感兴趣，但我常看别人玩。","I'm not that into it, but I often watch other people play it.","be into：喜欢、感兴趣；although 和 but 只留一个"],
+  ["dm28","msg","希望你一切都好。","I hope you're doing well. // I hope you're doing well!","邮件开头的客套"],
+  ["dm29","msg","谢谢你今天抽时间跟我聊。","Thank you for taking the time to speak with me today.","感谢信第一句"],
+  ["dm30","msg","我写信是想跟进一下我的申请。","I'm writing to follow up on my application.","第一句就说目的"],
+  ["dm31","msg","我想问一下我的申请现在进展如何。","I just wanted to check in on the status of my application.","check in on：问一下进展"],
+  ["dm32","msg","你下周方便简单通个电话吗？","Would you be available for a quick call next week?",""],
+  ["dm33","msg","如果还需要别的材料，请告诉我。","Please let me know if you need any other information.",""],
+  ["dm34","msg","我很喜欢了解你们团队的工作。","I really enjoyed learning about your team's work.",""],
+  ["dm35","msg","再次感谢你的时间。","Thanks again for your time.",""],
+  ["dm36","msg","期待你的回复。","I look forward to hearing from you.","look forward to + -ing"],
+  ["dm37","msg","祝好，","Best regards,","落款，后面换行写名字"],
+  ["dm38","msg","谢谢，","Thanks,","比较随意的落款"],
 ];
 const DL_CARDS = [
   ["dl01","cs","What can I get for you?","想要点什么"],
@@ -3449,7 +3460,8 @@ function focusLine(){
 }
 function planLine(){
   const p = S.settings.planWhen;
-  return p ? `<div class="meta">你的计划：${esc(p)}，就打开脱口练一会儿</div>` : `<div class="meta"><button class="btn sm ghost" style="padding-left:0;min-height:32px" data-act="nav" data-v="plan">定一个固定的练习时间</button></div>`;
+  /* 练习计划一直有入口：定了时间也能随时加、改每天要练的内容 */
+  return p ? `<div class="meta">你的计划：${esc(p)}，就打开脱口练一会儿　<button class="linkbtn small" data-act="nav" data-v="plan">练习计划</button></div>` : `<div class="meta"><button class="btn sm ghost" style="padding-left:0;min-height:32px" data-act="nav" data-v="plan">定练习时间、加练习计划</button></div>`;
 }
 /* 单词：首页单独一个入口，不用改首页的题库也能练（面试这周首页选的是面试题库，单词不会出现） */
 function wordStats(){
@@ -3493,15 +3505,21 @@ VIEWS.home = {
       </section>
       ${iv != null ? `<div class="countdown"><span class="num">${iv}</span><span>${iv === 0 ? "今天就是面试，稳住，先说结论" : "天后面试"}</span></div>` : ""}
       <button class="feature" data-act="nav" data-v="callsetup">${ICON.phone}<div><b>来电模拟</b><span>面试官念题、你开口答，屏幕上不显示问题，和电话面试一样</span></div></button>
+      <div class="sec-title">开口说</div>
       <div class="mods">
-        ${mod("hands","head","耳机模式","走路、坐车时听着练")}${wordsTile()}${mod("tips","chat","说话技巧","重音、语调、断句、连读")}${mod("grammar","pen","语法要点","时态、-s、-ed、语序")}
-        <button class="mod" data-act="listen-go">${ICON.ear}<b>听力快练</b><span>听懂面试官的问法</span></button>
-        ${mod("free","bolt","反射训练","按类型挑着练")}
-        ${mod("dialogs","chat","情景对话","点餐、闲聊、打电话办事")}
-        ${mod("journal","mic","语音日记","睡前 1 分钟")}
-        ${mod("write","pen","写作自查","求职邮件、感谢信")}
-        ${mod("import","imp","导入新内容","把 Claude 的导入码贴进来")}
+        ${mod("free","bolt","反射训练","按类型挑着练")}${mod("dialogs","chat","情景对话","点餐、闲聊、打电话办事")}
+        ${mod("journal","mic","语音日记","睡前 1 分钟")}${mod("hands","head","耳机模式","走路、坐车时听着练")}
       </div>
+      <div class="sec-title">听和写</div>
+      <div class="mods">
+        <button class="mod" data-act="listen-go">${ICON.ear}<b>听力快练</b><span>听懂面试官的问法</span></button>
+        ${mod("write","pen","写作","回复消息、写邮件，按你的错误清单检查")}
+      </div>
+      <div class="sec-title">学</div>
+      <div class="mods">
+        ${mod("chunks","chat","常用语块","聊天、写邮件现成的说法")}${wordsTile()}${mod("tips","chat","说话技巧","重音、语调、断句、连读")}${mod("grammar","pen","语法要点","时态、-s、-ed、语序")}
+      </div>
+      <p class="small muted" style="margin:12px 2px 0">有 Claude 给的导入码？<button class="linkbtn small" data-act="nav" data-v="import">导入新内容</button></p>
       <p class="tip">${esc(tipOfDay())}</p>
     </div>`;
   }
@@ -5428,7 +5446,7 @@ VIEWS.progress = {
     const reps = calls ? (S.calls.reduce((a, c) => a + (c.rep || 0), 0) / calls).toFixed(1) : null;
     return `<div class="wrap"><div class="top"><h2 style="font-size:26px">进度</h2></div>
       <div class="statgrid"><div class="stat"><span class="num">${st.streak}</span><span>连续天数</span></div><div class="stat"><span class="num">${mastered}</span><span>已掌握</span></div><div class="stat"><span class="num">${totalMin}</span><span>总分钟</span></div></div>
-      <button class="btn block" style="margin-bottom:12px" data-act="nav" data-v="today">今天练过的句子</button>
+      <div class="sec-title">记录</div><div class="list" style="margin-bottom:12px">${liRow("today","今天练过的句子","今天每一句练得怎么样")}${liRow("dblog","对话记录", ((S.dbLog || []).length) + " 场：每一场的题、你说的话、分数")}${liRow("errlog","错误档案", typeof errTop === "function" && errTop(5).length ? "现在的清单：" + errTop(5).map(c => (ERR_DEFS[c] || {}).n || c).join("、") : "你最常犯的错，写作时自动检查")}</div>
       <div class="panel"><h3>开口用时</h3>${thisW ? `<p style="margin-top:6px"><span class="num" style="font-size:30px">${fmt1(thisW)}</span> 秒，这 7 天平均${lastW ? `，前 7 天是 ${fmt1(lastW)} 秒` : ""}</p><p class="small muted">从灯灭到说完一句的时间。越短，说明越接近脱口而出。</p>` : `<p class="small muted" style="margin-top:6px">用麦克风或输入框答几题，这里就会显示你开口有多快。</p>`}</div>
       <div class="panel"><h3>最近 12 周</h3><div class="heat" style="margin-top:10px">${heat}</div><p class="small muted" style="margin-top:6px">颜色越深练得越久；虚线框是自动补签的日子（每周 1 次）。</p></div>
       <div class="panel"><h3>最近 7 天（分钟）</h3><div class="week" style="margin-top:10px">${week}</div></div>
@@ -5472,10 +5490,10 @@ VIEWS.me = {
         <p class="small muted" style="margin-top:6px">这台手机现在能用 ${TTS.list("en").length} 个英文声音。想换男声、女声：手机设置里搜“文字转语音”，首选引擎选“Google 语音识别和语音合成”，点它旁边的齿轮 → 安装语音数据 → 英语（美国），列表里有好几个声音，点一下能试听，选一个就行。没有齿轮的话，在手机的应用列表里找到“Google 语音识别和语音合成”（Speech Services by Google），打开它的设置。换完回来点“试听英文”听听。</p>
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-      <div class="sec-title">内容和数据</div><div class="sec-title">学习资料</div><div class="list">${liRow("tips","说话技巧","重音、语调、断句、连读、难发的音")}${liRow("grammar","语法要点","时态、-s、-ed、be 动词、语序")}</div><div class="sec-title">设置和工具</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("battle","对战角色","练完一轮，和昨天的你打一场；可以导入你自己的角色")}${liRow("asr","录音转文字", BUILD.pwa ? "在手机上识别录音，转好了会提醒你" : "要在安装到手机上的版本里用")}${liRow("dblog","对话记录", ((S.dbLog || []).length) + " 场")}${liRow("errlog","错误档案", (typeof errTop === "function" ? errTop(5).length : 0) + " 类在清单里")}${liRow("pending","问 Claude", ((S.pending || []).length) + " 句说法，" + ((S.wantWords || []).length) + " 个词，" + ((S.dbAsk || []).length) + " 条回答")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
-        ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
-        ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
+      <div class="sec-title">内容</div><div class="list">${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}${liRow("pending","问 Claude", ((S.pending || []).length) + " 句说法，" + ((S.wantWords || []).length) + " 个词，" + ((S.dbAsk || []).length + (S.replyAsk || []).length) + " 条回答和回复")}${liRow("battle","对战角色","练完一轮，和昨天的你打一场；可以导入你自己的角色")}</div>
+      <div class="sec-title">工具</div><div class="list">${liRow("plan","练习计划", "每天练什么、固定的练习时间" + (S.settings.planWhen ? "（" + esc(S.settings.planWhen) + "）" : ""))}${liRow("asr","录音转文字", BUILD.pwa ? "在手机上识别录音，转好了会提醒你" : "要在安装到手机上的版本里用")}${liRow("device","设备检测","朗读、识别、录音能不能用")}${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}</div>
+      <div class="sec-title">数据</div><div class="list">${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("storage","存储空间","看占了多少、清理旧录音")}</div>
+      <div class="sec-title">关于</div><div class="list">${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
       <p class="small muted" style="margin:4px 4px 0">脱口 ${esc(BUILD.version)}${BUILD.pwa ? "，离线版" : ""}</p>
       <button class="btn danger block" style="margin-top:18px" data-act="reset">清空所有进度</button></div>`;
@@ -5758,11 +5776,11 @@ VIEWS.about = {
         <li><b>按弱项出题。</b>每道题都标了错误类型，哪类正确率低就多出哪类。面试前 3 周会多放面试内容。</li>
         <li><b>内容会长大。</b>和 Claude 练完，让它给你导入码，新句子就进了每天的复习。</li></ul></div>
       <div class="panel"><h3>推荐用法</h3><ul class="issues">
-        <li>每天：首页点“开始”，10 分钟。没空就选 3 分钟，保住连续天数。</li>
+        <li>每天：首页点“练习”，10 分钟。没空就选 3 分钟，保住连续天数。</li>
         <li>面试前：先在“面试”页写好 Q1、Q2、Q6，复制给 Claude 改，再用来电模拟每天打 1 通。</li>
         <li>碎片时间：戴耳机开耳机模式。</li>
         <li>睡前：语音日记 1 分钟，用过去式讲今天。</li>
-        <li>每两周备份一次：我的 → 备份与恢复。</li></ul></div></div>`;
+        <li>回笔友、写邮件：首页“写作”，先写、不改，写完按你的错误清单检查，改过的句子会自动变成改错卡。</li><li>每两周备份一次：我的 → 备份与恢复。</li></ul></div></div>`;
   }
 };
 
@@ -5898,8 +5916,8 @@ VIEWS.pending = {
       ${(S.dbAsk || []).length ? `<div class="list">${S.dbAsk.map((x, i) => `<div class="li"><div class="grow"><span>${esc(x.who)}问：${esc(x.q)}</span><b class="en" style="font-size:15px">${esc(x.said)}</b></div><button class="btn sm ghost" data-act="dba-del" data-i="${i}">删除</button></div>`).join("")}</div>
         <button class="btn primary block" style="margin-top:12px" data-act="dba-copy">复制给 Claude：点评、改好、做成卡片（${S.dbAsk.length} 条）</button>
         <button class="btn block ghost" style="margin-top:8px" data-act="dba-clear">已经发过了，清空</button>` : `<p class="muted small">现在没有。</p>`}
-      <h3 style="margin-top:22px">写好的回复（${(S.replyAsk || []).length}）</h3>
-      <p class="muted small" style="margin:4px 0 10px">在“写回复”里点“存起来问 Claude”的回复。发给 Claude：按错误代码只标出错误，不直接改写，你自己改。</p>
+      <h3 style="margin-top:22px">写好的回复和邮件（${(S.replyAsk || []).length}）</h3>
+      <p class="muted small" style="margin:4px 0 10px">在“写作”里点“存起来问 Claude”的内容。发给 Claude：按错误代码只标出错误，不直接改写，你自己改。</p>
       ${(S.replyAsk || []).length ? `<div class="list">${S.replyAsk.map(x => `<div class="li"><div class="grow"><b class="en" style="font-size:15px">${esc(x.text.slice(0, 120))}${x.text.length > 120 ? "…" : ""}</b></div></div>`).join("")}</div>
         <button class="btn primary block" style="margin-top:12px" data-act="rwa-copy">复制给 Claude：只标错误代码（${S.replyAsk.length} 条）</button>
         <button class="btn block ghost" style="margin-top:8px" data-act="rwa-clear">已经发过了，清空</button>` : `<p class="muted small">现在没有。</p>`}
@@ -6151,7 +6169,7 @@ let PLAN_PICK = null;
 /* 计划页：分成 今天 / 接下来 / 没做完 / 已完成 四个标签，一次只看一类；加一项和修改都收在按钮后面 */
 let PLAN_FORM = false, PLAN_EDIT = null;
 VIEWS.plan = {
-  tab:"me", noRefresh:true,
+  tab:"home", noRefresh:true,
   render(){
     const cur = S.settings.planWhen || ""; PLAN_PICK = null;
     const d = today(), tn = dnum(d); const all = (S.plan || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.ts || 0) - (b.ts || 0));
@@ -12395,7 +12413,7 @@ async function batFinish(keepPanel){
   const b = S.game && S.game.boss ? BT.boss(S.game.boss.tag, S.game.boss.hp, S.game.boss.img && !S.game.boss.img.startsWith("u:") ? S.game.boss.img : null) : null;
   const bossLine = R.bossDown ? `这一轮打败了首领！下一个首领会换成你最近最常错的那类句子。` : b ? `首领「${b.name}」还剩 ${b.hp}/${b.max}（弱点：${(TAGS[b.tag] || TAGS.other).label}），下次游戏接着打。` : "";
   const won = target && o.won;
-  const misTip = (RUN.batMis || 0) >= 3 ? `<p class="small" style="margin-top:6px">这一轮点了 ${RUN.batMis} 次“识别错了”。这多半是识别的问题，不是你：可以在“我的 → 设置”里把识别换成 Whisper，模型选准一些的 small.en，或者说的时候离麦克风近一点。</p>` : "";
+  const misTip = (RUN.batMis || 0) >= 3 ? `<p class="small" style="margin-top:6px">这一轮点了 ${RUN.batMis} 次“识别错了”。这多半是识别的问题，不是你：可以在“我的 → 练习”里把识别换成 Whisper，模型选准一些的 small.en，或者说的时候离麦克风近一点。</p>` : "";
   const html = `<div class="panel bt-result ${won ? "won" : ""}"><b>${won ? "超过了昨天的自己" : target ? "差一点" : "第一次的成绩"}</b><p class="small" style="margin-top:4px">${msg}</p>${bossLine ? `<p class="small muted" style="margin-top:4px">${bossLine}</p>` : ""}${misTip}</div>`;
   const p = $("#btPanel"); if (p){ if (keepPanel) p.insertAdjacentHTML("beforeend", html); else p.innerHTML = html; }
   if (won) await R.A.cheer();
@@ -12696,9 +12714,8 @@ ACT["bt-del"] = async () => {
     const game = k === "start-game";
     /* 自动测试的浏览器（navigator.webdriver）跳过这一步，除非测试自己要测它（__menuTest）；手机上照常弹出 */
     if (el && el.dataset && el.dataset.menu && window.__startChoice !== "new" && !(navigator.webdriver && !window.__menuTest)){
-      const c = await choose(game ? "游戏" : "练习", "", [["std", game ? "普通" : "普通练习"], ["talk", game ? "对话首领战" : "对话"]].concat(game ? [] : [["write", "写回复"]])); if (!c) return;
+      const c = await choose(game ? "游戏" : "练习", "", [["std", game ? "普通" : "普通练习"], ["talk", game ? "对话首领战" : "对话"]]); if (!c) return;
       if (c === "talk"){ dbOpen(game); return; }
-      if (c === "write"){ UI.nav("reply"); return; }
     }
     if (await startChoice(game)) return; return f.apply(this, arguments); }; }
 })();
@@ -13166,13 +13183,28 @@ const RW_RULES = [
   {c:"A6", re:/[\u4e00-\u9fff]+/g}
 ];
 const rwSentences = t => String(t || "").replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Za-z“"'(])/).filter(Boolean);
-function rwCheck(text, letter){
+const MAIL_MOVES = [
+  ["开头", [["希望你一切都好。", "I hope you're doing well."], ["谢谢你今天抽时间跟我聊。", "Thank you for taking the time to speak with me today."], ["我写信是想跟进一下我的申请。", "I'm writing to follow up on my application."]]],
+  ["跟进、请求", [["我想问一下我的申请现在进展如何。", "I just wanted to check in on the status of my application."], ["你下周方便简单通个电话吗？", "Would you be available for a quick call next week?"], ["如果还需要别的材料，请告诉我。", "Please let me know if you need any other information."]]],
+  ["感谢", [["我很喜欢了解你们团队的工作。", "I really enjoyed learning about your team's work."], ["再次感谢你的时间。", "Thanks again for your time."]]],
+  ["结尾", [["期待你的回复。", "I look forward to hearing from you."], ["祝好，", "Best regards,"], ["谢谢，", "Thanks,"]]]
+];
+const wMode = () => (L.wMode === "mail" ? "mail" : "reply");
+const RW_MINOR = new Set(["C1", "C2", "C3"]);   /* 聊天里可以先不管的小错；写邮件时照样标 */
+function rwCheck(text, letter, mail){
+  if (mail === undefined) mail = wMode() === "mail";
   const out = [];
   for (const r of RW_RULES){ r.re.lastIndex = 0; let m; while ((m = r.re.exec(text))){ const s = m[0].trim(); if (!s) { r.re.lastIndex++; continue; } if (r.skip && r.skip.test(text.slice(Math.max(0, m.index - 10), m.index + s.length + 10))) continue; out.push({c:r.c, s}); } }
   for (const s of rwSentences(text)) if (s.split(/\s+/).length > 26) out.push({c:"E2", s: s.split(/\s+/).slice(0, 8).join(" ") + " …"});
   const qs = (text.match(/\?/g) || []).length;
-  if (text.trim() && !qs) out.push({c:"E1", s:"结尾没有问题", tip:"结尾留一个问题，对方好接着聊"});
-  if (qs > 2) out.push({c:"D3", s:`问了 ${qs} 个问题`, tip:"一封信问一两个就够，不然像在查户口"});
+  if (mail){
+    /* 邮件：开头打招呼、结尾落款 */
+    if (text.trim() && !/^\s*(hi|hello|dear|good (morning|afternoon|evening))\b/i.test(text)) out.push({c:"E1", s:"开头没有称呼", tip:"开头写 Hi Name, 或 Dear Name,"});
+    if (text.trim() && !/(best|thanks|thank you|regards|sincerely|cheers)[^\n]{0,20}(\n\s*[^\n]{0,40})?\s*$/i.test(text.trim())) out.push({c:"E1", s:"结尾没有落款", tip:"结尾写 Best regards, 或 Thanks, 再换行写名字"});
+  } else {
+    if (text.trim() && !qs) out.push({c:"E1", s:"结尾没有问题", tip:"结尾留一个问题，对方好接着聊"});
+    if (qs > 2) out.push({c:"D3", s:`问了 ${qs} 个问题`, tip:"一封信问一两个就够，不然像在查户口"});
+  }
   const L = String(letter || "").split(/\s+/).filter(Boolean).length, W = String(text).split(/\s+/).filter(Boolean).length;
   if (L >= 15 && W > L * 2.2) out.push({c:"E2", s:`你写了 ${W} 个词，来信 ${L} 个词`, tip:"信的长度和对方差不多就好，写短一点不容易出错"});
   return out;
@@ -13202,28 +13234,47 @@ const CHAT_MOVES = [
   ["祝福", [["祝我好运吧！", "Wish me luck!"], ["祝你考试顺利！", "Good luck on your exam!"], ["希望你周末过得愉快！", "Hope you have a great weekend!"]]],
   ["结尾", [["期待你的回信！", "Can't wait to hear back from you!"], ["回头聊！", "Talk soon!"], ["保重！", "Take care!"]]]
 ];
-const RW = {letter:"", text:"", first:null, firstIssues:null, issues:null, ai:null};
-VIEWS.reply = {
-  render(){
-    const top = errTop(5);
-    return `<div class="wrap rw">${backBtn()}<h2>写回复</h2><p class="muted small">先用中文列几个关键词，再直接用英文写、先别改；写完点“检查”，只标出你常犯的错，你自己改。</p>
-      <div class="card"><p class="small muted">对方的来信</p><textarea id="rwLetter" rows="4" style="width:100%" placeholder="把笔友的来信粘贴进来">${esc(RW.letter)}</textarea>
-        <button class="linkbtn small" data-act="rw-sample">换一封练习信</button></div>
+const RW = {first:null, firstIssues:null, issues:null, drafts:{reply:{letter:"", text:""}, mail:{letter:"", text:""}}};
+const rwD = () => { const d = RW.drafts[wMode()]; if (wMode() === "mail" && !d.text && L.wDraft) d.text = L.wDraft; return d; };
+Object.defineProperty(RW, "letter", {get(){ return rwD().letter; }, set(v){ rwD().letter = v; }});
+Object.defineProperty(RW, "text", {get(){ return rwD().text; }, set(v){ rwD().text = v; if (wMode() === "mail"){ L.wDraft = v; saveLocal(); } }});
+const rwMovesHTML = moves => moves.map(([g, L0]) => `<p class="small muted" style="margin:8px 0 4px">${g}</p><div class="rw-chips">${L0.map(([zh, en]) => `<button class="btn sm ghost" data-act="rw-chunk" data-t="${esc(en)}" title="${esc(zh)}">${esc(en)}</button>`).join("")}</div>`).join("");
+/* 写作：回复消息（笔友、朋友）和写邮件（求职邮件、cover letter、感谢信）在同一个页面，步骤一样：先列关键词 → 直接写、先不改 → 按你的错误清单检查 */
+VIEWS.write = {
+  tab:"home", noRefresh:true,
+  render(p){
+    if (p && p.m) L.wMode = p.m;
+    const mail = wMode() === "mail", top = errTop(5), d = rwD();
+    return `<div class="wrap rw">${backBtn()}<h2>写作</h2>
+      <div class="seg" role="group" aria-label="写什么" style="margin:6px 0 10px"><button data-act="w-mode" data-v="reply" aria-pressed="${!mail}">回复消息</button><button data-act="w-mode" data-v="mail" aria-pressed="${mail}">写邮件</button></div>
+      <p class="muted small">${mail ? "求职邮件、cover letter、感谢信：" : "笔友、朋友的消息："}先用中文列几个关键词，再直接用英文写、先别改；写完点“检查”，只标出你常犯的错，你自己改。</p>
+      <div class="card"><p class="small muted">${mail ? "对方的邮件（可以不填）" : "对方的来信"}</p><textarea id="rwLetter" rows="4" style="width:100%" placeholder="${mail ? "要回复的邮件贴进来" : "把笔友的来信粘贴进来"}">${esc(d.letter)}</textarea>
+        ${mail ? "" : `<button class="linkbtn small" data-act="rw-sample">换一封练习信</button>`}</div>
       <div class="card"><p class="small muted">先用中文列关键词（可以不填）</p>
-        <div class="rw-plan"><input id="rwA" placeholder="回答什么"><input id="rwR" placeholder="回应什么"><input id="rwQ" placeholder="问什么"></div></div>
-      <div class="card"><p class="small muted">直接用英文写，一句只讲一件事，先别改</p><textarea id="rwText" rows="7" style="width:100%" placeholder="Hi! …">${esc(RW.text)}</textarea>
-        <details style="margin-top:6px"><summary class="small">聊天语块（点一下插进去）</summary>${CHAT_MOVES.map(([g, L]) => `<p class="small muted" style="margin:8px 0 4px">${g}</p><div class="rw-chips">${L.map(([zh, en]) => `<button class="btn sm ghost" data-act="rw-chunk" data-t="${esc(en)}" title="${esc(zh)}">${esc(en)}</button>`).join("")}</div>`).join("")}</details>
-        <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="rw-check">检查</button>${typeof AI !== "undefined" && AI.fn && !AI.off ? `<button class="btn" data-act="rw-ai">让 Claude 只标错误</button>` : ""}<button class="btn" data-act="rw-done">完成</button><button class="btn ghost" data-act="rw-ask">存起来问 Claude</button></div></div>
+        <div class="rw-plan">${mail ? `<input id="rwA" placeholder="目的（为什么写）"><input id="rwR" placeholder="要点"><input id="rwQ" placeholder="下一步（想让对方做什么）">` : `<input id="rwA" placeholder="回答什么"><input id="rwR" placeholder="回应什么"><input id="rwQ" placeholder="问什么">`}</div></div>
+      <div class="card"><p class="small muted">直接用英文写，一句只讲一件事，先别改</p><textarea id="rwText" class="en" rows="8" style="width:100%" placeholder="${mail ? "Hi …," : "Hi! …"}">${esc(d.text)}</textarea>
+        <details style="margin-top:6px"><summary class="small">${mail ? "邮件常用说法" : "聊天语块"}（点一下插进去）</summary>${rwMovesHTML(mail ? MAIL_MOVES : CHAT_MOVES)}</details>
+        <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="rw-check">检查</button>${typeof AI !== "undefined" && AI.fn && !AI.off ? `<button class="btn" data-act="rw-ai">让 Claude 只标错误</button>` : ""}<button class="btn" data-act="rw-done">完成</button><button class="btn ghost" data-act="rw-ask">存起来问 Claude</button>${mail ? `<button class="btn ghost" data-act="w-copy">复制给 Claude 改好</button>` : ""}</div></div>
       <div id="rwRes"></div>
-      <p class="small muted" style="margin-top:8px">现在检查的清单：${top.length ? top.map(c => esc(c + " " + ERR_DEFS[c].n)).join("、") : "（还没有统计，先用默认的）"}　<button class="linkbtn small" data-act="nav" data-v="errlog">错误档案</button></p></div>`;
+      ${mail ? `<details class="panel" style="margin-top:12px"><summary>规则查不出来的，发送前自己再过一遍</summary><ul class="issues">
+        <li>第一句就说清写信的目的了吗？</li><li>这件事是平时、过去、已经，还是正在？时态对吗？</li><li>interested in、looking forward to、good at 后面接东西了吗？</li>
+        <li>结尾有没有一句下一步（比如约个时间）？</li><li>感谢信：面试后 24 小时内发，提一个面试里聊到的具体内容。</li></ul></details>` : ""}
+      <p class="small muted" style="margin-top:8px">现在检查的清单：${top.length ? top.map(c => esc(c + " " + ERR_DEFS[c].n)).join("、") : "（还没有统计）"}　<button class="linkbtn small" data-act="nav" data-v="errlog">错误档案</button></p></div>`;
   },
   mount(){ const l = $("#rwLetter"), t = $("#rwText"); if (l) l.addEventListener("input", () => { RW.letter = l.value; }); if (t) t.addEventListener("input", () => { RW.text = t.value; }); }
 };
+VIEWS.reply = {tab:"home", noRefresh:true, render(){ L.wMode = "reply"; return VIEWS.write.render({}); }, mount(){ VIEWS.write.mount(); }};
+ACT["w-mode"] = el => { L.wMode = el.dataset.v === "mail" ? "mail" : "reply"; saveLocal(); RW.first = null; RW.firstIssues = null; UI.render(); };
+ACT["w-copy"] = () => { const t = (($("#rwText") || $("#wText") || {}).value || "").trim(); if (!t){ toast("先把内容写进来"); return; } sendToClaude(claudePrompt("求职邮件或 cover letter", t)); };
 ACT["rw-sample"] = () => { const cur = RW.letter; let k = 0, x; do { x = RW_LETTERS[Math.floor(Math.random() * RW_LETTERS.length)]; } while (x === cur && k++ < 5); RW.letter = x; const l = $("#rwLetter"); if (l) l.value = x; };
 ACT["rw-chunk"] = el => { const t = $("#rwText"); if (!t) return; const s = typeof t.selectionStart === "number" ? t.selectionStart : t.value.length, add = (s > 0 && !/\s$/.test(t.value.slice(0, s)) ? " " : "") + el.dataset.t + " "; t.value = t.value.slice(0, s) + add + t.value.slice(s); RW.text = t.value; t.focus(); };
-function rwShow(issues, note){
-  const top = errTop(5), byC = {}; for (const x of issues) (byC[x.c] = byC[x.c] || []).push(x);
-  const list = issues.length ? issues.map(x => `<p class="small db-miss">✗ <b>${x.c}</b> ${esc(ERR_DEFS[x.c] ? ERR_DEFS[x.c].n : "")}：“${esc(x.s)}”<span class="muted">　${esc(x.tip || (ERR_DEFS[x.c] || {}).tip || "")}</span></p>`).join("") : `<p class="small">✓ 你清单上的错一个都没查到。</p>`;
+function rwShow(issues, note, text){
+  const top = errTop(5), byC = {}, mail = wMode() === "mail"; for (const x of issues) (byC[x.c] = byC[x.c] || []).push(x);
+  const row = x => `<p class="small db-miss">✗ <b>${x.c}</b> ${esc(ERR_DEFS[x.c] ? ERR_DEFS[x.c].n : "")}：“${esc(x.s)}”<span class="muted">　${esc(x.tip || (ERR_DEFS[x.c] || {}).tip || "")}</span></p>`;
+  const main = mail ? issues : issues.filter(x => !RW_MINOR.has(x.c)), minor = mail ? [] : issues.filter(x => RW_MINOR.has(x.c));
+  /* 写邮件：再加上 app 原来的写作规则（大小写、撇号、常见搭配……） */
+  const extra = mail && text && typeof ruleOut === "function" && K.checkWriting ? (() => { try { const r = K.checkWriting(text); return r && r.length ? `<p class="small muted" style="margin-top:8px">写作规则还查到：</p>${ruleOut(text, r)}` : ""; } catch (e) { return ""; } })() : "";
+  const list = (main.length ? main.map(row).join("") : `<p class="small">✓ 你清单上的错一个都没查到。</p>`) + (minor.length ? `<p class="small muted" style="margin-top:6px">小问题（聊天里可以先不管，写邮件时要改）：${minor.map(x => esc(x.c + " “" + x.s + "”")).join("、")}</p>` : "") + extra;
   const chk = top.map(c => `<span class="small ${byC[c] ? "db-miss" : ""}">${byC[c] ? "✗" : "✓"} ${c} ${esc(ERR_DEFS[c].n)}</span>`).join("　");
   $("#rwRes").innerHTML = `<div class="card">${note ? `<p class="small muted">${esc(note)}</p>` : ""}${list}${top.length ? `<p style="margin-top:8px">${chk}</p>` : ""}
     <p class="small muted" style="margin-top:6px">只标不改：改完可以再点一次“检查”。先回答对方的问题了吗？自己看一眼。</p></div>`;
@@ -13232,17 +13283,18 @@ ACT["rw-check"] = () => {
   const text = (($("#rwText") || {}).value || "").trim(); RW.text = text; RW.letter = ($("#rwLetter") || {}).value || RW.letter; if (!text){ toast("先写几句"); return; }
   const issues = rwCheck(text, RW.letter); RW.issues = issues;
   if (RW.first === null){ RW.first = text; RW.firstIssues = issues; }   /* 第一次检查：这才是你下意识会犯的，记进错误档案 */
-  rwShow(issues);
+  rwShow(issues, "", text);
 };
 ACT["rw-ai"] = async () => {
   const text = (($("#rwText") || {}).value || "").trim(); if (!text || !(typeof AI !== "undefined" && AI.fn)) return; RW.text = text;
   $("#rwRes").innerHTML = `<p class="small muted">Claude 在看……</p>`;
   try {
-    const j = await AI.fn.json(`你是英语老师。下面是一位中文母语者写给笔友的回复。请只标出错误，不要改写、不要给出改好的句子。
+    const mail = wMode() === "mail";
+    const j = await AI.fn.json(`你是英语老师。下面是一位中文母语者写的${mail ? "求职相关的英文邮件（求职邮件、cover letter 或感谢信）" : "给笔友的回复"}。请只标出错误，不要改写、不要给出改好的句子。
 错误代码：${Object.entries(ERR_DEFS).map(([c, d]) => c + " " + d.n).join("；")}。
 对方来信：${RW.letter}
 他的回复：${text}
-只回复一个 JSON：{"issues":[{"c":"错误代码","s":"他原文里出错的那几个词（原样摘出来）","tip":"一句中文提示：错在哪，不要直接给答案"}]}，最多 8 条，聊天里不影响意思的小错（C 类）可以不标。`, {modelTier:"default"});
+只回复一个 JSON：{"issues":[{"c":"错误代码","s":"他原文里出错的那几个词（原样摘出来）","tip":"一句中文提示：错在哪，不要直接给答案"}]}，最多 8 条，${mail ? "正式邮件里大小写、撇号、标点（C 类）也要标" : "聊天里不影响意思的小错（C 类）可以不标"}。`, {modelTier:"default"});
     const issues = ((j && j.issues) || []).filter(x => x && x.c && x.s).map(x => ({c:String(x.c).toUpperCase(), s:String(x.s), tip:String(x.tip || "")}));
     if (RW.first === null){ RW.first = text; RW.firstIssues = issues.concat(rwCheck(text, RW.letter)); }
     RW.issues = issues; rwShow(issues, "Claude 标的（只标不改）：");
@@ -13263,7 +13315,7 @@ ACT["rw-done"] = () => {
     if (S.custom.some(c => c.t === "f" && c.wrong === a)) continue; const id = "rw" + now.toString(36) + Math.random().toString(36).slice(2, 6);
     S.custom.push({id, t:"f", tag:"colloc", en:best, alt:[], note:[...new Set(hit.map(x => x.c + " " + (ERR_DEFS[x.c] || {}).n))].join("；"), zh:"", wrong:a, grp:"", word:"", mean:"", deck:"我的回复改错"}); made++;
   }
-  S.replies = (S.replies || []).concat({ts:now, letter:RW.letter, first:RW.first, final:text, codes}).slice(-30);
+  S.replies = (S.replies || []).concat({ts:now, mode:wMode(), letter:RW.letter, first:RW.first, final:text, codes}).slice(-30);
   save(); try { rebuildCatalog(); } catch (e) {}
   toast(made ? `完成：${made} 句改过的句子变成了改错卡，过几天会在复习里出现` : "完成：已记进错误档案");
   RW.text = ""; RW.first = null; RW.firstIssues = null; RW.issues = null; UI.render();
@@ -13272,11 +13324,11 @@ VIEWS.errlog = {
   render(){
     const st = errState(), top = errTop(5);
     const rows = Object.keys(ERR_DEFS).map(c => ({c, e:st[c] || {}, sc:errScore(c)})).filter(x => x.sc > 0 || (x.e.hits || []).length || x.e.seed).sort((a, b) => b.sc - a.sc);
-    return `<div class="wrap">${backBtn()}<h2>错误档案</h2><p class="muted small">每一类错误出现了多少次：起点是导入的统计（比如以前的写作分析），之后每写一次回复，第一次检查查出来的都记进来。排在最前面的 5 类，就是写回复时自动检查的清单；某一类觉得改掉了，可以移出清单，换下一类进来。</p>
+    return `<div class="wrap">${backBtn()}<h2>错误档案</h2><p class="muted small">每一类错误出现了多少次：起点是导入的统计（比如以前的写作分析），之后在“写作”里每写一次，第一次检查查出来的都记进来。排在最前面的 5 类，就是写作时（回复消息、写邮件）自动检查的清单；某一类觉得改掉了，可以移出清单，换下一类进来。</p>
       ${rows.length ? rows.map(x => { const recent = (x.e.hits || []).filter(t => Date.now() - t < 30 * 864e5).length, total = (x.e.seed || 0) + (x.e.hits || []).length, on = top.includes(x.c);
         return `<div class="card" style="margin-top:8px"><p><b>${x.c} ${esc(ERR_DEFS[x.c].n)}</b>${on ? `<span class="small" style="color:#B42318">　在清单里</span>` : x.e.off ? `<span class="small muted">　已移出清单</span>` : ""}${x.e.pri ? `<span class="small muted">　（导入时标了优先）</span>` : ""}</p>
           <p class="small muted">一共 ${total} 次，最近一个月 ${recent} 次${recent === 0 && (x.e.hits || []).length ? "（这个月没再出现 ✓）" : ""}</p><p class="small">${esc(ERR_DEFS[x.c].tip)}</p>
-          <button class="linkbtn small" data-act="err-toggle" data-c="${x.c}">${x.e.off ? "加回清单" : "我觉得改掉了，移出清单"}</button></div>`; }).join("") : `<p class="muted small" style="margin-top:12px">还没有统计。导入“错误统计”或者写一次回复，就会有了。</p>`}</div>`;
+          <button class="linkbtn small" data-act="err-toggle" data-c="${x.c}">${x.e.off ? "加回清单" : "我觉得改掉了，移出清单"}</button></div>`; }).join("") : `<p class="muted small" style="margin-top:12px">还没有统计。导入“错误统计”，或者在“写作”里写一次，就会有了。</p>`}</div>`;
   }
 };
 ACT["err-toggle"] = el => { const st = errState(), c = el.dataset.c; st[c] = st[c] || {seed:0, hits:[]}; st[c].off = !st[c].off; save(); UI.render(); };
@@ -13286,11 +13338,28 @@ function rwaText(){
   return `下面是我写给笔友的回复。请按错误代码只标出错误，不要直接改写，也不要给出改好的句子，让我自己改。每条写：错误代码、我原文里出错的那几个词、一句中文提示。聊天里不影响意思的小错（C 类）可以不标。
 错误代码：${Object.entries(ERR_DEFS).map(([c, d]) => c + " " + d.n).join("；")}
 
-` + L0.map((x, i) => `${i + 1}. 对方来信：${x.letter || "（没贴）"}\n我的回复：${x.text}`).join("\n\n");
+` + L0.map((x, i) => x.mode === "mail" ? `${i + 1}. （求职邮件）${x.letter ? "对方的邮件：" + x.letter + "\n" : ""}我写的邮件：${x.text}` : `${i + 1}. 对方来信：${x.letter || "（没贴）"}\n我的回复：${x.text}`).join("\n\n");
 }
-ACT["rw-ask"] = () => { const text = (($("#rwText") || {}).value || "").trim(); if (!text){ toast("先写几句"); return; } S.replyAsk = (S.replyAsk || []).concat({letter:RW.letter, text, ts:Date.now()}).slice(-20); save(); toast(`存好了（共 ${S.replyAsk.length} 条）。在“我的 → 问 Claude”里一起发`); };
+ACT["rw-ask"] = () => { const text = (($("#rwText") || {}).value || "").trim(); if (!text){ toast("先写几句"); return; } S.replyAsk = (S.replyAsk || []).concat({mode:wMode(), letter:RW.letter, text, ts:Date.now()}).slice(-20); save(); toast(`存好了（共 ${S.replyAsk.length} 条）。在“我的 → 问 Claude”里一起发`); };
 ACT["rwa-copy"] = () => { const t = rwaText(); if (t) sendToClaude(t); };
 ACT["rwa-clear"] = async () => { if (!await sheet("清空写好的回复？", "确认 Claude 已经收到再清。", "清空", true)) return; S.replyAsk = []; save(); UI.render(); };
+
+VIEWS.chunks = {
+  tab:"home",
+  render(){
+    const sec = (title, moves, k) => `<div class="sec-title">${title}</div>` + moves.map(([g, L0], gi) => `<div class="card" style="margin-top:8px"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>${g}</b><button class="btn sm" data-act="ck-go" data-k="${k}" data-g="${gi}">练这一组</button></div>
+      ${L0.map(([zh, en]) => `<div class="li" style="padding:6px 0"><div class="grow"><b class="en" style="font-size:15px">${esc(en)}</b><span>${esc(zh)}</span></div><button class="btn sm ghost" data-act="say" data-text="${esc(en)}" aria-label="听一遍">${ICON.ear || "▶"}</button></div>`).join("")}</div>`).join("");
+    return `<div class="wrap">${backBtn()}<h2>常用语块</h2><p class="muted small">聊天、写邮件时现成的说法，整块背、整块用，比一个词一个词拼省力，也不容易错。这些也在“日常生活”题库里，每天的复习会练到；“写作”页面里点一下就能插进去。</p>
+      <div class="row-gap" style="margin:8px 0"><button class="btn" data-act="ck-go" data-k="chat" data-g="all">练全部聊天语块</button><button class="btn" data-act="ck-go" data-k="mail" data-g="all">练全部邮件说法</button></div>
+      ${sec("聊天回复", CHAT_MOVES, "chat")}${sec("写邮件", MAIL_MOVES, "mail")}</div>`;
+  }
+};
+ACT["ck-go"] = el => {
+  const moves = el.dataset.k === "mail" ? MAIL_MOVES : CHAT_MOVES, g = el.dataset.g;
+  const ens = new Set((g === "all" ? moves : [moves[+g]]).flatMap(([, L0]) => L0.map(([, en]) => en)));
+  const title = g === "all" ? (el.dataset.k === "mail" ? "邮件说法" : "聊天语块") : "语块：" + moves[+g][0];
+  startSession("free", {filter: c => c.deck === "daily" && ens.has(c.en), fillAhead:true, newLimit:40, newUsed:0}, title);
+};
 
 </script>
 </body>
