@@ -703,6 +703,11 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .deck-grp-h em{font-style:normal;color:var(--ink2,#334155)}.deck-grp-h i{font-style:normal;margin-left:auto}
 details.pl-day>summary{list-style:none;cursor:pointer}details.pl-day>summary::-webkit-details-marker{display:none}details.pl-day>summary::before{content:"▾ ";color:var(--muted,#6B7280)}details.pl-day:not([open])>summary::before{content:"▸ "}
 .plan-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.now-row{display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--surface2,#F4F6F8)}.now-row .grow span{display:block}.now-row .grow b{display:block;font-size:15px}
+.rd-body{font-size:17px;line-height:1.75}.rd-s{margin:0 0 10px}.rd-s.rd-on{background:#FFF6DB;border-radius:6px}.rd-play{border:0;background:none;color:var(--muted,#6B7280);font-size:12px;padding:0 4px;cursor:pointer}
+.rd-w{cursor:pointer}.rd-u{text-decoration:underline dotted #C2410C;text-underline-offset:4px}.rd-ck{text-decoration:underline solid #2563EB;text-underline-offset:4px}.rd-pick{background:#DBEAFE;border-radius:4px}
+.rd-popc{position:sticky;bottom:72px;margin-top:10px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.now-row .btn{flex:none;white-space:nowrap;min-width:64px}
 
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
@@ -724,7 +729,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.58.3"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.59.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2201,7 +2206,7 @@ function chunkSentence(en){
 
 /* ---------- 导入码 ---------- */
 function parseImport(text){
-  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], plan:[], errStats:[], meta:{date:"", who:[], replace:[]}, bad:[]};
+  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], plan:[], errStats:[], articles:[], meta:{date:"", who:[], replace:[]}, bad:[]};
   const ROLE = {"开场":"first","核心":"core","初筛":"screen","提问":"ask","基本":"core","行为":"core","电话":"screen","技术":"tech","概念":"concept","first":"first","core":"core","screen":"screen","ask":"ask","tech":"tech","concept":"concept"};
   let deck = "我的卡片";
   String(text||"").split(/\r?\n/).forEach((line, i) => {
@@ -2212,6 +2217,7 @@ function parseImport(text){
     if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); if (/^(日常生活|daily)$/i.test(deck.trim())) deck = "daily"; else if (/^(通用|通用（诊断报告）|core)$/i.test(deck.trim())) deck = "core"; if (p[2] && /替换|replace/i.test(p[2]) && !res.meta.replace.includes(deck)) res.meta.replace.push(deck); return; }
     if (kind==="面试日期" && /^\d{4}-\d{2}-\d{2}$/.test(p[1]||"")){ res.meta.date = p[1]; return; }
     if (kind==="面试官" && p[1]){ res.meta.who.push({deck, name:p[1], company:p[2]||""}); return; }
+    if (kind==="文章" && p[2]){ res.articles.push({title:(p[1] || "").trim(), text:p.slice(2).join("|").trim()}); return; }   /* 阅读：文章|标题|正文 */
     if (kind==="错误统计" && p[1] && p[2]){ res.errStats.push({c:p[1].trim().toUpperCase(), n:+p[2] || 0, pri:/^(优先|1|yes|y)$/i.test(String(p[4] || "").trim())}); return; }   /* 错误档案的起点：错误统计|代码|次数|说明|优先（可选：排在清单前面） */
     if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
     else if ((kind==="词"||kind==="W") && p[1] && p[2] && p[3]){ const a = splitAlts(p[3]); res.cards.push({t:"w", word:p[1].trim(), mean:p[2].trim(), en:a[0], alt:a.slice(1), zh:(p[4]||"").trim(), tag:"vocab", note:p[5]||"", deck}); }
@@ -3401,6 +3407,7 @@ const ICON = {
   hang:SV('<g transform="rotate(135 12 12)"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></g>'),
   head:SV('<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/>'),
   ear:SV('<path d="M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-6 0"/><path d="M10 9a2 2 0 0 1 4 0"/>'),
+  book:SV('<path d="M3 5.5C3 4.7 3.7 4 4.5 4H10a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H3z"/><path d="M21 5.5c0-.8-.7-1.5-1.5-1.5H14a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"/>'),
   bolt:SV('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'),
   mic:SV('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>'),
   pen:SV('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>'),
@@ -3524,14 +3531,14 @@ VIEWS.home = {
       <section class="hero">
         <div class="gantry" id="homeLights">${lamps()}</div>
         <h2>开始今天的练习</h2>
-        ${typeof todayPlanHTML === "function" ? todayPlanHTML() : ""}
+        ${typeof todayPlanHTML === "function" ? todayPlanHTML() : ""}${planLine()}
         ${deckSelectHTML()}
         <div class="meta">${line}</div>
         <div class="seg" role="group" aria-label="练习时长">${seg}</div>
         <div class="start-row"><button class="btn primary big" data-act="start" data-menu="1">练习</button><button class="btn big game-start" data-act="start-game" data-menu="1">游戏</button></div>
         <label class="switch quiet-sw"><span>现在不方便说话（打字回答）</span><input type="checkbox" data-chg="quiet" ${L.quiet ? "checked" : ""}></label>
         ${L.quiet ? `<label class="switch quiet-sw"><span>播放声音（关掉会跳过听力题）</span><input type="checkbox" data-chg="local" data-key="quietSound" ${L.quietSound ? "checked" : ""}></label>` : ""}
-        <div class="meta">到期复习 ${c.due} 题，今天还有 ${c.newLeft} 道新题</div>${focusLine()}${planLine()}${todayLine()}
+        <div class="meta">到期复习 ${c.due} 题，今天还有 ${c.newLeft} 道新题</div>${focusLine()}${todayLine()}
       </section>
       ${iv != null ? `<div class="countdown"><span class="num">${iv}</span><span>${iv === 0 ? "今天就是面试，稳住，先说结论" : "天后面试"}</span></div>` : ""}
       <button class="feature" data-act="nav" data-v="callsetup">${ICON.phone}<div><b>来电模拟</b><span>面试官念题、你开口答，屏幕上不显示问题，和电话面试一样</span></div></button>
@@ -3547,7 +3554,7 @@ VIEWS.home = {
       </div>
       <div class="sec-title">学</div>
       <div class="mods">
-        ${mod("chunks","chat","常用语块","聊天、写邮件现成的说法")}${mod("pron","ear","发音","听辨、第一印象、重音")}${wordsTile()}${mod("tips","chat","说话技巧","重音、语调、断句、连读")}${mod("grammar","pen","语法要点","时态、-s、-ed、语序")}
+        ${mod("chunks","chat","常用语块","聊天、写邮件现成的说法")}${mod("pron","ear","发音","听辨、第一印象、重音")}${mod("read","book","阅读","边听边读，挑有用的词和短语")}${wordsTile()}${mod("tips","chat","说话技巧","重音、语调、断句、连读")}${mod("grammar","pen","语法要点","时态、-s、-ed、语序")}
       </div>
       <p class="small muted" style="margin:12px 2px 0">有 Claude 给的导入码？<button class="linkbtn small" data-act="nav" data-v="import">导入新内容</button></p>
       <p class="tip">${esc(tipOfDay())}</p>
@@ -4943,7 +4950,7 @@ VIEWS.callrev = {
 
 /* ---------- 我的计划：写成“什么时候 → 做什么”；链接了练习的，做完自动打勾 ---------- */
 const PLAN_ACTS = [["","不链接练习"],["phone","模拟一场电话初筛"],["basic","模拟一场基本面试"],["tech","模拟一场技术面试"],["concept","基础概念快答"],["quick","3 分钟练习"],["std","10 分钟练习"],["deep","20 分钟练习"],["listen","听力快练"],["words","练单词"],["hands","耳机模式"],
-  ["call","来电模拟"],["free","反射训练"],["dialogs","情景对话"],["journal","语音日记"],["write:reply","写作：回复消息"],["write:mail","写作：写邮件"],["chunks","常用语块"],["errlog","看错误档案"],["dtalk:iv","对话练习（面试官）"],["dtalk:cc","对话练习（Coffee chat）"],["dboss:432","三遍提速战"],["pron","发音"]];
+  ["call","来电模拟"],["free","反射训练"],["dialogs","情景对话"],["journal","语音日记"],["write:reply","写作：回复消息"],["write:mail","写作：写邮件"],["chunks","常用语块"],["errlog","看错误档案"],["dtalk:iv","对话练习（面试官）"],["dtalk:cc","对话练习（Coffee chat）"],["dboss:432","三遍提速战"],["pron","发音"],["read","阅读"]];
 function planActLabel(a){ if (!a) return ""; if (/^dtalk:cc:/.test(a)) return "对话练习（Coffee chat：" + dbPersona(a.slice(9)) + "）"; if (a.startsWith("solo:")) return "单题彩排：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); if (a.startsWith("read:")) return "跟读参考回答：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); return (PLAN_ACTS.find(x => x[0] === a) || ["", ""])[1]; }
 function planAutoDone(act){ if (!act) return; const d = today(); let n = 0; for (const x of (S.plan || [])) if (x.date === d && !x.done && x.act === act){ x.done = true; n++; } if (n){ save(); toast("计划里的一项完成了 ✓"); } }
 function fmtDate(dt){ const d = new Date(dt + "T12:00:00"); return `${d.getMonth() + 1}月${d.getDate()}日 周${"日一二三四五六"[d.getDay()]}`; }
@@ -4993,14 +5000,22 @@ function planRowHTML(x, page){
 }
 function todayPlanHTML(){
   const d = today(); const items = (S.plan || []).filter(x => x.date === d); const due = ivDueList();
-  if (!items.length && !due.length) return "";
-  const left = items.filter(x => !x.done), open = !!L.planOpen;
+  const left = items.filter(x => !x.done), open = !!L.planOpen, low = (S.lowDays || []).includes(d);
+  /* 现在做：只给你一件事，点一下就开始 */
+  const nx = left[0], c = typeof counts === "function" ? counts() : null;
+  const now = nx ? `<div class="now-row"><div class="grow"><span class="small muted">现在做</span><b>${nx.cue ? esc(nx.cue) + " → " : ""}${esc(nx.text)}</b></div>${nx.act ? `<button class="btn primary" data-act="plan-go" data-v="${esc(nx.act)}">开始</button>` : `<button class="btn" data-act="plan-done-now" data-id="${nx.id}">做完了</button>`}</div>`
+    : items.length ? "" : `<div class="now-row"><div class="grow"><span class="small muted">现在做</span><b>复习到期的卡${c && c.due ? `（${c.due} 题）` : ""}</b></div><button class="btn primary" data-act="plan-go" data-v="std">开始</button></div>`;
+  const lowLine = low ? `<p class="small muted" style="margin-top:6px">今天只做 3 分钟也算 ✓</p>` : `<p class="small muted" style="margin-top:6px">没精神？<button class="linkbtn small" data-act="low-day">只做 3 分钟</button></p>`;
+  if (!items.length && !due.length) return `<div class="panel plan-card">${now}${lowLine}</div>`;
   /* 默认收起：只显示下一项没做的，免得把练习挤到下面去 */
-  const shown = open ? items : left.slice(0, 1);
-  return `<div class="panel plan-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>今天的计划${items.length ? `（还剩 ${left.length} 项）` : ""}</b><span class="row-gap" style="flex:none">${items.length > 1 ? `<button class="btn sm ghost" data-act="plan-toggle">${open ? "收起" : `展开 ${items.length} 项`}</button>` : ""}<button class="btn sm ghost" data-act="nav" data-v="plan">添加/修改</button></span></div>
-    ${shown.length ? `<div class="list" style="margin-top:6px">${shown.map(x => planRowHTML(x, false)).join("")}</div>` : items.length ? `<p class="small muted" style="margin-top:6px">今天的计划都做完了 ✓</p>` : ""}
+  const shown = open ? items : [];
+  return `<div class="panel plan-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>今天的计划${items.length ? `（还剩 ${left.length} 项）` : ""}</b><span class="row-gap" style="flex:none">${items.length > 1 ? `<button class="btn sm ghost" data-act="plan-toggle">${open ? "收起" : `展开 ${items.length} 项`}</button>` : ""}</span></div>
+    ${open ? "" : now}${shown.length ? `<div class="list" style="margin-top:6px">${shown.map(x => planRowHTML(x, false)).join("")}</div>` : !left.length && items.length ? `<p class="small muted" style="margin-top:6px">今天的计划都做完了 ✓</p>` : ""}${left.length ? lowLine : ""}
     ${due.length ? `<div class="row-gap" style="margin-top:8px;align-items:center"><span class="small">有 ${due.length} 道面试题该重练了（之前模拟时卡住的）</span><button class="btn sm" data-act="iv-due-go">现在练</button></div>` : ""}</div>`;
 }
+ACT["plan-done-now"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x) return; x.done = true; save(); UI.render(); };
+/* 没精神的那天：只做 3 分钟复习；这天剩下的计划不会出现在“没做完”里 */
+ACT["low-day"] = () => { const d = today(); S.lowDays = (S.lowDays || []).filter(x => x !== d).concat(d).slice(-60); save(); startSession("quick", {}, "3 分钟练习"); };
 ACT["plan-toggle"] = () => { L.planOpen = !L.planOpen; saveLocal(); UI.render(); };
 CHG["plan-done"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x) return; x.done = el.checked; save(); UI.render(); };
 ACT["plan-del"] = el => { S.plan = (S.plan || []).filter(p => p.id !== el.dataset.id); if (PLAN_EDIT === el.dataset.id){ PLAN_EDIT = null; PLAN_FORM = false; } save(); toast("删除了"); UI.render(); };
@@ -5009,7 +5024,7 @@ ACT["plan-go"] = el => {
   if (["phone","basic","tech","concept"].includes(a)) return ACT["mod-go"]({dataset:{v:a}});
   if (["quick","std","deep"].includes(a)) return startSession(a, {}, {quick:"3 分钟练习", std:"10 分钟练习", deep:"20 分钟练习"}[a]);
   if (a === "listen") return ACT["listen-go"](); if (a === "words") return ACT["words-go"](); if (a === "hands") return UI.nav("hands");
-  if (a === "call") return UI.nav("callsetup"); if (["free", "dialogs", "journal", "chunks", "errlog", "pron"].includes(a)) return UI.nav(a);
+  if (a === "call") return UI.nav("callsetup"); if (["free", "dialogs", "journal", "chunks", "errlog", "pron", "read"].includes(a)) return UI.nav(a);
   if (a.startsWith("write:")) return UI.nav("write", {m:a.slice(6)});
   if (a.startsWith("dtalk:")){ const [m, ...p] = a.slice(6).split(":"); return dbStart(m, p.join(":") || (m === "cc" ? "*" : ""), false); }
   if (a.startsWith("solo:")) return ACT["iv-solo"]({dataset:{q:a.slice(5)}});
@@ -5266,7 +5281,7 @@ function interviewsPanelHTML(){
   /* 所有导入过面试题的题库都能选（不要求已经写了回答） */
   const decks = Array.from(new Set((S.customQ || []).map(q => q.deck).filter(Boolean))).map(d => ({id:"u:" + d, label:d}));
   const form = `<div id="ivsForm" style="margin-top:10px;border-top:1px solid var(--line, #e2e2e2);padding-top:10px"><b>${ed ? "修改这场面试" : "添加一场面试"}</b>
-    <label class="fld"><span>名称</span><input type="text" id="ivsName" value="${esc(ed ? ed.name : "")}" placeholder="比如：TaylorMade 招聘经理面试"></label>
+    <label class="fld"><span>名称</span><input type="text" id="ivsName" value="${esc(ed ? ed.name : "")}" placeholder="比如：某公司招聘经理面试"></label>
     <label class="fld"><span>日期</span><input type="date" id="ivsDate" value="${esc(ed ? ed.date : "")}"></label>
     <label class="fld"><span>时间（可选）</span><input type="time" id="ivsTime" value="${esc(ed ? ed.time || "" : "")}"></label>
     <label class="fld"><span>用哪个题库准备（可选）</span><select id="ivsDeck"><option value="">不指定</option>${decks.map(s => `<option value="${esc(s.id)}" ${ed && ed.deck === s.id ? "selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label>
@@ -5587,13 +5602,13 @@ ACT["imp-preview"] = () => {
   IMP = r;
   const by = t => r.cards.filter(c => c.t === t).length; const dup = r.cards.filter(c => S.custom.some(x => x.id === c.id)).length;
   const decks = Array.from(new Set(r.cards.map(c => c.deck).concat(r.questions.map(q => q.deck))));
-  const n = r.cards.length + r.answers.length + r.keys.length + r.questions.length + r.alts.length + r.plan.length;
+  const n = r.cards.length + r.answers.length + r.keys.length + r.questions.length + r.alts.length + r.plan.length + (r.articles || []).length;
   const who = r.meta.who[0];
   $("#impOut").innerHTML = `<div class="panel" style="margin-top:12px"><h3>读到了</h3><ul class="issues">
     ${decks.length ? `<li>题库：${decks.map(esc).join("，")}</li>` : ""}
     <li>卡片 ${r.cards.length} 张（反射卡 ${by("r")}，找错 ${by("f")}，听力 ${by("l")}）${dup ? `，其中 ${dup} 张已经有了，会更新` : ""}</li>
     ${r.questions.length ? `<li>面试题 ${r.questions.length} 道，追问 ${r.follow.length} 个</li>` : ""}${r.plan.length ? `<li>计划 ${r.plan.length} 项${r.planReplace ? "（会替换所有没做完的计划）" : ""}</li>` : ""}${r.alts.length ? `<li>确认算对的说法 ${r.alts.length} 条</li>` : ""}
-    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${(r.errStats || []).length ? `<li>错误统计 ${r.errStats.length} 类（记进错误档案）</li>` : ""}${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
+    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${(r.errStats || []).length ? `<li>错误统计 ${r.errStats.length} 类（记进错误档案）</li>` : ""}${(r.articles || []).length ? `<li>文章 ${r.articles.length} 篇（在“阅读”里）</li>` : ""}${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
     ${r.meta.date ? `<li>面试日期：${esc(r.meta.date)}</li>` : ""}${who ? `<li>面试官：${esc(who.name)}${who.company ? "，" + esc(who.company) : ""}</li>` : ""}
     ${r.bad.length ? `<li>看不懂、会跳过的：第 ${r.bad.join("、")} 行</li>` : ""}</ul>
     ${n ? `<button class="btn primary block" style="margin-top:12px" data-act="imp-apply">确认导入</button>` : `<p class="note">没有能导入的内容，检查一下格式。</p>`}</div>`;
@@ -5629,6 +5644,7 @@ ACT["imp-apply"] = () => {
   if (r.meta.date){ S.interviews = S.interviews || []; if (!S.interviews.some(x => x.date === r.meta.date)){ const dk = (r.questions[0] || r.cards[0] || {}).deck || ""; const nm = dk && dk !== "core" && dk !== "daily" ? (/面试/.test(dk) ? dk : dk + " 面试") : "面试"; S.interviews.push({id:"i" + Date.now().toString(36), name:nm, date:r.meta.date, time:"", deck: dk && dk !== "core" && dk !== "daily" ? "u:" + dk : ""}); } syncInterviewDate(); }
   S.deckMeta = S.deckMeta || {}; for (const w of r.meta.who) S.deckMeta[w.deck] = {name:w.name, company:w.company};
   if (r.questions.length) S.settings.callDeck = "u:" + r.questions[0].deck;
+  if ((r.articles || []).length){ S.reads = S.reads || []; for (const a of r.articles) if (!S.reads.some(x => x.text === a.text)) S.reads.push({id:"rd" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title:a.title, text:a.text, ts:Date.now(), done:false}); S.reads = S.reads.slice(-30); }
   if ((r.errStats || []).length){ S.errStats = S.errStats || {}; for (const e of r.errStats){ const x = S.errStats[e.c] = S.errStats[e.c] || {seed:0, hits:[]}; x.seed = Math.max(x.seed || 0, e.n); if (e.pri) x.pri = true; } }   /* 错误档案的起点；“优先”的排在清单前面 */
   rebuildCatalog(); save(true); IMP = null;
   const dk = Array.from(new Set(r.cards.map(c => c.deck).concat(r.questions.map(q => q.deck))))[0];
@@ -6217,7 +6233,8 @@ VIEWS.plan = {
   render(){
     const cur = S.settings.planWhen || ""; PLAN_PICK = null;
     const d = today(), tn = dnum(d); const all = (S.plan || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.ts || 0) - (b.ts || 0));
-    const G = {today: all.filter(x => x.date === d && !x.done), next: all.filter(x => x.date > d && !x.done), late: all.filter(x => x.date < d && !x.done), done: all.filter(x => x.done && tn - dnum(x.date) <= 30)};
+    const lowD = new Set(S.lowDays || []);
+    const G = {today: all.filter(x => x.date === d && !x.done), next: all.filter(x => x.date > d && !x.done), late: all.filter(x => x.date < d && !x.done && !lowD.has(x.date)), done: all.filter(x => x.done && tn - dnum(x.date) <= 30)};
     const tabs = [["today","今天"],["next","接下来"],["late","没做完"],["done","已完成"]];
     const tab = G[L.planTab] ? L.planTab : "today";
     const byDate = (arr, desc) => { const g = {}; for (const x of arr) (g[x.date] = g[x.date] || []).push(x);
@@ -12834,7 +12851,8 @@ ACT["pl-gen"] = async () => {
     dialogs: () => ["晚上", "情景对话：点餐、闲聊、打电话办事，挑一个", "dialogs"],
     free: () => ["午休", "反射训练：挑你最弱的一类，看中文马上说英文", "free"],
     words: () => hasWords ? ["午休", "单词：学 2–3 个新词，复习到期的", "words"] : null,
-    pron: () => ["午休", "发音：练一组听辨，再测一句第一印象", "pron"]
+    pron: () => ["午休", "发音：练一组听辨，再测一句第一印象", "pron"],
+    read: () => ["晚上", "阅读：读一篇（边听边读），把有用的词和短语加进想学的", "read"]
   };
   /* 一周轮换（周日 0 … 周六 6），每天按顺序取前几项 */
   const W = {
@@ -12845,7 +12863,7 @@ ACT["pl-gen"] = async () => {
   };
   const mixOrder = ["iv", "write", "cc", "iv", "daily", "cc", "write"];
   const ivDate = S.settings.interviewDate && /^\d{4}-\d{2}-\d{2}$/.test(S.settings.interviewDate) ? S.settings.interviewDate : "";
-  const start = new Date(today() + "T12:00:00"); start.setDate(start.getDate() + 1); const items = [];
+  const start = new Date(today() + "T12:00:00"); const items = [];   /* 从今天开始排 */
   const add = (date, x) => { if (x) items.push({id:"g" + Math.random().toString(36).slice(2, 9), date, cue:x[0], text:x[1], act:x[2] || "", gen:true, done:false}); };
   for (let i = 0; i < 14; i++){
     const dt = new Date(start); dt.setDate(start.getDate() + i); const d = ymd(dt), dow = dt.getDay(); week = Math.floor(i / 7);
@@ -12860,8 +12878,9 @@ ACT["pl-gen"] = async () => {
     const keys = W[g][dow]; let n = 0;
     for (const k of keys){ if (n >= extra) break; const x = T[k](); if (x){ add(d, x); n++; } }
     if (n < extra){ for (const k of ["listen", "chunks", "journal"]){ if (n >= extra) break; if (!keys.includes(k)){ add(d, T[k]()); n++; } } }
+    if (dow === 6 && (S.reads || []).length && items.length && items[items.length - 1].date === d && items[items.length - 1].act !== main){ const x = T.read(); Object.assign(items[items.length - 1], {cue:x[0], text:x[1], act:x[2]}); }
   }
-  const t = today(); S.plan = (S.plan || []).filter(x => !(x.gen && x.date > t)).concat(items); save(); UI.render();
+  const t = today(); S.plan = (S.plan || []).filter(x => !(x.gen && !x.done && x.date >= t)).concat(items); save(); UI.render();
   toast(`排好了：14 天 ${items.length} 项${newWas !== newN ? `；每天新卡改成最多 ${newN} 张` : ""}${ivDate ? "；面试前几天是冲刺" : ""}`);
 };
 
@@ -13722,6 +13741,123 @@ function pronSummary(){ const p = pronState(), ok = PRON_UNITS.filter(u => pronA
   return a + (f ? (f.flags.length ? `；上次要注意：${f.flags.slice(0, 3).join("、")}` : "；上次第一印象都听对了") : ""); }
 VIEWS.pron.mount = () => {};
 VIEWS.pron.leave = () => { pronStopAll(); try { Rec.cancel(); } catch (e) {} PR.run = null; PR.ft = null; PR.st = null; };   /* 离开发音页面：清掉正在做的练习，回来是列表 */
+
+/* 删除之前都先问一句：这些动作以前点了就删 */
+(function(){
+  const ASK = {
+    "plan-del": ["删除这一项计划？", ""], "plan-clear": ["清掉固定的练习时间？", ""], "alt-del": ["删除这个“也对”的说法？", ""],
+    "hist-del": ["删掉这条记录？", "不影响复习安排。"], "pend-del": ["删除这一条？", ""], "ww-del": ["删除这个词？", ""],
+    "dba-del": ["删除这一条回答？", ""], "asr-del": ["删除这份转写？", ""], "ph-del": ["从难词本里删掉？", ""],
+    "resume-drop": ["不接着练上次那一轮了？", "上次没练完的会丢掉。"]
+  };
+  for (const [k, [t, d]] of Object.entries(ASK)){ const f = ACT[k]; if (typeof f !== "function") continue;
+    ACT[k] = async function(){ if (!await sheet(t, d, k === "resume-drop" ? "不练了" : "删除", true)) return; return f.apply(this, arguments); }; }
+})();
+
+/* ===================== 阅读（v1.59.0）：首页“学” → 阅读 =====================
+   来源：自己贴进来的文章（去哪找见 READ_SITES）、Claude 写的文章（导入码“文章|标题|正文”，或者在 claude.ai 里直接写）。
+   边听边读（点一句读一句，或者从头连着听，读到哪句哪句高亮）；“没练过的词”= app 里练过的卡片、题目里都没出现过的词（不一定是生词）；
+   你在练的语块划线（K.findChunks + CHUNK_LEX）；点词 → 加进“想学的词和短语”；读完用 3 句话复述。 */
+const READ_SITES = [
+  ["VOA Learning English", "https://learningenglish.voanews.com/", "美国之音给外语学习者的版本：新闻用简单、慢速的英语写，大多有音频，没有广告"],
+  ["BBC Learning English", "https://www.bbc.co.uk/learningenglish/", "BBC 的学英语网站：新闻词汇、6 分钟英语"],
+  ["Breaking News English", "https://breakingnewsenglish.com/", "同一条新闻分好几个难度，挑一个读着不费劲的"],
+  ["News in Levels", "https://www.newsinlevels.com/", "同一条新闻分 3 个难度"],
+  ["IEEE Spectrum", "https://spectrum.ieee.org/", "工程新闻，原版、难一些，挑你懂的技术话题"]
+];
+const RDG = {cur:null, sel:null, aud:0, retell:null};
+const rdState = () => { S.reads = S.reads || []; return S.reads; };
+const rdSents = t => String(t || "").replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=["“A-Z0-9])/).filter(Boolean);
+const rdWords = s => String(s).split(/\s+/).filter(Boolean);
+const rdNorm = w => String(w).toLowerCase().replace(/[’]/g, "'").replace(/^[^a-z0-9']+|[^a-z0-9']+$/g, "");
+const rdStem = w => w.replace(/'s$/, "").replace(/(ies)$/, "y").replace(/(ing|ed|es|s)$/, "");
+let RD_KNOWN = null;
+function rdKnown(){
+  if (RD_KNOWN) return RD_KNOWN; const set = new Set();
+  const addText = t => { for (const w of String(t || "").split(/\s+/)){ const n = rdNorm(w); if (n){ set.add(n); set.add(rdStem(n)); } } };
+  for (const c of (CAT && CAT.cards) || []){ addText(c.en); (c.alt || []).forEach(addText); addText(c.word); addText(c.wrong); }
+  for (const q of (typeof allQuestions === "function" ? allQuestions() : [])) addText((q.v || []).join(" ") || q.text || "");
+  for (const a of Object.values(S.answers || {})) addText(typeof a === "string" ? a : (a && a.text) || "");
+  /* app 自带的所有英文内容（情景对话、说话技巧、例句……）也算：常见词基本都在里面，只标真正少见的 */
+  try { addText(JSON.stringify(CONTENT).replace(/\\n/g, " ").replace(/[^A-Za-z' ]+/g, " ")); } catch (e) {}
+  return (RD_KNOWN = set);
+}
+/* 词形还原：surprised → surprise、shaped → shape、making → make、tries → try……只要有一种还原以后是练过的词就不标 */
+const rdForms = n => [n, rdStem(n), n.replace(/d$/, ""), n.replace(/ed$/, ""), n.replace(/ing$/, ""), n.replace(/ing$/, "e"), n.replace(/es$/, ""), n.replace(/s$/, ""), n.replace(/ies$/, "y"), n.replace(/ied$/, "y"), n.replace(/ly$/, ""), n.replace(/(.)\1ed$/, "$1"), n.replace(/(.)\1ing$/, "$1")];
+const rdUnknown = (raw, first) => { const n = rdNorm(raw); if (n.length < 4 || /\d/.test(n)) return false; if (!first && /^[A-Z]/.test(raw.replace(/^[^A-Za-z]+/, ""))) return false; const k = rdKnown(); return !rdForms(n).some(f => f && k.has(f)); };
+const rdStopAll = () => { RDG.aud++; try { TTS.cancel(); } catch (e) {} try { Player.stop(); } catch (e) {} return RDG.aud; };
+const rdSay = (t, rate) => TTS.speak(t, {voice: typeof pronPick === "function" ? (pronPick(pronUS()) || undefined) : undefined, rate:rate || 0.9, raw:true});
+VIEWS.read = {
+  tab:"home",
+  render(){
+    const L0 = rdState(), A = RDG.cur ? L0.find(x => x.id === RDG.cur) : null;
+    if (A) return rdArticleHTML(A);
+    const ai = typeof AI !== "undefined" && AI.fn && !AI.off;
+    return `<div class="wrap">${backBtn()}<h2>阅读</h2>
+      <details class="card" ${L0.length ? "" : "open"}><summary><b>去哪找文章</b></summary>
+        ${READ_SITES.map(([n, u, d]) => `<p class="small" style="margin-top:8px"><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a><br><span class="muted">${esc(d)}</span></p>`).join("")}
+        <p class="small" style="margin-top:8px">你要面试的公司官网的新闻、产品页<br><span class="muted">面试和 coffee chat 时正好用得上</span></p>
+        <p class="small muted" style="margin-top:8px">挑读着不费劲的：一段里不认识的词最好不超过一两个。</p></details>
+      <div class="card" style="margin-top:10px"><b>贴一篇进来</b><input id="rdTitle" placeholder="标题（可以不填）" style="width:100%;margin-top:8px"><textarea id="rdText" rows="6" style="width:100%;margin-top:6px" placeholder="把文章粘贴到这里"></textarea>
+        <button class="btn primary" data-act="rd-add" style="margin-top:8px">开始读</button></div>
+      ${ai ? `<div class="card" style="margin-top:10px"><b>让 Claude 写一篇</b><input id="rdTopic" placeholder="话题，比如：高尔夫球杆怎么设计" style="width:100%;margin-top:8px"><button class="btn" data-act="rd-ai" style="margin-top:8px">写一篇</button></div>` : ""}
+      ${L0.length ? `<div class="sec-title">我的文章</div><div class="list">${L0.slice().reverse().map(x => `<div class="li"><div class="grow"><b>${esc(x.title || x.text.slice(0, 40))}</b><span>${rdWords(x.text).length} 个词${x.done ? " · 读过 ✓" : ""}</span></div><button class="btn sm" data-act="rd-open" data-id="${x.id}">读</button><button class="btn sm ghost" data-act="rd-del" data-id="${x.id}">删</button></div>`).join("")}</div>` : ""}</div>`;
+  },
+  leave(){ rdStopAll(); RDG.cur = null; RDG.sel = null; RDG.retell = null; }
+};
+function rdArticleHTML(A){
+  const sents = rdSents(A.text); let gi = 0, unk = 0, tot = 0;
+  const body = sents.map((s, si) => { const ws = rdWords(s), ck = (typeof CHUNK_LEX !== "undefined" && K.findChunks) ? K.findChunks(ws.map(rdNorm), CHUNK_LEX) : [];
+    const inCk = new Map(); for (const c of ck) for (let k = c.s; k <= c.e; k++) inCk.set(k, c);
+    return `<p class="rd-s" data-s="${si}"><button class="rd-play" data-act="rd-sent" data-s="${si}" aria-label="读这一句">▶</button> ` + ws.map((w, k) => { const u = rdUnknown(w, k === 0), c = inCk.get(k); tot++; if (u) unk++;
+      const cls = ["rd-w", u ? "rd-u" : "", c ? "rd-ck" : "", RDG.sel && RDG.sel.a === A.id && RDG.sel.i === gi ? "rd-pick" : ""].filter(Boolean).join(" ");
+      return `<span class="${cls}" data-act="rd-word" data-i="${gi++}" data-s="${si}"${c ? ` title="${esc(c.p + " " + (c.zh || ""))}"` : ""}>${esc(w)}</span>`; }).join(" ") + `</p>`; }).join("");
+  const R = RDG.retell;
+  return `<div class="wrap">${backBtn()}<button class="linkbtn small" data-act="rd-back">← 返回列表</button><h2 style="margin-top:6px">${esc(A.title || "文章")}</h2>
+    <p class="small muted">点 ▶ 读一句；点一个词可以听、加进想学的；虚线是没练过的词（${tot ? Math.round(100 * unk / tot) : 0}%），实线是你在练的语块。</p>
+    <div class="row-gap" style="margin:8px 0"><button class="btn sm" data-act="rd-all">▶ 从头听</button><button class="btn sm ghost" data-act="rd-stop">■ 停</button></div>
+    <div class="card rd-body en">${body}</div>
+    <div id="rdPop"></div>
+    <div class="card" style="margin-top:10px"><b>读完了：用 3 句话复述</b>
+      <div class="db-mic"><button class="mic" id="rdMic" data-act="rd-retell">${ICON.mic}</button><div class="heard" id="rdHeard">${R && R.text ? esc(R.text) : "点一下开始说"}</div></div>
+      ${R && R.text ? `<p class="small muted">${rdWords(R.text).length} 个词</p>` : ""}
+      <button class="btn" data-act="rd-done" style="margin-top:6px">读完了</button></div></div>`;
+}
+ACT["rd-add"] = () => { const text = (($("#rdText") || {}).value || "").trim(); if (rdWords(text).length < 5){ toast("贴一段文章进来"); return; }
+  const title = (($("#rdTitle") || {}).value || "").trim(), L0 = rdState(), id = "rd" + Date.now().toString(36);
+  L0.push({id, title, text, ts:Date.now(), done:false}); S.reads = L0.slice(-30); save(); RDG.cur = id; UI.render(); };
+ACT["rd-open"] = el => { RDG.cur = el.dataset.id; RDG.sel = null; RDG.retell = null; UI.render(); };
+ACT["rd-back"] = () => { rdStopAll(); RDG.cur = null; RDG.sel = null; RDG.retell = null; UI.render(); };
+ACT["rd-del"] = async el => { if (!await sheet("删除这篇文章？", "", "删除", true)) return; S.reads = rdState().filter(x => x.id !== el.dataset.id); save(); UI.render(); };
+ACT["rd-stop"] = () => { rdStopAll(); document.querySelectorAll(".rd-s.rd-on").forEach(p => p.classList.remove("rd-on")); };
+async function rdPlaySent(si, tok){ const A = rdState().find(x => x.id === RDG.cur); if (!A) return; const s = rdSents(A.text)[si]; if (!s || tok !== RDG.aud) return;
+  const p = document.querySelector(`.rd-s[data-s="${si}"]`); document.querySelectorAll(".rd-s.rd-on").forEach(x => x.classList.remove("rd-on")); if (p){ p.classList.add("rd-on"); p.scrollIntoView({block:"nearest", behavior:"smooth"}); }
+  await rdSay(s, 0.9); if (p && tok === RDG.aud) p.classList.remove("rd-on"); }
+ACT["rd-sent"] = el => { const tok = rdStopAll(); rdPlaySent(+el.dataset.s, tok); };
+ACT["rd-all"] = async () => { const A = rdState().find(x => x.id === RDG.cur); if (!A) return; const tok = rdStopAll(), n = rdSents(A.text).length; for (let i = 0; i < n; i++){ if (tok !== RDG.aud) return; await rdPlaySent(i, tok); await wait(200); } };
+/* 点词：听、加进想学的；“从这里选短语”以后再点一个词，就把中间整段当成短语 */
+ACT["rd-word"] = el => {
+  const A = rdState().find(x => x.id === RDG.cur); if (!A) return; const all = rdWords(rdSents(A.text).join(" ")), i = +el.dataset.i;
+  if (RDG.sel && RDG.sel.a === A.id && RDG.sel.i !== i){ const a = Math.min(RDG.sel.i, i), b = Math.max(RDG.sel.i, i); const ph = all.slice(a, b + 1).join(" ").replace(/^[^A-Za-z0-9']+|[^A-Za-z0-9']+$/g, ""); RDG.sel = null; rdPop(ph, true); UI.render(); setTimeout(() => rdPop(ph, true), 0); return; }
+  const w = rdNorm(all[i]); rdPop(w, false, i);
+};
+function rdPop(t, phrase, i){ const p = $("#rdPop"); if (!p) return;
+  p.innerHTML = `<div class="card rd-popc"><b class="en">${esc(t)}</b><div class="row-gap" style="margin-top:6px"><button class="btn sm" data-act="rd-say" data-t="${esc(t)}">▶ 听</button><button class="btn sm primary" data-act="rd-want" data-t="${esc(t)}">加进想学的${phrase ? "短语" : "词"}</button>${phrase ? "" : `<button class="btn sm ghost" data-act="rd-from" data-i="${i}">从这里选短语</button>`}</div>${phrase ? "" : `<p class="small muted" style="margin-top:4px">选短语：点“从这里选短语”，再点短语的最后一个词</p>`}</div>`;
+  p.scrollIntoView({block:"nearest", behavior:"smooth"}); }
+ACT["rd-say"] = el => { rdStopAll(); rdSay(el.dataset.t, 0.85); };
+ACT["rd-want"] = el => { const t = el.dataset.t; S.wantWords = S.wantWords || []; if (!S.wantWords.some(x => String(x).toLowerCase() === t.toLowerCase())) S.wantWords.push(t); save(); toast(`加进“想学的”了（${S.wantWords.length}）`); const p = $("#rdPop"); if (p) p.innerHTML = ""; };
+ACT["rd-from"] = el => { RDG.sel = {a:RDG.cur, i:+el.dataset.i}; UI.render(); toast("再点短语的最后一个词"); };
+ACT["rd-retell"] = async () => { const btn = $("#rdMic"), h = $("#rdHeard"); if (RDG.retell && RDG.retell.on){ try { stopAny(); } catch (e) {} return; }
+  RDG.retell = {on:true}; micState(btn, "live"); if (h) h.textContent = "在听……";
+  const r = await listenAny({manual:true, maxMs:90000, idleMs:600000, btn, heard:h}); micState(btn, null); RDG.retell = {on:false, text:((r && r.text) || "").trim()}; UI.render(); };
+ACT["rd-done"] = () => { const A = rdState().find(x => x.id === RDG.cur); if (A){ A.done = true; save(); } if (typeof planAutoDone === "function") planAutoDone("read"); toast("读完了 ✓"); rdStopAll(); RDG.cur = null; RDG.retell = null; UI.render(); };
+/* claude.ai 里：按你的水平写一篇（认识 95%–98% 的词），把你在练的语块放进去几个 */
+ACT["rd-ai"] = async () => { const topic = (($("#rdTopic") || {}).value || "").trim(); if (!topic){ toast("写一个话题"); return; } if (!(typeof AI !== "undefined" && AI.fn)) return;
+  const chunks = (CONTENT.CHUNKS || []).slice(0, 200).map(c => c[0]).sort(() => Math.random() - 0.5).slice(0, 6);
+  toast("Claude 在写……");
+  try { const j = await AI.fn.json(`给一位英语中级（大约 B2）的中文母语者写一篇短文，话题：${topic}。要求：250 到 350 个英文单词；读者能认识文中 95% 以上的词，少用生僻词；句子不要太长；自然地用上其中 3 个以上的语块：${chunks.join("; ")}。只回复一个 JSON：{"title":"英文标题","text":"正文，段落之间空一格"}`, {modelTier:"default"});
+    if (!j || !j.text) throw new Error("empty"); const id = "rd" + Date.now().toString(36); rdState().push({id, title:String(j.title || topic), text:String(j.text), ts:Date.now(), done:false, ai:true}); S.reads = rdState().slice(-30); save(); RDG.cur = id; UI.render();
+  } catch (e) { toast("Claude 现在写不了，先贴一篇进来"); } };
 
 </script>
 </body>
