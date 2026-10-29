@@ -692,6 +692,8 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .db-mic{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px}
 .db-mic .heard{text-align:center;min-height:1.4em}
 .db-mic + .row-gap{justify-content:center}
+.db-bar{height:6px;border-radius:3px;background:var(--line,#E2E5EA);overflow:hidden;margin:8px 0 2px}
+.db-bar i{display:block;height:100%;width:100%;background:#F5B942}
 
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
@@ -713,7 +715,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.53.3"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.54.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -12739,10 +12741,15 @@ function dbQuestions(mode, persona){
   const pool = Object.values(QBY || {}).filter(q => q && q.id && (mode === "cc" ? isCC(q) && (!persona || persona === "*" || q.deck === persona) : mode === "432" ? true : !isCC(q)) && dbRef(q));
   if (!pool.length) return [];
   if (mode === "432"){ const long = pool.filter(q => dbRef(q).split(/(?<=[.?!])\s+/).length >= 3); const pick = (long.find(q => /as a result/i.test(dbRef(q))) ? long.filter(q => /as a result/i.test(dbRef(q))) : long.length ? long : pool); const q = pick[Math.floor(Math.random() * pick.length)]; return [q, q, q]; }
-  const first = pool.find(q => /yourself|about you|your background/i.test(dbText(q))) || pool[0];
-  const ask = pool.find(q => q !== first && /questions? for me|any questions/i.test(dbText(q)));
-  const mid = pool.filter(q => q !== first && q !== ask).sort(() => Math.random() - 0.5).slice(0, 2);
-  return [first, ...mid, ask].filter(Boolean);
+  const recent = (L.dbRecent || []).slice(-10), fresh = q => !recent.includes(q.id), rnd = a => a.slice().sort(() => Math.random() - 0.5);
+  const pickOne = arr => { const r = rnd(arr); return r.find(fresh) || r[0]; };
+  const firsts = pool.filter(q => /yourself|about you|your background/i.test(dbText(q))), asks = pool.filter(q => /questions? for me|any questions/i.test(dbText(q)));
+  const first = firsts.length ? pickOne(firsts) : pickOne(pool), ask = pickOne(asks.filter(q => q !== first));
+  const rest = rnd(pool.filter(q => q !== first && q !== ask && !firsts.includes(q) && !asks.includes(q)));
+  const mid = rest.filter(fresh).concat(rest.filter(q => !fresh(q))).slice(0, 2);
+  const out = [first, ...mid, ask].filter(Boolean);
+  L.dbRecent = (L.dbRecent || []).concat(out.map(q => q.id)).slice(-12); saveLocal();
+  return out;
 }
 /* 对话：game 为 true 是对话首领战（有舞台、血量、对波），false 是对话练习（只有问题、回答、分数和反馈）；题目和判分一样 */
 ACT["db-open"] = () => dbOpen(true);
@@ -12807,7 +12814,7 @@ ACT["db-say"] = async () => {
   micState(btn, "live"); const h = $("#dbHeard"); if (h) h.textContent = st.mode === "432" ? `在听……限时 ${st.limits[st.i]} 秒，到时间自动停` : "在听……想一下词、停一停都没关系，说完再点一下麦克风";
   const lim = st.mode === "432" ? st.limits[st.i] * 1000 : 600000, t0 = performance.now();
   const stopper = st.mode === "432" ? setTimeout(() => { try { stopAny(); } catch (e) {} }, lim + 300) : null;
-  const r = await listenAny({manual:true, maxMs:lim, idleMs:600000, heard:h, onInterim: tx => { if (h && tx) h.textContent = tx; }}); if (stopper) clearTimeout(stopper); micState(btn, "");
+  const r = await listenAny({manual:true, maxMs:lim, idleMs:600000, btn, heard:h, onInterim: tx => { if (h && tx) h.textContent = tx; }}); if (stopper) clearTimeout(stopper); micState(btn, "");   /* btn：录完以后识别时转圈 */
   dbResolve(((r && r.text) || "").trim(), Math.min(lim, performance.now() - t0) / 1000);
 };
 /* 判分：不看用词和参考回答像不像（不用背稿）。在 claude.ai 里打开时让 Claude 按意思判；离线版按沟通要素判：
@@ -12815,7 +12822,7 @@ ACT["db-say"] = async () => {
 async function dbJudge(said, q, ref, ask){
   const st = DB.st, qt = st.follow ? st.follow.q : dbText(q), words = String(said || "").trim().split(/\s+/).filter(Boolean).length, base = dbScore(said, ref), cc = st.mode === "cc";
   const res = {words, needResult:base.needResult, result:base.result, questions:base.questions, pts:[], cov:0, fb:"", rewrite:"", ai:false};
-  if (words < 3) return res;
+  if (words < 4) return res;   /* 不到 4 个词：按没开口算 */
   if (typeof AI !== "undefined" && AI.fn && !AI.off){
     try {
       const keys = (S.keys && S.keys[q.id]) || "";
@@ -12862,6 +12869,7 @@ ${keys ? "要点：" + keys + "\n" : ""}按真实交流的效果分项打分（�
   ];
   if (ask && !cc) crit.push({s:"问了对方问题", v:engage, w:0.2, tip:"准备两三个问题：团队、项目、对新人的建议"});
   const tw = crit.reduce((a, c) => a + c.w, 0); res.cov = crit.reduce((a, c) => a + c.w * c.v, 0) / tw;
+  if (words < 8) res.cov = Math.min(res.cov, 0.3);   /* 太短：最多 30 分 */
   res.pts = crit.map(c => ({s:c.s, ok:c.v >= 0.8, tip:c.v >= 0.8 ? "" : c.tip}));
   return res;
 }
@@ -12871,7 +12879,7 @@ async function dbResolve(said, secs){
   $("#dbCtl").innerHTML = `<p class="small muted">${said ? "你说的：" + esc(said) : "这一回合没开口"}</p>${said ? `<p class="small muted" id="dbJudging">正在看你答得怎么样……</p>` : ""}`;
   const sc = await dbJudge(said, q, ref, ask); const jg = $("#dbJudging"); if (jg) jg.remove();
   let dmg = 0, note = "", wpm = 0;
-  if (sc.words < 3){ const d = st.mode === "cc" ? 10 : 14; if (st.game){ st.you = Math.max(0, st.you - d); try { await A.enemyMove("light", d); } catch (e) {} } note = st.game ? "这一回合没开口，对方占了上风。哪怕先说一句“Let me think for a second”也好。" : "这一题没开口。哪怕先说一句“Let me think for a second”也好。"; }
+  if (sc.words < 4){ const d = st.mode === "cc" ? 10 : 14; if (st.game){ st.you = Math.max(0, st.you - d); try { await A.enemyMove("light", d); } catch (e) {} } note = st.game ? "这一回合没开口，对方占了上风。哪怕先说一句“Let me think for a second”也好。" : "这一题没开口。哪怕先说一句“Let me think for a second”也好。"; }
   else {
     dmg = Math.round(6 + 30 * sc.cov) + (ask ? sc.questions * 4 : 0);
     if (st.mode === "432"){ wpm = secs > 3 ? Math.round(sc.words / (secs / 60)) : 0; st.wpm.push(wpm); const prev = st.wpm.length > 1 ? st.wpm[st.wpm.length - 2] : 0; if (prev && wpm > prev){ const b = Math.min(10, Math.round((wpm - prev) * 0.25)); dmg += b; note = `比上一遍每分钟多说了 ${wpm - prev} 个词，连击加成 +${b}。`; } }
@@ -12917,22 +12925,36 @@ async function dbClash(){
   const fx = A.clash({you:youC, foe:MON_COL[st.boss] || ["#FF5A3C", "#FFC46A"], getP:() => p, youSkill: BAT_CHAR ? ((A.loadout && A.loadout.skill) || "wideBeam") : "rig", foeSkill:"generic", foeId: st.boss});
   $("#dbCtl").innerHTML = `<div class="card db-clash"><p><b>对波！</b>双方都在聚能……</p></div>`; await fx.ready;
   const items = dbClashItems(st.mode), res = [];
+  const qCard = document.querySelector(".db-q"); if (qCard) qCard.hidden = true;   /* 对波时上一题的问题先收起来，只看对波这一句 */
   for (let k = 0; k < items.length; k++){
     const c = items[k], lim = critMs({en:c.en});
     $("#dbFb").innerHTML = ""; $("#dbCtl").innerHTML = `<div class="card db-clash"><p><b>对波！第 ${k + 1}/${items.length} 句</b>：在 ${(lim / 1000).toFixed(1)} 秒内说对，把光推回去</p>${k === items.length - 1 ? `<p class="small">最后一句推得更远：${dbClashHint(p)}</p>` : ""}<p class="zh" style="font-size:18px;margin:6px 0">${esc(c.zh)}</p>
-      <div class="row-gap"><button class="btn primary" id="dbcMic">🎤 说</button><input id="dbcText" placeholder="或者打字，回车交上去" style="flex:1;min-width:0"></div><p class="small muted" id="dbcRes">${res.map(r => r ? "✓" : "✗").join(" ")}</p></div>`;
-    const t0 = performance.now();
-    const said = await new Promise(resolve => {
-      const tx = $("#dbcText"); tx.addEventListener("keydown", e => { if (e.key === "Enter") resolve(tx.value.trim()); });
-      $("#dbcMic").addEventListener("click", async () => { const r = await listenAny({short:true, maxMs:lim + 2500, quietMs:1200}); resolve(((r && r.text) || "").trim()); }, {once:true});
-      DB.clashAnswer = resolve;   /* 测试用 */
+      <div class="db-bar"><i id="dbcBar"></i></div>
+      <div class="db-mic"><button class="mic" id="dbcMic" data-act="dbc-say" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="dbcHeard">点一下开始说（倒计时只算到你说完，识别的时间不算）</div></div>
+      <div class="row-gap" style="justify-content:center;margin-top:6px"><input id="dbcText" placeholder="或者打字，回车交上去" style="flex:1;min-width:0;max-width:320px"></div>
+      <p class="small muted" id="dbcRes" style="text-align:center">${res.map(r => r ? "✓" : "✗").join(" ")}</p></div>`;
+    const t0 = performance.now(), cl = DB.cl = {t0, lim, recording:false, stopAt:null, done:false, resolve:null};
+    const ans = await new Promise(resolve => {
+      cl.resolve = v => { if (cl.done) return; cl.done = true; resolve(v); };
+      const tx = $("#dbcText"); if (tx) tx.addEventListener("keydown", e => { if (e.key === "Enter") cl.resolve({said:tx.value.trim(), endAt:performance.now()}); });
+      DB.clashAnswer = said => cl.resolve({said, endAt:performance.now()});   /* 测试用 */
+      /* 倒计时：说完（录音停）就停住；时间到了还没开口算没说对，正在说就在那一刻停录音，按已经说了的判断 */
+      const tick = () => { if (cl.done) return; const now = performance.now(), el = (cl.stopAt || now) - t0, bar = $("#dbcBar");
+        if (bar) bar.style.width = `${Math.max(0, 100 - (100 * el) / lim)}%`;
+        if (!cl.stopAt && el > lim){ if (cl.recording){ try { stopAny(); } catch (e) {} } else { cl.resolve({said:"", endAt:now, timeout:true}); return; } }
+        requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
     });
-    const el = performance.now() - t0, cmp = K.compareSaid(c.en, c.alt || [], said || ""), ok = !!said && (cmp.exact || cmp.level === "close") && el <= lim + 1500;
+    DB.cl = null;
+    const said = (ans.said || "").trim(), el = (ans.endAt || performance.now()) - t0, cmp = K.compareSaid(c.en, c.alt || [], said);
+    const ok = !!said && (cmp.exact || cmp.level === "close" || cmp.near) && el <= lim + 300;
     /* 前面几句各推三分之一，最后一句推二分之一：不管前面怎样，最后一句说对和说错，结果都差很多 */
     const step = k === items.length - 1 ? 0.5 : 1 / 3;
     res.push(ok); fx.burst(); const from = p, to = Math.max(-1, Math.min(1, p + (ok ? step : -step))), ta = performance.now();
-    await new Promise(r => { const step = now => { const u = Math.min(1, (now - ta) / 420); p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(step); else r(); }; requestAnimationFrame(step); });
+    const rr = $("#dbcRes"); if (rr) rr.textContent = res.map(r => (r ? "✓" : "✗")).join(" ") + (ans.timeout ? "（时间到）" : !ok && said && el > lim + 300 ? "（说对了，但慢了）" : "");
+    await new Promise(r => { const stp = now => { const u = Math.min(1, (now - ta) / 420); p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(stp); else r(); }; requestAnimationFrame(stp); });
   }
+  if (qCard) qCard.hidden = false;
   $("#dbCtl").innerHTML = `<p class="small muted">对波结果：${res.map(r => r ? "✓" : "✗").join(" ")}</p>`;
   /* 按交点最后停在哪里算伤害（越靠近对方，对方挨得越多，最多 30；越靠近你，你挨得越多，最多 15）；能量球在输的一方身上炸开，被打倒才倒下 */
   const out = dbClashOut(p), youWin = out.foe > 0, fall = youWin ? A.hp - out.foe <= 0 : st.you - out.you <= 0;
@@ -12941,11 +12963,12 @@ async function dbClash(){
   st.clashResult = p; $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp)); st.busy = false;
 }
 async function dbEnd(){
-  const st = DB.st, A = DB.A; if (!st) return; const won = st.game && (A.hp <= 0 || (st.you > 0 && A.hp < 50));
-  if (st.game){ try { if (A.hp <= 0) await A.knockout(); await A.finish(won); } catch (e) {} }
+  /* 输赢：首领的血打到 0 才算赢；你的血到 0 算输；都没到 0 就是没打倒（不播胜利动画，告诉你它还剩多少血） */
+  const st = DB.st, A = DB.A; if (!st) return; const ko = st.game && A.hp <= 0, dead = st.game && st.you <= 0, won = ko;
+  if (st.game){ try { if (ko){ await A.knockout(); await A.finish(true); } else if (dead) await A.finish(false); } catch (e) {} }
   const avg = st.rounds.length ? Math.round(100 * st.rounds.reduce((s, r) => s + r.cov, 0) / st.rounds.length) : 0;
   const t432 = st.mode === "432" ? `<p class="small muted" style="margin-top:6px">${st.rounds.map((r, k) => `第 ${k + 1} 遍（${st.limits[k]} 秒）：讲到 ${Math.round(r.cov * 100)}%，每分钟 ${r.wpm || 0} 个词`).join("<br>")}</p>` : "";
-  $("#dbCtl").innerHTML = ""; $("#dbFb").innerHTML = `<div class="card"><h3>${st.game ? (won ? "赢了" : "这一场没拿下") : "练完了"}</h3><p>平均 ${avg} 分。</p>${t432}
+  $("#dbCtl").innerHTML = ""; $("#dbFb").innerHTML = `<div class="card"><h3>${st.game ? (ko ? "赢了：把它打倒了" : dead ? "输了：你被打倒了" : `这场没打倒它（它还剩 ${Math.max(1, Math.round(A.hp))} 血）`) : "练完了"}</h3><p>平均 ${avg} 分。</p>${t432}
     ${st.rounds.map((r, k) => `<p class="small" style="margin-top:8px"><b>${st.mode === "432" ? "第 " + (k + 1) + " 遍" : "第 " + (k + 1) + " 回合"}：${Math.round(r.cov * 100)}%</b>　${esc(r.q)}</p>${r.pts.filter(p => !p.ok).slice(0, 3).map(p => `<p class="small db-miss">✗ ${esc(p.s)}</p>`).join("")}`).join("")}
     <div class="row-gap" style="margin-top:12px"><button class="btn primary" data-act="db-again">再来一场</button><button class="btn" data-act="db-home">回首页</button></div></div>`;
   planAutoDone("dboss:" + st.mode);
@@ -13022,6 +13045,18 @@ ACT["db-ask"] = el => {
   S.dbAsk.push({mode: st.mode === "cc" ? "Coffee chat" : st.mode === "432" ? "4/3/2" : "面试", who: dbWho(st), q: r.q, said: r.said, ref: st.follow ? (st.follow.a || "") : (q ? dbRef(q) : ""), ts: Date.now()});
   if (S.dbAsk.length > 60) S.dbAsk = S.dbAsk.slice(-60); save();
   if (el){ el.disabled = true; el.textContent = "已存"; } toast(`存好了（共 ${S.dbAsk.length} 条）。在“我的 → 问 Claude”里一起发给 Claude`);
+};
+
+/* 对波：点麦克风开始说，再点一下结束；录音停的那一刻倒计时就停（识别的时间不算） */
+ACT["dbc-say"] = async el => {
+  const cl = DB.cl; if (!cl || cl.done) return; const btn = $("#dbcMic"), h = $("#dbcHeard");
+  if (cl.recording){ try { stopAny(); } catch (e) {} return; }
+  cl.recording = true; micState(btn, "live"); if (h) h.textContent = "在听……说完再点一下，或者停一下就好";
+  const left = Math.max(1200, cl.lim - (performance.now() - cl.t0)) + 1500;
+  const r = await listenAny({short:true, maxMs:left, quietMs:1200, btn, heard:h, onStop: endAt => { cl.stopAt = endAt || performance.now(); }});
+  cl.recording = false; micState(btn, null);
+  if (!cl.stopAt) cl.stopAt = (r && r.endAt) || performance.now();
+  cl.resolve({said:((r && r.text) || "").trim(), endAt:(r && r.endAt) || cl.stopAt});
 };
 
 </script>
