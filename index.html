@@ -717,7 +717,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.56.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.57.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -3004,7 +3004,8 @@ const ASR = {
     else if (m.type === "note"){ this.status = m.msg || ""; this.paint(); }
     else if (m.type === "loaded"){
       const j = this.cur; this.cur = null; this.dl = {}; this.status = "";
-      if (j){ try { j.onDone && j.onDone(""); } catch (e) {} if (!j.quiet) toast("模型下载好了：" + j.label, 5000); }
+      if (j){ try { j.onDone && j.onDone(""); } catch (e) {} if (!j.quiet) toast((this.cached ? "识别模型准备好了：" : "模型下载好了：") + j.label, 5000); }
+      this.cached = true;
       /* 只是下载：模型已经存好了，关掉识别线程，把内存还给手机（练习前的预加载除外） */
       if (!this.q.length && this.w && !(j && j.keep)){ try { this.w.terminate(); } catch (e) {} this.w = null; this.loadedId = null; }
       this.next();
@@ -3044,8 +3045,12 @@ const ASR = {
     el.hidden = false;
     const what = this.cur && this.cur.kind === "load" ? "正在准备识别模型" : "正在转写";
     const secs = this.cur && this.curT ? Math.round((Date.now() - this.curT) / 1000) : 0;
-    el.textContent = pct >= 0 && pct < 100 ? `正在下载识别模型：${pct}%（别关掉 app）` : `${what}：${this.cur ? this.cur.label : ""}${secs ? `（${secs} 秒）` : ""}${left ? `，后面还有 ${left} 段` : ""}${this.status ? "　" + this.status : ""}`;
+    /* 已经下载过的模型，每次打开 app 也要从手机存储读进内存，进度条照样会走：这时写“读取”，不是“下载” */
+    const fromDisk = this.cached === true || (this.cached == null && L.asrReady);
+    el.textContent = pct >= 0 && pct < 100 ? (fromDisk ? `正在读取识别模型：${pct}%（已经下载过，不用联网，也不会多占空间）` : `正在下载识别模型：${pct}%（别关掉 app）`) : `${what}：${this.cur ? this.cur.label : ""}${secs ? `（${secs} 秒）` : ""}${left ? `，后面还有 ${left} 段` : ""}${this.status ? "　" + this.status : ""}`;
   },
+  /* 现在选的模型是不是已经存在手机里了（清过浏览器数据就没了，要重新下载）：决定提示写“读取”还是“下载” */
+  async checkCached(){ try { const info = await this.cacheInfo(), k = L.asrModel && ASR_MODELS[L.asrModel] ? L.asrModel : "base"; this.cached = !!(info[k] && info[k].files > 0); } catch (e) { this.cached = null; } },
   /* 哪些模型已经下载了、各占多少：transformers.js 把模型文件存在浏览器的 transformers-cache 里 */
   async cacheInfo(){
     const out = {}; for (const k of Object.keys(ASR_MODELS)) out[k] = {files:0, bytes:0};
@@ -3096,7 +3101,7 @@ async function whisperListen(o){
   cue(); micState(o.btn, heardAny ? "busy" : null);   /* 录音结束：振一下、响一声；识别时圈一直转 */
   const r = await Rec.stop();
   if (!r || !r.blob || !heardAny){ micState(o.btn, null); return {text:""}; }
-  if (o.heard && o.heard.isConnected) o.heard.textContent = ASR.loadedId ? "正在识别……" : "正在识别……（第一次要先加载模型）";
+  if (o.heard && o.heard.isConnected) o.heard.textContent = ASR.loadedId ? "正在识别……" : (ASR.cached === true || (ASR.cached == null && L.asrReady)) ? "正在识别……（先把模型读进内存，几秒钟；已经下载过，不会重新下载）" : "正在识别……（第一次要先下载模型）";
   const text = await new Promise(res => ASR.enqueue({blob:r.blob, label:"练习", priority:true, quiet:true, onDone: t => res(t || ""), onErr: () => res("")}));
   micState(o.btn, null);
   return {text: String(text).replace(/^[\s"']+|[\s"']+$/g, ""), alts: [], endAt: heardAny ? endAt : null};
@@ -4911,8 +4916,9 @@ VIEWS.callrev = {
 };
 
 /* ---------- 我的计划：写成“什么时候 → 做什么”；链接了练习的，做完自动打勾 ---------- */
-const PLAN_ACTS = [["","不链接练习"],["phone","模拟一场电话初筛"],["basic","模拟一场基本面试"],["tech","模拟一场技术面试"],["concept","基础概念快答"],["quick","3 分钟练习"],["std","10 分钟练习"],["deep","20 分钟练习"],["listen","听力快练"],["words","练单词"],["hands","耳机模式"]];
-function planActLabel(a){ if (!a) return ""; if (a.startsWith("solo:")) return "单题彩排：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); if (a.startsWith("read:")) return "跟读参考回答：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); return (PLAN_ACTS.find(x => x[0] === a) || ["", ""])[1]; }
+const PLAN_ACTS = [["","不链接练习"],["phone","模拟一场电话初筛"],["basic","模拟一场基本面试"],["tech","模拟一场技术面试"],["concept","基础概念快答"],["quick","3 分钟练习"],["std","10 分钟练习"],["deep","20 分钟练习"],["listen","听力快练"],["words","练单词"],["hands","耳机模式"],
+  ["call","来电模拟"],["free","反射训练"],["dialogs","情景对话"],["journal","语音日记"],["write:reply","写作：回复消息"],["write:mail","写作：写邮件"],["chunks","常用语块"],["errlog","看错误档案"],["dtalk:iv","对话练习（面试官）"],["dtalk:cc","对话练习（Coffee chat）"],["dboss:432","三遍提速战"]];
+function planActLabel(a){ if (!a) return ""; if (/^dtalk:cc:/.test(a)) return "对话练习（Coffee chat：" + dbPersona(a.slice(9)) + "）"; if (a.startsWith("solo:")) return "单题彩排：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); if (a.startsWith("read:")) return "跟读参考回答：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); return (PLAN_ACTS.find(x => x[0] === a) || ["", ""])[1]; }
 function planAutoDone(act){ if (!act) return; const d = today(); let n = 0; for (const x of (S.plan || [])) if (x.date === d && !x.done && x.act === act){ x.done = true; n++; } if (n){ save(); toast("计划里的一项完成了 ✓"); } }
 function fmtDate(dt){ const d = new Date(dt + "T12:00:00"); return `${d.getMonth() + 1}月${d.getDate()}日 周${"日一二三四五六"[d.getDay()]}`; }
 /* 提醒我：网页没法直接打开手机日历的“新建日程”（Chrome 只允许打开声明了可以从浏览器启动的应用）。
@@ -4977,6 +4983,9 @@ ACT["plan-go"] = el => {
   if (["phone","basic","tech","concept"].includes(a)) return ACT["mod-go"]({dataset:{v:a}});
   if (["quick","std","deep"].includes(a)) return startSession(a, {}, {quick:"3 分钟练习", std:"10 分钟练习", deep:"20 分钟练习"}[a]);
   if (a === "listen") return ACT["listen-go"](); if (a === "words") return ACT["words-go"](); if (a === "hands") return UI.nav("hands");
+  if (a === "call") return UI.nav("callsetup"); if (["free", "dialogs", "journal", "chunks", "errlog"].includes(a)) return UI.nav(a);
+  if (a.startsWith("write:")) return UI.nav("write", {m:a.slice(6)});
+  if (a.startsWith("dtalk:")){ const [m, ...p] = a.slice(6).split(":"); return dbStart(m, p.join(":") || (m === "cc" ? "*" : ""), false); }
   if (a.startsWith("solo:")) return ACT["iv-solo"]({dataset:{q:a.slice(5)}});
   if (a.startsWith("read:")) return UI.nav("reader", {q:a.slice(5), src:"ref"});
 };
@@ -5931,7 +5940,7 @@ ACT["pend-del"] = el => { (S.pending || []).splice(+el.dataset.i, 1); save(); UI
 ACT["pend-clear"] = async () => { if (!await sheet("清空拿不准的说法？", "建议先把 Claude 给的导入码导进来再清空。", "清空", true)) return; S.pending = []; save(); UI.render(); };
 CHG.profile = el => { S.settings.profile = el.value.slice(0, 600); save(); };
 CHG.dict = el => { L.dict = el.value; saveLocal(); toast("查词典默认用：" + dictCur().name); };
-CHG.asrmodel = el => { if (L.asrModel !== el.value){ L.asrModel = el.value; L.asrReady = false; saveLocal(); toast("换了模型：第一次用要重新下载"); } };
+CHG.asrmodel = el => { if (L.asrModel !== el.value){ L.asrModel = el.value; L.asrReady = false; saveLocal(); try { ASR.cached = null; ASR.checkCached(); } catch (e) {} toast("换了模型：第一次用要重新下载"); } };
 CHG.asrgpu = el => { L.asrGpu = !!el.checked; saveLocal(); toast(L.asrGpu ? "用显卡加速：出乱码就关掉" : "用 CPU：慢一点，但结果更可靠"); };
 /* 录音转文字：第一次要下载模型，先说一声 */
 async function asrOK(){
@@ -12745,27 +12754,67 @@ ACT["bt-del"] = async () => {
 })();
 const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 const isCC = q => /coffee|chat|社交|networking/i.test((q && q.deck) || "");
+/* 推荐计划（v1.57）：按你选的目标和每天的时间，用 app 现在有的练习排接下来 14 天。
+   原则：每天早上先复习（间隔复习、先说再看答案）；其余按一周轮换（开口、写、听、语块都练到，同一类任务隔几天再来一次）；
+   有什么内容排什么（有 coffee chat 题库才排对话练习、有单词卡才排单词、错误档案有统计才排“看错误档案”）；面试前 3 天自动换成面试冲刺。 */
 ACT["pl-gen"] = async () => {
-  const goal = await choose("生成推荐计划：最想练什么？", `<p class="small muted">按间隔复习、主动回想和同一任务反复练的原则排：每天先复习，再学新的，晚上开口彩排。重新生成只替换以前自动生成的，你自己加的不动。</p>`, [["iv", "面试"], ["cc", "Coffee chat 和社交"], ["daily", "日常口语"], ["mix", "都练一点"]]); if (!goal) return;
-  const mins = await choose("每天大概有多少时间？", "", [["20", "20 分钟"], ["40", "40 分钟"], ["60", "1 小时"]]); if (!mins) return;
+  const goal = await choose("生成推荐计划：最想练什么？", `<p class="small muted">每天早上先复习；其余按一周轮着练开口、写作、听力和语块，同一类隔几天再练一次；面试前 3 天自动换成面试冲刺。重新生成只替换以前自动生成的，你自己加的不动。</p>`, [["iv", "面试"], ["cc", "Coffee chat 和社交"], ["daily", "日常口语"], ["write", "写作（笔友、邮件）"], ["mix", "都练一点"]]); if (!goal) return;
+  const mins = await choose("每天大概有多少时间？", `<p class="small muted">20 分钟：复习加 1 项；40 分钟：复习加 2 项；1 小时：复习加 3 项。</p>`, [["20", "20 分钟"], ["40", "40 分钟"], ["60", "1 小时"]]); if (!mins) return;
   const qs = Object.values(QBY || {}).filter(q => q && q.id), ivQ = qs.filter(q => !isCC(q)), ccQ = qs.filter(isCC);
-  const pick = (arr, k) => (arr.length ? arr[k % arr.length] : null), newN = {20:8, 40:12, 60:18}[mins], main = mins === "20" ? "std" : "deep";
+  const ccDecks = [...new Set(ccQ.map(q => q.deck))].sort((a, b) => (/闲聊/.test(b) ? 1 : 0) - (/闲聊/.test(a) ? 1 : 0));
+  const hasWords = CAT.cards.some(c => c.t === "w"), hasErr = typeof errTop === "function" && errTop(5).length > 0;
+  const newN = {20:8, 40:12, 60:18}[mins], main = mins === "20" ? "std" : "deep", extra = {20:1, 40:2, 60:3}[mins];
+  const pick = (arr, k) => (arr.length ? arr[((k % arr.length) + arr.length) % arr.length] : null);
+  let soloK = 0, ccK = 0;
+  /* 每一种练习：时间段、写清楚怎么做、链接 */
+  const T = {
+    soloIv: () => { const q = pick(ivQ, soloK++); return q ? ["晚上", `彩排一道面试题：${q.zh || q.id}（先说一遍，再看参考回答，再说一遍）`, "solo:" + q.id] : null; },
+    soloCc: () => { const q = pick(ccQ, soloK++); return q ? ["晚上", `彩排一道 coffee chat 题：${q.zh || q.id}（说完问回对方一句）`, "solo:" + q.id] : null; },
+    talkIv: () => ivQ.length ? ["晚上", "对话练习 · 面试官：4 题连着答，答完看每题的反馈", "dtalk:iv"] : null,
+    talkCc: () => { const d = pick(ccDecks, ccK++); return d ? ["晚上", `对话练习 · Coffee chat：${dbPersona(d)}（3–4 题，说完记得问回对方）`, "dtalk:cc:" + d] : T.dialogs(); },
+    bossIv: () => ivQ.length ? ["晚上", "对话首领战 · 面试官：游戏模式，把首领打倒（只有打到 0 血才算赢）", "dboss:iv"] : null,
+    bossCc: () => ccQ.length ? ["晚上", "对话首领战 · Coffee chat：游戏模式", "dboss:cc"] : null,
+    b432: () => qs.length ? ["晚上", "三遍提速：同一题讲三遍（90、60、45 秒），一遍比一遍顺", "dboss:432"] : null,
+    call: () => ivQ.length ? ["晚上", "来电模拟：面试官念题、你开口答，屏幕上不显示问题，和电话面试一样", "call"] : null,
+    mock: () => ivQ.length ? ["晚上", "完整模拟面试一次，结束后逐题回放、给自己打分", "basic"] : null,
+    reply: () => ["晚上", "写作 · 回复消息：回一封笔友的信（没有就用练习信）。先列关键词、直接写，写完点“检查”，改完点“完成”", "write:reply"],
+    mail: () => ["晚上", "写作 · 写邮件：写一封跟进或感谢邮件，检查开头称呼和结尾落款", "write:mail"],
+    chunks: () => ["午休", "常用语块：练一组（聊天或邮件），整块说出来", "chunks"],
+    err: () => hasErr ? ["周末", "看错误档案：这周哪类错误在减少？最常犯的那类，今天写和说的时候特别注意", "errlog"] : ["晚上", "写作 · 回复消息：写一封回复，写完会自动记进错误档案", "write:reply"],
+    listen: () => ["午休", "听力快练：听懂别人的问法（5 分钟）", "listen"],
+    hands: () => ["路上", "耳机模式：走路、坐车时听着练 10 分钟", "hands"],
+    journal: () => ["睡前", "语音日记：用过去式讲今天，1 分钟", "journal"],
+    dialogs: () => ["晚上", "情景对话：点餐、闲聊、打电话办事，挑一个", "dialogs"],
+    free: () => ["午休", "反射训练：挑你最弱的一类，看中文马上说英文", "free"],
+    words: () => hasWords ? ["午休", "单词：学 2–3 个新词，复习到期的", "words"] : null
+  };
+  /* 一周轮换（周日 0 … 周六 6），每天按顺序取前几项 */
+  const W = {
+    iv:    [["err", "soloIv", "journal"], ["soloIv", "b432", "listen"], ["talkIv", "soloIv", "chunks"], ["listen", "soloIv", "hands"], ["call", "soloIv", "mail"], ["soloIv", "free", "bossIv"], ["mock", "listen", "journal"]],
+    cc:    [["err", "reply", "journal"], ["talkCc", "chunks", "journal"], ["soloCc", "reply", "listen"], ["reply", "dialogs", "hands"], ["talkCc", "soloCc", "free"], ["dialogs", "b432", "listen"], ["bossCc", "chunks", "journal"]],
+    daily: [["err", "reply", "journal"], ["dialogs", "chunks", "words"], ["free", "listen", "journal"], ["reply", "hands", "words"], ["dialogs", "chunks", "listen"], ["talkCc", "free", "journal"], ["listen", "words", "hands"]],
+    write: [["err", "mail", "words"], ["reply", "chunks", "err"], ["mail", "chunks", "journal"], ["reply", "free", "listen"], ["mail", "chunks", "journal"], ["reply", "talkCc", "listen"], ["reply", "dialogs", "journal"]]
+  };
+  const mixOrder = ["iv", "write", "cc", "iv", "daily", "cc", "write"];
+  const ivDate = S.settings.interviewDate && /^\d{4}-\d{2}-\d{2}$/.test(S.settings.interviewDate) ? S.settings.interviewDate : "";
   const start = new Date(today() + "T12:00:00"); start.setDate(start.getDate() + 1); const items = [];
-  const add = (date, cue, text, act) => items.push({id:"g" + Math.random().toString(36).slice(2, 9), date, cue, text, act:act || "", gen:true, done:false});
+  const add = (date, x) => { if (x) items.push({id:"g" + Math.random().toString(36).slice(2, 9), date, cue:x[0], text:x[1], act:x[2] || "", gen:true, done:false}); };
   for (let i = 0; i < 14; i++){
     const dt = new Date(start); dt.setDate(start.getDate() + i); const d = ymd(dt), dow = dt.getDay();
-    add(d, "早上", `复习到期的卡，再学 ${newN} 张新卡`, main);
-    if (dow === 0){ add(d, "晚上", goal === "daily" ? "听力快练" : "完整模拟面试一次，听回放给自己打分", goal === "daily" ? "listen" : "basic"); continue; }
-    if (dow === 3 || dow === 6) add(d, "晚上", "听力快练", "listen");
-    if (goal === "daily"){ if (i % 2) add(d, "晚上", "练单词", "words"); }
-    else {
-      const cc = goal === "cc" || (goal === "mix" && i % 2 === 1), q = pick(cc ? ccQ : ivQ, i);
-      if (q) add(d, "晚上", `${cc ? "Coffee chat" : "面试"}彩排：${q.zh || q.id}`, "solo:" + q.id);
-      if (mins === "60" || !q) add(d, "晚上", cc ? "对话首领战（Coffee chat）" : "对话首领战（面试官）", cc ? "dboss:cc" : "dboss:iv");
+    const left = ivDate ? Math.round((new Date(ivDate + "T12:00:00") - dt) / 864e5) : null;
+    if (left === 0){ add(d, ["面试前", "面试前 15 分钟：把最重要的三个故事的要点各说一遍，不学新的", ivQ[0] ? "solo:" + ivQ[0].id : ""]); continue; }
+    add(d, ["早上", `复习到期的卡，再学 ${newN} 张新卡（先说出来，再看答案）`, main]);
+    if (left !== null && left > 0 && left <= 3 && ivQ.length){   /* 面试冲刺 */
+      const sprint = [T.call(), T.soloIv(), left === 1 ? T.soloIv() : T.mock()].filter(Boolean).slice(0, Math.max(2, extra));
+      sprint.forEach(x => add(d, x)); continue;
     }
+    const g = goal === "mix" ? mixOrder[dow] : goal;
+    const keys = W[g][dow]; let n = 0;
+    for (const k of keys){ if (n >= extra) break; const x = T[k](); if (x){ add(d, x); n++; } }
+    if (n < extra){ for (const k of ["listen", "chunks", "journal"]){ if (n >= extra) break; if (!keys.includes(k)){ add(d, T[k]()); n++; } } }
   }
   const t = today(); S.plan = (S.plan || []).filter(x => !(x.gen && x.date > t)).concat(items); save(); UI.render();
-  toast(`排好了：接下来 14 天，一共 ${items.length} 项`);
+  toast(`排好了：接下来 14 天，一共 ${items.length} 项${ivDate ? "（面试前几天换成了面试冲刺）" : ""}`);
 };
 
 /* ===================== 对话首领战：面试官 / Coffee chat / 4/3/2 连击战 ===================== */
@@ -13046,7 +13095,7 @@ async function dbEnd(){
     ${st.rounds.map((r, k) => `<p class="small" style="margin-top:8px"><b>${st.mode === "432" ? "第 " + (k + 1) + " 遍" : "第 " + (k + 1) + " 回合"}：${Math.round(r.cov * 100)}%</b>　${esc(r.q)}</p>${r.pts.filter(p => !p.ok).slice(0, 3).map(p => `<p class="small db-miss">✗ ${esc(p.s)}</p>`).join("")}`).join("")}
     <div class="row-gap" style="margin-top:12px"><button class="btn primary" data-act="db-again">再来一场</button><button class="btn" data-act="db-home">回首页</button></div></div>`;
   if (st.log){ st.log.done = true; st.log.result = st.game ? (ko ? "赢" : dead ? "输" : "没打倒") : ""; save(); }
-  planAutoDone("dboss:" + st.mode);
+  planAutoDone("dboss:" + st.mode); if (!st.game){ planAutoDone("dtalk:" + st.mode); if (st.persona) planAutoDone("dtalk:" + st.mode + ":" + st.persona); }
 }
 ACT["db-again"] = () => { const st = DB.st; if (st) dbStart(st.mode, st.persona, st.game); };
 ACT["db-home"] = () => { DB.st = null; UI.nav("home"); };
@@ -13316,6 +13365,7 @@ ACT["rw-done"] = () => {
     S.custom.push({id, t:"f", tag:"colloc", en:best, alt:[], note:[...new Set(hit.map(x => x.c + " " + (ERR_DEFS[x.c] || {}).n))].join("；"), zh:"", wrong:a, grp:"", word:"", mean:"", deck:"我的回复改错"}); made++;
   }
   S.replies = (S.replies || []).concat({ts:now, mode:wMode(), letter:RW.letter, first:RW.first, final:text, codes}).slice(-30);
+  if (typeof planAutoDone === "function") planAutoDone("write:" + wMode());
   save(); try { rebuildCatalog(); } catch (e) {}
   toast(made ? `完成：${made} 句改过的句子变成了改错卡，过几天会在复习里出现` : "完成：已记进错误档案");
   RW.text = ""; RW.first = null; RW.firstIssues = null; RW.issues = null; UI.render();
@@ -13331,6 +13381,7 @@ VIEWS.errlog = {
           <button class="linkbtn small" data-act="err-toggle" data-c="${x.c}">${x.e.off ? "加回清单" : "我觉得改掉了，移出清单"}</button></div>`; }).join("") : `<p class="muted small" style="margin-top:12px">还没有统计。导入“错误统计”，或者在“写作”里写一次，就会有了。</p>`}</div>`;
   }
 };
+VIEWS.errlog.mount = () => { if (typeof planAutoDone === "function") planAutoDone("errlog"); };
 ACT["err-toggle"] = el => { const st = errState(), c = el.dataset.c; st[c] = st[c] || {seed:0, hits:[]}; st[c].off = !st[c].off; save(); UI.render(); };
 /* 问 Claude：写好的回复（请它只标错误代码，不改写） */
 function rwaText(){
@@ -13358,8 +13409,12 @@ ACT["ck-go"] = el => {
   const moves = el.dataset.k === "mail" ? MAIL_MOVES : CHAT_MOVES, g = el.dataset.g;
   const ens = new Set((g === "all" ? moves : [moves[+g]]).flatMap(([, L0]) => L0.map(([, en]) => en)));
   const title = g === "all" ? (el.dataset.k === "mail" ? "邮件说法" : "聊天语块") : "语块：" + moves[+g][0];
+  if (typeof planAutoDone === "function") planAutoDone("chunks");
   startSession("free", {filter: c => c.deck === "daily" && ens.has(c.en), fillAhead:true, newLimit:40, newUsed:0}, title);
 };
+
+/* 一打开 app 就查一下现在选的 Whisper 模型在不在手机里，提示才写得对（读取 / 下载） */
+setTimeout(() => { try { if (typeof ASR !== "undefined" && ASR.checkCached && ASR.supported && ASR.supported()) ASR.checkCached(); } catch (e) {} }, 1500);
 
 </script>
 </body>
