@@ -694,6 +694,8 @@ body.g-drill .g-top::after{content:"跟读中，对战先收起来";display:bloc
 .db-mic + .row-gap{justify-content:center}
 .db-bar{height:6px;border-radius:3px;background:var(--line,#E2E5EA);overflow:hidden;margin:8px 0 2px}
 .db-bar i{display:block;height:100%;width:100%;background:#F5B942}
+.rw-plan{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rw-plan input{min-width:0}@media (max-width:520px){.rw-plan{grid-template-columns:1fr}}
+.rw-chips{display:flex;flex-wrap:wrap;gap:6px}.rw-chips .btn{font-family:inherit}
 
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
@@ -715,7 +717,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.54.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.55.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -1497,7 +1499,34 @@ const D_CARDS = [
   ["d171","fixed","别人问 Do you mind if I sit here?，你同意：","Not at all, go ahead. // No, go ahead.","Do you mind 是问“你介意吗”，同意要说 No 或 Not at all"],
   ["d172","fixed","别人问 You don't like coffee?，你确实不喜欢：","No, I don't.","英语按事实回答：不喜欢就说 No（中文是“对，不喜欢”）"],
   ["d173","fixed","别人问 Aren't you coming?，你要去：","Yes, I am. // Yeah, I'm coming.","要去就说 Yes，和问题里的 not 无关"],
-  ["d174","fixed","别人问 Is it okay if I open the window?，你同意：","Sure, go ahead. // Yeah, of course.",""]
+  ["d174","fixed","别人问 Is it okay if I open the window?，你同意：","Sure, go ahead. // Yeah, of course.",""],
+  ["dm01","chat","那太酷了！","That's so cool! // That's really cool!","表态：别漏了 's（That cool 是你最常犯的错）"],
+  ["dm02","chat","不会吧！","No way!","听到意外的事"],
+  ["dm03","chat","听起来很好玩。","That sounds like so much fun. // That sounds really fun.","sound like + 名词，sound + 形容词"],
+  ["dm04","chat","我也是！","Same here! // Me too!",""],
+  ["dm05","chat","真替你高兴！","I'm so happy for you!",""],
+  ["dm06","chat","那一定很失望吧。","That must have been so disappointing.","体谅对方，不评价对方"],
+  ["dm07","chat","听到这个很难过。","I'm sorry to hear that.",""],
+  ["dm08","chat","希望你现在好点了。","I hope you're feeling better now.",""],
+  ["dm09","chat","我最近有点忙。","I've been kind of busy lately. // I've been kind of busy these days.","最近是 lately / these days，不是 those days"],
+  ["dm10","chat","我最近状态不太好。","I've been in a bit of a funk lately.","in a bit of a funk：有点提不起劲"],
+  ["dm11","chat","我最近一直在找工作。","I've been job hunting lately. // I've been looking for a job lately.",""],
+  ["dm12","chat","说实话，我今天才第一次用这个 app。","To be honest, today is my first time using this app.",""],
+  ["dm13","chat","你呢？","How about you? // What about you?","回答以后反问一句，话题就接下去了"],
+  ["dm14","chat","你最近在忙什么？","What have you been up to lately?",""],
+  ["dm15","chat","你试过露营吗？","Have you ever tried camping?","Have you ever + 过去分词"],
+  ["dm16","chat","你最喜欢它的哪一点？","What do you like most about it?",""],
+  ["dm17","chat","对了，你看了那场比赛吗？","By the way, did you watch the game?","By the way 转话题"],
+  ["dm18","chat","说到电影，你最近看了什么好看的吗？","Speaking of movies, have you seen anything good lately?","Speaking of … 顺着话题转"],
+  ["dm19","chat","抱歉回晚了！","Sorry for the late reply! // Sorry for the late response!",""],
+  ["dm20","chat","这周太忙了，没来得及回。","This week was crazy, so I didn't get a chance to reply.","didn't get a chance to：没来得及"],
+  ["dm21","chat","祝我好运吧！","Wish me luck!",""],
+  ["dm22","chat","祝你考试顺利！","Good luck on your exam!",""],
+  ["dm23","chat","希望你周末过得愉快！","Hope you have a great weekend!",""],
+  ["dm24","chat","期待你的回信！","Can't wait to hear back from you! // Looking forward to hearing from you!",""],
+  ["dm25","chat","回头聊！","Talk soon!",""],
+  ["dm26","chat","保重！","Take care!",""],
+  ["dm27","chat","我对这个不太感兴趣，但我常看别人玩。","I'm not that into it, but I often watch other people play it.","be into：喜欢、感兴趣；although 和 but 只留一个"],
 ];
 const DL_CARDS = [
   ["dl01","cs","What can I get for you?","想要点什么"],
@@ -2154,7 +2183,7 @@ function chunkSentence(en){
 
 /* ---------- 导入码 ---------- */
 function parseImport(text){
-  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], plan:[], meta:{date:"", who:[], replace:[]}, bad:[]};
+  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], plan:[], errStats:[], meta:{date:"", who:[], replace:[]}, bad:[]};
   const ROLE = {"开场":"first","核心":"core","初筛":"screen","提问":"ask","基本":"core","行为":"core","电话":"screen","技术":"tech","概念":"concept","first":"first","core":"core","screen":"screen","ask":"ask","tech":"tech","concept":"concept"};
   let deck = "我的卡片";
   String(text||"").split(/\r?\n/).forEach((line, i) => {
@@ -2165,6 +2194,7 @@ function parseImport(text){
     if ((kind==="题库"||kind==="组"||kind==="DECK") && p[1]){ deck = p[1].slice(0, 40); if (/^(日常生活|daily)$/i.test(deck.trim())) deck = "daily"; else if (/^(通用|通用（诊断报告）|core)$/i.test(deck.trim())) deck = "core"; if (p[2] && /替换|replace/i.test(p[2]) && !res.meta.replace.includes(deck)) res.meta.replace.push(deck); return; }
     if (kind==="面试日期" && /^\d{4}-\d{2}-\d{2}$/.test(p[1]||"")){ res.meta.date = p[1]; return; }
     if (kind==="面试官" && p[1]){ res.meta.who.push({deck, name:p[1], company:p[2]||""}); return; }
+    if (kind==="错误统计" && p[1] && p[2]){ res.errStats.push({c:p[1].trim().toUpperCase(), n:+p[2] || 0, pri:/^(优先|1|yes|y)$/i.test(String(p[4] || "").trim())}); return; }   /* 错误档案的起点：错误统计|代码|次数|说明|优先（可选：排在清单前面） */
     if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
     else if ((kind==="词"||kind==="W") && p[1] && p[2] && p[3]){ const a = splitAlts(p[3]); res.cards.push({t:"w", word:p[1].trim(), mean:p[2].trim(), en:a[0], alt:a.slice(1), zh:(p[4]||"").trim(), tag:"vocab", note:p[5]||"", deck}); }
     else if ((kind==="改"||kind==="F") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"f", wrong:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
@@ -5443,7 +5473,7 @@ VIEWS.me = {
         ${!TTS.ok ? `<p class="note">这个浏览器不支持朗读。</p>` : !enV.length ? `<p class="note">还没读到语音列表。试听没声音的话，去设备检测看看。</p>` : ""}</div>
       <div class="sec-title">外观</div><div class="panel"><select data-chg="set" data-key="theme" aria-label="外观">${[["auto","跟随系统"],["light","浅色"],["dark","深色"]].map(([k, l]) => `<option value="${k}" ${s.theme === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       <div class="sec-title">内容和数据</div><div class="sec-title">学习资料</div><div class="list">${liRow("tips","说话技巧","重音、语调、断句、连读、难发的音")}${liRow("grammar","语法要点","时态、-s、-ed、be 动词、语序")}</div><div class="sec-title">设置和工具</div><div class="list">
-        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("battle","对战角色","练完一轮，和昨天的你打一场；可以导入你自己的角色")}${liRow("asr","录音转文字", BUILD.pwa ? "在手机上识别录音，转好了会提醒你" : "要在安装到手机上的版本里用")}${liRow("dblog","对话记录", ((S.dbLog || []).length) + " 场")}${liRow("pending","问 Claude", ((S.pending || []).length) + " 句说法，" + ((S.wantWords || []).length) + " 个词，" + ((S.dbAsk || []).length) + " 条回答")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
+        ${liRow("plan","练习时间", S.settings.planWhen ? esc(S.settings.planWhen) : "还没定")}${liRow("battle","对战角色","练完一轮，和昨天的你打一场；可以导入你自己的角色")}${liRow("asr","录音转文字", BUILD.pwa ? "在手机上识别录音，转好了会提醒你" : "要在安装到手机上的版本里用")}${liRow("dblog","对话记录", ((S.dbLog || []).length) + " 场")}${liRow("errlog","错误档案", (typeof errTop === "function" ? errTop(5).length : 0) + " 类在清单里")}${liRow("pending","问 Claude", ((S.pending || []).length) + " 句说法，" + ((S.wantWords || []).length) + " 个词，" + ((S.dbAsk || []).length) + " 条回答")}${liRow("storage","存储空间","看占了多少、清理旧录音")}${liRow("import","导入新内容","把 Claude 给的导入码贴进来")}${liRow("custom","我导入的内容", S.custom.length + " 张卡，" + (S.customQ || []).length + " 道面试题")}
         ${liRow("backup","备份与恢复","换手机或清浏览器数据前先备份")}${liRow("device","设备检测","朗读、识别、录音能不能用")}
         ${liRow("install", BUILD.pwa ? "离线安装" : "离线版说明", BUILD.pwa ? "装到桌面，没网也能练" : "这个版本需要联网")}${liRow("about","这个 app 的练法","为什么这样练")}</div>
       <p class="small muted" style="margin:14px 4px 0">${Cloud.on ? "进度会自动同步到你的 Claude 账号。" : BUILD.pwa ? "进度存在这台手机上，记得偶尔备份。" : "进度存在这个浏览器里。"}${STORAGE_OK ? "" : " 注意：这个浏览器存不了数据，关掉页面进度会丢，请先备份。"}</p>
@@ -5502,7 +5532,7 @@ ACT["imp-preview"] = () => {
     ${decks.length ? `<li>题库：${decks.map(esc).join("，")}</li>` : ""}
     <li>卡片 ${r.cards.length} 张（反射卡 ${by("r")}，找错 ${by("f")}，听力 ${by("l")}）${dup ? `，其中 ${dup} 张已经有了，会更新` : ""}</li>
     ${r.questions.length ? `<li>面试题 ${r.questions.length} 道，追问 ${r.follow.length} 个</li>` : ""}${r.plan.length ? `<li>计划 ${r.plan.length} 项${r.planReplace ? "（会替换所有没做完的计划）" : ""}</li>` : ""}${r.alts.length ? `<li>确认算对的说法 ${r.alts.length} 条</li>` : ""}
-    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
+    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${(r.errStats || []).length ? `<li>错误统计 ${r.errStats.length} 类（记进错误档案）</li>` : ""}${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
     ${r.meta.date ? `<li>面试日期：${esc(r.meta.date)}</li>` : ""}${who ? `<li>面试官：${esc(who.name)}${who.company ? "，" + esc(who.company) : ""}</li>` : ""}
     ${r.bad.length ? `<li>看不懂、会跳过的：第 ${r.bad.join("、")} 行</li>` : ""}</ul>
     ${n ? `<button class="btn primary block" style="margin-top:12px" data-act="imp-apply">确认导入</button>` : `<p class="note">没有能导入的内容，检查一下格式。</p>`}</div>`;
@@ -5538,6 +5568,7 @@ ACT["imp-apply"] = () => {
   if (r.meta.date){ S.interviews = S.interviews || []; if (!S.interviews.some(x => x.date === r.meta.date)){ const dk = (r.questions[0] || r.cards[0] || {}).deck || ""; const nm = dk && dk !== "core" && dk !== "daily" ? (/面试/.test(dk) ? dk : dk + " 面试") : "面试"; S.interviews.push({id:"i" + Date.now().toString(36), name:nm, date:r.meta.date, time:"", deck: dk && dk !== "core" && dk !== "daily" ? "u:" + dk : ""}); } syncInterviewDate(); }
   S.deckMeta = S.deckMeta || {}; for (const w of r.meta.who) S.deckMeta[w.deck] = {name:w.name, company:w.company};
   if (r.questions.length) S.settings.callDeck = "u:" + r.questions[0].deck;
+  if ((r.errStats || []).length){ S.errStats = S.errStats || {}; for (const e of r.errStats){ const x = S.errStats[e.c] = S.errStats[e.c] || {seed:0, hits:[]}; x.seed = Math.max(x.seed || 0, e.n); if (e.pri) x.pri = true; } }   /* 错误档案的起点；“优先”的排在清单前面 */
   rebuildCatalog(); save(true); IMP = null;
   const dk = Array.from(new Set(r.cards.map(c => c.deck).concat(r.questions.map(q => q.deck))))[0];
   toast(`导入好了：卡片 ${r.cards.length}，面试题 ${r.questions.length}` + (dk ? `。首页可以选“${dk}”单独练` : "")); UI.back();
@@ -5867,6 +5898,11 @@ VIEWS.pending = {
       ${(S.dbAsk || []).length ? `<div class="list">${S.dbAsk.map((x, i) => `<div class="li"><div class="grow"><span>${esc(x.who)}问：${esc(x.q)}</span><b class="en" style="font-size:15px">${esc(x.said)}</b></div><button class="btn sm ghost" data-act="dba-del" data-i="${i}">删除</button></div>`).join("")}</div>
         <button class="btn primary block" style="margin-top:12px" data-act="dba-copy">复制给 Claude：点评、改好、做成卡片（${S.dbAsk.length} 条）</button>
         <button class="btn block ghost" style="margin-top:8px" data-act="dba-clear">已经发过了，清空</button>` : `<p class="muted small">现在没有。</p>`}
+      <h3 style="margin-top:22px">写好的回复（${(S.replyAsk || []).length}）</h3>
+      <p class="muted small" style="margin:4px 0 10px">在“写回复”里点“存起来问 Claude”的回复。发给 Claude：按错误代码只标出错误，不直接改写，你自己改。</p>
+      ${(S.replyAsk || []).length ? `<div class="list">${S.replyAsk.map(x => `<div class="li"><div class="grow"><b class="en" style="font-size:15px">${esc(x.text.slice(0, 120))}${x.text.length > 120 ? "…" : ""}</b></div></div>`).join("")}</div>
+        <button class="btn primary block" style="margin-top:12px" data-act="rwa-copy">复制给 Claude：只标错误代码（${S.replyAsk.length} 条）</button>
+        <button class="btn block ghost" style="margin-top:8px" data-act="rwa-clear">已经发过了，清空</button>` : `<p class="muted small">现在没有。</p>`}
       ${[(S.pending || []).length, (S.wantWords || []).length, (S.dbAsk || []).length].filter(Boolean).length >= 2 ? `<div class="panel" style="margin-top:20px"><b>一起发</b><p class="small muted" style="margin-top:4px">把上面几样一起复制，一次发给 Claude。</p>
         <button class="btn primary block" style="margin-top:8px" data-act="all-copy">一起复制给 Claude</button><button class="btn block ghost" style="margin-top:8px" data-act="all-clear">两样都发过了，清空</button></div>` : ""}</div>`;
   }
@@ -12660,8 +12696,9 @@ ACT["bt-del"] = async () => {
     const game = k === "start-game";
     /* 自动测试的浏览器（navigator.webdriver）跳过这一步，除非测试自己要测它（__menuTest）；手机上照常弹出 */
     if (el && el.dataset && el.dataset.menu && window.__startChoice !== "new" && !(navigator.webdriver && !window.__menuTest)){
-      const c = await choose(game ? "游戏" : "练习", "", [["std", game ? "普通" : "普通练习"], ["talk", game ? "对话首领战" : "对话"]]); if (!c) return;
+      const c = await choose(game ? "游戏" : "练习", "", [["std", game ? "普通" : "普通练习"], ["talk", game ? "对话首领战" : "对话"]].concat(game ? [] : [["write", "写回复"]])); if (!c) return;
       if (c === "talk"){ dbOpen(game); return; }
+      if (c === "write"){ UI.nav("reply"); return; }
     }
     if (await startChoice(game)) return; return f.apply(this, arguments); }; }
 })();
@@ -13092,6 +13129,168 @@ VIEWS.dblog = {
           ${x.rounds.map(r => `<p class="small" style="margin-top:8px"><b>${r.score} 分</b>　${esc(r.who || "")}问：${esc(r.q)}</p><p class="small en">${esc(r.said || "（没开口）")}</p>`).join("")}</details>`; }).join("") : `<p class="muted small" style="margin-top:12px">还没有记录。</p>`}</div>`;
   }
 };
+
+/* ===================== 写回复工作台、错误档案（v1.55.0） ===================== */
+/* 写和检查分开：先用中文列 3 个关键词（回答什么、回应什么、问什么），再直接用英文写、先不改；写完按“你自己的”错误清单检查——只标不改，你改。
+   第一次检查查出来的错误记进错误档案（这才是你“下意识”会犯的）；完成时，改过的句子自动变成改错卡，过几天在复习里凭记忆再写一遍。 */
+const ERR_DEFS = {
+  A1:{n:"中文结构直译", tip:"先说“主语 + 动词”，别按中文语序一个词一个词翻"}, A2:{n:"时态", tip:"讲过去的事用过去式；最近一直在做的用 I've been …"},
+  A3:{n:"those days / these days", tip:"最近是 these days 或 lately；those days 是“那些日子（过去）”"}, A4:{n:"用错词、拼成了别的词", tip:"now / know、you / your、mouth / month 这种拼成了别的真词，意思就跑偏了"},
+  A5:{n:"疑问句结构", tip:"疑问句把 do / does / did / is / are 提前"}, A6:{n:"夹杂中文", tip:"这里缺一个英文说法：查一下，或者存起来问 Claude"},
+  B1:{n:"漏 be 动词", tip:"形容词、地点前面要有 be：That's cool、It's hard、I'm here"}, B2:{n:"although 和 but 连用", tip:"although 和 but 只留一个"},
+  B3:{n:"主谓一致", tip:"主语是 I 时动词不加 -s；he / she / it 后面要加 -s"}, B4:{n:"完成时、进行时的形式", tip:"have 后面用过去分词：haven't played"},
+  B5:{n:"用 will 表示习惯", tip:"习惯用一般现在时：I usually go …"}, B6:{n:"过去完成时用多了", tip:"一般过去的事用过去式就够了"},
+  B7:{n:"动词形式、情态动词叠用", tip:"情态动词不能叠用：might can → could"}, B8:{n:"单复数", tip:"两个以上的东西加 -s"},
+  B9:{n:"冠词", tip:"元音开头用 an：an interview"}, B10:{n:"介词", tip:"年份、季节前面用 in：in 2024、in the summer"},
+  B11:{n:"中式搭配", tip:"换成现成的地道说法（看聊天语块）"}, B12:{n:"-ed / -ing 形容词", tip:"事物让人觉得怎样用 -ing：exciting、tiring"},
+  B13:{n:"双重最高级", tip:"most 和 -est 二选一"}, C1:{n:"小写 i", tip:"I 永远大写"}, C2:{n:"缺撇号", tip:"I'm、it's、that's、don't"},
+  C3:{n:"拼写", tip:"拼写错误"}, C4:{n:"逗号连句", tip:"两个完整的句子之间用句号，或者用 and / but / so 连起来"},
+  E1:{n:"话题跳跃、顺序", tip:"先回答对方的问题 → 再回应 → 再说自己的新话题 → 最后留一个问题"}, E2:{n:"一句话太长", tip:"一句只讲一件事，拆成两句"},
+  D3:{n:"语气和分寸", tip:"一封信问一两个问题就够"}
+};
+/* 自动检查：只标不改。每条规则对应一个错误代码 */
+const RW_RULES = [
+  {c:"A3", re:/\bthose days\b/gi, skip:/back in those days|in those days/i},
+  {c:"B2", re:/\balthough\b[^.!?]*?\bbut\b/gi},
+  {c:"B1", re:/\b(that|it|this)\s+(cool|hard|good|nice|great|fun|easy|amazing|awesome|interesting|crazy|true|ok|okay|fine|my first|a really|really \w+)\b/gi},
+  {c:"B1", re:/\bI\s+(here|so|very|really (?:tired|busy|happy|sad)|tired|busy|ready|sure)\b/g},
+  {c:"B3", re:/\bI\s+(?:really\s+|also\s+|just\s+|usually\s+)?(wants|likes|loves|needs|thinks|has|goes|plays|watches|knows|feels|does|gets|makes|tries)\b/gi},
+  {c:"B5", re:/\b(usually|often|sometimes|always)\s+(I|we)\s+will\b|\b(I|we)\s+will\s+usually\b/gi},
+  {c:"C1", re:/(^|[\s(“"'])i(?=[\s’',.!?]|$)/g},
+  {c:"C2", re:/\b(im|ive|dont|cant|didnt|doesnt|isnt|wasnt|thats|youre|theyre|havent|wont)\b/gi},
+  {c:"B9", re:/\ba\s+(?!uni|use|usu|euro|one\b|u\b)[aeiou]\w*/gi},
+  {c:"B10", re:/\bat\s+(?:19|20)\d\d\b|\bat\s+(?:the\s+)?(?:summer|winter|spring|fall|autumn)\b/gi},
+  {c:"B13", re:/\bmost\s+\w+est\b/gi},
+  {c:"B7", re:/\b(might|may|will|would|could|should|must)\s+(can|could|will|may)\b/gi},
+  {c:"B12", re:/\b(excited|tired|bored|interested)\s+(sport|game|movie|book|class|trip|job|show)s?\b/gi},
+  {c:"A6", re:/[\u4e00-\u9fff]+/g}
+];
+const rwSentences = t => String(t || "").replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Za-z“"'(])/).filter(Boolean);
+function rwCheck(text, letter){
+  const out = [];
+  for (const r of RW_RULES){ r.re.lastIndex = 0; let m; while ((m = r.re.exec(text))){ const s = m[0].trim(); if (!s) { r.re.lastIndex++; continue; } if (r.skip && r.skip.test(text.slice(Math.max(0, m.index - 10), m.index + s.length + 10))) continue; out.push({c:r.c, s}); } }
+  for (const s of rwSentences(text)) if (s.split(/\s+/).length > 26) out.push({c:"E2", s: s.split(/\s+/).slice(0, 8).join(" ") + " …"});
+  const qs = (text.match(/\?/g) || []).length;
+  if (text.trim() && !qs) out.push({c:"E1", s:"结尾没有问题", tip:"结尾留一个问题，对方好接着聊"});
+  if (qs > 2) out.push({c:"D3", s:`问了 ${qs} 个问题`, tip:"一封信问一两个就够，不然像在查户口"});
+  const L = String(letter || "").split(/\s+/).filter(Boolean).length, W = String(text).split(/\s+/).filter(Boolean).length;
+  if (L >= 15 && W > L * 2.2) out.push({c:"E2", s:`你写了 ${W} 个词，来信 ${L} 个词`, tip:"信的长度和对方差不多就好，写短一点不容易出错"});
+  return out;
+}
+/* 错误档案：起点来自导入的“错误统计”（比如以前写作分析里的次数），之后每写一次回复，第一次检查查出来的错误都记进来 */
+function errState(){ S.errStats = S.errStats || {}; return S.errStats; }
+/* 排序：最近一个月出现的次数最重要；导入时标了“优先”的（比如以前写作分析里的第一优先）排在前面，等你写回复的真实统计多了，就按实际情况来 */
+function errScore(code){ const e = errState()[code] || {}; const recent = (e.hits || []).filter(t => Date.now() - t < 30 * 864e5).length; return recent * 3 + (e.seed || 0) * 0.5 + (e.hits || []).length * 0.5 + (e.pri ? 40 : 0); }
+function errTop(n){ const st = errState(); return Object.keys(ERR_DEFS).filter(c => !(st[c] && st[c].off) && errScore(c) > 0).sort((a, b) => errScore(b) - errScore(a)).slice(0, n || 5); }
+const RW_LETTERS = [
+  "Hi! I just got back from a trip to the mountains. It was cold but so beautiful. Have you been anywhere fun lately?",
+  "Hey! Sorry for the late reply, school has been crazy this week. I'm reading a fantasy book right now. What do you like to read?",
+  "Hello! I started learning Japanese this month. It's hard but really fun. Are you learning any other languages?",
+  "Hi! We had our first snow today! I love this time of year. What's the weather like where you are?",
+  "Hey! I finally finished the game I was playing, it took me 60 hours haha. Do you play any games?",
+  "Hi! I just started a new job at a coffee shop. The mornings are early, but I like my coworkers. What do you do?",
+  "Hello! My dog learned a new trick this week, he can high-five now. Do you have any pets?",
+  "Hey! I'm thinking about getting into photography. Do you have any tips for a beginner?"
+];
+const CHAT_MOVES = [
+  ["表态、接话", [["那太酷了！", "That's so cool!"], ["不会吧！", "No way!"], ["听起来很好玩。", "That sounds like so much fun."], ["我也是！", "Same here!"], ["真替你高兴！", "I'm so happy for you!"]]],
+  ["体谅", [["那一定很失望吧。", "That must have been so disappointing."], ["听到这个很难过。", "I'm sorry to hear that."], ["希望你现在好点了。", "I hope you're feeling better now."]]],
+  ["说近况", [["我最近有点忙。", "I've been kind of busy lately."], ["我最近状态不太好。", "I've been in a bit of a funk lately."], ["我最近一直在找工作。", "I've been job hunting lately."], ["说实话，我今天才第一次用这个 app。", "To be honest, today is my first time using this app."]]],
+  ["问回对方", [["你呢？", "How about you?"], ["你最近在忙什么？", "What have you been up to lately?"], ["你试过露营吗？", "Have you ever tried camping?"], ["你最喜欢它的哪一点？", "What do you like most about it?"]]],
+  ["转话题", [["对了，你看了那场比赛吗？", "By the way, did you watch the game?"], ["说到电影，你最近看了什么好看的吗？", "Speaking of movies, have you seen anything good lately?"]]],
+  ["晚回道歉", [["抱歉回晚了！", "Sorry for the late reply!"], ["这周太忙了，没来得及回。", "This week was crazy, so I didn't get a chance to reply."]]],
+  ["祝福", [["祝我好运吧！", "Wish me luck!"], ["祝你考试顺利！", "Good luck on your exam!"], ["希望你周末过得愉快！", "Hope you have a great weekend!"]]],
+  ["结尾", [["期待你的回信！", "Can't wait to hear back from you!"], ["回头聊！", "Talk soon!"], ["保重！", "Take care!"]]]
+];
+const RW = {letter:"", text:"", first:null, firstIssues:null, issues:null, ai:null};
+VIEWS.reply = {
+  render(){
+    const top = errTop(5);
+    return `<div class="wrap rw">${backBtn()}<h2>写回复</h2><p class="muted small">先用中文列几个关键词，再直接用英文写、先别改；写完点“检查”，只标出你常犯的错，你自己改。</p>
+      <div class="card"><p class="small muted">对方的来信</p><textarea id="rwLetter" rows="4" style="width:100%" placeholder="把笔友的来信粘贴进来">${esc(RW.letter)}</textarea>
+        <button class="linkbtn small" data-act="rw-sample">换一封练习信</button></div>
+      <div class="card"><p class="small muted">先用中文列关键词（可以不填）</p>
+        <div class="rw-plan"><input id="rwA" placeholder="回答什么"><input id="rwR" placeholder="回应什么"><input id="rwQ" placeholder="问什么"></div></div>
+      <div class="card"><p class="small muted">直接用英文写，一句只讲一件事，先别改</p><textarea id="rwText" rows="7" style="width:100%" placeholder="Hi! …">${esc(RW.text)}</textarea>
+        <details style="margin-top:6px"><summary class="small">聊天语块（点一下插进去）</summary>${CHAT_MOVES.map(([g, L]) => `<p class="small muted" style="margin:8px 0 4px">${g}</p><div class="rw-chips">${L.map(([zh, en]) => `<button class="btn sm ghost" data-act="rw-chunk" data-t="${esc(en)}" title="${esc(zh)}">${esc(en)}</button>`).join("")}</div>`).join("")}</details>
+        <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="rw-check">检查</button>${typeof AI !== "undefined" && AI.fn && !AI.off ? `<button class="btn" data-act="rw-ai">让 Claude 只标错误</button>` : ""}<button class="btn" data-act="rw-done">完成</button><button class="btn ghost" data-act="rw-ask">存起来问 Claude</button></div></div>
+      <div id="rwRes"></div>
+      <p class="small muted" style="margin-top:8px">现在检查的清单：${top.length ? top.map(c => esc(c + " " + ERR_DEFS[c].n)).join("、") : "（还没有统计，先用默认的）"}　<button class="linkbtn small" data-act="nav" data-v="errlog">错误档案</button></p></div>`;
+  },
+  mount(){ const l = $("#rwLetter"), t = $("#rwText"); if (l) l.addEventListener("input", () => { RW.letter = l.value; }); if (t) t.addEventListener("input", () => { RW.text = t.value; }); }
+};
+ACT["rw-sample"] = () => { const cur = RW.letter; let k = 0, x; do { x = RW_LETTERS[Math.floor(Math.random() * RW_LETTERS.length)]; } while (x === cur && k++ < 5); RW.letter = x; const l = $("#rwLetter"); if (l) l.value = x; };
+ACT["rw-chunk"] = el => { const t = $("#rwText"); if (!t) return; const s = typeof t.selectionStart === "number" ? t.selectionStart : t.value.length, add = (s > 0 && !/\s$/.test(t.value.slice(0, s)) ? " " : "") + el.dataset.t + " "; t.value = t.value.slice(0, s) + add + t.value.slice(s); RW.text = t.value; t.focus(); };
+function rwShow(issues, note){
+  const top = errTop(5), byC = {}; for (const x of issues) (byC[x.c] = byC[x.c] || []).push(x);
+  const list = issues.length ? issues.map(x => `<p class="small db-miss">✗ <b>${x.c}</b> ${esc(ERR_DEFS[x.c] ? ERR_DEFS[x.c].n : "")}：“${esc(x.s)}”<span class="muted">　${esc(x.tip || (ERR_DEFS[x.c] || {}).tip || "")}</span></p>`).join("") : `<p class="small">✓ 你清单上的错一个都没查到。</p>`;
+  const chk = top.map(c => `<span class="small ${byC[c] ? "db-miss" : ""}">${byC[c] ? "✗" : "✓"} ${c} ${esc(ERR_DEFS[c].n)}</span>`).join("　");
+  $("#rwRes").innerHTML = `<div class="card">${note ? `<p class="small muted">${esc(note)}</p>` : ""}${list}${top.length ? `<p style="margin-top:8px">${chk}</p>` : ""}
+    <p class="small muted" style="margin-top:6px">只标不改：改完可以再点一次“检查”。先回答对方的问题了吗？自己看一眼。</p></div>`;
+}
+ACT["rw-check"] = () => {
+  const text = (($("#rwText") || {}).value || "").trim(); RW.text = text; RW.letter = ($("#rwLetter") || {}).value || RW.letter; if (!text){ toast("先写几句"); return; }
+  const issues = rwCheck(text, RW.letter); RW.issues = issues;
+  if (RW.first === null){ RW.first = text; RW.firstIssues = issues; }   /* 第一次检查：这才是你下意识会犯的，记进错误档案 */
+  rwShow(issues);
+};
+ACT["rw-ai"] = async () => {
+  const text = (($("#rwText") || {}).value || "").trim(); if (!text || !(typeof AI !== "undefined" && AI.fn)) return; RW.text = text;
+  $("#rwRes").innerHTML = `<p class="small muted">Claude 在看……</p>`;
+  try {
+    const j = await AI.fn.json(`你是英语老师。下面是一位中文母语者写给笔友的回复。请只标出错误，不要改写、不要给出改好的句子。
+错误代码：${Object.entries(ERR_DEFS).map(([c, d]) => c + " " + d.n).join("；")}。
+对方来信：${RW.letter}
+他的回复：${text}
+只回复一个 JSON：{"issues":[{"c":"错误代码","s":"他原文里出错的那几个词（原样摘出来）","tip":"一句中文提示：错在哪，不要直接给答案"}]}，最多 8 条，聊天里不影响意思的小错（C 类）可以不标。`, {modelTier:"default"});
+    const issues = ((j && j.issues) || []).filter(x => x && x.c && x.s).map(x => ({c:String(x.c).toUpperCase(), s:String(x.s), tip:String(x.tip || "")}));
+    if (RW.first === null){ RW.first = text; RW.firstIssues = issues.concat(rwCheck(text, RW.letter)); }
+    RW.issues = issues; rwShow(issues, "Claude 标的（只标不改）：");
+  } catch (e) { toast("Claude 现在用不了，先用自动检查"); ACT["rw-check"](); }
+};
+/* 完成：改过的句子自动变成改错卡（过几天在复习里凭记忆再写一遍）；第一次检查查出来的错误记进错误档案 */
+ACT["rw-done"] = () => {
+  const text = (($("#rwText") || {}).value || "").trim(); if (!text){ toast("先写几句"); return; }
+  if (RW.first === null){ RW.first = text; RW.firstIssues = rwCheck(text, RW.letter); }
+  const st = errState(), now = Date.now(), codes = [...new Set((RW.firstIssues || []).map(x => x.c))];
+  for (const c of codes){ st[c] = st[c] || {seed:0, hits:[]}; st[c].hits = (st[c].hits || []).concat(now).slice(-80); }
+  const A = rwSentences(RW.first), B = rwSentences(text), words = s => new Set(dbWords(s)), sim = (a, b) => { const x = words(a), y = words(b); if (!x.size || !y.size) return 0; let n = 0; for (const w of x) if (y.has(w)) n++; return n / Math.max(x.size, y.size); };
+  let made = 0; S.custom = S.custom || [];
+  for (const a of A){
+    const hit = (RW.firstIssues || []).filter(x => a.includes(x.s.replace(/ …$/, "").slice(0, 20))); if (!hit.length || B.includes(a)) continue;
+    let best = null, bs = 0; for (const b of B){ const v = sim(a, b); if (v > bs && b !== a){ bs = v; best = b; } }
+    if (!best || bs < 0.35) continue;
+    if (S.custom.some(c => c.t === "f" && c.wrong === a)) continue; const id = "rw" + now.toString(36) + Math.random().toString(36).slice(2, 6);
+    S.custom.push({id, t:"f", tag:"colloc", en:best, alt:[], note:[...new Set(hit.map(x => x.c + " " + (ERR_DEFS[x.c] || {}).n))].join("；"), zh:"", wrong:a, grp:"", word:"", mean:"", deck:"我的回复改错"}); made++;
+  }
+  S.replies = (S.replies || []).concat({ts:now, letter:RW.letter, first:RW.first, final:text, codes}).slice(-30);
+  save(); try { rebuildCatalog(); } catch (e) {}
+  toast(made ? `完成：${made} 句改过的句子变成了改错卡，过几天会在复习里出现` : "完成：已记进错误档案");
+  RW.text = ""; RW.first = null; RW.firstIssues = null; RW.issues = null; UI.render();
+};
+VIEWS.errlog = {
+  render(){
+    const st = errState(), top = errTop(5);
+    const rows = Object.keys(ERR_DEFS).map(c => ({c, e:st[c] || {}, sc:errScore(c)})).filter(x => x.sc > 0 || (x.e.hits || []).length || x.e.seed).sort((a, b) => b.sc - a.sc);
+    return `<div class="wrap">${backBtn()}<h2>错误档案</h2><p class="muted small">每一类错误出现了多少次：起点是导入的统计（比如以前的写作分析），之后每写一次回复，第一次检查查出来的都记进来。排在最前面的 5 类，就是写回复时自动检查的清单；某一类觉得改掉了，可以移出清单，换下一类进来。</p>
+      ${rows.length ? rows.map(x => { const recent = (x.e.hits || []).filter(t => Date.now() - t < 30 * 864e5).length, total = (x.e.seed || 0) + (x.e.hits || []).length, on = top.includes(x.c);
+        return `<div class="card" style="margin-top:8px"><p><b>${x.c} ${esc(ERR_DEFS[x.c].n)}</b>${on ? `<span class="small" style="color:#B42318">　在清单里</span>` : x.e.off ? `<span class="small muted">　已移出清单</span>` : ""}${x.e.pri ? `<span class="small muted">　（导入时标了优先）</span>` : ""}</p>
+          <p class="small muted">一共 ${total} 次，最近一个月 ${recent} 次${recent === 0 && (x.e.hits || []).length ? "（这个月没再出现 ✓）" : ""}</p><p class="small">${esc(ERR_DEFS[x.c].tip)}</p>
+          <button class="linkbtn small" data-act="err-toggle" data-c="${x.c}">${x.e.off ? "加回清单" : "我觉得改掉了，移出清单"}</button></div>`; }).join("") : `<p class="muted small" style="margin-top:12px">还没有统计。导入“错误统计”或者写一次回复，就会有了。</p>`}</div>`;
+  }
+};
+ACT["err-toggle"] = el => { const st = errState(), c = el.dataset.c; st[c] = st[c] || {seed:0, hits:[]}; st[c].off = !st[c].off; save(); UI.render(); };
+/* 问 Claude：写好的回复（请它只标错误代码，不改写） */
+function rwaText(){
+  const L0 = S.replyAsk || []; if (!L0.length) return "";
+  return `下面是我写给笔友的回复。请按错误代码只标出错误，不要直接改写，也不要给出改好的句子，让我自己改。每条写：错误代码、我原文里出错的那几个词、一句中文提示。聊天里不影响意思的小错（C 类）可以不标。
+错误代码：${Object.entries(ERR_DEFS).map(([c, d]) => c + " " + d.n).join("；")}
+
+` + L0.map((x, i) => `${i + 1}. 对方来信：${x.letter || "（没贴）"}\n我的回复：${x.text}`).join("\n\n");
+}
+ACT["rw-ask"] = () => { const text = (($("#rwText") || {}).value || "").trim(); if (!text){ toast("先写几句"); return; } S.replyAsk = (S.replyAsk || []).concat({letter:RW.letter, text, ts:Date.now()}).slice(-20); save(); toast(`存好了（共 ${S.replyAsk.length} 条）。在“我的 → 问 Claude”里一起发`); };
+ACT["rwa-copy"] = () => { const t = rwaText(); if (t) sendToClaude(t); };
+ACT["rwa-clear"] = async () => { if (!await sheet("清空写好的回复？", "确认 Claude 已经收到再清。", "清空", true)) return; S.replyAsk = []; save(); UI.render(); };
 
 </script>
 </body>

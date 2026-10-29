@@ -1,5 +1,5 @@
 /* 脱口离线缓存 */
-const VERSION = "1.54.1";
+const VERSION = "1.55.0";
 const CACHE = "tuokou-" + VERSION;
 const FONTS = "tuokou-fonts";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./scenes/day.webp", "./scenes/night.webp", "./scenes/garage.webp", "./scenes/factory.webp", "./scenes/forest.webp", "./scenes/forestN.webp", "./scenes/gday.webp", "./scenes/gday_front.webp", "./scenes/gnight.webp", "./scenes/gnight_front.webp", "./scenes/gforest.webp", "./scenes/gforest_front.webp", "./scenes/gforestN.webp", "./scenes/gforestN_front.webp", "./scenes/amuse.webp", "./scenes/amuse_front.webp", "./scenes/amuseN.webp", "./scenes/amuseN_front.webp", "./scenes/moon.webp", "./scenes/moon_front.webp", "./scenes/gas.webp", "./scenes/gas_front.webp", "./scenes/gasN.webp", "./scenes/gasN_front.webp"];
