@@ -708,6 +708,8 @@ details.pl-day>summary{list-style:none;cursor:pointer}details.pl-day>summary::-w
 .rd-w{cursor:pointer}.rd-u{text-decoration:underline dotted #C2410C;text-underline-offset:4px}.rd-ck{text-decoration:underline solid #2563EB;text-underline-offset:4px}.rd-pick{background:#DBEAFE;border-radius:4px}
 .rd-popc{position:sticky;bottom:72px;margin-top:10px;box-shadow:0 4px 16px rgba(0,0,0,.12)}
 .now-row .btn{flex:none;white-space:nowrap;min-width:64px}
+.deck-grp-h i{font-size:20px;line-height:1;padding:4px 8px}.deck-grp-h{min-height:34px}
+.deck-head{display:flex;align-items:center;justify-content:space-between}.deck-all-fold{background:none;border:0;font-size:28px;line-height:1;padding:2px 10px;color:var(--ink2,#334155);cursor:pointer}
 
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
@@ -729,7 +731,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.59.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.59.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2699,7 +2701,8 @@ function deckSelectHTML(){
   const L0 = deckList().filter(x => x.id === "all" || x.id === "core" || x.id === "daily" || withCards.has(x.id.slice(2)));
   const groups = {}; for (const x of L0.filter(x => x.id !== "all")) (groups[deckGroupOf(x)] = groups[deckGroupOf(x)] || []).push(x);
   const head = L0.find(x => x.id === "all");
-  return `<div class="deck-pick" role="group" aria-label="选择题库"><span class="small muted">练哪些题库（可以多选）</span><div class="deck-chips">${chip(head, all)}</div>
+  const gs = DECK_GROUPS.filter(g => groups[g]), allFold = gs.length && gs.every(g => (L.deckFold || {})[g]);
+  return `<div class="deck-pick" role="group" aria-label="选择题库"><div class="deck-head"><span class="small muted">练哪些题库（可以多选）</span>${gs.length ? `<button class="deck-all-fold" data-act="deck-fold-all" aria-label="${allFold ? "全部展开" : "全部收起"}">${allFold ? "▸" : "▾"}</button>` : ""}</div><div class="deck-chips">${chip(head, all)}</div>
     ${DECK_GROUPS.filter(g => groups[g]).map(g => { const fold = !!(L.deckFold || {})[g], on = groups[g].filter(x => a.includes(x.id)).length;
       return `<div class="deck-grp"><button class="deck-grp-h" data-act="deck-fold" data-v="${g}" aria-expanded="${!fold}">${g}${on ? `<em>选了 ${on} 个</em>` : ""}<i>${fold ? "▸" : "▾"}</i></button>${fold ? "" : `<div class="deck-chips">${groups[g].map(x => chip(x, a.includes(x.id))).join("")}</div>`}</div>`; }).join("")}</div>`;
 }
@@ -4302,7 +4305,7 @@ class IvStage {
   }
   done(){
     const a = ans(this.q.id); a.practiced = (a.practiced||0) + 1; a.lastAt = Date.now();
-    const dv = (S.ivDue || {})[this.q.id]; if (dv && dv.due <= dnum(today())) S.ivDue[this.q.id] = {r:"hard", due: dnum(today()) + 2};
+    const dv = (S.ivDue || {})[this.q.id]; if (dv && dv.due <= dnum(today())) S.ivDue[this.q.id] = {r:dv.r, due: dnum(today()) + 2};   /* 练过了：先推后两天，保留你上次的标法（练完再标一次，标得好就不再安排） */
     if (!this.o.inRun && typeof planAutoDone === "function") planAutoDone("solo:" + this.q.id);
     if (this.blob) IDB.put("iv:" + this.q.id, this.blob);
     save(); RUN.res.iv++;
@@ -4368,6 +4371,7 @@ ACT["deck-tog"] = el => {
   if (v === "all") a = []; else a = a.includes(v) ? a.filter(x => x !== v) : a.concat(v);
   setDecks(a); save(); UI.refresh();
 };
+ACT["deck-fold-all"] = () => { L.deckFold = L.deckFold || {}; const gs = DECK_GROUPS, allFold = gs.every(g => L.deckFold[g]); for (const g of gs) L.deckFold[g] = !allFold; saveLocal(); UI.refresh(); };
 ACT["deck-fold"] = el => { const g = el.dataset.v; L.deckFold = L.deckFold || {}; L.deckFold[g] = !L.deckFold[g]; saveLocal(); UI.refresh(); };
 CHG.callDeck = el => { S.settings.callDeck = el.value; save(); };
 CHG.quiet = el => { L.quiet = el.checked; saveLocal(); UI.render(); };
@@ -4623,6 +4627,10 @@ function callEnd(){
 /* ---------- 模拟面试复盘：每题听录音、看参考回答、给自己打分；卡住的题隔天再练 ---------- */
 const CR_RATE = [["again","没说出来"],["hard","较多卡顿"],["good","还行"],["great","不错"]];
 const IV_GAP = {again:1, hard:2, good:5, great:7};
+/* 安排重练：标“不错”就不再安排；连着两次“还行”或者更好也不再安排；其余按间隔再练 */
+function ivSched(qid, r){ S.ivDue = S.ivDue || {}; const prev = S.ivDue[qid];
+  if (r === "great" || (r === "good" && prev && (prev.r === "good" || prev.r === "great"))){ delete S.ivDue[qid]; return; }
+  S.ivDue[qid] = {r, due: dnum(today()) + (IV_GAP[r] || 2)}; }
 let CR_URLS = [];
 function crRec(id){ return (S.calls || []).find(c => c.id === id); }
 function fmtWhen(ts){ const d = new Date(ts); return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; }
@@ -4728,7 +4736,7 @@ ACT["iv-rate"] = el => {
   const qid = el.dataset.q, r = el.dataset.r; S.soloRate = S.soloRate || {}; const arr = S.soloRate[qid] || (S.soloRate[qid] = []); const last = arr[arr.length - 1];
   if (last && Date.now() - last.ts < 30 * 60e3){ last.r = r; last.ts = Date.now(); } else arr.push({ts:Date.now(), r});
   if (arr.length > 30) arr.splice(0, arr.length - 30);
-  S.ivDue = S.ivDue || {}; S.ivDue[qid] = {r, due: dnum(today()) + (IV_GAP[r] || 2)}; save();
+  ivSched(qid, r); save();
   $$(`[data-act="iv-rate"][data-q="${qid}"]`).forEach(b => { const on = b.dataset.r === r; b.classList.toggle("primary", on); b.setAttribute("aria-pressed", on); });
   const top = UI.top();
   if (top && top.name === "run" && RUN.kind === "redo" && r !== "good" && r !== "great"){ RUN.ivRetry = RUN.ivRetry || {}; if (!RUN.ivRetry[qid]){ RUN.ivRetry[qid] = 1; RUN.items.push({k:"iv", qid}); toast("这题过一会儿再来一次"); } }
@@ -4802,7 +4810,7 @@ function crRowsHTML(rec, urlFor, live){
 }
 ACT["cr-rate"] = el => {
   const rec = crRec(el.dataset.id); if (!rec) return; const qid = el.dataset.q, r = el.dataset.r;
-  rec.rate = rec.rate || {}; rec.rate[qid] = r; S.ivDue = S.ivDue || {}; S.ivDue[qid] = {r, due: dnum(today()) + (IV_GAP[r] || 2)}; save();
+  rec.rate = rec.rate || {}; rec.rate[qid] = r; ivSched(qid, r); save();
   $$(`[data-act="cr-rate"][data-id="${rec.id}"][data-q="${qid}"]`).forEach(b => { const on = b.dataset.r === r; b.classList.toggle("primary", on); b.setAttribute("aria-pressed", on); });
   const sum = $("#crSum"); if (sum) sum.outerHTML = crSummaryHTML(rec);
 };
@@ -4918,6 +4926,8 @@ function ivRunQs(qids, title){
 ACT["cr-redo"] = el => { const rec = crRec(el.dataset.id); if (!rec) return; const rt = rec.rate || {}; ivRunQs(rec.segs.filter(s => s.k === "q" && (rt[s.qid] === "again" || rt[s.qid] === "hard")).map(s => s.qid), "重练卡住的题"); };
 function ivDueList(){ const tn = dnum(today()); return Object.entries(S.ivDue || {}).filter(([q, v]) => v.due <= tn && QBY[q]).sort((a, b) => (a[1].r === "again" ? 0 : 1) - (b[1].r === "again" ? 0 : 1)).map(([q]) => q); }
 ACT["iv-due-go"] = () => ivRunQs(ivDueList(), "重练之前卡住的题");
+ACT["iv-due-later"] = () => { const tn = dnum(today()); for (const q of ivDueList()) S.ivDue[q].due = tn + 1; save(); UI.render(); toast("明天再提醒"); };
+ACT["iv-due-rm"] = async el => { if (!await sheet("这道题不再提醒重练？", "以后模拟面试时再标，还会重新安排。", "不再提醒", true)) return; delete (S.ivDue || {})[el.dataset.q]; save(); UI.render(); };
 VIEWS.calls = {
   tab:"iv",
   render(){
@@ -5011,7 +5021,7 @@ function todayPlanHTML(){
   const shown = open ? items : [];
   return `<div class="panel plan-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>今天的计划${items.length ? `（还剩 ${left.length} 项）` : ""}</b><span class="row-gap" style="flex:none">${items.length > 1 ? `<button class="btn sm ghost" data-act="plan-toggle">${open ? "收起" : `展开 ${items.length} 项`}</button>` : ""}</span></div>
     ${open ? "" : now}${shown.length ? `<div class="list" style="margin-top:6px">${shown.map(x => planRowHTML(x, false)).join("")}</div>` : !left.length && items.length ? `<p class="small muted" style="margin-top:6px">今天的计划都做完了 ✓</p>` : ""}${left.length ? lowLine : ""}
-    ${due.length ? `<div class="row-gap" style="margin-top:8px;align-items:center"><span class="small">有 ${due.length} 道面试题该重练了（之前模拟时卡住的）</span><button class="btn sm" data-act="iv-due-go">现在练</button></div>` : ""}</div>`;
+    ${due.length ? `<div class="row-gap" style="margin-top:8px;align-items:center"><span class="small">模拟面试时没说好的 ${due.length} 道题，今天该重练了</span><button class="btn sm" data-act="iv-due-go">现在练</button><button class="btn sm ghost" data-act="iv-due-later">明天再说</button></div>` : ""}</div>`;
 }
 ACT["plan-done-now"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x) return; x.done = true; save(); UI.render(); };
 /* 没精神的那天：只做 3 分钟复习；这天剩下的计划不会出现在“没做完”里 */
@@ -6254,6 +6264,10 @@ VIEWS.plan = {
         <label class="fld"><span>做什么</span><input type="text" id="plText" value="${esc(ed ? ed.text : "")}" placeholder="比如：模拟一场电话初筛"></label>
         <label class="fld"><span>链接到哪个练习（可选）</span><select id="plAct">${PLAN_ACTS.concat(ed && ed.act && !PLAN_ACTS.some(a => a[0] === ed.act) ? [[ed.act, planActLabel(ed.act)]] : []).map(([v, l]) => `<option value="${esc(v)}" ${ed && ed.act === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
         <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="pl-add">${ed ? "保存修改" : "加上"}</button><button class="btn ghost" data-act="pl-cancel">取消</button></div></div>`;
+    const dueQ = tab === "today" && typeof ivDueList === "function" ? ivDueList() : [];
+    if (dueQ.length) body = `<div class="panel" style="margin-bottom:10px"><b>面试题重练（${dueQ.length} 道）</b><p class="small muted">模拟面试时没说好的题，按间隔安排；练完标“不错”就不再安排</p>
+      <div class="list" style="margin-top:6px">${dueQ.map(q => `<div class="li"><div class="grow"><b>${esc((QBY[q] && (QBY[q].zh || (QBY[q].v || [])[0])) || q)}</b></div><button class="linkbtn small" data-act="iv-due-rm" data-q="${esc(q)}">不再提醒</button></div>`).join("")}</div>
+      <div class="row-gap" style="margin-top:8px"><button class="btn sm primary" data-act="iv-due-go">现在练</button><button class="btn sm ghost" data-act="iv-due-later">明天再说</button></div></div>` + body;
     const nGen = (S.plan || []).filter(x => x.gen && !x.done).length, grouped = ["next", "late", "done"].includes(tab) && body.includes("pl-day");
     return `<div class="wrap">${backBtn()}<h2>我的计划</h2>
       <div class="row-gap" style="margin-top:6px"><button class="btn sm primary" data-act="pl-open-top">＋ 添加一项</button><button class="btn sm" data-act="pl-gen">生成推荐计划</button>${nGen ? `<button class="btn sm ghost" data-act="pl-gen-clear">清除推荐计划（${nGen}）</button>` : ""}</div>
@@ -13784,7 +13798,7 @@ function rdKnown(){
 }
 /* 词形还原：surprised → surprise、shaped → shape、making → make、tries → try……只要有一种还原以后是练过的词就不标 */
 const rdForms = n => [n, rdStem(n), n.replace(/d$/, ""), n.replace(/ed$/, ""), n.replace(/ing$/, ""), n.replace(/ing$/, "e"), n.replace(/es$/, ""), n.replace(/s$/, ""), n.replace(/ies$/, "y"), n.replace(/ied$/, "y"), n.replace(/ly$/, ""), n.replace(/(.)\1ed$/, "$1"), n.replace(/(.)\1ing$/, "$1")];
-const rdUnknown = (raw, first) => { const n = rdNorm(raw); if (n.length < 4 || /\d/.test(n)) return false; if (!first && /^[A-Z]/.test(raw.replace(/^[^A-Za-z]+/, ""))) return false; const k = rdKnown(); return !rdForms(n).some(f => f && k.has(f)); };
+const rdUnknown = (raw, first) => { const n = rdNorm(raw); if (n.length < 5 || /\d/.test(n)) return false;   /* 4 个字母以内的绝大多数是常见词，不标 */ if (!first && /^[A-Z]/.test(raw.replace(/^[^A-Za-z]+/, ""))) return false; const k = rdKnown(); return !rdForms(n).some(f => f && k.has(f)); };
 const rdStopAll = () => { RDG.aud++; try { TTS.cancel(); } catch (e) {} try { Player.stop(); } catch (e) {} return RDG.aud; };
 const rdSay = (t, rate) => TTS.speak(t, {voice: typeof pronPick === "function" ? (pronPick(pronUS()) || undefined) : undefined, rate:rate || 0.9, raw:true});
 VIEWS.read = {
@@ -13797,7 +13811,7 @@ VIEWS.read = {
       <details class="card" ${L0.length ? "" : "open"}><summary><b>去哪找文章</b></summary>
         ${READ_SITES.map(([n, u, d]) => `<p class="small" style="margin-top:8px"><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a><br><span class="muted">${esc(d)}</span></p>`).join("")}
         <p class="small" style="margin-top:8px">你要面试的公司官网的新闻、产品页<br><span class="muted">面试和 coffee chat 时正好用得上</span></p>
-        <p class="small muted" style="margin-top:8px">挑读着不费劲的：一段里不认识的词最好不超过一两个。</p></details>
+        <p class="small muted" style="margin-top:8px">挑读着不费劲的：一段里不认识的词最好不超过一两个（大约认识 95%–98% 的词）。大部分时候读这种；偶尔读一篇难一点的，只精读一两段。话题挑你感兴趣、面试和 coffee chat 用得上的。</p></details>
       <div class="card" style="margin-top:10px"><b>贴一篇进来</b><input id="rdTitle" placeholder="标题（可以不填）" style="width:100%;margin-top:8px"><textarea id="rdText" rows="6" style="width:100%;margin-top:6px" placeholder="把文章粘贴到这里"></textarea>
         <button class="btn primary" data-act="rd-add" style="margin-top:8px">开始读</button></div>
       ${ai ? `<div class="card" style="margin-top:10px"><b>让 Claude 写一篇</b><input id="rdTopic" placeholder="话题，比如：高尔夫球杆怎么设计" style="width:100%;margin-top:8px"><button class="btn" data-act="rd-ai" style="margin-top:8px">写一篇</button></div>` : ""}
@@ -13815,6 +13829,7 @@ function rdArticleHTML(A){
   const R = RDG.retell;
   return `<div class="wrap">${backBtn()}<button class="linkbtn small" data-act="rd-back">← 返回列表</button><h2 style="margin-top:6px">${esc(A.title || "文章")}</h2>
     <p class="small muted">点 ▶ 读一句；点一个词可以听、加进想学的；虚线是没练过的词（${tot ? Math.round(100 * unk / tot) : 0}%），实线是你在练的语块。</p>
+    ${(() => { const r = tot ? unk / tot : 0; if (tot < 60) return ""; return `<p class="small" style="margin-top:4px">${r <= 0.04 ? "难度合适：适合连着读、边听边读" : r <= 0.08 ? "有点难：挑一两段精读，生词加进想学的" : "偏难：换一篇简单点的，比如 Learning English 的版本"}</p>`; })()}
     <div class="row-gap" style="margin:8px 0"><button class="btn sm" data-act="rd-all">▶ 从头听</button><button class="btn sm ghost" data-act="rd-stop">■ 停</button></div>
     <div class="card rd-body en">${body}</div>
     <div id="rdPop"></div>
