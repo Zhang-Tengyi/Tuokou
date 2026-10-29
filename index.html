@@ -717,7 +717,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.57.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.57.1"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -3004,7 +3004,7 @@ const ASR = {
     else if (m.type === "note"){ this.status = m.msg || ""; this.paint(); }
     else if (m.type === "loaded"){
       const j = this.cur; this.cur = null; this.dl = {}; this.status = "";
-      if (j){ try { j.onDone && j.onDone(""); } catch (e) {} if (!j.quiet) toast((this.cached ? "识别模型准备好了：" : "模型下载好了：") + j.label, 5000); }
+      if (j){ try { j.onDone && j.onDone(""); } catch (e) {} if (!j.quiet) toast(this.cached ? "模型准备好了" : "模型下载好了", 3000); }
       this.cached = true;
       /* 只是下载：模型已经存好了，关掉识别线程，把内存还给手机（练习前的预加载除外） */
       if (!this.q.length && this.w && !(j && j.keep)){ try { this.w.terminate(); } catch (e) {} this.w = null; this.loadedId = null; }
@@ -3047,7 +3047,7 @@ const ASR = {
     const secs = this.cur && this.curT ? Math.round((Date.now() - this.curT) / 1000) : 0;
     /* 已经下载过的模型，每次打开 app 也要从手机存储读进内存，进度条照样会走：这时写“读取”，不是“下载” */
     const fromDisk = this.cached === true || (this.cached == null && L.asrReady);
-    el.textContent = pct >= 0 && pct < 100 ? (fromDisk ? `正在读取识别模型：${pct}%（已经下载过，不用联网，也不会多占空间）` : `正在下载识别模型：${pct}%（别关掉 app）`) : `${what}：${this.cur ? this.cur.label : ""}${secs ? `（${secs} 秒）` : ""}${left ? `，后面还有 ${left} 段` : ""}${this.status ? "　" + this.status : ""}`;
+    el.textContent = pct >= 0 && pct < 100 ? (fromDisk ? `正在读取模型：${pct}%` : `正在下载模型：${pct}%（别关掉 app）`) : `${what}：${this.cur ? this.cur.label : ""}${secs ? `（${secs} 秒）` : ""}${left ? `，后面还有 ${left} 段` : ""}${this.status ? "　" + this.status : ""}`;
   },
   /* 现在选的模型是不是已经存在手机里了（清过浏览器数据就没了，要重新下载）：决定提示写“读取”还是“下载” */
   async checkCached(){ try { const info = await this.cacheInfo(), k = L.asrModel && ASR_MODELS[L.asrModel] ? L.asrModel : "base"; this.cached = !!(info[k] && info[k].files > 0); } catch (e) { this.cached = null; } },
@@ -3101,7 +3101,7 @@ async function whisperListen(o){
   cue(); micState(o.btn, heardAny ? "busy" : null);   /* 录音结束：振一下、响一声；识别时圈一直转 */
   const r = await Rec.stop();
   if (!r || !r.blob || !heardAny){ micState(o.btn, null); return {text:""}; }
-  if (o.heard && o.heard.isConnected) o.heard.textContent = ASR.loadedId ? "正在识别……" : (ASR.cached === true || (ASR.cached == null && L.asrReady)) ? "正在识别……（先把模型读进内存，几秒钟；已经下载过，不会重新下载）" : "正在识别……（第一次要先下载模型）";
+  if (o.heard && o.heard.isConnected) o.heard.textContent = ASR.loadedId ? "正在识别……" : (ASR.cached === true || (ASR.cached == null && L.asrReady)) ? "正在识别……（读取模型）" : "正在识别……（下载模型）";
   const text = await new Promise(res => ASR.enqueue({blob:r.blob, label:"练习", priority:true, quiet:true, onDone: t => res(t || ""), onErr: () => res("")}));
   micState(o.btn, null);
   return {text: String(text).replace(/^[\s"']+|[\s"']+$/g, ""), alts: [], endAt: heardAny ? endAt : null};
@@ -12875,14 +12875,14 @@ function dbStart(mode, persona, game){
   const log = {ts:Date.now(), mode, game: game !== false, persona: persona || "", rounds:[]}; S.dbLog.push(log); save();
   DB.st = {log, mode, game: game !== false, persona: persona || "", qs, i:0, you:100, rounds:[], busy:false, follow:null, fdone:{}, clashed:false, limits:[90, 60, 45], wpm:[]}; UI.nav("dboss");
 }
-const dbWho = st => (st.mode === "cc" ? (st.persona && st.persona !== "*" ? dbPersona(st.persona) : (st.qs[st.i] ? dbPersona(st.qs[st.i].deck) : "对方")) : st.mode === "432" ? "对手" : "面试官");
+const dbWho = st => (st.mode === "cc" ? (n => (/破冰|闲聊/.test(n) ? "对方" : n))(st.persona && st.persona !== "*" ? dbPersona(st.persona) : (st.qs[st.i] ? dbPersona(st.qs[st.i].deck) : "对方")) : st.mode === "432" ? "对手" : "面试官");   /* 破冰闲聊和谁都能聊：显示“对方” */
 VIEWS.dboss = {
   render(){
     const st = DB.st; if (!st) return `<div class="wrap">${backBtn()}<p>没有在进行的对话首领战。</p></div>`;
     const title = st.mode === "cc" ? "Coffee chat：" + (st.persona === "*" ? "各种人" : dbPersona(st.persona || (st.qs[0] || {}).deck)) : st.mode === "432" ? (st.game ? "三遍提速战" : "三遍提速练习") : "面试官";
     return `<div class="wrap db">${backBtn()}<h2>${st.mode === "432" ? "" : st.game ? "对话首领战：" : "对话练习："}${title}</h2>
       ${st.game ? `<div class="bt-stage db-arena" id="dbArena"></div>` : ""}
-      <p class="small muted" id="dbHud" style="margin:6px 0">${st.game ? `${youName()} <b id="dbYou">${st.you}</b> · ${dbWho(st)} <b id="dbBoss">100</b> · ` : ""}第 <span id="dbRound">1</span>/${st.qs.length} ${st.mode === "432" ? "遍" : st.game ? "回合" : "题"}</p>
+      <p class="small muted" id="dbHud" style="margin:6px 0">${st.game ? `${youName()} <b id="dbYou">${st.you}</b> · ${dbWho(st)} <b id="dbBoss">100</b> · ` : ""}第 <span id="dbRound">1</span>/${st.qs.length} ${st.mode === "432" ? "遍" : "题"}<span id="dbRoundTag"></span></p>
       <div class="card db-q"><p class="small muted" id="dbWhoSay">${dbWho(st)}问：</p><p class="en" id="dbQ"></p>
         <div class="row-gap"><button class="linkbtn small" data-act="db-hear">再听一遍</button><button class="linkbtn small" data-act="db-zh">看中文</button></div><p class="small muted" id="dbZh" hidden></p></div>
       <div id="dbCtl"></div><div id="dbFb"></div></div>`;
@@ -12903,7 +12903,7 @@ function dbAsk(){
   const text = st.follow ? st.follow.q : dbText(q);
   if (st.mode === "cc" && st.persona === "*" && DB.A && st.game){ DB.A.setNames(dbWho(st), youName()); }   /* 随机：每回合换一种人 */
   $("#dbWhoSay").textContent = st.follow ? `${dbWho(st)}追问：` : st.mode === "432" ? `第 ${st.i + 1} 遍，限时 ${st.limits[st.i]} 秒：尽量讲全、讲快` : `${dbWho(st)}问：`;
-  $("#dbQ").textContent = text; const zh = $("#dbZh"); zh.textContent = st.follow ? "" : (q.zh || ""); zh.hidden = true; $("#dbRound").textContent = st.i + 1; $("#dbFb").innerHTML = "";
+  $("#dbQ").textContent = text; const zh = $("#dbZh"); zh.textContent = st.follow ? "" : (q.zh || ""); zh.hidden = true; $("#dbRound").textContent = st.i + 1; const rt = $("#dbRoundTag"); if (rt) rt.textContent = st.follow ? " · 追问" : ""; $("#dbFb").innerHTML = "";
   $("#dbCtl").innerHTML = `<div class="db-mic"><button class="mic" id="dbMic" data-act="db-say" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="dbHeard">${st.mode === "432" ? `点一下开始说，限时 ${st.limits[st.i]} 秒（说完也可以自己点结束）` : "点一下开始说，说完再点一下"}</div></div>
     <div class="row-gap" style="margin-top:8px">${st.mode === "432" ? "" : `<button class="btn sm" data-act="db-typeopen">打字回答</button>`}<button class="btn sm ghost" data-act="db-skip">跳过</button></div><div id="dbType" hidden><textarea id="dbText" rows="4" style="width:100%;margin-top:8px" placeholder="把你的回答打出来"></textarea><button class="btn primary" data-act="db-typed" style="margin-top:6px">交上去</button></div>`;
   st.t0 = performance.now(); ACT["db-hear"]("auto");
@@ -12996,41 +12996,52 @@ ${keys ? "要点：" + keys + "\n" : ""}按真实交流的效果分项打分（�
 async function dbResolve(said, secs){
   const st = DB.st, A = DB.A; if (!st || st.busy) return; st.busy = true;
   const q = st.qs[st.i], ref = st.follow ? st.follow.a : dbRef(q), ask = !st.follow && /questions? for me|any questions/i.test(dbText(q));
-  $("#dbCtl").innerHTML = `<p class="small muted">${said ? "你说的：" + esc(said) : "这一回合没开口"}</p>${said ? `<p class="small muted" id="dbJudging">正在看你答得怎么样……</p>` : ""}`;
+  $("#dbCtl").innerHTML = `<p class="small muted">${said ? "你说的：" + esc(said) : "这一题没开口"}</p>${said ? `<p class="small muted" id="dbJudging">正在看你答得怎么样……</p>` : ""}`;
   const sc = await dbJudge(said, q, ref, ask); const jg = $("#dbJudging"); if (jg) jg.remove();
   let dmg = 0, note = "", wpm = 0;
-  if (sc.words < 4){ const d = st.mode === "cc" ? 10 : 14; if (st.game){ st.you = Math.max(0, st.you - d); try { await A.enemyMove("light", d); } catch (e) {} } note = st.game ? "这一回合没开口，对方占了上风。哪怕先说一句“Let me think for a second”也好。" : "这一题没开口。哪怕先说一句“Let me think for a second”也好。"; }
+  st.anim = null;
+  if (sc.words < 4){ const d = st.mode === "cc" ? 10 : 14; if (st.game){ st.you = Math.max(0, st.you - d); st.anim = {foe:true}; try { await A.enemyMove("light", d); } catch (e) {} } note = st.game ? "这一回合没开口，对方占了上风。哪怕先说一句“Let me think for a second”也好。" : "这一题没开口。哪怕先说一句“Let me think for a second”也好。"; }
   else {
     dmg = Math.round(6 + 30 * sc.cov) + (ask ? sc.questions * 4 : 0);
     if (st.mode === "432"){ wpm = secs > 3 ? Math.round(sc.words / (secs / 60)) : 0; st.wpm.push(wpm); const prev = st.wpm.length > 1 ? st.wpm[st.wpm.length - 2] : 0; if (prev && wpm > prev){ const b = Math.min(10, Math.round((wpm - prev) * 0.25)); dmg += b; note = `比上一遍每分钟多说了 ${wpm - prev} 个词，连击加成 +${b}。`; } }
     if (sc.needResult && !sc.result){ dmg = Math.round(dmg * 0.5); note = (note ? note + " " : "") + "没讲结果：对方加了护盾，伤害减半。讲项目最后一定要说结果（As a result, ...）。"; }
     const kind = sc.cov >= 0.7 ? "skill" : sc.cov >= 0.4 ? "heavy" : "light";
-    if (st.game){ try { await A.move(kind, dmg); } catch (e) {} }
+    if (st.game){ st.anim = {kind, dmg, hp0:A.hp}; try { await A.move(kind, dmg); } catch (e) {} }
   }
-  st.rounds.push({q: st.follow ? st.follow.q : dbText(q), said, cov:sc.cov, pts:sc.pts, dmg, note, wpm, secs: Math.round(secs || 0), questions: ask ? sc.questions : null});
+  st.rounds.push({qi: st.i, follow: !!st.follow, q: st.follow ? st.follow.q : dbText(q), said, cov:sc.cov, pts:sc.pts, dmg, note, wpm, secs: Math.round(secs || 0), questions: ask ? sc.questions : null});
   if (st.log){ st.log.rounds.push({q: st.follow ? st.follow.q : dbText(q), who: dbWho(st), said, score: Math.round(sc.cov * 100)}); }
   try { dayRec().sec += Math.min(240, Math.max(10, Math.round((performance.now() - (st.t0 || performance.now())) / 1000))); } catch (e) {}   /* 对话练习的时间也算进每天的练习时间 */
   save();
   if (st.game){ $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp)); }
   const alive = !st.game || (A.hp > 0 && st.you > 0), more = alive && (st.i + 1 < st.qs.length || (!st.follow && dbFollow(q) && !st.fdone[q.id]));
   if (!st.game) dmg = 0;   /* 对话练习：只看分数，不算伤害 */
-  $("#dbFb").innerHTML = `<div class="card db-fb"><p><b>这一回合 ${Math.round(sc.cov * 100)} 分</b>${dmg ? `，伤害 ${dmg}` : ""}${ask ? `；你问了 ${sc.questions} 个问题` : ""}${st.mode === "432" && wpm ? `；每分钟 ${wpm} 个词` : ""}${sc.ai ? `<span class="small muted">（Claude 按意思判的）</span>` : ""}</p>${note ? `<p class="small">${esc(note)}</p>` : ""}${sc.fb ? `<p class="small">${esc(sc.fb)}</p>` : ""}
+  $("#dbFb").innerHTML = `<div class="card db-fb"><p><b>${st.mode === "432" ? "这一遍" : st.follow ? "这个追问" : "这一题"} ${Math.round(sc.cov * 100)} 分</b>${dmg ? `，伤害 ${dmg}` : ""}${ask ? `；你问了 ${sc.questions} 个问题` : ""}${st.mode === "432" && wpm ? `；每分钟 ${wpm} 个词` : ""}${sc.ai ? `<span class="small muted">（Claude 按意思判的）</span>` : ""}</p>${note ? `<p class="small">${esc(note)}</p>` : ""}${sc.fb ? `<p class="small">${esc(sc.fb)}</p>` : ""}
     ${(sc.sub || []).length ? `<p class="small muted" style="margin-top:4px">${sc.sub.map(x => `${esc(x.s)} ${x.v}`).join(" · ")}</p>` : ""}
     ${sc.pts.map(p => `<p class="small ${p.ok ? "" : "db-miss"}">${p.ok ? "✓" : "✗"} ${esc(p.s)}${p.tip ? `<span class="muted">：${esc(p.tip)}</span>` : ""}</p>`).join("")}
     ${sc.rewrite ? `<p class="small muted" style="margin-top:6px">你可以这样说：</p><p class="small en">${esc(sc.rewrite)}</p>` : ""}
     ${ref ? `<details style="margin-top:6px"><summary class="small muted">参考回答：一种说法（不用照背）</summary><p class="small en">${esc(ref)}</p></details>` : ""}
     ${said ? `<button class="btn sm" data-act="db-ask" style="margin-top:8px">存起来问 Claude</button>` : ""}
-    <button class="btn primary block" data-act="db-next" style="margin-top:10px">${more ? "下一回合" : "看结果"}</button></div>`;
+    ${st.game && st.anim ? `<button class="btn sm" data-act="db-replay" style="margin-top:8px">回放</button>` : ""}
+    <button class="btn primary block" data-act="db-next" style="margin-top:10px">${more ? "继续" : "看结果"}</button></div>`;
   st.busy = false;
 }
 ACT["db-next"] = async () => {
-  const st = DB.st; if (!st || st.busy) return; const q = st.qs[st.i];
-  const alive = () => !st.game || (DB.A.hp > 0 && st.you > 0);
-  if (st.game && DB.A.hp > 0 && DB.A.hp <= 30 && !st.clashed && st.mode !== "432" && st.you > 0){ await dbClash(); if (DB.A.hp <= 0 || st.you <= 0) return dbEnd(); }
+  const st = DB.st; if (!st || st.busy || st.replaying) return; const q = st.qs[st.i];
+  if (st.game && DB.A.hp > 0 && DB.A.hp <= 30 && !st.clashed && st.mode !== "432" && st.you > 0){
+    await dbClash(); if (DB.A.hp <= 0 || st.you <= 0) return dbEnd();
+    /* 对波打完先停一下：可以回放，再继续 */
+    const c = st.lastClash; $("#dbCtl").innerHTML = `<div class="card"><p class="small">对波结果：${c.res.map(r => r ? "✓" : "✗").join(" ")}（${c.youWin ? "你赢了" : "对方赢了"}）</p><div class="row-gap" style="margin-top:8px"><button class="btn" data-act="db-creplay">回放对波</button><button class="btn primary" data-act="db-cont">继续</button></div></div>`;
+    return;
+  }
+  dbNextStep();
+};
+function dbNextStep(){
+  const st = DB.st; if (!st) return; const q = st.qs[st.i], alive = () => !st.game || (DB.A.hp > 0 && st.you > 0);
   if (!st.follow && st.mode !== "432" && dbFollow(q) && !st.fdone[q.id] && alive()){ st.fdone[q.id] = true; st.follow = dbFollow(q); return dbAsk(); }
   st.follow = null; st.i++;
   if (st.i < st.qs.length && alive()) dbAsk(); else dbEnd();
-};
+}
+ACT["db-cont"] = () => { const st = DB.st; if (!st || st.busy || st.replaying) return; dbNextStep(); };
 /* 对波：连续 3 句快问快答（你已经会的句子），每句在暴击时间内说对，交点往对方那边推三分之一；说错、说慢就退回来三分之一 */
 function dbClashItems(mode){
   const known = CAT.cards.filter(c => c.t === "r" && S.cards[c.id] && (S.cards[c.id].reps || 0) >= 1 && String(c.en).split(/\s+/).length <= 14);
@@ -13048,12 +13059,14 @@ async function dbClash(){
   const fx = A.clash({you:youC, foe:MON_COL[st.boss] || ["#FF5A3C", "#FFC46A"], getP:() => p, youSkill: BAT_CHAR ? ((A.loadout && A.loadout.skill) || "wideBeam") : "rig", foeSkill:"generic", foeId: st.boss});
   $("#dbCtl").innerHTML = `<div class="card db-clash"><p><b>对波！</b>双方都在聚能……</p></div>`; await fx.ready;
   const items = dbClashItems(st.mode), res = [];
+  const rec = {you:youC, foe:MON_COL[st.boss] || ["#FF5A3C", "#FFC46A"], youSkill: BAT_CHAR ? ((A.loadout && A.loadout.skill) || "wideBeam") : "rig", foeId: st.boss, hpBefore:A.hp, steps:[], res};   /* 回放用 */
   const qCard = document.querySelector(".db-q"); if (qCard) qCard.hidden = true;   /* 对波时上一题的问题先收起来，只看对波这一句 */
   for (let k = 0; k < items.length; k++){
-    const c = items[k], lim = critMs({en:c.en});
+    /* 对波的时间：至少 6 秒，句子越长越多（读中文、想、开口都要时间；识别的时间本来就不算） */
+    const c = items[k], lim = Math.round(Math.max(6000, 2500 + 650 * String(c.en).split(/\s+/).filter(Boolean).length));
     $("#dbFb").innerHTML = ""; $("#dbCtl").innerHTML = `<div class="card db-clash"><p><b>对波！第 ${k + 1}/${items.length} 句</b>：在 ${(lim / 1000).toFixed(1)} 秒内说对，把光推回去</p>${k === items.length - 1 ? `<p class="small">最后一句推得更远：${dbClashHint(p)}</p>` : ""}<p class="zh" style="font-size:18px;margin:6px 0">${esc(c.zh)}</p>
       <div class="db-bar"><i id="dbcBar"></i></div>
-      <div class="db-mic"><button class="mic" id="dbcMic" data-act="dbc-say" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="dbcHeard">点一下开始说（倒计时只算到你说完，识别的时间不算）</div></div>
+      <div class="db-mic"><button class="mic" id="dbcMic" data-act="dbc-say" aria-label="点一下开始说">${ICON.mic}</button><div class="heard" id="dbcHeard">点一下开始说</div></div>
       <div class="row-gap" style="justify-content:center;margin-top:6px"><input id="dbcText" placeholder="或者打字，回车交上去" style="flex:1;min-width:0;max-width:320px"></div>
       <p class="small muted" id="dbcRes" style="text-align:center">${res.map(r => r ? "✓" : "✗").join(" ")}</p></div>`;
     const t0 = performance.now(), cl = DB.cl = {t0, lim, recording:false, stopAt:null, done:false, resolve:null};
@@ -13070,10 +13083,15 @@ async function dbClash(){
     });
     DB.cl = null;
     const said = (ans.said || "").trim(), el = (ans.endAt || performance.now()) - t0, cmp = K.compareSaid(c.en, c.alt || [], said);
-    const ok = !!said && (cmp.exact || cmp.level === "close" || cmp.near) && el <= lim + 300;
+    let ok = !!said && (cmp.exact || cmp.level === "close" || cmp.near) && el <= lim + 300;
+    /* 识别不一定准：用麦克风说、没通过的，先给你看听到了什么，可以按“说对了”算 */
+    if (!ok && said && ans.mic && !ans.timeout && el <= lim + 300){
+      const rr = $("#dbcRes"); if (rr) rr.innerHTML = `听到：“${esc(said)}”　<button class="btn sm" data-act="dbc-mine">识别错了，我说对了</button>`;
+      ok = await new Promise(r => { DB.clMine = r; setTimeout(() => r(false), 3500); }); DB.clMine = null;
+    }
     /* 前面几句各推三分之一，最后一句推二分之一：不管前面怎样，最后一句说对和说错，结果都差很多 */
     const step = k === items.length - 1 ? 0.5 : 1 / 3;
-    res.push(ok); fx.burst(); const from = p, to = Math.max(-1, Math.min(1, p + (ok ? step : -step))), ta = performance.now();
+    res.push(ok); fx.burst(); const from = p, to = Math.max(-1, Math.min(1, p + (ok ? step : -step))), ta = performance.now(); rec.steps.push([from, to]);
     const rr = $("#dbcRes"); if (rr) rr.textContent = res.map(r => (r ? "✓" : "✗")).join(" ") + (ans.timeout ? "（时间到）" : !ok && said && el > lim + 300 ? "（说对了，但慢了）" : "");
     await new Promise(r => { const stp = now => { const u = Math.min(1, (now - ta) / 420); p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(stp); else r(); }; requestAnimationFrame(stp); });
   }
@@ -13083,6 +13101,7 @@ async function dbClash(){
   const out = dbClashOut(p), youWin = out.foe > 0, fall = youWin ? A.hp - out.foe <= 0 : st.you - out.you <= 0;
   await fx.end(youWin ? "you" : "foe", youWin ? out.foe : out.you, {fall});
   if (!youWin) st.you = Math.max(0, st.you - out.you);
+  Object.assign(rec, {youWin, dmg: youWin ? out.foe : out.you, fall, hpAfter:A.hp}); st.lastClash = rec;
   st.clashResult = p; $("#dbYou").textContent = st.you; $("#dbBoss").textContent = Math.max(0, Math.round(A.hp)); st.busy = false;
 }
 async function dbEnd(){
@@ -13091,8 +13110,8 @@ async function dbEnd(){
   if (st.game){ try { if (ko){ await A.knockout(); await A.finish(true); } else if (dead) await A.finish(false); } catch (e) {} }
   const avg = st.rounds.length ? Math.round(100 * st.rounds.reduce((s, r) => s + r.cov, 0) / st.rounds.length) : 0;
   const t432 = st.mode === "432" ? `<p class="small muted" style="margin-top:6px">${st.rounds.map((r, k) => `第 ${k + 1} 遍（${st.limits[k]} 秒）：讲到 ${Math.round(r.cov * 100)}%，每分钟 ${r.wpm || 0} 个词`).join("<br>")}</p>` : "";
-  $("#dbCtl").innerHTML = ""; $("#dbFb").innerHTML = `<div class="card"><h3>${st.game ? (ko ? "赢了：把它打倒了" : dead ? "输了：你被打倒了" : `这场没打倒它（它还剩 ${Math.max(1, Math.round(A.hp))} 血）`) : "练完了"}</h3><p>平均 ${avg} 分。</p>${t432}
-    ${st.rounds.map((r, k) => `<p class="small" style="margin-top:8px"><b>${st.mode === "432" ? "第 " + (k + 1) + " 遍" : "第 " + (k + 1) + " 回合"}：${Math.round(r.cov * 100)}%</b>　${esc(r.q)}</p>${r.pts.filter(p => !p.ok).slice(0, 3).map(p => `<p class="small db-miss">✗ ${esc(p.s)}</p>`).join("")}`).join("")}
+  $("#dbCtl").innerHTML = ""; $("#dbFb").innerHTML = `<div class="card"><h3>${st.game ? (ko ? "赢了：把它打倒了" : dead ? "输了：你被打倒了" : `这场没打倒它（它还剩 ${Math.max(1, Math.round(A.hp))} 血）`) : "练完了"}</h3><p>平均 ${avg} 分。</p>${t432}${st.game && st.lastClash ? `<button class="btn sm" data-act="db-creplay" style="margin-top:6px">回放对波</button>` : ""}
+    ${st.rounds.map((r, k) => `<p class="small" style="margin-top:8px"><b>${st.mode === "432" ? "第 " + (k + 1) + " 遍" : "第 " + ((r.qi == null ? k : r.qi) + 1) + " 题" + (r.follow ? " · 追问" : "")}：${Math.round(r.cov * 100)}%</b>　${esc(r.q)}</p>${r.pts.filter(p => !p.ok).slice(0, 3).map(p => `<p class="small db-miss">✗ ${esc(p.s)}</p>`).join("")}`).join("")}
     <div class="row-gap" style="margin-top:12px"><button class="btn primary" data-act="db-again">再来一场</button><button class="btn" data-act="db-home">回首页</button></div></div>`;
   if (st.log){ st.log.done = true; st.log.result = st.game ? (ko ? "赢" : dead ? "输" : "没打倒") : ""; save(); }
   planAutoDone("dboss:" + st.mode); if (!st.game){ planAutoDone("dtalk:" + st.mode); if (st.persona) planAutoDone("dtalk:" + st.mode + ":" + st.persona); }
@@ -13175,12 +13194,12 @@ ACT["db-ask"] = el => {
 ACT["dbc-say"] = async el => {
   const cl = DB.cl; if (!cl || cl.done) return; const btn = $("#dbcMic"), h = $("#dbcHeard");
   if (cl.recording){ try { stopAny(); } catch (e) {} return; }
-  cl.recording = true; micState(btn, "live"); if (h) h.textContent = "在听……说完再点一下，或者停一下就好";
+  cl.recording = true; micState(btn, "live"); if (h) h.textContent = "在听……";
   const left = Math.max(1200, cl.lim - (performance.now() - cl.t0)) + 1500;
   const r = await listenAny({short:true, maxMs:left, quietMs:1200, btn, heard:h, onStop: endAt => { cl.stopAt = endAt || performance.now(); }});
   cl.recording = false; micState(btn, null);
   if (!cl.stopAt) cl.stopAt = (r && r.endAt) || performance.now();
-  cl.resolve({said:((r && r.text) || "").trim(), endAt:(r && r.endAt) || cl.stopAt});
+  cl.resolve({said:((r && r.text) || "").trim(), endAt:(r && r.endAt) || cl.stopAt, mic:true});
 };
 
 /* 对话记录：每一场的题、你的回答、分数（最多 40 场，三个月以前的自动删掉） */
@@ -13415,6 +13434,22 @@ ACT["ck-go"] = el => {
 
 /* 一打开 app 就查一下现在选的 Whisper 模型在不在手机里，提示才写得对（读取 / 下载） */
 setTimeout(() => { try { if (typeof ASR !== "undefined" && ASR.checkCached && ASR.supported && ASR.supported()) ASR.checkCached(); } catch (e) {} }, 1500);
+
+/* 回放：这一回合打出去的那一下（血量先恢复到打之前，放完再放回去）；对波照记下来的推进再放一遍 */
+ACT["db-replay"] = async el => {
+  const st = DB.st, A = DB.A; if (!st || !st.anim || st.replaying || st.busy) return; st.replaying = true; if (el) el.disabled = true;
+  try { const a = st.anim, cur = A.hp; if (a.foe) await A.enemyMove("light", 0); else { if (cur <= 0 && A.revive) A.revive(); A.setHP(a.hp0, true); await A.move(a.kind, a.dmg); A.setHP(cur, true); } } catch (e) {}
+  st.replaying = false; if (el) el.disabled = false;
+};
+async function dbClashPlay(rec){
+  const st = DB.st, A = DB.A; if (A.revive) A.revive(); A.setHP(rec.hpBefore, true); let p = 0;
+  const fx = A.clash({you:rec.you, foe:rec.foe, getP:() => p, youSkill:rec.youSkill, foeSkill:"generic", foeId:rec.foeId}); await fx.ready;
+  for (const [from, to] of rec.steps){ await wait(650); fx.burst(); const ta = performance.now(); await new Promise(r => { const stp = now => { const u = Math.min(1, (now - ta) / 420); p = from + (to - from) * (1 - (1 - u) * (1 - u)); if (u < 1) requestAnimationFrame(stp); else r(); }; requestAnimationFrame(stp); }); }
+  await fx.end(rec.youWin ? "you" : "foe", rec.dmg, {fall:rec.fall}); A.setHP(rec.hpAfter, true);
+  if (st && st.game){ $("#dbBoss") && ($("#dbBoss").textContent = Math.max(0, Math.round(A.hp))); }
+}
+ACT["db-creplay"] = async el => { const st = DB.st; if (!st || !st.lastClash || st.replaying) return; st.replaying = true; if (el) el.disabled = true; try { await dbClashPlay(st.lastClash); } catch (e) {} st.replaying = false; if (el) el.disabled = false; };
+ACT["dbc-mine"] = () => { if (DB.clMine) DB.clMine(true); };
 
 </script>
 </body>
