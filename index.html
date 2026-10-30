@@ -731,7 +731,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.59.4"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.59.6"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2038,8 +2038,11 @@ function numWords(n){ n = Math.floor(Math.abs(n)); if (n < 1000) return n999(n);
 function yearWords(y){ if (y >= 2000 && y <= 2009) return "two thousand" + (y % 10 ? " " + N_ONES[y % 10] : ""); const hi = Math.floor(y / 100), lo = y % 100; return n999(hi) + " " + (lo === 0 ? "hundred" : lo < 10 ? "oh " + N_ONES[lo] : n999(lo)); }
 function ordWords(n){ const w = numWords(n); const last = w.match(/([a-z]+)$/)[1]; const irr = {one:"first", two:"second", three:"third", five:"fifth", eight:"eighth", nine:"ninth", twelve:"twelfth"}; return w.slice(0, -last.length) + (irr[last] || (last.endsWith("y") ? last.slice(0, -1) + "ieth" : last + "th")); }
 function decWords(s){ const [a, b] = s.split("."); return numWords(+a) + " point " + b.split("").map(d => N_ONES[+d]).join(" "); }
+const ACR_WORDS = new Set("NASA CAD PIN RAM ROM SIM GIF STEM SCUBA RADAR SONAR LEGO IKEA AIDS COVID NATO OPEC FIFA ZIP JPEG LASER WIFI".split(" "));
 function speakEN(text){
   let s = String(text || "");
+  /* 缩写一个字母一个字母地念：IMU → I M U，IMUs → I M U's；OK 念 okay；本来当单词念的（NASA、CAD、STEM……）不动 */
+  s = s.replace(/\bOK\b/g, "okay").replace(/\b([A-Z]{2,5})(s)?\b/g, (m, a, pl) => (ACR_WORDS.has(a) ? m : a.split("").join(" ") + (pl ? "'s" : "")));
   s = s.replace(/\bRS-?(\d)(\d{2})\b/g, (m, a, b) => "RS " + N_ONES[+a] + " " + n999(+b)).replace(/\b401\s*\(?k\)?/gi, "four-oh-one-k").replace(/\b8051\b/g, "eighty fifty-one").replace(/\bSpO2\b/g, "S P O two").replace(/\be\.g\.\s*/gi, "for example, ").replace(/\bi\.e\.\s*/gi, "that is, ").replace(/\bvs\.?(?=\s)/gi, "versus").replace(/\s&\s/g, " and ").replace(/°F\b/g, " degrees Fahrenheit").replace(/°C\b/g, " degrees Celsius");
   s = s.replace(/\b\d+(?:\.\d+){2,}\b/g, m => m.split(".").map(x => numWords(+x)).join(" dot "));
   s = s.replace(/([\d%KkMm])\s*[–—]\s*(\$?\d)/g, "$1 to $2").replace(/(\d)-(\d)/g, "$1 to $2");
@@ -3144,7 +3147,8 @@ async function whisperListen(o){
 function listenAny(o){ return whisperOn() ? whisperListen(o || {}) : SR.listen(o || {}); }
 function stopAny(){ if (WL.active) whisperStop(); else SR.stop(); }
 /* 录音时还是原来的样子（.live）；只有识别时换成转圈（.busy） */
-function micState(btn, st){ if (!btn) return; btn.classList.remove("busy"); if (st === "busy") btn.classList.remove("live"); if (st) btn.classList.add(st); }
+let MIC_LAST = null;
+function micState(btn, st){ if (!btn) return; if (/^(mic|micBtn|lMic)$/.test(btn.id)) MIC_LAST = st || null; btn.classList.remove("busy"); if (st === "busy") btn.classList.remove("live"); if (st) btn.classList.add(st); }
 /* 录音结束的提示：振一下，短短响一声 */
 function cue(){
   try { vib(35); } catch (e) {}
@@ -3717,7 +3721,7 @@ ACT["input-mode"] = el => {
   else S.settings.inputMode = "keyboard";
   save(); SR.abort();
   const s = RUN.stage;
-  if (s instanceof CardStage && (s.phase === "prompt" || s.phase === "retry")) s.render();
+  if (s instanceof CardStage && (s.phase === "prompt" || s.phase === "retry")){ s.render(); const mb = $("#micBtn") || $("#mic") || $("#lMic"); if (mb && MIC_LAST) micState(mb, MIC_LAST); }   /* 还在识别：新的按钮接着转圈 */
   else if (s instanceof ListenStage && !s.done) s.render();
   else if (typeof DG !== "undefined" && DG.st && DG.st.phase === "listen") dgRender();
 };
@@ -3749,7 +3753,7 @@ class CardStage {
   promptHTML(){
     const c = this.card;
     if (c.t === "r") return `<div class="zh">${esc(c.zh)}</div>`;
-    if (c.t === "w") return this.freeUse ? `<p class="small muted">用这个词说一句你自己的话：</p><div class="zh">${esc(c.mean)}</div><p class="small muted" style="margin-top:8px">说说你的生活、找工作、打球，什么都行。</p>` : `<div class="zh">${esc(c.zh)}</div><div class="parts" style="margin-top:10px"><span class="chip cue">要用上：${esc(c.mean)}</span></div>`;
+    if (c.t === "w") return this.freeUse ? `<p class="small muted">用这个词说一句你自己的话：</p><div class="zh">${esc(c.mean)}</div><p class="small muted" style="margin-top:8px">说说你的生活、找工作、打球，什么都行。</p>` : `<div class="zh">${esc(c.zh)}</div><div class="parts" style="margin-top:10px"><span class="chip cue">要用上：${esc(c.mean)}（${esc(c.word[0])} 开头，${/\s/.test(c.word) ? c.word.trim().split(/\s+/).length + " 个词" : c.word.length + " 个字母"}）</span></div>`;
     if (c.t === "t") return `<div class="verb">${esc(c.verb)}</div><div class="parts">${c.subj ? `<span class="chip">${esc(c.subj)}</span>` : ""}${c.obj ? `<span class="chip">${esc(c.obj)}</span>` : ""}<span class="chip cue">${esc(c.cue)}</span></div><p class="small muted" style="margin-top:10px">用 ${esc(c.verb)} 说一句完整的话</p>`;
     if (c.t === "f") return `<p class="small muted">你以前写过：</p><div class="wrong">${esc(c.wrong)}</div><p class="small muted" style="margin-top:8px">说出正确的版本</p>`;
     const done = c.steps.slice(0, this.step).map(s => `<div class="step-done">✓ ${esc(s.en)}</div>`).join("");
@@ -3819,8 +3823,14 @@ class CardStage {
     const base = [{text:t, play:"slow", label:"先听慢速，跟着说一遍"}, {text:t, play:"normal", label:"再听正常速度，跟着说一遍"}, {text:t, play:null, label:"不听了，自己说一遍"}];
     if (!this.leech) return base;
     const ch = K.chunkSentence(t); if (ch.length < 2) return base;
-    const cum = ch.map((_, i) => ch.slice(0, i + 1).join(" "));
-    return cum.slice(0, -1).map((x, i) => ({text:x, rest: t.slice(x.length).trim(), play:"slow", label: ch.length === 2 ? "先说前半句（后半句下一步加上）：听慢速，跟着说" : `先说前 ${i + 1} 块（后面的下一步加上）：听慢速，跟着说`})).concat([{text:t, play:"normal", label:"整句：听一遍，跟着说"}, {text:t, play:null, label:"不听了，自己说整句"}]);
+    /* 上次错在哪一块：先单独练那一块；不知道的话从后往前加（先最后一块、再加上前面一块……），句尾的语调不会被打断 */
+    const misses = [].concat((S.lastMiss || {})[this.card.id] || []).filter(Boolean);
+    if (misses.length){ const sets = misses.map(m => new Set(K.tokens(m))); const cov = ch.map(c => { const tk = K.tokens(c); if (!tk.length) return 1; return sets.reduce((a, st) => a + tk.filter(w => st.has(w)).length / tk.length, 0) / sets.length; });
+      const w = cov.indexOf(Math.min(...cov)), rest = cov.filter((_, i) => i !== w), second = rest.length ? Math.min(...rest) : 1;
+      /* 只有某一块明显比别的差（大部分词没说出来、比第二差的那块差一截）才先练它；不明显就从后往前加 */
+      if (cov[w] < 0.67 && second - cov[w] >= 0.2) return [{text:ch[w], play:"slow", label:"先练这一块（你上次这里没说好）：听慢速，跟着说"}].concat([{text:t, play:"normal", label:"整句：听一遍，跟着说"}, {text:t, play:null, label:"不听了，自己说一遍"}]); }
+    const suf = ch.map((_, i) => ch.slice(ch.length - 1 - i).join(" "));
+    return suf.slice(0, -1).map((x, i) => ({text:x, play:"slow", label: i === 0 ? "先说最后一块：听慢速，跟着说" : `再往前加一块：听慢速，跟着说`})).concat([{text:t, play:"normal", label:"整句：听一遍，跟着说"}, {text:t, play:null, label:"不听了，自己说整句"}]);
   }
   startClock(){
     this.t0 = performance.now(); const ck = $("#clock");
@@ -3861,10 +3871,12 @@ class CardStage {
     if (c0.t === "w" && this.said){
       const has = K.hasWord(this.said, c0.word);
       if (this.freeUse){ const fl = K.speechFlags(this.said); cmp = {exact: has && !fl.length, level: has ? (fl.length ? "close" : "exact") : "off", ops:[], notes: has ? [] : [{msg:"这句没用上要练的词"}], score: has ? 1 : 0, free:true}; if (!has) wHint = `要用上“${c0.mean}”这个词，它以 ${c0.word[0]} 开头`; }
-      else if (!has && cmp){ cmp = Object.assign({}, cmp, {exact:false, level: cmp.level === "exact" ? "close" : cmp.level, notes:[{msg:`这句要用上：${c0.word}`}].concat(cmp.notes || [])}); wHint = `这句要用上“${c0.mean}”这个词，它以 ${c0.word[0]} 开头`; }
+      else if (!has && cmp){ cmp = Object.assign({}, cmp, {exact:false, level: cmp.level === "exact" ? "close" : cmp.level, notes:[{msg:`这句要用上：${c0.word}`}].concat(cmp.notes || [])}); wHint = `意思可能对了，但这张卡练的是“${c0.mean}”里 ${c0.word[0]} 开头的那个词（${/\s/.test(c0.word) ? c0.word.trim().split(/\s+/).length + " 个词" : c0.word.length + " 个字母"}），用上它再说一遍`; }
     }
     this.mean = null; this.flags = [];
-    if (cmp && !cmp.exact){ this.flags = K.speechFlags(this.said); const gram = (cmp.notes || []).some(n => /^(tense|plural|agree|be)$/.test(n.k)); if (!cmp.free && !wHint && !gram){ const m = K.meaningCheck(t.en, t.alt, this.said); if (m.ok) this.mean = m; } }
+    if (cmp && !cmp.exact){ this.flags = K.speechFlags(this.said).concat(typeof rwSpeakFlags === "function" ? rwSpeakFlags(this.said, t.en) : []); const gram = (cmp.notes || []).some(n => /^(tense|plural|agree|be)$/.test(n.k)); if (!cmp.free && !wHint && !gram){ const m = K.meaningCheck(t.en, t.alt, this.said); if (m.ok) this.mean = m; }
+      if (this.mean && /^(colloc|chat|msg)$/.test(c0.tag || "")){ this.mean = null; const ws = String(t.en).replace(/[^A-Za-z' ]+/g, " ").trim().split(/\s+/).filter(Boolean);
+        wHint = `意思对了，但这张卡练的就是这个说法本身：${ws.slice(0, 8).map(w => w[0] + "…").join(" ")}${ws.length > 8 ? " …" : ""}（${ws.length} 个词）`; } }
     if (cmp && !cmp.exact && this.phase === "prompt" && !this.tries){
       const hints = wHint ? [wHint] : (this.mean || cmp.free) ? this.flags.map(f => f.msg).slice(0, 3) : K.hintNotes(cmp.ops);
       if (hints.length){ this.tries = 1; this.hints = hints; this.hintMode = (this.mean || cmp.free) && !wHint ? "flags" : "diff"; this.firstSaid = this.said; this.firstCmp = cmp; Snd.bad(); vib([25,30,25]); this.phase = "retry"; this.render(); return; }
@@ -3872,6 +3884,8 @@ class CardStage {
     this.cmp = cmp || (this.phase === "retry" ? this.firstCmp : null);
     if (cmp){ if (cmp.exact){ Snd.good(); vib(15); } else if (this.mean && !this.flags.length){ Snd.good(); } else if (cmp.level === "off"){ Snd.bad(); vib([30,40,30]); } }
     if (this.firstMean == null && this.phase === "retry") this.firstMean = !!this.mean;
+    /* 记下这张卡这次没说好的说法：下次补练时，先练没说好的那一块 */
+    try { if (cmp && !cmp.exact && this.said){ S.lastMiss = S.lastMiss || {}; S.lastMiss[this.card.id] = [this.said].concat([].concat(S.lastMiss[this.card.id] || [])).slice(0, 2); const ks = Object.keys(S.lastMiss); if (ks.length > 300) delete S.lastMiss[ks[0]]; } else if (cmp && cmp.exact && S.lastMiss) delete S.lastMiss[this.card.id]; } catch (e) {}
     this.phase = "reveal"; this.render();
   }
   retryHTML(){
@@ -4134,6 +4148,7 @@ ACT["c-misrec"] = () => {
   S.misWords = S.misWords || {}; for (const w of words) S.misWords[w] = (S.misWords[w] || 0) + 1;
   const top = Object.entries(S.misWords).sort((a, b) => b[1] - a[1]).slice(0, 50); S.misWords = Object.fromEntries(top); save();
   s.misrec = true; s.cmp = {exact:true, level:"exact", ops:[], notes:[], score:1, text:s.target().en}; s.mean = null; s.flags = [];
+  if (S.lastMiss && s.card) delete S.lastMiss[s.card.id];   /* 识别错了：那一次不当成“没说好” */
   s.render(); toast("按你说对算。被识别错的词记下了，可以在“今天练过的”里专门听");
   if (typeof batMisrec === "function") batMisrec(s);
 };
@@ -4190,7 +4205,7 @@ class ListenStage {
       } else {
         const cmp = this.cmp; const lv = cmp ? cmp.level : "off";
         const lab = cmp ? {exact:"一字不差", close:"差一点", off:"漏得比较多"}[lv] : "看一下原句";
-        el.innerHTML = `<div class="card">${head}<div class="verdict ${cmp ? lv : ""}">${lab}</div>${this.saidRaw ? `<p class="small muted">你说的：<span class="en" style="font-size:15px">${esc(this.saidRaw)}</span></p>` : ""}
+        el.innerHTML = `<div class="card">${head}<div class="verdict ${cmp ? lv : ""}">${lab}</div>${this.firstSaid && this.saidRaw && this.firstSaid !== this.saidRaw ? `<p class="small muted">第一遍：<span class="en" style="font-size:15px">${esc(this.firstSaid)}</span></p><p class="small muted">第二遍：<span class="en" style="font-size:15px">${esc(this.saidRaw)}</span></p>` : this.saidRaw ? `<p class="small muted">你说的：<span class="en" style="font-size:15px">${esc(this.saidRaw)}</span></p>` : ""}
           ${cmp && !cmp.exact ? `<div class="diff">${diffHTML(cmp.ops)}</div><p class="small muted">绿色是没听出来（或没说出来）的词。最容易漏的是 did you、want to、I'd 这类读得很轻的小词。</p>` : ""}
           <div class="say-line" style="margin-top:8px"><div class="en">${wordsHTML(c.en)}</div><button class="icon-btn" data-act="l-play" aria-label="朗读">${ICON.speak}</button></div>
           <div class="note">${esc(c.zh)}</div>
@@ -5539,7 +5554,7 @@ VIEWS.me = {
         <label class="fld"><span>怎么检查你说的话</span><select data-chg="set" data-key="inputMode"><option value="auto" ${s.inputMode === "auto" ? "selected" : ""}>点麦克风自动识别${!SR.ok ? "（这个浏览器不支持）" : SR.broken ? "（这台手机现在用不了）" : ""}</option><option value="keyboard" ${s.inputMode === "keyboard" ? "selected" : ""}>只用键盘语音输入或打字</option></select></label>
         <label class="fld"><span>说英语时用什么识别</span><select data-chg="set" data-key="srEngine" data-rerender="1"><option value="device" ${S.settings.srEngine !== "whisper" ? "selected" : ""}>手机自带的识别：快，但口音重时容易听错</option><option value="whisper" ${S.settings.srEngine === "whisper" ? "selected" : ""} ${ASR.supported() ? "" : "disabled"}>Whisper：更准，说完要等几秒（只在安装版里能用）</option></select></label>
         ${S.settings.srEngine === "whisper" ? `<label class="fld" style="margin-top:0"><span>Whisper 用哪个模型</span><select data-chg="asrmodel" data-rerender="1"><option value="base" ${(L.asrModel || "base") === "base" ? "selected" : ""}>快：base.en（约 80 MB）</option><option value="small" ${L.asrModel === "small" ? "selected" : ""}>准一些：small.en（约 250 MB，慢一两秒）</option></select></label>` : ""}
-        ${S.settings.srEngine === "whisper" ? `<p class="small muted" style="margin:-4px 0 8px">说完停一下，会自动结束录音。第一次用要下载约 80 MB 的模型（在“存储空间”里管理）。Whisper 偶尔会把很小的口误自动“修好”，所以语法检查可能漏掉个别错误。</p>` : ""}
+        ${S.settings.srEngine === "whisper" ? `<p class="small muted" style="margin-top:12px;margin:-4px 0 8px">说完停一下，会自动结束录音。第一次用要下载约 80 MB 的模型（在“存储空间”里管理）。Whisper 偶尔会把很小的口误自动“修好”，所以语法检查可能漏掉个别错误。</p>` : ""}
         <label class="fld"><span>给 Claude 的自我介绍（可选）</span><textarea rows="3" data-chg="profile" placeholder="比如：机械工程硕士，正在准备美国工程类岗位面试，口语大约 A2–B1">${esc(S.settings.profile || "")}</textarea></label>
         <label class="fld"><span>说话中间停顿</span><select data-chg="srlong"><option value="on" ${L.srLong !== false ? "selected" : ""}>停 2.5 秒才算说完</option><option value="off" ${L.srLong === false ? "selected" : ""}>停一下就结束（手机默认）</option></select></label>
         <label class="fld"><span>停 2 秒自动检查</span><select data-chg="set" data-key="autoCheck">${[["smart","自动判断：语音说完自动查，打字时不查"],["on","一直开"],["off","关掉：每次自己点“检查”"]].map(([v, l]) => `<option value="${v}" ${(s.autoCheck || "smart") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
@@ -11797,7 +11812,8 @@ const BT = (() => {
       await run(winner, [{transform:"none"}, {transform:"translateY(-12%)", offset:0.25}, {transform:"none", offset:0.5}, {transform:"translateY(-7%)", offset:0.75}, {transform:"none"}], {duration:760, easing:"ease-in-out"});
     };
     /* 超过了昨天的自己：你的角色跳两下，周围冒星星 */
-    A.cheer = async () => { sparkles(you); pose(you, "win", 300); await run(you, [{transform:"none"}, {transform:"translateY(-12%)", offset:0.25}, {transform:"none", offset:0.5}, {transform:"translateY(-7%)", offset:0.75}, {transform:"none"}], {duration:760, easing:"ease-in-out"}); pose(you, "idle", 300); };
+    A.cheer = async () => { sparkles(you); pose(you, "win", 300); await run(you, [{transform:"none"}, {transform:"translateY(-12%)", offset:0.25}, {transform:"none", offset:0.5}, {transform:"translateY(-7%)", offset:0.75}, {transform:"none"}], {duration:760, easing:"ease-in-out"}); };   /* 胜利姿势保持住，下一只出来时再变回起手式（A.youIdle） */
+    A.youIdle = () => pose(you, "idle", 300);
     /* 预览用的几个动作（“对战角色”页） */
     A.preview = async act => {
       clearPose(); A.setHP(A.max, true); A.shields = 0; paintShields();
@@ -12181,7 +12197,8 @@ const GAME = {
     const nCards = RUN.items.filter(it => it.k === "card").length;
     const day = batDayRec(); if (!day.hp){ const ref = K.battleRef(S.battle, today()); day.ref = ref; day.hp = ref ? S.battle[ref].dmg : 0; }
     const r = RUN.gameResume || null; RUN.gameResume = null;
-    GAME.st = {A, smalls: r ? r.smalls : Math.max(2, Math.min(5, Math.floor(nCards / 3))), k: r ? Math.max(0, r.k - 1) : 0, combo: r ? r.combo : 0, best: r ? r.best : 0, defeated: r ? r.defeated : 0,
+    S.game.prog = S.game.prog || {k:0, smalls:6};   /* 这一轮打到第几只：跨着每次练习接着算，每次练得少也能打到精英和首领 */
+    GAME.st = {A, smalls: r ? r.smalls : S.game.prog.smalls, k: r ? Math.max(0, r.k - 1) : Math.min(S.game.prog.k, S.game.prog.smalls), combo: r ? r.combo : 0, best: r ? r.best : 0, defeated: r ? r.defeated : 0,
       chain:Promise.resolve(), enemy:null, bossDown: r ? r.bossDown : false, todayBefore:day.dmg, sessionDmg: r ? r.sessionDmg : 0, energy: r ? r.energy : 0, last:[],
       php: r && r.php != null ? r.php : 100, giveups: r ? r.giveups || 0 : 0, eliteN: r ? r.eliteN || 0 : 0, minorN: r ? r.minorN || 0 : 0, giant, place};
     A.onYouHit = d => { const st = GAME.st; if (!st || st.A !== A) return; st.php = Math.max(0, st.php - d); A.setYouHP(st.php, 100); };
@@ -12193,7 +12210,7 @@ const GAME = {
     GAME.next(true);
     if (r && r.hp != null && GAME.st.enemy){ GAME.st.enemy.hp = r.hp; A.setHP(r.hp, true, GAME.st.enemy.max); }
     GAME.score(); GAME.meter();
-    if (!L.gameTip){ const g = document.querySelector(".g-top"); if (g) g.insertAdjacentHTML("beforeend", `<div class="panel g-tip"><b>怎么打</b><p class="small" style="margin-top:4px">说完一句，你的角色就出招：完全对、基本对、意思对（换了个说法）都出重击，完全对、而且看到就能开口、正常语速一口气说完（十个词的句子大约 7 秒），还有暴击；只要开口说了，至少也能擦伤对手；一个字没说，对手加一层护盾，还会反击你：小兵打得轻，首领打得最重。重练时说对就能打碎护盾。被识别错了，就点“我说对了，是识别错了”，和识别对了完全一样。每次第一次就说对，攒一格能量；攒满 5 格，下一张是大招卡，说对了就放大招。没看清，点“回放”。</p><button class="btn sm" data-act="g-tip-ok" style="margin-top:6px">知道了</button></div>`); }
+    if (!L.gameTip){ const g = document.querySelector(".g-top"); if (g) g.insertAdjacentHTML("beforeend", `<div class="panel g-tip"><b>怎么打</b><p class="small" style="margin-top:4px">说完一句，你的角色就出招：完全对、基本对、意思对（换了个说法）都出重击，完全对、而且看到就能开口、正常语速一口气说完（十个词的句子大约 7 秒），还有暴击；只要开口说了，至少也能擦伤对手；一个字没说，对手加一层护盾，还会反击你：小兵打得轻，首领打得最重。重练时说对就能打碎护盾。被识别错了，就点“我说对了，是识别错了”，和识别对了完全一样。每次第一次就说对，攒一格能量；攒满 5 格，下一张是大招卡，说对了就放大招，没说出来能量降到 3 格。没看清，点“回放”。</p><button class="btn sm" data-act="g-tip-ok" style="margin-top:6px">知道了</button></div>`); }
   },
   score(){ const st = GAME.st; if (!st) return; const day = batDayRec(); st.A.setScore(`今天 ${st.todayBefore + st.sessionDmg}${day.hp ? ` / 昨天 ${day.hp}` : " 点"}`); },
   /* 连击、能量（5 格满了，下一张就是大招卡）、第几只 */
@@ -12240,12 +12257,15 @@ const GAME = {
       if (tier === "elite" && L.rivals !== false && st.rivals && st.rivals.length && ((st.eliteSeen = (st.eliteSeen || 0) + 1) % 3 === 0)){ const r = rivalFor(); if (r) return r; }
       return customFor(tier) || pick(i);
     };
+    /* 随机挑一只，不和上一只一样 */
+    const rndPick = (fn, key) => { st.lastPick = st.lastPick || {}; let e = null; for (let k = 0; k < 6; k++){ e = fn(Math.floor(Math.random() * 1000)); if (!e || e.name !== st.lastPick[key]) break; } if (e) st.lastPick[key] = e.name; return e; };
     const pick = i => {
       /* 巨大的局：人形小怪是真人大小，放在城市里不对，换成小怪怪物；精英档全用精英怪 */
-      if (st.giant && typeof TuokouMonsters !== "undefined"){ const m0 = BT.mob(i); if (m0.tier === "elite"){ st.eliteN = (st.eliteN || 0) + 1; return BT.eliteMon(st.eliteN - 1); } st.minorN = (st.minorN || 0) + 1; return BT.monster(st.minorN - 1); }
-      if (i % 4 === 3) return BT.monster(Math.floor(i / 4));
+      if (st.giant && typeof TuokouMonsters !== "undefined"){ const m0 = BT.mob(i); if (m0.tier === "elite"){ st.eliteN = (st.eliteN || 0) + 1; return rndPick(n => BT.eliteMon(n), "elite"); } st.minorN = (st.minorN || 0) + 1; return rndPick(n => BT.monster(n), "mon"); }
+      st.monSlot = st.monSlot || {}; const blk = Math.floor(i / 4); if (st.monSlot[blk] == null) st.monSlot[blk] = 1 + Math.floor(Math.random() * 3);
+      if (i % 4 === st.monSlot[blk]) return rndPick(n => BT.monster(n), "mon");
       const m = BT.mob(i);
-      if (m.tier === "elite" && typeof TuokouMonsters !== "undefined"){ st.eliteN = (st.eliteN || 0) + 1; if (st.eliteN % 2 === 0) return BT.eliteMon(st.eliteN / 2 - 1); }
+      if (m.tier === "elite" && typeof TuokouMonsters !== "undefined"){ st.eliteN = (st.eliteN || 0) + 1; if (st.eliteN % 2 === 0) return rndPick(n => BT.eliteMon(n), "elite"); }
       return m;
     };
     if (st.k < st.smalls) e = pick0(st.k);
@@ -12260,6 +12280,7 @@ const GAME = {
     const nm = document.getElementById("gName");
     const total = st.smalls + (st.bossDown ? 0 : 1); const no = Math.min(st.k, total);
     if (nm) nm.innerHTML = `<b>${esc(e.name)}</b> ${esc(e.en)}${e.boss ? `　<span class="g-weak">首领 · 弱点：${esc((TAGS[e.tag] || TAGS.other).label)}</span>` : ""}　<span class="g-wave">${st.k <= total ? `第 ${no}/${total} 只` : "加赛"}</span>`;
+    if (!first && st.A.youIdle) st.A.youIdle();
     return first ? Promise.resolve() : st.A.enemyIn();
   },
   onCard(entry){ const st = GAME.st; if (!st) return; GAME.focus(); st.chain = st.chain.then(() => GAME.play(entry)).catch(() => {}); },
@@ -12267,6 +12288,9 @@ const GAME = {
     if (!GAME.st || !st.A.root.isConnected) return;
     /* 原来没算“说对”的：补上连击和能量；说得够快就补上暴击 */
     const old = K.battleFirst(Object.assign({}, entry, {mis:false})), wasOk = ["exact", "close", "meaning", "sound"].includes(old);
+    /* 大招卡被识别错了：改判成说对，就放大招（能量用在大招上，不再补） */
+    if (entry.special && !wasOk){ st.combo++; st.best = Math.max(st.best, st.combo); st.energy = 0; GAME.meter(); const e = st.enemy, dmg = Math.round(40 * (e.boss && entry.tag === e.tag ? 1.5 : 1));
+      st.sessionDmg += delta; GAME.score(); GAME.say(`识别错了，按说对算：大招！-${dmg}`); st.last = [{kind:"special", dmg, label:`大招！-${dmg}`}]; await st.A.special(dmg); await GAME.afterHit(); return; }
     if (!wasOk){ st.combo++; st.best = Math.max(st.best, st.combo); if (st.energy < 5){ st.energy++; if (st.energy >= 5) GAME.armSpecial(); } GAME.meter(); }
     /* 暴击只加在打到对手身上的伤害里（和正常打中一样），和昨天比的成绩只算底数 */
     const critBonus = entry.ms > 0 && entry.ms <= critMs(entry) ? 5 : 0; if (critBonus) st.A.pop("暴击！", "crit");
@@ -12283,7 +12307,8 @@ const GAME = {
     if (A.hp <= 0 && !st.pendingNext){
       st.last.push({kind:"ko"});
       await A.knockout(); st.defeated++; A.cheer();
-      if (e.boss){ st.bossDown = true; S.game.boss = null; S.game.bossWins = (S.game.bossWins || 0) + 1; S.game.bossN = (S.game.bossN || 0) + 1; save(); }
+      if (e.boss){ st.bossDown = true; S.game.boss = null; S.game.bossWins = (S.game.bossWins || 0) + 1; S.game.bossN = (S.game.bossN || 0) + 1; S.game.prog = {k:0, smalls:6}; save(); }
+      else if (st.k <= st.smalls){ S.game.prog = S.game.prog || {k:0, smalls:6}; S.game.prog.k = Math.min(st.k, st.smalls); save(); }   /* 记下打到第几只 */
       GAME.say(e.boss ? `打败了首领「${e.name}」！` : `打倒了${e.name}！`);
       /* 先停在胜利画面；开始下一题的时候，新的对手才出来 */
       st.pendingNext = true;
@@ -12299,13 +12324,12 @@ const GAME = {
     if (entry.spoke || entry.mis) st.giveups = 0;   /* 开口说了任何一句，就从头算 */
     /* 大招卡：第一次就说对（至少意思对），马上放大招 */
     if (entry.special){
-      st.energy = 0; GAME.meter();
-      if (ok1 || entry.mis){
+      if (ok1 || entry.mis){ st.energy = 0; GAME.meter();
         const e = st.enemy; const dmg = Math.round(40 * (e.boss && entry.tag === e.tag ? 1.5 : 1));
         GAME.say(`大招！-${dmg}`); st.last.push({kind:"special", dmg, label:`大招！-${dmg}`});
         await A.special(dmg); await GAME.afterHit(); return;
       }
-      GAME.say("大招卡没说出来：能量清空了，再攒 5 格。正确说法看下面"); return;
+      st.energy = 3; GAME.meter(); GAME.say("大招卡没说出来：能量降到 3 格，再说对 2 次又能放。正确说法看下面"); return;
     }
     const LBL = {exact:"完全对", close:"基本对", meaning:"意思对了，换了个说法", sound:"听起来很接近", graze:"开口了，擦伤"};
     for (const ev of plan.events){
@@ -13545,6 +13569,7 @@ VIEWS.errlog = {
       ${rows.length ? rows.map(x => { const recent = (x.e.hits || []).filter(t => Date.now() - t < 30 * 864e5).length, total = (x.e.seed || 0) + (x.e.hits || []).length, on = top.includes(x.c);
         return `<div class="card" style="margin-top:8px"><p><b>${x.c} ${esc(ERR_DEFS[x.c].n)}</b>${on ? `<span class="small" style="color:#B42318">　在清单里</span>` : x.e.off ? `<span class="small muted">　已移出清单</span>` : ""}${x.e.pri ? `<span class="small muted">　（导入时标了优先）</span>` : ""}</p>
           <p class="small muted">一共 ${total} 次，最近一个月 ${recent} 次${recent === 0 && (x.e.hits || []).length ? "（这个月没再出现 ✓）" : ""}</p><p class="small">${esc(ERR_DEFS[x.c].tip)}</p>
+          ${(() => { const ex = [...new Set((S.replies || []).slice().reverse().flatMap(r => (r.issues || []).filter(z => z.c === x.c).map(z => z.s)))].slice(0, 3); return ex.length ? `<p class="small muted" style="margin-top:4px">你写过：${ex.map(z => "“" + esc(z) + "”").join("、")}</p>` : ""; })()}
           <button class="linkbtn small" data-act="err-toggle" data-c="${x.c}">${x.e.off ? "加回清单" : "我觉得改掉了，移出清单"}</button></div>`; }).join("") : `<p class="muted small" style="margin-top:12px">还没有统计。导入“错误统计”，或者在“写作”里写一次，就会有了。</p>`}</div>`;
   }
 };
@@ -13659,7 +13684,7 @@ function pronListenHTML(){
     return `<div class="card"><button class="linkbtn small" data-act="pr-tab" data-v="listen">← 返回</button><p class="small muted">${esc(u.name)} · 第 ${R.i + 1}/${R.total} 题</p><p class="small" style="margin:4px 0 10px">${esc(u.tip)}</p>
       <button class="btn block" data-act="pr-play">▶ 再听一遍</button>
       <div class="row-gap" style="margin-top:12px;justify-content:center">${q.opts.map(o => `<button class="btn${R.picked ? (o === q.ans ? " pr-right" : o === R.picked ? " pr-wrong" : "") : ""}" data-act="pr-pick" data-v="${esc(o)}" style="min-width:96px">${esc(o)}</button>`).join("")}</div>
-      <p class="small" id="prFb" style="text-align:center;margin-top:8px">${R.picked ? (R.picked === q.ans ? "✓" : `✗ 是 ${esc(q.ans)}`) + `<span class="muted">　点哪个就听哪个</span>` : ""}</p>
+      <p class="small" id="prFb" style="text-align:center;margin-top:8px">${R.picked ? (R.picked === q.ans ? "✓" : `✗ 是 ${esc(q.ans)}`) + `<span class="muted">　点击词汇听读音</span>` : ""}</p>
       ${R.picked ? `<button class="btn primary block" data-act="pr-next" style="margin-top:8px">下一题</button>` : ""}</div>`;
   }
   const gb = pronGB().length > 0;
@@ -13967,6 +13992,21 @@ ACT["rw-copy"] = el => { const k = el.dataset.k, t = k === "last" ? (RW.doneLast
 ACT["rw-ask-h"] = el => { const x = (S.replies || [])[+el.dataset.k]; if (!x) return; S.replyAsk = (S.replyAsk || []).concat({mode:x.mode, letter:x.letter || "", text:x.final, ts:Date.now()}).slice(-20); save(); toast(`存好了（共 ${S.replyAsk.length} 条）。在“我的 → 问 Claude”里一起发`); };
 ACT["rw-new"] = () => { RW.text = ""; RW.letter = ""; RW.first = null; RW.firstIssues = null; RW.issues = null; RW.doneLast = null; UI.render(); };
 ACT["rw-del"] = async el => { if (!await sheet("删除这一条记录？", "", "删除", true)) return; S.replies = (S.replies || []).filter((x, i) => i !== +el.dataset.k); save(); UI.render(); };
+
+/* 日常练习用的语法检查：只用不容易误判的几类；参考说法自己也会被同一条规则标出来的不算 */
+const RW_SPEAK = new Set(["B1", "B2", "B3", "B4", "B5", "B7", "B8", "B10", "B11", "B13", "A3", "A5", "A2"]);
+function rwSpeakFlags(said, ref){
+  try { const refC = new Set(rwCheck(String(ref || ""), "", false).map(x => x.c)); const seen = new Set();
+    const top = typeof errTop === "function" ? errTop(13) : [], rank = c => { const i = top.indexOf(c); return i < 0 ? 99 : i; };
+    return rwCheck(String(said || ""), "", false).filter(x => RW_SPEAK.has(x.c) && !refC.has(x.c)).filter(x => { const k = x.c + x.s; if (seen.has(k)) return false; seen.add(k); return true; })
+      .sort((a, b) => rank(a.c) - rank(b.c)).slice(0, 3).map(x => ({k:"gram", c:x.c, msg:`“${x.s}”：${x.tip || (ERR_DEFS[x.c] || {}).tip || ""}`})); } catch (e) { return []; }
+}
+/* 错误档案：写作检查的规则更新了，就按新规则把以前写的回复重新统计一遍（每个版本只做一次） */
+setTimeout(() => { try { const VER = "1.59.5"; if (!S || L.rwVer === VER) return; const reps = S.replies || []; if (!reps.length){ L.rwVer = VER; saveLocal(); return; }
+  const st = errState(); for (const c of Object.keys(st)) st[c].hits = [];
+  for (const x of reps){ const iss = rwCheck(x.first || x.final || "", x.letter || "", x.mode === "mail"); x.issues = iss.map(z => ({c:z.c, s:z.s})); x.codes = [...new Set(iss.map(z => z.c))];
+    for (const c of x.codes){ st[c] = st[c] || {seed:0, hits:[]}; st[c].hits.push(x.ts); } }
+  L.rwVer = VER; saveLocal(); save(); } catch (e) {} }, 2000);
 
 </script>
 </body>
