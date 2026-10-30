@@ -731,7 +731,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.59.1"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.59.2"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -13400,15 +13400,22 @@ VIEWS.write = {
       <div class="card"><p class="small muted">${mail ? "对方的邮件（可以不填）" : "对方的来信"}</p><textarea id="rwLetter" rows="4" style="width:100%" placeholder="${mail ? "要回复的邮件贴进来" : "把笔友的来信粘贴进来"}">${esc(d.letter)}</textarea>
         ${mail ? "" : `<button class="linkbtn small" data-act="rw-sample">换一封练习信</button>`}</div>
       <div class="card"><p class="small muted">先用中文列关键词（可以不填）</p>
-        <div class="rw-plan">${mail ? `<input id="rwA" placeholder="目的（为什么写）"><input id="rwR" placeholder="要点"><input id="rwQ" placeholder="下一步（想让对方做什么）">` : `<input id="rwA" placeholder="回答什么"><input id="rwR" placeholder="回应什么"><input id="rwQ" placeholder="问什么">`}</div></div>
+        <div class="rw-plan">${mail ? `<input id="rwA" placeholder="目的（为什么写）"><input id="rwR" placeholder="要点"><input id="rwQ" placeholder="下一步（想让对方做什么）">` : `<input id="rwA" placeholder="回答：对方问的（比如问你周末干嘛）"><input id="rwR" placeholder="回应：对方说的事（比如“那太酷了”）"><input id="rwQ" placeholder="提问：你想问对方的">`}</div></div>
       <div class="card"><p class="small muted">直接用英文写，一句只讲一件事，先别改</p><textarea id="rwText" class="en" rows="8" style="width:100%" placeholder="${mail ? "Hi …," : "Hi! …"}">${esc(d.text)}</textarea>
         <details style="margin-top:6px"><summary class="small">${mail ? "邮件常用说法" : "聊天语块"}（点一下插进去）</summary>${rwMovesHTML(mail ? MAIL_MOVES : CHAT_MOVES)}</details>
         <div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="rw-check">检查</button>${typeof AI !== "undefined" && AI.fn && !AI.off ? `<button class="btn" data-act="rw-ai">让 Claude 只标错误</button>` : ""}<button class="btn" data-act="rw-done">完成</button><button class="btn ghost" data-act="rw-ask">存起来问 Claude</button>${mail ? `<button class="btn ghost" data-act="w-copy">复制给 Claude 改好</button>` : ""}</div></div>
+      ${RW.doneLast ? `<div class="card" style="margin-top:10px;border-color:#2F9E5B"><b>存好了 ✓</b><p class="en" style="white-space:pre-wrap;margin-top:6px;font-size:15px">${esc(RW.doneLast.text)}</p>
+        <div class="row-gap" style="margin-top:8px"><button class="btn sm" data-act="rw-copy" data-k="last">复制</button><button class="btn sm primary" data-act="rw-new">写下一封</button></div></div>` : ""}
       <div id="rwRes"></div>
       ${mail ? `<details class="panel" style="margin-top:12px"><summary>规则查不出来的，发送前自己再过一遍</summary><ul class="issues">
         <li>第一句就说清写信的目的了吗？</li><li>这件事是平时、过去、已经，还是正在？时态对吗？</li><li>interested in、looking forward to、good at 后面接东西了吗？</li>
         <li>结尾有没有一句下一步（比如约个时间）？</li><li>感谢信：面试后 24 小时内发，提一个面试里聊到的具体内容。</li></ul></details>` : ""}
-      <p class="small muted" style="margin-top:8px">现在检查的清单：${top.length ? top.map(c => esc(c + " " + ERR_DEFS[c].n)).join("、") : "（还没有统计）"}　<button class="linkbtn small" data-act="nav" data-v="errlog">错误档案</button></p></div>`;
+      <p class="small muted" style="margin-top:8px">现在检查的清单：${top.length ? top.map(c => esc(c + " " + ERR_DEFS[c].n)).join("、") : "（还没有统计）"}　<button class="linkbtn small" data-act="nav" data-v="errlog">错误档案</button></p>
+      ${(S.replies || []).length ? `<div class="sec-title">我写过的（${S.replies.length}）</div>${S.replies.map((x, i) => [x, i]).reverse().map(([x, i]) => { const d = new Date(x.ts);
+        return `<details class="card" style="margin-top:8px"><summary><b>${x.mode === "mail" ? "邮件" : "回复"}</b>　<span class="small muted">${d.getMonth() + 1} 月 ${d.getDate()} 日</span><br><span class="small">${esc(String(x.final || "").slice(0, 60))}${String(x.final || "").length > 60 ? "…" : ""}</span></summary>
+          ${x.letter ? `<p class="small muted" style="margin-top:6px">对方：${esc(x.letter)}</p>` : ""}<p class="en" style="white-space:pre-wrap;margin-top:6px;font-size:15px">${esc(x.final || "")}</p>
+          ${x.first && x.first !== x.final ? `<p class="small muted" style="margin-top:4px">初稿：${esc(x.first)}</p>` : ""}
+          <div class="row-gap" style="margin-top:6px"><button class="btn sm" data-act="rw-copy" data-k="${i}">复制</button><button class="btn sm ghost" data-act="rw-del" data-k="${i}">删除</button></div></details>`; }).join("")}` : ""}</div>`;
   },
   mount(){ const l = $("#rwLetter"), t = $("#rwText"); if (l) l.addEventListener("input", () => { RW.letter = l.value; }); if (t) t.addEventListener("input", () => { RW.text = t.value; }); }
 };
@@ -13452,6 +13459,7 @@ ACT["rw-ai"] = async () => {
 /* 完成：改过的句子自动变成改错卡（过几天在复习里凭记忆再写一遍）；第一次检查查出来的错误记进错误档案 */
 ACT["rw-done"] = () => {
   const text = (($("#rwText") || {}).value || "").trim(); if (!text){ toast("先写几句"); return; }
+  if (RW.doneLast && RW.doneLast.text === text){ toast("这一封已经存好了"); return; }   /* 重复点完成：不存两份 */
   if (RW.first === null){ RW.first = text; RW.firstIssues = rwCheck(text, RW.letter); }
   const st = errState(), now = Date.now(), codes = [...new Set((RW.firstIssues || []).map(x => x.c))];
   for (const c of codes){ st[c] = st[c] || {seed:0, hits:[]}; st[c].hits = (st[c].hits || []).concat(now).slice(-80); }
@@ -13467,8 +13475,8 @@ ACT["rw-done"] = () => {
   S.replies = (S.replies || []).concat({ts:now, mode:wMode(), letter:RW.letter, first:RW.first, final:text, codes}).slice(-30);
   if (typeof planAutoDone === "function") planAutoDone("write:" + wMode());
   save(); try { rebuildCatalog(); } catch (e) {}
-  toast(made ? `完成：${made} 句改过的句子变成了改错卡，过几天会在复习里出现` : "完成：已记进错误档案");
-  RW.text = ""; RW.first = null; RW.firstIssues = null; RW.issues = null; UI.render();
+  toast(made ? `存好了：${made} 句改过的句子变成了改错卡` : codes.length ? "存好了：第一次检查查出的错记进了错误档案" : "存好了");
+  RW.doneLast = {ts:now, text, mode:wMode()}; UI.render();   /* 不清空：先显示存好的内容，点“写下一封”才清 */
 };
 VIEWS.errlog = {
   render(){
@@ -13804,20 +13812,23 @@ const rdSay = (t, rate) => TTS.speak(t, {voice: typeof pronPick === "function" ?
 VIEWS.read = {
   tab:"home",
   render(){
-    const L0 = rdState(), A = RDG.cur ? L0.find(x => x.id === RDG.cur) : null;
+    const L0 = rdState(), A = RDG.cur ? L0.find(x => x.id === RDG.cur) : null, E = RDG.edit ? L0.find(x => x.id === RDG.edit) : null;
+    if (E) return `<div class="wrap">${backBtn()}<h2>修改文章</h2><input id="rdETitle" value="${esc(E.title || "")}" placeholder="标题" style="width:100%;margin-top:8px"><textarea id="rdEText" rows="14" style="width:100%;margin-top:6px">${esc(E.text)}</textarea>
+      <div class="row-gap" style="margin-top:8px"><button class="btn primary" data-act="rd-save">保存</button><button class="btn ghost" data-act="rd-cancel">取消</button></div></div>`;
     if (A) return rdArticleHTML(A);
     const ai = typeof AI !== "undefined" && AI.fn && !AI.off;
     return `<div class="wrap">${backBtn()}<h2>阅读</h2>
       <details class="card" ${L0.length ? "" : "open"}><summary><b>去哪找文章</b></summary>
         ${READ_SITES.map(([n, u, d]) => `<p class="small" style="margin-top:8px"><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a><br><span class="muted">${esc(d)}</span></p>`).join("")}
         <p class="small" style="margin-top:8px">你要面试的公司官网的新闻、产品页<br><span class="muted">面试和 coffee chat 时正好用得上</span></p>
+        <p class="small muted" style="margin-top:8px">复制前先打开浏览器的“简化视图”或“阅读模式”（Chrome：设置 → 无障碍 → 简化视图），广告和导航就不会混进来；贴进来以后，像广告、导航的行也会自动去掉。</p>
         <p class="small muted" style="margin-top:8px">挑读着不费劲的：一段里不认识的词最好不超过一两个（大约认识 95%–98% 的词）。大部分时候读这种；偶尔读一篇难一点的，只精读一两段。话题挑你感兴趣、面试和 coffee chat 用得上的。</p></details>
       <div class="card" style="margin-top:10px"><b>贴一篇进来</b><input id="rdTitle" placeholder="标题（可以不填）" style="width:100%;margin-top:8px"><textarea id="rdText" rows="6" style="width:100%;margin-top:6px" placeholder="把文章粘贴到这里"></textarea>
         <button class="btn primary" data-act="rd-add" style="margin-top:8px">开始读</button></div>
       ${ai ? `<div class="card" style="margin-top:10px"><b>让 Claude 写一篇</b><input id="rdTopic" placeholder="话题，比如：高尔夫球杆怎么设计" style="width:100%;margin-top:8px"><button class="btn" data-act="rd-ai" style="margin-top:8px">写一篇</button></div>` : ""}
-      ${L0.length ? `<div class="sec-title">我的文章</div><div class="list">${L0.slice().reverse().map(x => `<div class="li"><div class="grow"><b>${esc(x.title || x.text.slice(0, 40))}</b><span>${rdWords(x.text).length} 个词${x.done ? " · 读过 ✓" : ""}</span></div><button class="btn sm" data-act="rd-open" data-id="${x.id}">读</button><button class="btn sm ghost" data-act="rd-del" data-id="${x.id}">删</button></div>`).join("")}</div>` : ""}</div>`;
+      ${L0.length ? `<div class="sec-title">我的文章</div><div class="list">${L0.slice().reverse().map(x => `<div class="li"><div class="grow"><b>${esc(x.title || x.text.slice(0, 40))}</b><span>${rdWords(x.text).length} 个词${x.done ? " · 读过 ✓" : ""}</span></div><button class="btn sm" data-act="rd-open" data-id="${x.id}">读</button><button class="btn sm ghost" data-act="rd-edit" data-id="${x.id}">改</button><button class="btn sm ghost" data-act="rd-del" data-id="${x.id}">删</button></div>`).join("")}</div>` : ""}</div>`;
   },
-  leave(){ rdStopAll(); RDG.cur = null; RDG.sel = null; RDG.retell = null; }
+  leave(){ rdStopAll(); RDG.cur = null; RDG.sel = null; RDG.retell = null; RDG.edit = null; }
 };
 function rdArticleHTML(A){
   const sents = rdSents(A.text); let gi = 0, unk = 0, tot = 0;
@@ -13830,7 +13841,7 @@ function rdArticleHTML(A){
   return `<div class="wrap">${backBtn()}<button class="linkbtn small" data-act="rd-back">← 返回列表</button><h2 style="margin-top:6px">${esc(A.title || "文章")}</h2>
     <p class="small muted">点 ▶ 读一句；点一个词可以听、加进想学的；虚线是没练过的词（${tot ? Math.round(100 * unk / tot) : 0}%），实线是你在练的语块。</p>
     ${(() => { const r = tot ? unk / tot : 0; if (tot < 60) return ""; return `<p class="small" style="margin-top:4px">${r <= 0.04 ? "难度合适：适合连着读、边听边读" : r <= 0.08 ? "有点难：挑一两段精读，生词加进想学的" : "偏难：换一篇简单点的，比如 Learning English 的版本"}</p>`; })()}
-    <div class="row-gap" style="margin:8px 0"><button class="btn sm" data-act="rd-all">▶ 从头听</button><button class="btn sm ghost" data-act="rd-stop">■ 停</button></div>
+    <div class="row-gap" style="margin:8px 0"><button class="btn sm" data-act="rd-all">▶ 从头听</button><button class="btn sm ghost" data-act="rd-stop">■ 停</button><button class="btn sm ghost" data-act="rd-edit">修改</button>${A.raw ? `<button class="btn sm ghost" data-act="rd-raw">恢复原文</button>` : ""}</div>
     <div class="card rd-body en">${body}</div>
     <div id="rdPop"></div>
     <div class="card" style="margin-top:10px"><b>读完了：用 3 句话复述</b>
@@ -13838,10 +13849,25 @@ function rdArticleHTML(A){
       ${R && R.text ? `<p class="small muted">${rdWords(R.text).length} 个词</p>` : ""}
       <button class="btn" data-act="rd-done" style="margin-top:6px">读完了</button></div></div>`;
 }
-ACT["rd-add"] = () => { const text = (($("#rdText") || {}).value || "").trim(); if (rdWords(text).length < 5){ toast("贴一段文章进来"); return; }
-  const title = (($("#rdTitle") || {}).value || "").trim(), L0 = rdState(), id = "rd" + Date.now().toString(36);
-  L0.push({id, title, text, ts:Date.now(), done:false}); S.reads = L0.slice(-30); save(); RDG.cur = id; UI.render(); };
-ACT["rd-open"] = el => { RDG.cur = el.dataset.id; RDG.sel = null; RDG.retell = null; UI.render(); };
+/* 去掉像广告、导航、分享按钮的行：只留像正文的句子 */
+const RD_JUNK = /^(advertisement|sponsored|ad\b|subscribe|sign up|sign in|log in|newsletter|cookie|read more|related|recommended|share|follow us|click here|download the app|watch|listen|photo|image|credit|getty|reuters$|ap$|©|copyright|all rights reserved|skip to|menu|search|privacy|terms)/i;
+function rdClean(raw){
+  const lines = String(raw || "").replace(/\r/g, "").split(/\n+/).map(x => x.trim()).filter(Boolean), out = [], seen = new Set(); let removed = 0;
+  for (const l of lines){ const w = l.split(/\s+/).length;
+    if (RD_JUNK.test(l) || /^https?:\/\//i.test(l) || (w <= 3 && !/[.!?]$/.test(l)) || seen.has(l)){ removed++; continue; }
+    seen.add(l); out.push(l); }
+  return {text: out.join("\n"), removed};
+}
+ACT["rd-add"] = () => { const raw = (($("#rdText") || {}).value || "").trim(); if (rdWords(raw).length < 5){ toast("贴一段文章进来"); return; }
+  const c = rdClean(raw), text = c.text || raw, title = (($("#rdTitle") || {}).value || "").trim(), L0 = rdState(), id = "rd" + Date.now().toString(36);
+  L0.push({id, title, text, raw: c.removed ? raw : "", ts:Date.now(), done:false}); S.reads = L0.slice(-30); save(); RDG.cur = id; UI.render();
+  if (c.removed) toast(`去掉了 ${c.removed} 行像广告、导航的内容`); };
+ACT["rd-raw"] = () => { const A = rdState().find(x => x.id === RDG.cur); if (!A || !A.raw) return; A.text = A.raw; A.raw = ""; save(); UI.render(); toast("恢复成原文了"); };
+ACT["rd-edit"] = el => { RDG.edit = el.dataset.id || RDG.cur; UI.render(); };
+ACT["rd-save"] = () => { const A = rdState().find(x => x.id === RDG.edit); if (!A) return; const t = (($("#rdEText") || {}).value || "").trim(); if (rdWords(t).length < 5){ toast("正文太短了"); return; }
+  A.title = (($("#rdETitle") || {}).value || "").trim(); A.text = t; RDG.edit = null; save(); UI.render(); toast("改好了"); };
+ACT["rd-cancel"] = () => { RDG.edit = null; UI.render(); };
+ACT["rd-open"] = el => { RDG.cur = el.dataset.id; RDG.sel = null; const A = rdState().find(x => x.id === RDG.cur); RDG.retell = A && A.retell ? {on:false, text:A.retell} : null; UI.render(); };
 ACT["rd-back"] = () => { rdStopAll(); RDG.cur = null; RDG.sel = null; RDG.retell = null; UI.render(); };
 ACT["rd-del"] = async el => { if (!await sheet("删除这篇文章？", "", "删除", true)) return; S.reads = rdState().filter(x => x.id !== el.dataset.id); save(); UI.render(); };
 ACT["rd-stop"] = () => { rdStopAll(); document.querySelectorAll(".rd-s.rd-on").forEach(p => p.classList.remove("rd-on")); };
@@ -13864,7 +13890,9 @@ ACT["rd-want"] = el => { const t = el.dataset.t; S.wantWords = S.wantWords || []
 ACT["rd-from"] = el => { RDG.sel = {a:RDG.cur, i:+el.dataset.i}; UI.render(); toast("再点短语的最后一个词"); };
 ACT["rd-retell"] = async () => { const btn = $("#rdMic"), h = $("#rdHeard"); if (RDG.retell && RDG.retell.on){ try { stopAny(); } catch (e) {} return; }
   RDG.retell = {on:true}; micState(btn, "live"); if (h) h.textContent = "在听……";
-  const r = await listenAny({manual:true, maxMs:90000, idleMs:600000, btn, heard:h}); micState(btn, null); RDG.retell = {on:false, text:((r && r.text) || "").trim()}; UI.render(); };
+  const r = await listenAny({manual:true, maxMs:90000, idleMs:600000, btn, heard:h}); micState(btn, null); RDG.retell = {on:false, text:((r && r.text) || "").trim()};
+  const A = rdState().find(x => x.id === RDG.cur); if (A && RDG.retell.text){ A.retell = RDG.retell.text; save(); }   /* 复述存进这篇文章 */
+  UI.render(); };
 ACT["rd-done"] = () => { const A = rdState().find(x => x.id === RDG.cur); if (A){ A.done = true; save(); } if (typeof planAutoDone === "function") planAutoDone("read"); toast("读完了 ✓"); rdStopAll(); RDG.cur = null; RDG.retell = null; UI.render(); };
 /* claude.ai 里：按你的水平写一篇（认识 95%–98% 的词），把你在练的语块放进去几个 */
 ACT["rd-ai"] = async () => { const topic = (($("#rdTopic") || {}).value || "").trim(); if (!topic){ toast("写一个话题"); return; } if (!(typeof AI !== "undefined" && AI.fn)) return;
@@ -13873,6 +13901,12 @@ ACT["rd-ai"] = async () => { const topic = (($("#rdTopic") || {}).value || "").t
   try { const j = await AI.fn.json(`给一位英语中级（大约 B2）的中文母语者写一篇短文，话题：${topic}。要求：250 到 350 个英文单词；读者能认识文中 95% 以上的词，少用生僻词；句子不要太长；自然地用上其中 3 个以上的语块：${chunks.join("; ")}。只回复一个 JSON：{"title":"英文标题","text":"正文，段落之间空一格"}`, {modelTier:"default"});
     if (!j || !j.text) throw new Error("empty"); const id = "rd" + Date.now().toString(36); rdState().push({id, title:String(j.title || topic), text:String(j.text), ts:Date.now(), done:false, ai:true}); S.reads = rdState().slice(-30); save(); RDG.cur = id; UI.render();
   } catch (e) { toast("Claude 现在写不了，先贴一篇进来"); } };
+
+/* 写作：复制、写下一封、删除一条记录 */
+async function copyText(t){ try { await navigator.clipboard.writeText(t); toast("复制好了"); } catch (e) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("复制好了"); } catch (e2) { toast("复制不了，长按文字自己复制"); } ta.remove(); } }
+ACT["rw-copy"] = el => { const k = el.dataset.k, t = k === "last" ? (RW.doneLast && RW.doneLast.text) : ((S.replies || [])[+k] || {}).final; if (t) copyText(t); };
+ACT["rw-new"] = () => { RW.text = ""; RW.letter = ""; RW.first = null; RW.firstIssues = null; RW.issues = null; RW.doneLast = null; UI.render(); };
+ACT["rw-del"] = async el => { if (!await sheet("删除这一条记录？", "", "删除", true)) return; S.replies = (S.replies || []).filter((x, i) => i !== +el.dataset.k); save(); UI.render(); };
 
 </script>
 </body>
