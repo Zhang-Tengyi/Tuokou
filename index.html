@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16202B">
 <title>脱口</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -731,7 +731,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.59.2"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.59.4"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -13318,19 +13318,65 @@ const ERR_DEFS = {
 const RW_RULES = [
   {c:"A3", re:/\bthose days\b/gi, skip:/back in those days|in those days/i},
   {c:"B2", re:/\balthough\b[^.!?]*?\bbut\b/gi},
-  {c:"B1", re:/\b(that|it|this)\s+(cool|hard|good|nice|great|fun|easy|amazing|awesome|interesting|crazy|true|ok|okay|fine|my first|a really|really \w+)\b/gi},
+  {c:"B1", re:/(?<!\b(?:is|was|isn't|wasn't|make|makes|made|find|finds|found|keep|keeps|kept|get|got|think|thought|feel|felt|consider)\s)\bit\s+(?:cool|hard|good|nice|great|fun|easy|amazing|awesome|interesting|crazy|true|ok|okay|fine|my first|a really)\b/gi},
+  {c:"B1", re:/(?:^|[.!?]\s+|\b(?:wow|oh|well|so|and|but|yeah)\s+)(?:that|this)\s+(?:cool|hard|good|nice|great|fun|easy|amazing|awesome|interesting|crazy|true|ok|okay|fine|my first|a really)\b/gi},
   {c:"B1", re:/\bI\s+(here|so|very|really (?:tired|busy|happy|sad)|tired|busy|ready|sure)\b/g},
   {c:"B3", re:/\bI\s+(?:really\s+|also\s+|just\s+|usually\s+)?(wants|likes|loves|needs|thinks|has|goes|plays|watches|knows|feels|does|gets|makes|tries)\b/gi},
   {c:"B5", re:/\b(usually|often|sometimes|always)\s+(I|we)\s+will\b|\b(I|we)\s+will\s+usually\b/gi},
   {c:"C1", re:/(^|[\s(“"'])i(?=[\s’',.!?]|$)/g},
   {c:"C2", re:/\b(im|ive|dont|cant|didnt|doesnt|isnt|wasnt|thats|youre|theyre|havent|wont)\b/gi},
-  {c:"B9", re:/\ba\s+(?!uni|use|usu|euro|one\b|u\b)[aeiou]\w*/gi},
+  {c:"B9", re:/\ba\s+(?!uni|use|usu|euro|one\b|u\b)[aeiou]\w*/g},
   {c:"B10", re:/\bat\s+(?:19|20)\d\d\b|\bat\s+(?:the\s+)?(?:summer|winter|spring|fall|autumn)\b/gi},
   {c:"B13", re:/\bmost\s+\w+est\b/gi},
   {c:"B7", re:/\b(might|may|will|would|could|should|must)\s+(can|could|will|may)\b/gi},
   {c:"B12", re:/\b(excited|tired|bored|interested)\s+(sport|game|movie|book|class|trip|job|show)s?\b/gi},
-  {c:"A6", re:/[\u4e00-\u9fff]+/g}
+  {c:"A6", re:/[\u4e00-\u9fff]+/g},
+  {c:"B10", re:/\b(?:go|goes|went|going|gone)\s+to\s+(?:camping|hiking|fishing|shopping|swimming|skiing|biking|running|bowling|sightseeing)\b/gi, tip:"go camping、go hiking：不加 to"},
+  {c:"A2", re:/\b(?:do|does)\s+(?:you|he|she|they|we)\b[^.?!]*\b(?:lately|recently)\b/gi, tip:"lately、recently 用现在完成时：Have you been anywhere lately?"},
+  {c:"B11", re:/\bhalf (?:a )?months?\b/gi, tip:"“两周前”一般说 two weeks ago"},
+  /* ---- v1.59.4：用真实的写作错误校准 ---- */
+  {c:"B1", re:/(?:^|[.!?]\s+|,\s*|\b(?:think|maybe|and|but|so|well|wow|today|yesterday|now|because|oh|yeah)\s+)(?:that|it|this)\s*(?:\.{2,}\s*)?\s(?:(?:so|really|very|pretty)\s+(?!(?:help|helps|helped|want|wants|like|likes|need|needs|make|makes|mean|means|is|was|has|do|does|did|depends|matters|works)\b)\w+|getting|almost|a|an|my|your|our)\b/gi, tip:"形容词、名词、-ing 前面要有 be：That's so cool、It's getting cold、It's a good chance"},
+  {c:"B1", re:/\b(?:which|who)\s+(?:really\s+|very\s+|so\s+|pretty\s+)?(?:popular|good|nice|great|hard|easy|cool|fun|busy|hot|cold|cheap|expensive|important|interesting|beautiful|amazing|famous|different|useful|helpful|impressive|boring|crazy)\b/gi, tip:"which / who 后面要有 be：the song that is really popular"},
+  {c:"B1", re:/(?<!\b(?:make|makes|made|find|finds|found|keep|keeps|kept|get|got|feel|felt|consider|think|thought|is|was|isn't|wasn't)\s)\bit\s+(?:really\s+|very\s+|so\s+|pretty\s+)?(?:hard|easy|cool|fun|hot|cold|amazing|awesome|impressive|crazy|interesting|beautiful|boring|great|nice|good)\b(?!\s+(?:to|for|that)\b)/gi, tip:"形容词前面要有 be：It's hard、That's cool"},
+  {c:"A5", re:/\b(?:what|where|when|why|how)\s+(?:your|his|her|their|my|our)\s+\w+[^?.!]*\?/gi, tip:"疑问句要有 do / does / is：What do you use your lab for?"},
+  {c:"A5", re:/\b(?:are|is|am)\s+(?:you|he|she|it|they|we|i)\s+(?!(?:tired|interested|excited|bored|scared|married|worried|surprised|confused|done|supposed|used|based|located|allowed)\b)(?:\w+ed|came|went|saw|got|took|made|did|ate|bought|met|left)\b/gi, tip:"问过去的事用 did：Did you come here to study?"},
+  {c:"A5", re:/\b(?:is|are)\s+(?:everything|it|this|that|he|she|they|you)\s+(?:go|do|work|have|come|get|make|look|feel|seem)\b/gi, tip:"Is everything going well? / Does everything …?"},
+  {c:"B4", re:/\b(?:have|has|haven't|hasn't|have not|has not)\s+(?:already\s+|never\s+|just\s+|not\s+|ever\s+|been\s+)?(?:stay|play|finish|watch|try|see|eat|make|take|come|visit|study|hear|meet|travel)\b/gi, tip:"have 后面用过去分词：have stayed、haven't played"},
+  {c:"B4", re:/\b(?:I'm|I am|you're|we're|they're|he's|she's)\s+(?:already\s+|just\s+)?(?:finish|graduate|start|done with)\b(?!ed)/gi, tip:"“已经做完”用完成时：I've already finished …"},
+  {c:"B5", re:/\b(?:I|we)\s+(?:usually|often|always|sometimes)\s+will\b/gi, tip:"习惯用一般现在时：I usually watch …"},
+  {c:"B3", re:/\bI\s+(?:pretty|still|always|often|sometimes|totally|kind of)\s+(?:wants|likes|loves|needs|thinks|has|goes|plays|watches|knows|feels|does|gets|makes|tries)\b/gi, tip:"主语是 I 时动词不加 -s"},
+  {c:"B3", re:/\b(?:this|that)\s+(?!(?:is|was|has|must|will|would|could|should|might|may|can|did|does|do|kind|sort|one|time|way|day|week|year|guy|really|just|also|still|i|you|we|they|he|she|it)\b)[a-z]+(?<!s)\s+(?:usually\s+|always\s+|often\s+|really\s+|also\s+|kind of\s+|sometimes\s+)?(?:have|give|want|like|need|seem|look)\b/gi, tip:"this / that + 一个东西，后面的动词要加 -s：This place usually has …"},
+  {c:"B7", re:/\bcontinue\s+(?:stay|play|go|watch|work|make|try|study|live)\b/gi, tip:"continue to stay / continue staying"},
+  {c:"B7", re:/\bfirst time\s+(?:hear|see|try|go|play|watch|eat|visit|meet)\b/gi, tip:"the first time hearing about …"},
+  {c:"B7", re:/\benjoy\s+(?:design|create|play|watch|cook|read|swim|hike|travel|make|build|work)\b/gi, tip:"enjoy 后面用 -ing：enjoy designing"},
+  {c:"B7", re:/\bsounds? like is\b/gi, tip:"sounds like + 名词：sounds like a really chill lifestyle"},
+  {c:"B8", re:/\bsome\s+(?:little\s+|small\s+|good\s+|cool\s+|new\s+|YouTube\s+|funny\s+)?(?:video|channel|robot|trail|game|song|book|movie|friend|photo|picture|idea|place|tip|character)\b(?!s)/gi, tip:"some 后面的可数名词用复数：some videos、some trails"},
+  {c:"B8", re:/\b(?:[2-9]|\d{2,}|two|three|four|five|six|seven|eight|nine|ten|several|many|few)\s+(?:time|year|day|week|month|hour|game|video|friend|trail|place|machine|robot)\b(?!s)/gi, tip:"两个以上用复数：three times"},
+  {c:"B8", re:/\bthis kinds of\b|\b(?:those|these) kind of\b/gi, tip:"this kind of / these kinds of"},
+  {c:"B9", re:/\bthe\s+[A-Z][a-z]+\s+(?:park|beach|lake|street|Park|Beach|Lake|Street)\b/g, tip:"专有地名一般不加 the：near Central Park"},
+  {c:"B10", re:/\bsame with\b/gi, tip:"the same as / kind of like"},
+  {c:"B10", re:/\bnot that in\b/gi, tip:"not that into it：be into 才是“喜欢”"},
+  {c:"B11", re:/\bfor study\b/gi, tip:"来读书：to study"},
+  {c:"B11", re:/\bwish you (?:have|had|can|will)\b/gi, tip:"祝福用 Hope you have …"},
+  {c:"B11", re:/\bsmall rain\b/gi, tip:"light rain / a drizzle"},
+  {c:"B11", re:/\bbe wet\b/gi, tip:"get wet"},
+  {c:"B11", re:/\b(?:is|are) discount\b/gi, tip:"is on sale"},
+  {c:"B11", re:/\bhave a walk\b/gi, tip:"go for a walk"},
+  {c:"B11", re:/\bpull myself out\w*/gi, tip:"get myself outdoors"},
+  {c:"B11", re:/\bfavou?rite list\b/gi, tip:"add it to my favorites"},
+  {c:"B11", re:/\bclimb (?:some |the )?trails?\b/gi, tip:"hike the trails"},
+  {c:"B11", re:/\bsleep bags?\b/gi, tip:"sleeping bag"},
+  {c:"B11", re:/\bdo (?:some )?ex[ce]+r[cs]i\w*/gi, tip:"work out / exercise"},
+  {c:"B11", re:/\bwatch golf game\b/gi, tip:"watch golf"},
+  {c:"A4", re:/\bhalf mouth\b|\bmouths? ago\b/gi, tip:"month 才是“月”，mouth 是“嘴”"}
 ];
+const RW_PAST = /\b(?:ago|yesterday|last (?:week|weekend|month|year|night|summer|winter|fall|spring|time)|went|this past (?:week|weekend))\b/i;   /* 只认明确的时间词：单独一个 was / were / did 不算（现在时的句子里也常有） */
+const RW_NOW = /\b(?:now|today|these days|usually|always|every (?:day|week)|nowadays)\b/i;
+const RW_BASE = /\b(?:we|i|they|he|she)\s+(?:also\s+|just\s+|then\s+)?(chat|cook|climb|watch|go|eat|see|play|visit|take|have|make|walk|hike|swim|talk|drive|sleep|stay|buy|get|meet|try|enjoy|look|spend|sit|run|ride|camp|leave|come)\b/i;
+/* 动词变过去式：不规则的查表；e 结尾加 d；辅音 + y 改 ied；短的“辅音元音辅音”双写；其余加 ed */
+function rwPastOf(v){ const w = String(v).toLowerCase(), irr = {go:"went", eat:"ate", see:"saw", take:"took", have:"had", make:"made", get:"got", meet:"met", buy:"bought", sleep:"slept", sit:"sat", run:"ran", ride:"rode", drive:"drove", leave:"left", come:"came", spend:"spent", swim:"swam"};
+  if (irr[w]) return irr[w]; if (/e$/.test(w)) return w + "d"; if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + "ied"; if (w.length <= 4 && /[^aeiou][aeiou][^aeiouwy]$/.test(w)) return w + w.slice(-1) + "ed"; return w + "ed"; }
+const RW_ING = /\band\s+(watching|eating|cooking|chatting|walking|hiking|swimming|playing|talking|looking|taking|making|sitting|running|climbing|visiting)\b/i;
 const rwSentences = t => String(t || "").replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Za-z“"'(])/).filter(Boolean);
 const MAIL_MOVES = [
   ["开头", [["希望你一切都好。", "I hope you're doing well."], ["谢谢你今天抽时间跟我聊。", "Thank you for taking the time to speak with me today."], ["我写信是想跟进一下我的申请。", "I'm writing to follow up on my application."]]],
@@ -13343,7 +13389,19 @@ const RW_MINOR = new Set(["C1", "C2", "C3"]);   /* 聊天里可以先不管的�
 function rwCheck(text, letter, mail){
   if (mail === undefined) mail = wMode() === "mail";
   const out = [];
-  for (const r of RW_RULES){ r.re.lastIndex = 0; let m; while ((m = r.re.exec(text))){ const s = m[0].trim(); if (!s) { r.re.lastIndex++; continue; } if (r.skip && r.skip.test(text.slice(Math.max(0, m.index - 10), m.index + s.length + 10))) continue; out.push({c:r.c, s}); } }
+  for (const r of RW_RULES){ r.re.lastIndex = 0; let m; while ((m = r.re.exec(text))){ const s = m[0].trim(); if (!s) { r.re.lastIndex++; continue; } if (r.skip && r.skip.test(text.slice(Math.max(0, m.index - 10), m.index + s.length + 10))) continue; out.push(r.tip ? {c:r.c, s: s.length > 40 ? s.slice(-40) : s, tip:r.tip} : {c:r.c, s}); } }
+  /* either 只用在否定句：整句里没有 not / n't / never / no / neither / nor，又以 either 结尾，就该用 too */
+  for (const s of rwSentences(text)){ if (/\beither\s*[.!?]*\s*$/i.test(s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").trim()) && !/\b(?:not|never|no|neither|nor)\b|n't\b/i.test(s)) out.push({c:"B11", s:s.length > 40 ? s.slice(-40) : s, tip:"肯定句用 too；either 只用在否定句：I love traveling too."}); }
+  /* 讲过去的事：前面出现了 ago、last week、went……，后面的 We chat / I cook 也该用过去式；并列的动作形式要一样 */
+  let past = false;
+  for (const s of rwSentences(text)){
+    if (RW_NOW.test(s) && !RW_PAST.test(s)) past = false;
+    if (RW_PAST.test(s)) past = true;
+    const mb = s.match(RW_BASE);
+    if (past && mb && !/\?\s*$/.test(s)) out.push({c:"A2", s:mb[0], tip:"前面讲的是过去的事，这里也用过去式：" + mb[0].replace(mb[1], rwPastOf(mb[1]))});
+    const mi = s.match(RW_ING);
+    if (mi && (mb || RW_PAST.test(s))) out.push({c:"B7", s:mi[0], tip:"几个动作并列时形式一样：…and watched the stars"});
+  }
   for (const s of rwSentences(text)) if (s.split(/\s+/).length > 26) out.push({c:"E2", s: s.split(/\s+/).slice(0, 8).join(" ") + " …"});
   const qs = (text.match(/\?/g) || []).length;
   if (mail){
@@ -13415,7 +13473,8 @@ VIEWS.write = {
         return `<details class="card" style="margin-top:8px"><summary><b>${x.mode === "mail" ? "邮件" : "回复"}</b>　<span class="small muted">${d.getMonth() + 1} 月 ${d.getDate()} 日</span><br><span class="small">${esc(String(x.final || "").slice(0, 60))}${String(x.final || "").length > 60 ? "…" : ""}</span></summary>
           ${x.letter ? `<p class="small muted" style="margin-top:6px">对方：${esc(x.letter)}</p>` : ""}<p class="en" style="white-space:pre-wrap;margin-top:6px;font-size:15px">${esc(x.final || "")}</p>
           ${x.first && x.first !== x.final ? `<p class="small muted" style="margin-top:4px">初稿：${esc(x.first)}</p>` : ""}
-          <div class="row-gap" style="margin-top:6px"><button class="btn sm" data-act="rw-copy" data-k="${i}">复制</button><button class="btn sm ghost" data-act="rw-del" data-k="${i}">删除</button></div></details>`; }).join("")}` : ""}</div>`;
+          ${(x.issues || []).length ? `<p class="small" style="margin-top:6px">第一次检查查出：${x.issues.map(z => `<b>${esc(z.c)}</b> “${esc(z.s)}”`).join("、")}</p>` : `<p class="small muted" style="margin-top:6px">自动检查没查出错（它只查常见的几类，不代表没有错）</p>`}
+          <div class="row-gap" style="margin-top:6px"><button class="btn sm" data-act="rw-copy" data-k="${i}">复制</button><button class="btn sm ghost" data-act="rw-ask-h" data-k="${i}">存起来问 Claude</button><button class="btn sm ghost" data-act="rw-del" data-k="${i}">删除</button></div></details>`; }).join("")}` : ""}</div>`;
   },
   mount(){ const l = $("#rwLetter"), t = $("#rwText"); if (l) l.addEventListener("input", () => { RW.letter = l.value; }); if (t) t.addEventListener("input", () => { RW.text = t.value; }); }
 };
@@ -13472,7 +13531,7 @@ ACT["rw-done"] = () => {
     if (S.custom.some(c => c.t === "f" && c.wrong === a)) continue; const id = "rw" + now.toString(36) + Math.random().toString(36).slice(2, 6);
     S.custom.push({id, t:"f", tag:"colloc", en:best, alt:[], note:[...new Set(hit.map(x => x.c + " " + (ERR_DEFS[x.c] || {}).n))].join("；"), zh:"", wrong:a, grp:"", word:"", mean:"", deck:"我的回复改错"}); made++;
   }
-  S.replies = (S.replies || []).concat({ts:now, mode:wMode(), letter:RW.letter, first:RW.first, final:text, codes}).slice(-30);
+  S.replies = (S.replies || []).concat({ts:now, mode:wMode(), letter:RW.letter, first:RW.first, final:text, codes, issues:(RW.firstIssues || []).map(x => ({c:x.c, s:x.s}))}).slice(-30);
   if (typeof planAutoDone === "function") planAutoDone("write:" + wMode());
   save(); try { rebuildCatalog(); } catch (e) {}
   toast(made ? `存好了：${made} 句改过的句子变成了改错卡` : codes.length ? "存好了：第一次检查查出的错记进了错误档案" : "存好了");
@@ -13905,6 +13964,7 @@ ACT["rd-ai"] = async () => { const topic = (($("#rdTopic") || {}).value || "").t
 /* 写作：复制、写下一封、删除一条记录 */
 async function copyText(t){ try { await navigator.clipboard.writeText(t); toast("复制好了"); } catch (e) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("复制好了"); } catch (e2) { toast("复制不了，长按文字自己复制"); } ta.remove(); } }
 ACT["rw-copy"] = el => { const k = el.dataset.k, t = k === "last" ? (RW.doneLast && RW.doneLast.text) : ((S.replies || [])[+k] || {}).final; if (t) copyText(t); };
+ACT["rw-ask-h"] = el => { const x = (S.replies || [])[+el.dataset.k]; if (!x) return; S.replyAsk = (S.replyAsk || []).concat({mode:x.mode, letter:x.letter || "", text:x.final, ts:Date.now()}).slice(-20); save(); toast(`存好了（共 ${S.replyAsk.length} 条）。在“我的 → 问 Claude”里一起发`); };
 ACT["rw-new"] = () => { RW.text = ""; RW.letter = ""; RW.first = null; RW.firstIssues = null; RW.issues = null; RW.doneLast = null; UI.render(); };
 ACT["rw-del"] = async el => { if (!await sheet("删除这一条记录？", "", "删除", true)) return; S.replies = (S.replies || []).filter((x, i) => i !== +el.dataset.k); save(); UI.render(); };
 
