@@ -734,7 +734,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.62.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.62.2"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -10237,7 +10237,7 @@ const BT = (() => {
     const custom = tplMatch(lo) === "custom";
     const r = rec.rSet || (custom && rec.r) ? rec.r : t.r, cm = rec.cmSet || (custom && rec.cm) ? rec.cm : t.cm, big = !!(giant && rec.giantM);
     const ready = big ? rec.giantM * r : 0;
-    return {loadout:lo, r, cm, kh: big ? ready / Math.max(CITY_READY_M, ready) : ((cm / 100) * r) / READY_M, giantReady: big ? Math.max(CITY_READY_M, ready) : 0, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowScale: rec.glowScale || 1, glowName: rec.glowName || "", glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
+    return {loadout:lo, r, cm, kh: big ? ready / Math.max(CITY_READY_M, ready) : ((cm / 100) * r) / READY_M, giantReady: big ? Math.max(CITY_READY_M, ready) : 0, hover:!!lo.hover, giant:big, glow: rec.glow || null, glowName: rec.glowName || "", glowScale: rec.glowScale || 1, glowName: rec.glowName || "", glowId: rec.glow ? (rec.glowName || "g") + (rec.at || "") : ""};
   }
 
   /* ---------- 内置背景（量过一次：店门口的售货机 1.83 米定比例，近处车道的中间定脚的位置） ---------- */
@@ -10309,9 +10309,79 @@ const BT = (() => {
   function loadImg(src){ if (!imgCache.has(src)) imgCache.set(src, new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; })); return imgCache.get(src); }
   const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
   /* 眼睛、胸灯：用遮罩取出原图这一块盖回去（颜色不受场景影响），再叠一次亮芯，最后两层光晕（贴着轮廓，不溢出） */
+  /* 发光部位自动对齐：在原位置附近（图高的 3.5%，4 到 24 像素）找一个位置，让部位落在和它颜色最接近、又最亮的地方（眼睛暖白、能量灯青蓝）。
+     挪得越远扣分越多（免得被头盔反光的银色吸过去）；要比原位置好 8% 以上才挪。你的图和做发光部位时用的图留白不一样，眼睛就会只亮一半或者不亮 */
+  const ALIGN_PX = new WeakMap();
+  function glowAlign(img, w, h, mask, px, py, mw, mh, color){
+    let data = ALIGN_PX.get(img); if (!data){ const c = canvasOf(w, h), g = c.getContext("2d"); g.drawImage(img, 0, 0); data = g.getImageData(0, 0, w, h).data; ALIGN_PX.set(img, data); }
+    const W = Math.max(1, Math.round(mw)), H = Math.max(1, Math.round(mh)), mc = canvasOf(W, H), mg = mc.getContext("2d"); mg.drawImage(mask, 0, 0, W, H); const md = mg.getImageData(0, 0, W, H).data;
+    let pts = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (md[(y * W + x) * 4 + 3] > 100) pts.push([x, y]);
+    if (!pts.length) return {dx:0, dy:0}; if (pts.length > 140){ const st = pts.length / 140; pts = pts.filter((_, i) => Math.floor(i / st) !== Math.floor((i - 1) / st)); }
+    const [cr, cg, cb] = /^#[0-9a-f]{6}$/i.test(color || "") ? hexRGB(color) : [255, 255, 255];
+    const sc = (dx, dy) => { let t = 0; for (const [x, y] of pts){ const X = Math.round(px + x + dx), Y = Math.round(py + y + dy); if (X < 0 || Y < 0 || X >= w || Y >= h) continue;
+      const i = (Y * w + X) * 4; if (data[i + 3] < 60) continue; const r = data[i], gg = data[i + 1], b = data[i + 2];
+      const bright = (0.2126 * r + 0.7152 * gg + 0.0722 * b) / 255, sim = 1 - Math.min(1, Math.hypot(r - cr, gg - cg, b - cb) / 255); t += bright * 0.4 + sim * 0.6; } return t; };
+    const R = Math.round(Math.max(4, Math.min(24, h * 0.035))), base = sc(0, 0), pen = pts.length * 0.0025; let best = {dx:0, dy:0, v:base};
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++){ if (!dx && !dy) continue; const v = sc(dx, dy) - pen * (dx * dx + dy * dy); if (v > best.v) best = {dx, dy, v}; }
+    return best.v > base * 1.08 ? {dx:best.dx, dy:best.dy} : {dx:0, dy:0};
+  }
+  /* 眼睛的范围用你自己的图找全（v1.62.2）：发光部位.json 里有些姿势的眼睛遮罩画得不完整或者放错了地方（迪迦重击、胜利只盖了眼睛的一部分；
+     初代技能、胜利只有几个像素，胜利的还不在眼缝上）。从遮罩里又亮、颜色又接近这个部位颜色的像素出发（一个都没有就在附近找最近的一块），
+     往外把挨着的、同样又亮又是这个颜色的像素都算进来——整只眼睛就都包括了；头盔的银色没这么亮、颜色也不一样，不会算进来。范围太大或太小就退回原来的遮罩 */
+  function eyeRegion(img, w, h, mask, px, py, mw, mh, color){
+    let data = ALIGN_PX.get(img); if (!data){ const c = canvasOf(w, h), g = c.getContext("2d"); g.drawImage(img, 0, 0); data = g.getImageData(0, 0, w, h).data; ALIGN_PX.set(img, data); }
+    const [cr, cg, cb] = /^#[0-9a-f]{6}$/i.test(color || "") ? hexRGB(color) : [255, 250, 230];
+    const ok = (X, Y) => { if (X < 0 || Y < 0 || X >= w || Y >= h) return false; const i = (Y * w + X) * 4; if (data[i + 3] < 90) return false;
+      const r = data[i], g = data[i + 1], b = data[i + 2], lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255, sim = 1 - Math.min(1, Math.hypot(r - cr, g - cg, b - cb) / 255);
+      return lum >= 0.84 && sim >= 0.8; };
+    const W = Math.max(1, Math.round(mw)), H = Math.max(1, Math.round(mh)), mc = canvasOf(W, H), mg = mc.getContext("2d"); mg.drawImage(mask, 0, 0, W, H); const md = mg.getImageData(0, 0, W, H).data;
+    const R = Math.round(Math.max(W, H, h * 0.03) * 1.6), cx0 = Math.round(px + W / 2), cy0 = Math.round(py + H / 2);
+    const bx0 = Math.max(0, cx0 - R), by0 = Math.max(0, cy0 - R), bx1 = Math.min(w - 1, cx0 + R), by1 = Math.min(h - 1, cy0 + R);
+    let seeds = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (md[(y * W + x) * 4 + 3] > 100){ const X = Math.round(px + x), Y = Math.round(py + y); if (ok(X, Y)) seeds.push([X, Y]); }
+    if (!seeds.length){
+      /* 遮罩放错了地方：在附近找“像眼睛的一块”（又亮、颜色对、大小合适），选离原位置最近的那块 */
+      const bw = bx1 - bx0 + 1, vis = new Uint8Array(bw * (by1 - by0 + 1)); let best = null, bd = 1e9;
+      for (let Y = by0; Y <= by1; Y++) for (let X = bx0; X <= bx1; X++){ const k0 = (Y - by0) * bw + (X - bx0); if (vis[k0] || !ok(X, Y)) continue;
+        const st = [[X, Y]], comp = []; vis[k0] = 1;
+        while (st.length){ const [x, y] = st.pop(); comp.push([x, y]); for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const x2 = x + dx, y2 = y + dy; if (x2 < bx0 || y2 < by0 || x2 > bx1 || y2 > by1) continue; const k = (y2 - by0) * bw + (x2 - bx0); if (vis[k]) continue; vis[k] = 1; if (ok(x2, y2)) st.push([x2, y2]); } }
+        if (comp.length < 5 || comp.length > h * 0.25 * Math.max(4, h * 0.012)) continue;
+        const cx = comp.reduce((t, c) => t + c[0], 0) / comp.length, cy = comp.reduce((t, c) => t + c[1], 0) / comp.length, d = (cx - cx0) ** 2 + (cy - cy0) ** 2;
+        if (d < bd){ bd = d; best = comp; } }
+      if (best) seeds = best;
+    }
+    if (!seeds.length) return null;
+    /* 往外长的时候，只接受和眼睛本身（起点像素的平均颜色）很接近的像素：头盔边上的高光也很亮，但颜色和眼睛不一样，不会长过去 */
+    let mr = 0, mgc = 0, mb = 0; for (const [X, Y] of seeds){ const i = (Y * w + X) * 4; mr += data[i]; mgc += data[i + 1]; mb += data[i + 2]; } mr /= seeds.length; mgc /= seeds.length; mb /= seeds.length;
+    const ok2 = (X, Y) => { if (X < 0 || Y < 0 || X >= w || Y >= h) return false; const i = (Y * w + X) * 4; if (data[i + 3] < 90) return false;
+      const r = data[i], g = data[i + 1], b = data[i + 2], lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; return lum >= 0.8 && Math.hypot(r - mr, g - mgc, b - mb) <= 34; };
+    const seen = new Uint8Array((bx1 - bx0 + 1) * (by1 - by0 + 1)), key = (X, Y) => (Y - by0) * (bx1 - bx0 + 1) + (X - bx0), q = [];
+    for (const [X, Y] of seeds) if (X >= bx0 && X <= bx1 && Y >= by0 && Y <= by1 && !seen[key(X, Y)]){ seen[key(X, Y)] = 1; q.push([X, Y]); }
+    let n = 0, x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1; const pts = [];
+    while (q.length){ const [X, Y] = q.pop(); n++; pts.push([X, Y]); if (X < x0) x0 = X; if (Y < y0) y0 = Y; if (X > x1) x1 = X; if (Y > y1) y1 = Y;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const X2 = X + dx, Y2 = Y + dy; if (X2 < bx0 || Y2 < by0 || X2 > bx1 || Y2 > by1) continue; const k = key(X2, Y2); if (seen[k]) continue; seen[k] = 1; if (ok2(X2, Y2)) q.push([X2, Y2]); } }
+    const boxA = (bx1 - bx0 + 1) * (by1 - by0 + 1); if (n < 4 || n > boxA * 0.45) return null;
+    /* 剪掉细长的尾巴（沿着头盔高光长出去的一条）：边缘剥掉一层 → 只留和眼睛连着的那块 → 再在原范围里补回两圈 */
+    { const inR = new Set(pts.map(([X, Y]) => X + "," + Y)), has = (X, Y) => inR.has(X + "," + Y);
+      const core = pts.filter(([X, Y]) => has(X - 1, Y) && has(X + 1, Y) && has(X, Y - 1) && has(X, Y + 1));
+      if (core.length >= 4){
+        const cs = new Set(core.map(([X, Y]) => X + "," + Y)), sk = new Set(seeds.map(([X, Y]) => X + "," + Y));
+        let start = core.find(([X, Y]) => sk.has(X + "," + Y)) || core.reduce((a2, c) => ((c[0] - cx0) ** 2 + (c[1] - cy0) ** 2 < (a2[0] - cx0) ** 2 + (a2[1] - cy0) ** 2 ? c : a2), core[0]);
+        const keep = new Set([start[0] + "," + start[1]]), st = [start];
+        while (st.length){ const [x, y] = st.pop(); for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const kk = (x + dx) + "," + (y + dy); if (cs.has(kk) && !keep.has(kk)){ keep.add(kk); st.push([x + dx, y + dy]); } } }
+        let cur = keep; for (let it = 0; it < 2; it++){ const nx = new Set(cur); for (const kk of cur){ const [x, y] = kk.split(",").map(Number); for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){ const k2 = (x + dx) + "," + (y + dy); if (inR.has(k2)) nx.add(k2); } } cur = nx; }
+        pts.length = 0; x0 = 1e9; y0 = 1e9; x1 = -1; y1 = -1; for (const kk of cur){ const [X, Y] = kk.split(",").map(Number); pts.push([X, Y]); if (X < x0) x0 = X; if (Y < y0) y0 = Y; if (X > x1) x1 = X; if (Y > y1) y1 = Y; }
+        n = pts.length; } }
+    /* 边上多一圈像素，眼睛的边缘也亮 */
+    const pad = 1, cw = x1 - x0 + 1 + pad * 2, ch = y1 - y0 + 1 + pad * 2, out = canvasOf(cw, ch), og = out.getContext("2d"), id = og.createImageData(cw, ch);
+    for (const [X, Y] of pts) for (let dy = -pad; dy <= pad; dy++) for (let dx = -pad; dx <= pad; dx++){ const xx = X - x0 + pad + dx, yy = Y - y0 + pad + dy; if (xx < 0 || yy < 0 || xx >= cw || yy >= ch) continue; const j = (yy * cw + xx) * 4; const a = dx || dy ? 140 : 255; if (id.data[j + 3] < a){ id.data[j] = id.data[j + 1] = id.data[j + 2] = 255; id.data[j + 3] = a; } }
+    og.putImageData(id, 0, 0); return {cv:out, x:x0 - pad, y:y0 - pad, w:cw, h:ch, n};
+  }
+  try { window.__glowAlign = glowAlign; window.__eyeRegion = eyeRegion; setTimeout(() => { try { window.__bakePose = bakePose; } catch (e) {} }, 0); } catch (e) {}   /* 测试用 */
   async function addGlow(g, img, p, w, h, gk){
     gk = gk || 1;   /* 迪迦的灯是别人的 0.55 倍（GLOW_K） */
-    const m0 = await loadImg(p.png), s = p.s || 1, m = {width:m0.width * s, height:m0.height * s}; const px = p.x * s, py = p.y * s;
+    let m0 = await loadImg(p.png); const s = p.s || 1; let m = {width:m0.width * s, height:m0.height * s}; let px = p.x * s, py = p.y * s;
+    if (p.kind === "eye"){ try { const r = eyeRegion(img, w, h, m0, px, py, m.width, m.height, p.color); if (r){ m0 = r.cv; px = r.x; py = r.y; m = {width:r.w, height:r.h}; } } catch (e) {} }   /* 眼睛：用你的图把范围找全 */
+    else if (p.align){ try { const o = glowAlign(img, w, h, m0, px, py, m.width, m.height, p.color); px += o.dx; py += o.dy; } catch (e) {} }
     const put = (gg) => gg.drawImage(m0, px, py, m.width, m.height);
     const t = canvasOf(w, h), tg = t.getContext("2d");
     tg.drawImage(img, 0, 0); tg.globalCompositeOperation = "destination-in"; put(tg);
@@ -10477,7 +10547,9 @@ const BT = (() => {
         img.style.height = (q.h / idle.h) * 100 + "%"; img.style.left = ((idle.ax - q.ax) / idle.w) * 100 + "%"; img.hidden = name !== "idle";
         face.appendChild(img); f.poseImgs[name] = Object.assign({img}, q);
       }
-      f.active = "idle"; f.rig = null; f.monster = m; f.glow = meta.glow || null; f.glowScale = meta.glowScale || 1; f.glowId = meta.glow ? (meta.glowId || "e") + "@" + (meta.glowScale || 1) : ""; A.shields = 0; paintShields();
+      f.active = "idle"; f.rig = null; f.monster = m; f.glow = meta.glow || null; f.glowScale = meta.glowScale || 1; f.glowId = meta.glow ? (meta.glowId || "e") + "@" + (meta.glowScale || 1) : "";
+      /* 对手是别的角色（劲敌、对波预览）：“这是哪个角色”也要换成它的，不然红奈的小臂能量、光线的起点、灯的强弱都用的是你自己角色的 */
+      const lsk = (m.loadout || meta.loadout || {}).skill; f.glowName = meta.glowName || ""; f.segName = lsk === "zepellion" ? "tiga" : lsk === "overRay" ? "nexus" : ""; A.shields = 0; paintShields();
       requestAnimationFrame(() => { layout(); relight(true); });
     };
     A.setEnemy = m => {
@@ -12141,10 +12213,14 @@ const BT = (() => {
     /* 换地点、换人以后：重画姿势图（先画屏幕上正在显示的那个）；灯不受“光影”开关影响，照样画 */
     let lightRun = 0; A.lightKey = null;
     function partsFor(f, name){
-      const e = f.glow && f.glow[name], q = f.poseImgs && f.poseImgs[name], s = f.glowScale || 1;
-      if (!(e && q && Math.abs(e.w * s - q.w) <= 2 && Math.abs(e.h * s - q.h) <= 2 && e.parts && e.parts.length)) return null;
+      const e = f.glow && f.glow[name], q = f.poseImgs && f.poseImgs[name]; let s = f.glowScale || 1;
+      if (!(e && q && e.parts && e.parts.length)) return null;
+      if (!(Math.abs(e.w * s - q.w) <= 2 && Math.abs(e.h * s - q.h) <= 2)){
+        /* 大小差得多：长宽比例差不到 5% 就按这个姿势自己的大小缩放（以前整个跳过，眼睛就不亮了），位置靠下面的自动对齐 */
+        const ar = (q.w / q.h) / (e.w / e.h); if (Math.abs(ar - 1) > 0.05) return null; s = q.h / e.h;
+      }
       const gk = GLOW_K[f.glowName] || 1, gfill = !!GLOW_FILL[f.glowName];
-      return s === 1 && gk === 1 && !gfill ? e.parts : e.parts.map(p => Object.assign({}, p, {s, gk, fill:gfill}));
+      return e.parts.map(p => Object.assign({}, p, {s, gk, fill:gfill, align:true}));
     }
     function rigLight(L){
       const m = root.querySelector(`#${rigFid} feColorMatrix`); if (!m) return "";
