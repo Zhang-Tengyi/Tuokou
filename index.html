@@ -712,6 +712,7 @@ details.pl-day>summary{list-style:none;cursor:pointer}details.pl-day>summary::-w
 .deck-head{display:flex;align-items:center;justify-content:space-between}.deck-all-fold{background:none;border:0;font-size:28px;line-height:1;padding:2px 10px;color:var(--ink2,#334155);cursor:pointer}
 .bt-glowfx{z-index:1}.bt-glowfx.bt-glowtop{z-index:2}
 .chip.reg-casual{background:#FEF3C7;color:#92400E}.chip.reg-formal{background:#E0E7FF;color:#3730A3}.chip.reg-listen{background:#FEE2E2;color:#991B1B}.chip.reg-neutral{background:#E5E7EB;color:#374151}
+.plan-bar{height:4px;border-radius:4px;background:var(--line,#E5E7EB);margin-top:6px;overflow:hidden}.plan-bar>i{display:block;height:100%;background:#2F9E5B;border-radius:4px}
 
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
@@ -733,7 +734,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.61.0"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.62.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -4367,6 +4368,8 @@ ACT["iv-done"] = () => RUN.stage instanceof IvStage && RUN.stage.done();
 
 /* 总结 */
 function showSummary(){
+  /* 保底的 3 分钟练完了：今天剩下的计划标成跳过，首页显示“✓ 保底完成” */
+  try { const d = today(); if (L.lowPending === d){ L.lowPending = null; saveLocal(); S.lowDays = (S.lowDays || []).filter(x => x !== d).concat(d).slice(-60); for (const x of S.plan || []) if (x.date === d && !x.done) x.skip = true; save(); } } catch (e) {}
   const el = stageEl(); if (!el) return;
   if (!RUN.exited && L.resume){ L.resume = null; saveLocal(); }
   if (!RUN.exited && typeof planAutoDone === "function") planAutoDone(RUN.kind);
@@ -5053,22 +5056,28 @@ function planRowHTML(x, page){
 }
 function todayPlanHTML(){
   const d = today(); const items = (S.plan || []).filter(x => x.date === d); const due = ivDueList();
-  const left = items.filter(x => !x.done), open = !!L.planOpen, low = (S.lowDays || []).includes(d);
+  const left = items.filter(x => !x.done && !x.skip), open = !!L.planOpen, low = (S.lowDays || []).includes(d), doneN = items.filter(x => x.done).length;
   /* 现在做：只给你一件事，点一下就开始 */
   const nx = left[0], c = typeof counts === "function" ? counts() : null;
   const now = nx ? `<div class="now-row"><div class="grow"><span class="small muted">现在做</span><b>${nx.cue ? esc(nx.cue) + " → " : ""}${esc(nx.text)}</b></div>${nx.act ? `<button class="btn primary" data-act="plan-go" data-v="${esc(nx.act)}">开始</button>` : `<button class="btn" data-act="plan-done-now" data-id="${nx.id}">做完了</button>`}</div>`
     : items.length ? "" : `<div class="now-row"><div class="grow"><span class="small muted">现在做</span><b>复习到期的卡${c && c.due ? `（${c.due} 题）` : ""}</b></div><button class="btn primary" data-act="plan-go" data-v="std">开始</button></div>`;
-  const lowLine = low ? `<p class="small muted" style="margin-top:6px">今天只做 3 分钟也算 ✓</p>` : `<p class="small muted" style="margin-top:6px">没精神？<button class="linkbtn small" data-act="low-day">只做 3 分钟</button></p>`;
+  const lowLine = low ? "" : `<p class="small muted" style="margin-top:6px">没精神？<button class="linkbtn small" data-act="low-day">只做 3 分钟</button></p>`;
+  /* 标题：今天的计划 3/5 加一条进度；都做完了 ✓；做了保底的 3 分钟：✓ 保底完成（剩下的跳过了） */
+  const allDone = items.length && !left.length, head = !items.length ? "今天的计划" : allDone ? (low && items.some(x => x.skip) ? "今天的计划 ✓ 保底完成" : "今天的计划 ✓") : `今天的计划 ${doneN}/${items.length}`;
+  const bar = items.length && !allDone ? `<div class="plan-bar"><i style="width:${Math.round(100 * doneN / items.length)}%"></i></div>` : "";
   if (!items.length && !due.length) return `<div class="panel plan-card">${now}${lowLine}</div>`;
   /* 默认收起：只显示下一项没做的，免得把练习挤到下面去 */
-  const shown = open ? left : [], doneN = items.length - left.length;   /* 展开：只列没做的，做完的合成一行 */
-  return `<div class="panel plan-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>今天的计划${items.length ? `（还剩 ${left.length} 项）` : ""}</b><span class="row-gap" style="flex:none">${items.length > 1 ? `<button class="btn sm ghost" data-act="plan-toggle">${open ? "收起" : `展开 ${items.length} 项`}</button>` : ""}</span></div>
-    ${open ? "" : now}${shown.length ? `<div class="list" style="margin-top:6px">${shown.map(x => planRowHTML(x, false)).join("")}</div>` : ""}${!left.length && items.length ? `<p class="small muted" style="margin-top:6px">今天的计划都做完了 ✓</p>` : open && doneN ? `<p class="small muted" style="margin-top:6px">做完了 ${doneN} 项 ✓</p>` : ""}${left.length ? lowLine : ""}
+  const shown = open ? left : [];   /* 展开：只列还没做的 */
+  return `<div class="panel plan-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>${head}</b><span class="row-gap" style="flex:none">${left.length > 1 ? `<button class="btn sm ghost" data-act="plan-toggle">${open ? "收起" : `展开 ${left.length} 项`}</button>` : ""}</span></div>${bar}
+    ${open ? "" : now}${shown.length ? `<div class="list" style="margin-top:6px">${shown.map(x => planRowHTML(x, false)).join("")}</div>` : ""}${left.length ? lowLine : ""}
     ${due.length ? `<div class="row-gap" style="margin-top:8px;align-items:center"><span class="small">模拟面试时没说好的 ${due.length} 道题，今天该重练了</span><button class="btn sm" data-act="iv-due-go">现在练</button><button class="btn sm ghost" data-act="iv-due-later">明天再说</button></div>` : ""}</div>`;
 }
 ACT["plan-done-now"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x) return; x.done = true; save(); UI.render(); };
 /* 没精神的那天：只做 3 分钟复习；这天剩下的计划不会出现在“没做完”里 */
-ACT["low-day"] = () => { const d = today(); S.lowDays = (S.lowDays || []).filter(x => x !== d).concat(d).slice(-60); save(); startSession("quick", {}, "3 分钟练习"); };
+ACT["low-day"] = async () => { const c = await choose("只做 3 分钟：怎么练？", "", [["std", "普通练习"], ["game", "游戏"]]); if (!c) return;
+  L.lowPending = today(); saveLocal();   /* 练完才算：showSummary 里把今天剩下的计划标成跳过 */
+  if (c === "game"){ S.settings.goal = "quick"; save(); return ACT["start-game"]({dataset:{}}); }
+  startSession("quick", {}, "3 分钟练习"); };
 ACT["plan-toggle"] = () => { L.planOpen = !L.planOpen; saveLocal(); UI.render(); };
 CHG["plan-done"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x) return; x.done = el.checked; save(); UI.render(); };
 ACT["plan-del"] = el => { S.plan = (S.plan || []).filter(p => p.id !== el.dataset.id); if (PLAN_EDIT === el.dataset.id){ PLAN_EDIT = null; PLAN_FORM = false; } save(); toast("删除了"); UI.render(); };
@@ -5959,8 +5968,8 @@ function dgRender(){
         ${mic ? `<button class="mic" id="dgMic" data-act="dg-mic" aria-label="回答">${ICON.mic}</button><div class="heard" id="heard">听完开口回答</div>` : `<p class="small muted" style="margin:0 0 8px">听完开口回答。想让 app 对照一下，就点输入框，用键盘的麦克风说。</p>`}
         <div class="or"><input type="text" class="en" id="typed" placeholder="${mic ? "或用键盘语音输入、打字" : "点这里，用键盘的麦克风说"}" autocomplete="off" spellcheck="false" enterkeyhint="done"><button class="btn sm" data-act="dg-check">对照</button></div>
         <button class="btn ghost block" style="margin-top:6px" data-act="dg-done">我说完了，看看可以怎么回</button></div>` :
-      `<div class="reveal">${st.verdict ? `<div class="verdict ${st.verdict.cls}">${esc(st.verdict.msg)}</div>` : ""}${st.said ? `<p class="small muted">你说的：<span class="en" style="font-size:15px">${esc(st.said)}</span></p>` : ""}
-        <div class="small muted" style="margin-top:8px">可以这样回：</div>
+      `<div class="reveal">${st.verdict ? `<div class="verdict ${st.verdict.cls}">${esc(st.verdict.msg)}</div>${(st.verdict.gram || []).length ? `<ul class="small" style="margin:4px 0 0 18px">${st.verdict.gram.map(g => `<li>${esc(g)}</li>`).join("")}</ul>` : ""}` : ""}${st.said ? `<p class="small muted">你说的：<span class="en" style="font-size:15px">${esc(st.said)}</span></p>` : ""}
+        <div class="small muted" style="margin-top:8px">可以这样回（只是例子，内容换成你自己的就行）：</div>
         ${t.reply.map(r => `<div class="say-line" style="margin-top:6px"><div class="en sm">${wordsHTML(r)}</div><div class="say-btns">${sayBtns(r)}</div></div>`).join("")}
         ${t.tip ? `<div class="note">${esc(t.tip)}</div>` : ""}
         <button class="btn primary block big" style="margin-top:14px" data-act="dg-next">${st.i === d.turns.length - 1 ? "完成这段对话" : "下一句"}</button></div>`}
@@ -5978,8 +5987,7 @@ function dgFinish(said){
   const st = DG.st; if (!st) return; const t = st.d.turns[st.i]; if (!t) return;
   st.said = said || ""; st.verdict = null;
   if (st.said){
-    const cmp = K.compareSaid(t.reply[0], t.reply.slice(1), st.said);
-    st.verdict = cmp.score >= 0.8 ? {cls:"exact", msg:"和参考说法很接近，很好"} : cmp.score >= 0.5 ? {cls:"close", msg:"意思差不多，可以参考下面的说法"} : {cls:"", msg:"换了说法也没关系，看看下面的参考"};
+    st.verdict = dgJudge(t, st.said);
   }
   st.phase = "reply"; dgRender(); if (canAutoSpeak()) TTS.speak(t.reply[0]);
 }
@@ -6418,6 +6426,41 @@ function convoText(t){ return `下面是我在当地记录的真实日常对话�
 ${t}`; }
 ACT["convo-copy"] = async () => { const t = (($("#convoText") || {}).value || "").trim(); if (t.length < 20){ toast("先把转写贴进来"); return; }
   try { await navigator.clipboard.writeText(convoText(t)); toast("复制好了，发到和 Claude 的对话里"); } catch (e) { toast("复制不了：长按输入框全选复制"); } };
+
+/* 情景对话的判断（v1.62.0）：按“功能是否到位”（回答到对方的问题、说法对、听得懂），不按内容是不是和参考一样。
+   1. 和参考很接近 → 很地道；2. 骨架一样（虚词顺序对上、内容换成自己的）或者回答到了问题（点单、二选一、名字、几位、是不是、付款、道谢……）→ 这样说也对；
+   3. 再用日常练习那套不容易误判的语法规则查一遍；4. 都不是 → 好像没回答到问题 */
+const DG_FN = new Set("a an the i i'm i'd i'll you we it it's is are was can could would will to for of in on at with and or but please some any just me my your this that be have get like".split(" "));
+function dgSkel(s){ return K.tokens(s).filter(w => DG_FN.has(w)); }
+function dgLcs(a, b){ const m = a.length, n = b.length; if (!m || !n) return 0; const dp = Array.from({length:m + 1}, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]); return dp[m][n]; }
+function dgFit(t, said){
+  const q = String(t.say || "").toLowerCase(), s = String(said || "").toLowerCase(), toks = K.tokens(s); if (!toks.length) return {ok:false};
+  const content = toks.filter(w => !DG_FN.has(w) && w.length > 1);
+  /* 骨架：参考说法的虚词顺序，大部分都对上了，内容是自己的 */
+  for (const r of t.reply){ const rs = dgSkel(r), ss = dgSkel(s); if (rs.length >= 2 && content.length && dgLcs(rs, ss) / rs.length >= 0.7) return {ok:true}; }
+  const has = re => re.test(s);
+  /* 二选一：A or B? → 说了其中一个；“我们有 X、Y 和 Z” → 说了其中一样 */
+  const orm = q.match(/([a-z' ]{2,30}?)\s+or\s+([a-z' ]{2,30}?)\?/); if (orm){ const opt = [orm[1].trim().split(" ").slice(-3).join(" "), orm[2].trim()]; if (opt.some(o => o && s.includes(o.replace(/^(is that |do you want |would you like |)/, "")))) return {ok:true}; }
+  const lst = q.match(/we have ([a-z ,'-]+?)(?:\.|$)/); if (lst && lst[1].split(/,\s*|\s+and\s+|\s+or\s+/).map(x => x.trim()).filter(x => x.length > 2).some(x => s.includes(x))) return {ok:true};
+  if (/what can i get|what would you like|ready to order|what can i do for you|anything (else|to drink)|what('s| is) your order|get you started/.test(q) && (has(/\b(can i (get|have)|could i (get|have)|i'?d like|i'?ll (have|take|get|go with)|let me (get|have)|i want|just (a|an|the|some)|no,? (that'?s|i'?m) (it|good|all))\b/) || (toks.length <= 6 && /please|thanks/.test(s)))) return {ok:true};
+  if (/name/.test(q) && (has(/\b(it'?s|my name is|i'?m|this is|name'?s)\b/) || /\b[A-Z][a-z]+/.test(String(said)))) return {ok:true};
+  if (/how many|party of|how much|what time|when/.test(q) && (has(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|noon|tonight|tomorrow|today|morning|afternoon|evening|o'?clock|am|pm)\b/))) return {ok:true};
+  if (/^(hi|hey|hello)?[,! ]*(how are you|how'?s it going|how are you doing|how'?s your day)/.test(q) && has(/\b(good|great|fine|not bad|pretty good|doing well|okay|alright)\b/)) return {ok:true};
+  if (/total|that'?ll be|that comes to|it'?s \$?\d/.test(q) && has(/\b(card|cash|here you go|tap|apple pay|pay|here it is|sure)\b/)) return {ok:true};
+  if (/^(do|does|did|are|is|was|were|can|could|would|will|have|has|should|any)\b/.test(q.replace(/^(sure|okay|great|alright|perfect)[.,!]\s*/, "")) && has(/\b(yes|yeah|yep|sure|no|nope|not really|of course|definitely|i think so|actually|please|that'?d be great|i'?m good)\b/)) return {ok:true};
+  if (/(enjoy|have a (good|great|nice)|thanks for|thank you|here you go|go ahead|there you go|see you)/.test(q) && has(/\b(thanks|thank you|appreciate|you too|have a (good|great|nice)|bye|see you)\b/)) return {ok:true};
+  if (/^(where|which)\b/.test(q) && content.length) return {ok:true, soft:true};
+  return {ok:false, why:"好像没回答到对方的问题：先听清对方问的是什么，再看看下面的说法"};
+}
+function dgJudge(t, said){
+  const cmp = K.compareSaid(t.reply[0], t.reply.slice(1), said), gram = typeof rwSpeakFlags === "function" ? rwSpeakFlags(said, t.reply.join(" ")) : [];
+  const fit = dgFit(t, said), g = gram.length ? gram.map(x => x.msg) : [];
+  if (cmp.score >= 0.8 && !g.length) return {cls:"exact", msg:"很地道，和参考说法很接近", gram:g};
+  if ((fit.ok || cmp.score >= 0.8) && !g.length) return {cls:"exact", msg:"这样说也对：回答到了问题，内容换成你自己的完全可以", gram:g};
+  if (fit.ok || cmp.score >= 0.5) return {cls:"close", msg: g.length ? "回答到了问题，但这里可能要改：" : "意思差不多，可以参考下面的说法", gram:g};
+  return {cls:"", msg: fit.why || "好像没回答到对方的问题，看看下面的说法", gram:g};
+}
 
 /* 脱口 Tuokou · 代码画的怪物（3 小怪 + 3 精英 + 8 首领），给 src/battle.js 用。
    全部是原创形象，可以进仓库。每只都有 light / heavy / skill 三招，外加 hit / win / lose。
@@ -11484,7 +11527,7 @@ const BT = (() => {
       const b = box(q.img); if (!b.w) return; const H = b.h, mir = mirrored(f), token = A.token;
       const P = (x, y) => [b.x + (mir ? 1 - x : x) * b.w, b.y + y * H];
       const arms = segF.map(([ex, ey, fx2, fy]) => ({e:P(ex, ey), f:P(fx2, fy)}));
-      const t0 = performance.now(), wd = Math.max(1.8, H * 0.0075), faint = level < 0, lv = Math.max(0, level);
+      const t0 = performance.now(), wd = Math.max(1.8, H * 0.0075), faint = level < 0, lv = Math.max(0, level); let stopped = false;
       const bolt = (ctx, pts, k) => {
         ctx.lineCap = "round"; ctx.lineJoin = "round";
         const path = () => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); };
@@ -11495,7 +11538,7 @@ const BT = (() => {
         ctx.globalAlpha = 0.92 * k; ctx.strokeStyle = "rgb(245, 252, 255)"; ctx.lineWidth = wd * 1.25; path(); ctx.stroke();
       };
       glowTop.add((ctx, now) => {
-        if (token !== A.token) return false;
+        if (token !== A.token || stopped) return false;
         const t = now - t0; if (t > ms) return false;
         const k = Math.min(1, t / 220) * (t > ms - 180 ? Math.max(0, (ms - t) / 180) : 1);
         ctx.save();
@@ -11526,6 +11569,7 @@ const BT = (() => {
         }
         ctx.restore(); return true;
       });
+      return () => { stopped = true; };   /* 关掉：对波结束、技能放完、换了姿势 */
     }
     /* 渐隐光带：同一个光带形状一层比一层窄地叠画，越往中间越亮，边缘看不到边框 */
     function softBand(ctx, ox, oy, x1, hw0, hw1, c0, c1, alpha, layers){
@@ -11551,7 +11595,7 @@ const BT = (() => {
       const o = handPoint(att), size = box(bodyOf(att)).h;
       holdGlow(face, fil(att, "drop-shadow(0 0 8px rgba(160, 210, 255, .55))"));
       let HOLD = cl ? 1e9 : HOLD_OR;
-      armEnergy(att, "skill", cl ? 60000 : HOLD_OR + 300, -1);
+      const armStop = armEnergy(att, "skill", cl ? 60000 : HOLD_OR + 300, -1) || (() => {});
       const seg = beamSeg(att, "skill"); if (seg){ o.x = seg.x; o.y = (seg.yTop + seg.yBot) / 2; }
       const t0 = performance.now(), band0 = seg ? (seg.yBot - seg.yTop) / 2 : size * 0.07, band1 = band0 * 1.7;
       const d0 = box(bodyOf(def)); let xEnd = dir < 0 ? d0.x - 30 : d0.x + d0.w + 30; const xEnd0 = xEnd;
@@ -11583,7 +11627,7 @@ const BT = (() => {
         else blit(ctx, "white", o.x, o.y, size * 0.2, 0.5 * fade);
         ctx.restore(); return true;
       }));
-      if (cl){ cl.done.then(() => { HOLD = performance.now() - t0; }); await cl.done; fadeHeld(800); return; }
+      if (cl){ cl.done.then(() => { HOLD = performance.now() - t0; armStop(); }); await cl.done; armStop(); fadeHeld(800); return; }
       await wait(220); if (token !== A.token) return; shakeFor(HOLD - 220, 3);
       const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
       pose(def, "recoil", 90); shake(10);
@@ -11598,7 +11642,7 @@ const BT = (() => {
         await wait(HOLD / parts.length);
       }
       push.cancel(); if (!def.classList.contains("still")) pose(def, "idle", 260);
-      fadeHeld(800); await pose(att, "idle", 300);
+      armStop(); fadeHeld(800); await pose(att, "idle", 300);
     }
     /* 百慕拉的激光（第十五节）。轻击：三条细红激光，带粉白色的芯，停在对手身上，手上两圈红色光环往外扩散。
        重击：先在掌心聚红光 → 白黄色大光球（四道转动的光芒，往外溅火星）→ 一道粗光线（白黄的芯、橙、很宽的红晕，里面能量条高速流动），穿过对手射到画面外，画面泛红约 1 秒 */
@@ -13165,7 +13209,7 @@ const dbText = q => (q.v && q.v[0]) || q.q || q.en || "";
 const dbRef = q => { const a = S.answers && S.answers[q.id]; return (a && a.text) || ""; };
 const dbFollow = q => { const f = (q.follow || []).find(t => S.followAns && S.followAns[q.id + "|" + t]); return f ? {q:f, a:S.followAns[q.id + "|" + f]} : null; };
 /* 对波的颜色：每个技能登记两个主色；首领按怪物 */
-const SKILL_COL = {overRay:["#FFFFFF", "rgb(90,170,255)"], wideBeam:["#8EE6FF", "#C99BFF"], rig:["#5EF0FF", "#2E9BFF"], stormBeam:["#7FB8FF", "#E8F3FF"], crescent:["#FFC24A", "#FF7A1A"], zepellion:["#F4F0FF", "#B48CFF"], laserThick:["#FF4040", "#FFB070"]};
+const SKILL_COL = {overRay:["#FFFFFF", "#5AAAFF"],   /* #5AAAFF 就是 rgb(90,170,255)：对波的爆炸只认 # 开头的颜色，写成 rgb() 会变黑 */ wideBeam:["#8EE6FF", "#C99BFF"], rig:["#5EF0FF", "#2E9BFF"], stormBeam:["#7FB8FF", "#E8F3FF"], crescent:["#FFC24A", "#FF7A1A"], zepellion:["#F4F0FF", "#B48CFF"], laserThick:["#FF4040", "#FFB070"]};
 const MON_COL = {corefang:["#FF6A2A", "#FFD27A"], abyssmaw:["#B04CFF", "#FF4FA8"], prismward:["#6CF6FF", "#FFFFFF"], twinhood:["#7CFF6A", "#E9FF8A"], galecrest:["#6CE0FF", "#B8F3FF"], starhorn:["#FFD84A", "#FFF3B0"], nullwraith:["#9A6CFF", "#FF5FD2"]};
 const DB = {st:null, A:null};
 function dbQuestions(mode, persona){
@@ -14423,26 +14467,36 @@ VIEWS.slang = {
       const it = R.items[R.i], p = R.picked;
       return `<div class="wrap">${backBtn()}<h2>听懂俚语</h2><div class="card"><button class="linkbtn small" data-act="sl-back">← 返回</button><p class="small muted">第 ${R.i + 1}/${R.items.length} 句：这句是什么意思？</p>
         <div class="row-gap" style="margin:8px 0"><button class="btn sm" data-act="sl-play">▶ 听</button></div>
-        <p class="en" style="font-size:18px">${esc(it.en)}</p>
+        <p class="en sl-sent" style="font-size:18px">${String(it.en).split(/(\s+)/).map((w, k) => /\S/.test(w) && /[A-Za-z]/.test(w) ? `<span class="rd-w${SL.sel != null && SL.sel === k ? " rd-pick" : ""}" data-act="sl-word" data-k="${k}">${esc(w)}</span>` : esc(w)).join("")}</p>
+        <p class="small muted">点一个词：听读音、收藏进“想学的”</p><div id="slPop"></div>
         <div style="margin-top:10px">${R.opts.map(o => `<button class="btn block${p != null ? (o === it.zh ? " pr-right" : o === p ? " pr-wrong" : "") : ""}" data-act="sl-pick" data-v="${esc(o)}" style="margin-top:6px;text-align:left" ${p != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}</div>
         ${p != null ? `<div class="card" style="margin-top:10px"><p><b class="en">${esc(it.term)}</b>　<span class="chip">${esc(it.lvl === "俚语" ? "俚语" : "脏话 · " + it.lvl)}</span><span class="chip">语气：${esc(it.tone)}</span><span class="chip">${esc(it.use)}</span></p><p class="small" style="margin-top:6px">${esc(it.note)}</p></div>
           <button class="btn primary block" data-act="sl-next" style="margin-top:10px">下一句</button>` : ""}</div></div>`;
     }
     return `<div class="wrap">${backBtn()}<h2>听懂俚语</h2><p class="muted small">当地人聊天里的俚语和脏话：不是为了说，是为了听懂，分清是在开玩笑、夸奖还是真的生气。每句会告诉你有多冲、自己能不能用。</p>
       <div class="card"><p class="small muted">${st.n ? `练过 ${st.n} 句，听懂 ${st.ok} 句` : "还没练"}　一共 ${slItems().length} 句${(S.slangCustom || []).length ? `（导入的 ${(S.slangCustom || []).length} 句）` : ""}</p><button class="btn primary block" data-act="sl-go" style="margin-top:8px">练 8 句</button></div>
-      <details class="card" style="margin-top:10px"><summary><b>怎么分清是不是开玩笑</b></summary>
+      <details class="card sl-tip" style="margin-top:10px" ${L.slTipClosed ? "" : "open"}><summary><b>怎么分清是不是开玩笑</b></summary>
         <p class="small" style="margin-top:6px">看三样：说的时候在不在笑；是不是好朋友之间（越熟越常互相开骂）；是对着人说，还是只是加强语气（fucking、hell 放在句子中间多半只是语气）。</p>
         <p class="small" style="margin-top:6px">自己用：俚语里标“可以用”的随便用；“朋友之间可以”的只跟熟人说；“听懂就行”的别说，尤其是面试和 coffee chat。</p></details></div>`;
   },
-  leave(){ SL.run = null; try { TTS.cancel(); } catch (e) {} }
+  leave(){ SL.run = null; SL.sel = null; try { TTS.cancel(); } catch (e) {} },
+  mount(){ const d = document.querySelector("details.sl-tip"); if (d) d.addEventListener("toggle", () => { L.slTipClosed = !d.open; saveLocal(); }); }   /* 记住上次是展开还是收起 */
 };
+/* 俚语句子里点词：听、收藏；“从这里选短语”再点最后一个词，收藏整段 */
+ACT["sl-word"] = el => { const R = SL.run; if (!R) return; const parts = String(R.items[R.i].en).split(/(\s+)/), k = +el.dataset.k;
+  const clean = w => String(w).replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "");
+  if (SL.sel != null && SL.sel !== k){ const a = Math.min(SL.sel, k), b = Math.max(SL.sel, k); const ph = clean(parts.slice(a, b + 1).join("")); SL.sel = null; UI.render(); setTimeout(() => slPop(ph, true), 0); return; }
+  slPop(clean(parts[k]), false, k); };
+function slPop(t, phrase, k){ const p = $("#slPop"); if (!p || !t) return;
+  p.innerHTML = `<div class="card rd-popc"><b class="en">${esc(t)}</b><div class="row-gap" style="margin-top:6px"><button class="btn sm" data-act="rd-say" data-t="${esc(t)}">▶ 听</button><button class="btn sm primary" data-act="rd-want" data-t="${esc(t)}">收藏进想学的</button>${phrase ? "" : `<button class="btn sm ghost" data-act="sl-from" data-k="${k}">从这里选短语</button>`}</div></div>`; }
+ACT["sl-from"] = el => { SL.sel = +el.dataset.k; UI.render(); toast("再点短语的最后一个词"); };
 function slMakeOpts(it, all){ const others = all.filter(x => x.zh !== it.zh).sort(() => Math.random() - 0.5).slice(0, 2).map(x => x.zh); return [it.zh].concat(others).sort(() => Math.random() - 0.5); }
 ACT["sl-go"] = () => { const all = slItems(), items = all.slice().sort(() => Math.random() - 0.5).slice(0, 8); SL.run = {items, all, i:0, res:[], picked:null, opts:slMakeOpts(items[0], all)}; UI.render(); setTimeout(() => ACT["sl-play"](), 250); };
 ACT["sl-back"] = () => { SL.run = null; try { TTS.cancel(); } catch (e) {} UI.render(); };
 ACT["sl-play"] = () => { const R = SL.run; if (!R) return; try { TTS.cancel(); } catch (e) {} const t = String(R.items[R.i].en).replace(/（[^）]*）/g, "").replace(/—/g, ","); rtSay(t); };
 ACT["sl-pick"] = el => { const R = SL.run; if (!R || R.picked != null) return; const it = R.items[R.i], ok = el.dataset.v === it.zh; R.picked = el.dataset.v; R.res.push(ok);
   const st = S.slangStat = S.slangStat || {n:0, ok:0}; st.n++; if (ok) st.ok++; save(); UI.render(); };
-ACT["sl-next"] = () => { const R = SL.run; if (!R) return; R.i++; R.picked = null; if (R.i >= R.items.length){ if (typeof planAutoDone === "function") planAutoDone("slang"); UI.render(); return; } R.opts = slMakeOpts(R.items[R.i], R.all); UI.render(); setTimeout(() => ACT["sl-play"](), 200); };
+ACT["sl-next"] = () => { const R = SL.run; if (!R) return; R.i++; R.picked = null; SL.sel = null; if (R.i >= R.items.length){ if (typeof planAutoDone === "function") planAutoDone("slang"); UI.render(); return; } R.opts = slMakeOpts(R.items[R.i], R.all); UI.render(); setTimeout(() => ACT["sl-play"](), 200); };
 
 </script>
 </body>
