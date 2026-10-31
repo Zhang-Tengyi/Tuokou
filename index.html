@@ -710,6 +710,8 @@ details.pl-day>summary{list-style:none;cursor:pointer}details.pl-day>summary::-w
 .now-row .btn{flex:none;white-space:nowrap;min-width:64px}
 .deck-grp-h i{font-size:20px;line-height:1;padding:4px 8px}.deck-grp-h{min-height:34px}
 .deck-head{display:flex;align-items:center;justify-content:space-between}.deck-all-fold{background:none;border:0;font-size:28px;line-height:1;padding:2px 10px;color:var(--ink2,#334155);cursor:pointer}
+.bt-glowfx{z-index:1}.bt-glowfx.bt-glowtop{z-index:2}
+.chip.reg-casual{background:#FEF3C7;color:#92400E}.chip.reg-formal{background:#E0E7FF;color:#3730A3}.chip.reg-listen{background:#FEE2E2;color:#991B1B}.chip.reg-neutral{background:#E5E7EB;color:#374151}
 
 .has-ai-only{display:none!important}
 .has-ai .has-ai-only{display:inline-flex!important}
@@ -731,7 +733,7 @@ details>summary{cursor:pointer;font-weight:600;color:var(--ink2)}
 <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>我的</span></button>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>window.__BUILD__={"pwa": true, "version": "1.59.6"};</script>
+<script>window.__BUILD__={"pwa": true, "version": "1.61.0"};</script>
 <script>
 const SCENE_SRC = {"day": "scenes/day.webp", "night": "scenes/night.webp", "garage": "scenes/garage.webp", "factory": "scenes/factory.webp", "forest": "scenes/forest.webp", "forestN": "scenes/forestN.webp", "gday": "scenes/gday.webp", "gnight": "scenes/gnight.webp", "gforest": "scenes/gforest.webp", "gforestN": "scenes/gforestN.webp", "amuse": "scenes/amuse.webp", "amuseN": "scenes/amuseN.webp", "moon": "scenes/moon.webp", "gas": "scenes/gas.webp", "gasN": "scenes/gasN.webp"};
 const SCENE_FRONT = {"day": "", "night": "", "garage": "", "factory": "", "forest": "", "forestN": "", "gday": "scenes/gday_front.webp", "gnight": "scenes/gnight_front.webp", "gforest": "scenes/gforest_front.webp", "gforestN": "scenes/gforestN_front.webp", "amuse": "scenes/amuse_front.webp", "amuseN": "scenes/amuseN_front.webp", "moon": "scenes/moon_front.webp", "gas": "scenes/gas_front.webp", "gasN": "scenes/gasN_front.webp"};
@@ -2210,8 +2212,11 @@ function chunkSentence(en){
 }
 
 /* ---------- 导入码 ---------- */
+/* 语域：朋友之间 / 通用 / 正式 / 听懂就行（导入码里卡的第 6 个字段） */
+const REG_KEYS = {"朋友之间":"casual", "朋友":"casual", "随意":"casual", "通用":"neutral", "正式":"formal", "听懂就行":"listen", "听懂":"listen"};
+function regKey(v){ return REG_KEYS[String(v || "").trim()] || ""; }
 function parseImport(text){
-  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], plan:[], errStats:[], articles:[], meta:{date:"", who:[], replace:[]}, bad:[]};
+  const res = {cards:[], answers:[], keys:[], questions:[], follow:[], alts:[], plan:[], errStats:[], articles:[], slang:[], meta:{date:"", who:[], replace:[]}, bad:[]};
   const ROLE = {"开场":"first","核心":"core","初筛":"screen","提问":"ask","基本":"core","行为":"core","电话":"screen","技术":"tech","概念":"concept","first":"first","core":"core","screen":"screen","ask":"ask","tech":"tech","concept":"concept"};
   let deck = "我的卡片";
   String(text||"").split(/\r?\n/).forEach((line, i) => {
@@ -2224,7 +2229,8 @@ function parseImport(text){
     if (kind==="面试官" && p[1]){ res.meta.who.push({deck, name:p[1], company:p[2]||""}); return; }
     if (kind==="文章" && p[2]){ res.articles.push({title:(p[1] || "").trim(), text:p.slice(2).join("|").trim()}); return; }   /* 阅读：文章|标题|正文 */
     if (kind==="错误统计" && p[1] && p[2]){ res.errStats.push({c:p[1].trim().toUpperCase(), n:+p[2] || 0, pri:/^(优先|1|yes|y)$/i.test(String(p[4] || "").trim())}); return; }   /* 错误档案的起点：错误统计|代码|次数|说明|优先（可选：排在清单前面） */
-    if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
+    if ((kind==="卡"||kind==="R") && p[1] && p[2]){ const a = splitAlts(p[2]), rg = regKey(p[5]); res.cards.push(Object.assign({t:"r", zh:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}, rg ? {reg:rg} : {})); }
+    else if (kind==="俚语" && p[1] && p[2]){ res.slang.push({en:p[1].trim(), zh:p[2].trim(), tone:(p[3]||"").trim(), lvl:(p[4]||"俚语").trim(), use:(p[5]||"听懂就行").trim(), note:(p[6]||"").trim(), term:(p[1].match(/[“"]([^”"]+)[”"]/) || [])[1] || ""}); }
     else if ((kind==="词"||kind==="W") && p[1] && p[2] && p[3]){ const a = splitAlts(p[3]); res.cards.push({t:"w", word:p[1].trim(), mean:p[2].trim(), en:a[0], alt:a.slice(1), zh:(p[4]||"").trim(), tag:"vocab", note:p[5]||"", deck}); }
     else if ((kind==="改"||kind==="F") && p[1] && p[2]){ const a = splitAlts(p[2]); res.cards.push({t:"f", wrong:p[1], en:a[0], alt:a.slice(1), tag:tagKey(p[3]), note:p[4]||"", deck}); }
     else if ((kind==="听"||kind==="L") && p[1] && p[2]){ res.cards.push({t:"l", grp:"cs", en:p[1], zh:p[2], tag:"listen", deck}); }
@@ -2716,7 +2722,7 @@ function deckGroupOf(x){
   if (/改错/.test(n)) return "改错";
   if (/单词|词汇|words?\b/i.test(n)) return "单词";
   if (/面试|interview|复盘/i.test(n)) return "面试";
-  if (/coffee|chat|社交|沟通|表达|聊天/i.test(n)) return "聊天和社交";
+  if (/coffee|chat|社交|沟通|表达|聊天|对话/i.test(n)) return "聊天和社交";
   if (/实验室|lab|工作|职场/i.test(n)) return "工作";
   return "其他";
 }
@@ -3552,12 +3558,12 @@ VIEWS.home = {
       <div class="sec-title">开口说</div>
       <div class="mods">
         ${mod("free","bolt","反射训练","按类型挑着练")}${mod("dialogs","chat","情景对话","点餐、闲聊、打电话办事")}
-        ${mod("journal","mic","语音日记","睡前 1 分钟")}${mod("hands","head","耳机模式","走路、坐车时听着练")}
+        ${mod("journal","mic","语音日记","睡前 1 分钟")}${mod("hands","head","耳机模式","走路、坐车时听着练")}${mod("react","chat","接话练习","听一句马上接；想不起词怎么说")}
       </div>
       <div class="sec-title">听和写</div>
       <div class="mods">
         <button class="mod" data-act="listen-go">${ICON.ear}<b>听力快练</b><span>听懂面试官的问法</span></button>
-        ${mod("write","pen","写作","回复消息、写邮件，按你的错误清单检查")}
+        ${mod("write","pen","写作","回复消息、写邮件，按你的错误清单检查")}${mod("slang","ear","听懂俚语","俚语、脏话：什么意思、是不是开玩笑")}
       </div>
       <div class="sec-title">学</div>
       <div class="mods">
@@ -3741,6 +3747,18 @@ function gramCheck(said, shown){
 function gramBoxHTML(gc){
   return `<div class="gram-box">${gc.must.map(i => `<div class="gline must"><span class="gtag">一定要改</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}${gc.opt.map(i => `<div class="gline opt"><span class="gtag">改不改都行</span>“${esc(i.text)}”：${esc(i.msg)}</div>`).join("")}</div>`;
 }
+/* 顽固错句：最近两次没说好都漏了同样的关键词 → 说之前先提示那几个正确的词（不显示你的错句，免得再加深印象）。
+   提示 2 级：完整的词 → 只给开头字母 → 不给；不给提示也说对了就不再算。又错了回到完整提示 */
+function stubCue(card){
+  if (!card || card.t !== "r") return null;
+  const st = (S.stub || {})[card.id]; if (st) return st;
+  const ms = [].concat((S.lastMiss || {})[card.id] || []).filter(Boolean); if (ms.length < 2) return null;
+  const sets = ms.map(m => new Set(K.tokens(m))), tw = K.tokens(card.en || "").filter(w => w.length > 2);
+  const miss = [...new Set(tw.filter(w => sets.every(s => !s.has(w))))].slice(0, 3); if (!miss.length) return null;
+  S.stub = S.stub || {}; S.stub[card.id] = {lv:2, cue:miss}; save(); return S.stub[card.id];
+}
+function stubCueHTML(card){ const st = stubCue(card); if (!st || st.lv <= 0) return "";
+  return `<p class="small stub-cue" style="margin-top:8px">注意用上：${st.cue.map(w => `<b class="en">${esc(st.lv >= 2 ? w : w[0] + "…")}</b>`).join("、")}</p>`; }
 class CardStage {
   constructor(card, retry){ this.card = card; this.retry = !!retry; this.step = 0; this.phase = "prompt"; this.drill = 0; this.alive = true; this.tries = 0; }
   get isE(){ return this.card.t === "e"; }
@@ -3749,10 +3767,10 @@ class CardStage {
   target(){ return this.isE ? this.card.steps[this.step] : this.card; }
   leave(){ this.alive = false; clearInterval(this.clock); SR.abort(); if (WL.active){ WL.active = false; if (WL.stopFn) WL.stopFn(); Rec.cancel(); } if (this.recOn){ Rec.cancel(); this.recOn = false; } if (this.recUrl){ URL.revokeObjectURL(this.recUrl); this.recUrl = null; } }
   show(){ if (this.freeUse === undefined){ const pc = S.cards[this.card.id]; this.freeUse = this.card.t === "w" && !!pc && (pc.box || 0) >= 2 && !this.retry && Math.random() < 0.4; } if (this.recUrl){ URL.revokeObjectURL(this.recUrl); this.recUrl = null; } this.phase = "prompt"; this.said = ""; this.cmp = null; this.ms = 0; this.tries = 0; this.firstCmp = null; this.mean = null; this.flags = []; this.mine = false; this.misrec = false; this.render(); }
-  chips(){ const c = this.card; return `<div class="kind"><span class="chip k">${TYPE_LABEL[c.t]}</span>${c.t === "w" ? "" : `<span class="chip">${esc((TAGS[c.tag]||TAGS.other).label)}</span>`}${this.retry ? '<span class="chip">再来一次</span>' : ""}${c.custom ? '<span class="chip">我导入的</span>' : ""}</div>`; }
+  chips(){ const c = this.card; return `<div class="kind"><span class="chip k">${TYPE_LABEL[c.t]}</span>${c.t === "w" ? "" : `<span class="chip">${esc((TAGS[c.tag]||TAGS.other).label)}</span>`}${c.reg ? `<span class="chip reg-${c.reg}">${({casual:"朋友之间", neutral:"通用", formal:"正式", listen:"听懂就行"})[c.reg] || ""}</span>` : ""}${this.retry ? '<span class="chip">再来一次</span>' : ""}${c.custom ? '<span class="chip">我导入的</span>' : ""}</div>`; }
   promptHTML(){
     const c = this.card;
-    if (c.t === "r") return `<div class="zh">${esc(c.zh)}</div>`;
+    if (c.t === "r") return `<div class="zh">${esc(c.zh)}</div>${this.phase === "prompt" ? stubCueHTML(c) : ""}`;
     if (c.t === "w") return this.freeUse ? `<p class="small muted">用这个词说一句你自己的话：</p><div class="zh">${esc(c.mean)}</div><p class="small muted" style="margin-top:8px">说说你的生活、找工作、打球，什么都行。</p>` : `<div class="zh">${esc(c.zh)}</div><div class="parts" style="margin-top:10px"><span class="chip cue">要用上：${esc(c.mean)}（${esc(c.word[0])} 开头，${/\s/.test(c.word) ? c.word.trim().split(/\s+/).length + " 个词" : c.word.length + " 个字母"}）</span></div>`;
     if (c.t === "t") return `<div class="verb">${esc(c.verb)}</div><div class="parts">${c.subj ? `<span class="chip">${esc(c.subj)}</span>` : ""}${c.obj ? `<span class="chip">${esc(c.obj)}</span>` : ""}<span class="chip cue">${esc(c.cue)}</span></div><p class="small muted" style="margin-top:10px">用 ${esc(c.verb)} 说一句完整的话</p>`;
     if (c.t === "f") return `<p class="small muted">你以前写过：</p><div class="wrong">${esc(c.wrong)}</div><p class="small muted" style="margin-top:8px">说出正确的版本</p>`;
@@ -3817,6 +3835,7 @@ class CardStage {
     }
   }
   drillSteps(){
+    if (this.stubDrill){ const t = this.target().en; return [{text:t, play:null, label:"说对了！再说一遍，把对的说顺"}, {text:t, play:null, label:"再说一遍"}]; }
     /* 开口说了、只是没说对：听一遍正确的、自己说一遍就行；一个字没说出来的才走完整的三步 */
     if (this.drillLite && !this.leech){ const t = this.target().en; return [{text:t, play:"normal", label:"听一遍正确的，跟着说"}, {text:t, play:null, label:"不听了，自己说一遍"}]; }
     const t = this.card.en;
@@ -3965,6 +3984,15 @@ class CardStage {
     if (!this.retry && r === "again") RUN.weak[this.card.tag] = (RUN.weak[this.card.tag]||0) + 1;
     if (res.pb){ RUN.res.pb++; Snd.pb(); vib([15,40,15]); const tc = $("#timeChip"); if (tc){ tc.classList.add("pb"); tc.textContent = fmt1(this.ms) + " 秒，最快一次"; } }
     else if (r === "good"){ Snd.good(); vib(15); }
+    const stb = (S.stub || {})[this.card.id];
+    if (stb){
+      if (r === "again"){ stb.lv = 2; save(); }
+      else if (!this.tries){ const shown = stb.lv > 0; stb.lv = Math.max(0, stb.lv - 1);
+        if (!shown){ delete S.stub[this.card.id]; if (S.lastMiss) delete S.lastMiss[this.card.id]; }
+        save();
+        /* 有提示时说对了：马上再说两遍，把对的说顺 */
+        if (shown){ this.stubDrill = true; this.drillLite = true; this.phase = "drill"; this.drill = 0; this.drillPlayed = -1; this.render(); return; } }
+    }
     if (r === "again" && (!this.retry || ((RUN.retries || {})[this.card.id] || 0) < 4)){
       const p = S.cards[this.card.id]; this.leech = !!(p && (p.lapses || 0) >= 3);
       /* 补练几步：只差一点（或者意思对了）练两步；差得多练三步——不再只看你有没有开口 */
@@ -4975,7 +5003,7 @@ VIEWS.callrev = {
 
 /* ---------- 我的计划：写成“什么时候 → 做什么”；链接了练习的，做完自动打勾 ---------- */
 const PLAN_ACTS = [["","不链接练习"],["phone","模拟一场电话初筛"],["basic","模拟一场基本面试"],["tech","模拟一场技术面试"],["concept","基础概念快答"],["quick","3 分钟练习"],["std","10 分钟练习"],["deep","20 分钟练习"],["listen","听力快练"],["words","练单词"],["hands","耳机模式"],
-  ["call","来电模拟"],["free","反射训练"],["dialogs","情景对话"],["journal","语音日记"],["write:reply","写作：回复消息"],["write:mail","写作：写邮件"],["chunks","常用语块"],["errlog","看错误档案"],["dtalk:iv","对话练习（面试官）"],["dtalk:cc","对话练习（Coffee chat）"],["dboss:432","三遍提速战"],["pron","发音"],["read","阅读"]];
+  ["call","来电模拟"],["free","反射训练"],["dialogs","情景对话"],["journal","语音日记"],["write:reply","写作：回复消息"],["write:mail","写作：写邮件"],["chunks","常用语块"],["errlog","看错误档案"],["dtalk:iv","对话练习（面试官）"],["dtalk:cc","对话练习（Coffee chat）"],["dboss:432","三遍提速战"],["pron","发音"],["read","阅读"],["react","接话练习"],["slang","听懂俚语"]];
 function planActLabel(a){ if (!a) return ""; if (/^dtalk:cc:/.test(a)) return "对话练习（Coffee chat：" + dbPersona(a.slice(9)) + "）"; if (a.startsWith("solo:")) return "单题彩排：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); if (a.startsWith("read:")) return "跟读参考回答：" + ((QBY[a.slice(5)] || {}).zh || a.slice(5)); return (PLAN_ACTS.find(x => x[0] === a) || ["", ""])[1]; }
 function planAutoDone(act){ if (!act) return; const d = today(); let n = 0; for (const x of (S.plan || [])) if (x.date === d && !x.done && x.act === act){ x.done = true; n++; } if (n){ save(); toast("计划里的一项完成了 ✓"); } }
 function fmtDate(dt){ const d = new Date(dt + "T12:00:00"); return `${d.getMonth() + 1}月${d.getDate()}日 周${"日一二三四五六"[d.getDay()]}`; }
@@ -5033,9 +5061,9 @@ function todayPlanHTML(){
   const lowLine = low ? `<p class="small muted" style="margin-top:6px">今天只做 3 分钟也算 ✓</p>` : `<p class="small muted" style="margin-top:6px">没精神？<button class="linkbtn small" data-act="low-day">只做 3 分钟</button></p>`;
   if (!items.length && !due.length) return `<div class="panel plan-card">${now}${lowLine}</div>`;
   /* 默认收起：只显示下一项没做的，免得把练习挤到下面去 */
-  const shown = open ? items : [];
+  const shown = open ? left : [], doneN = items.length - left.length;   /* 展开：只列没做的，做完的合成一行 */
   return `<div class="panel plan-card"><div class="row-gap" style="justify-content:space-between;align-items:center"><b>今天的计划${items.length ? `（还剩 ${left.length} 项）` : ""}</b><span class="row-gap" style="flex:none">${items.length > 1 ? `<button class="btn sm ghost" data-act="plan-toggle">${open ? "收起" : `展开 ${items.length} 项`}</button>` : ""}</span></div>
-    ${open ? "" : now}${shown.length ? `<div class="list" style="margin-top:6px">${shown.map(x => planRowHTML(x, false)).join("")}</div>` : !left.length && items.length ? `<p class="small muted" style="margin-top:6px">今天的计划都做完了 ✓</p>` : ""}${left.length ? lowLine : ""}
+    ${open ? "" : now}${shown.length ? `<div class="list" style="margin-top:6px">${shown.map(x => planRowHTML(x, false)).join("")}</div>` : ""}${!left.length && items.length ? `<p class="small muted" style="margin-top:6px">今天的计划都做完了 ✓</p>` : open && doneN ? `<p class="small muted" style="margin-top:6px">做完了 ${doneN} 项 ✓</p>` : ""}${left.length ? lowLine : ""}
     ${due.length ? `<div class="row-gap" style="margin-top:8px;align-items:center"><span class="small">模拟面试时没说好的 ${due.length} 道题，今天该重练了</span><button class="btn sm" data-act="iv-due-go">现在练</button><button class="btn sm ghost" data-act="iv-due-later">明天再说</button></div>` : ""}</div>`;
 }
 ACT["plan-done-now"] = el => { const x = (S.plan || []).find(p => p.id === el.dataset.id); if (!x) return; x.done = true; save(); UI.render(); };
@@ -5047,9 +5075,13 @@ ACT["plan-del"] = el => { S.plan = (S.plan || []).filter(p => p.id !== el.datase
 ACT["plan-go"] = el => {
   const a = el.dataset.v || "";
   if (["phone","basic","tech","concept"].includes(a)) return ACT["mod-go"]({dataset:{v:a}});
-  if (["quick","std","deep"].includes(a)) return startSession(a, {}, {quick:"3 分钟练习", std:"10 分钟练习", deep:"20 分钟练习"}[a]);
+  if (["quick","std","deep"].includes(a)){
+    return (async () => { const c = await choose("怎么练？", "", [["std", "普通练习"], ["game", "游戏"]]); if (!c) return;
+      if (c === "game"){ S.settings.goal = a; save(); return ACT["start-game"]({dataset:{}}); }
+      return startSession(a, {}, {quick:"3 分钟练习", std:"10 分钟练习", deep:"20 分钟练习"}[a]); })();
+  }
   if (a === "listen") return ACT["listen-go"](); if (a === "words") return ACT["words-go"](); if (a === "hands") return UI.nav("hands");
-  if (a === "call") return UI.nav("callsetup"); if (["free", "dialogs", "journal", "chunks", "errlog", "pron", "read"].includes(a)) return UI.nav(a);
+  if (a === "call") return UI.nav("callsetup"); if (["free", "dialogs", "journal", "chunks", "errlog", "pron", "read", "react", "slang"].includes(a)) return UI.nav(a);
   if (a.startsWith("write:")) return UI.nav("write", {m:a.slice(6)});
   if (a.startsWith("dtalk:")){ const [m, ...p] = a.slice(6).split(":"); return dbStart(m, p.join(":") || (m === "cc" ? "*" : ""), false); }
   if (a.startsWith("solo:")) return ACT["iv-solo"]({dataset:{q:a.slice(5)}});
@@ -5627,13 +5659,13 @@ ACT["imp-preview"] = () => {
   IMP = r;
   const by = t => r.cards.filter(c => c.t === t).length; const dup = r.cards.filter(c => S.custom.some(x => x.id === c.id)).length;
   const decks = Array.from(new Set(r.cards.map(c => c.deck).concat(r.questions.map(q => q.deck))));
-  const n = r.cards.length + r.answers.length + r.keys.length + r.questions.length + r.alts.length + r.plan.length + (r.articles || []).length;
+  const n = r.cards.length + r.answers.length + r.keys.length + r.questions.length + r.alts.length + r.plan.length + (r.articles || []).length + (r.slang || []).length;
   const who = r.meta.who[0];
   $("#impOut").innerHTML = `<div class="panel" style="margin-top:12px"><h3>读到了</h3><ul class="issues">
     ${decks.length ? `<li>题库：${decks.map(esc).join("，")}</li>` : ""}
     <li>卡片 ${r.cards.length} 张（反射卡 ${by("r")}，找错 ${by("f")}，听力 ${by("l")}）${dup ? `，其中 ${dup} 张已经有了，会更新` : ""}</li>
     ${r.questions.length ? `<li>面试题 ${r.questions.length} 道，追问 ${r.follow.length} 个</li>` : ""}${r.plan.length ? `<li>计划 ${r.plan.length} 项${r.planReplace ? "（会替换所有没做完的计划）" : ""}</li>` : ""}${r.alts.length ? `<li>确认算对的说法 ${r.alts.length} 条</li>` : ""}
-    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${(r.errStats || []).length ? `<li>错误统计 ${r.errStats.length} 类（记进错误档案）</li>` : ""}${(r.articles || []).length ? `<li>文章 ${r.articles.length} 篇（在“阅读”里）</li>` : ""}${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
+    <li>面试回答 ${r.answers.length} 条，要点 ${r.keys.length} 条</li>${(r.errStats || []).length ? `<li>错误统计 ${r.errStats.length} 类（记进错误档案）</li>` : ""}${(r.articles || []).length ? `<li>文章 ${r.articles.length} 篇（在“阅读”里）</li>` : ""}${(r.slang || []).length ? `<li>俚语 ${r.slang.length} 句（在“听懂俚语”里）</li>` : ""}${r.cards.some(c => c.t === "w") ? `<li>其中单词 ${r.cards.filter(c => c.t === "w").length} 个</li>` : ""}${(r.meta.replace || []).length ? `<li>会替换旧版：${esc(r.meta.replace.join("、"))}（新版里没有的旧卡片会删掉；没改过的句子，练习记录保留）</li>` : ""}
     ${r.meta.date ? `<li>面试日期：${esc(r.meta.date)}</li>` : ""}${who ? `<li>面试官：${esc(who.name)}${who.company ? "，" + esc(who.company) : ""}</li>` : ""}
     ${r.bad.length ? `<li>看不懂、会跳过的：第 ${r.bad.join("、")} 行</li>` : ""}</ul>
     ${n ? `<button class="btn primary block" style="margin-top:12px" data-act="imp-apply">确认导入</button>` : `<p class="note">没有能导入的内容，检查一下格式。</p>`}</div>`;
@@ -5646,7 +5678,7 @@ ACT["imp-apply"] = () => {
     S.custom = S.custom.filter(c => c.deck !== d || keepC.has(c.id));
     S.customQ = (S.customQ || []).filter(q => q.deck !== d || keepQ.has(q.id));
   }
-  for (const c of r.cards){ const i = S.custom.findIndex(x => x.id === c.id); const clean = {id:c.id, t:c.t, tag:c.tag, en:c.en, alt:c.alt || [], note:c.note || "", zh:c.zh || "", wrong:c.wrong || "", grp:c.grp || "", word:c.word || "", mean:c.mean || "", deck:c.deck || "我的卡片"}; if (i >= 0) S.custom[i] = clean; else S.custom.push(clean); }
+  for (const c of r.cards){ const i = S.custom.findIndex(x => x.id === c.id); const clean = {id:c.id, t:c.t, tag:c.tag, en:c.en, alt:c.alt || [], note:c.note || "", zh:c.zh || "", wrong:c.wrong || "", grp:c.grp || "", word:c.word || "", mean:c.mean || "", deck:c.deck || "我的卡片"}; if (c.reg) clean.reg = c.reg; if (i >= 0) S.custom[i] = clean; else S.custom.push(clean); }
   S.customQ = S.customQ || [];
   for (const q of r.questions){ const i = S.customQ.findIndex(x => x.id === q.id); const clean = {id:q.id, deck:q.deck, grp:"custom", role:q.role, v:q.v, zh:q.zh, sec:q.sec, tip:q.tip, tpl:"", follow: i >= 0 ? (S.customQ[i].follow || []) : []}; if (i >= 0) S.customQ[i] = clean; else S.customQ.push(clean); }
   rebuildQ();
@@ -5669,6 +5701,7 @@ ACT["imp-apply"] = () => {
   if (r.meta.date){ S.interviews = S.interviews || []; if (!S.interviews.some(x => x.date === r.meta.date)){ const dk = (r.questions[0] || r.cards[0] || {}).deck || ""; const nm = dk && dk !== "core" && dk !== "daily" ? (/面试/.test(dk) ? dk : dk + " 面试") : "面试"; S.interviews.push({id:"i" + Date.now().toString(36), name:nm, date:r.meta.date, time:"", deck: dk && dk !== "core" && dk !== "daily" ? "u:" + dk : ""}); } syncInterviewDate(); }
   S.deckMeta = S.deckMeta || {}; for (const w of r.meta.who) S.deckMeta[w.deck] = {name:w.name, company:w.company};
   if (r.questions.length) S.settings.callDeck = "u:" + r.questions[0].deck;
+  if ((r.slang || []).length){ S.slangCustom = S.slangCustom || []; for (const x of r.slang) if (!S.slangCustom.some(y => y.en === x.en)) S.slangCustom.push(x); S.slangCustom = S.slangCustom.slice(-300); }
   if ((r.articles || []).length){ S.reads = S.reads || []; for (const a of r.articles) if (!S.reads.some(x => x.text === a.text)) S.reads.push({id:"rd" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title:a.title, text:a.text, ts:Date.now(), done:false}); S.reads = S.reads.slice(-30); }
   if ((r.errStats || []).length){ S.errStats = S.errStats || {}; for (const e of r.errStats){ const x = S.errStats[e.c] = S.errStats[e.c] || {seed:0, hits:[]}; x.seed = Math.max(x.seed || 0, e.n); if (e.pri) x.pri = true; } }   /* 错误档案的起点；“优先”的排在清单前面 */
   rebuildCatalog(); save(true); IMP = null;
@@ -6006,7 +6039,11 @@ VIEWS.pending = {
         <button class="btn primary block" style="margin-top:12px" data-act="rwa-copy">复制给 Claude：只标错误代码（${S.replyAsk.length} 条）</button>
         <button class="btn block ghost" style="margin-top:8px" data-act="rwa-clear">已经发过了，清空</button>` : `<p class="muted small">现在没有。</p>`}
       ${[(S.pending || []).length, (S.wantWords || []).length, (S.dbAsk || []).length].filter(Boolean).length >= 2 ? `<div class="panel" style="margin-top:20px"><b>一起发</b><p class="small muted" style="margin-top:4px">把上面几样一起复制，一次发给 Claude。</p>
-        <button class="btn primary block" style="margin-top:8px" data-act="all-copy">一起复制给 Claude</button><button class="btn block ghost" style="margin-top:8px" data-act="all-clear">两样都发过了，清空</button></div>` : ""}</div>`;
+        <button class="btn primary block" style="margin-top:8px" data-act="all-copy">一起复制给 Claude</button><button class="btn block ghost" style="margin-top:8px" data-act="all-clear">两样都发过了，清空</button></div>` : ""}
+      <h3 style="margin-top:22px">真实对话转写</h3>
+      <p class="muted small">在当地录下来的聊天，语音转文字以后贴在这里。说话人可能标错、内容有识别错误都没关系，Claude 会按意思看：挑出值得学的说法，解释俚语和脏话（什么意思、是不是开玩笑、有多冲、你能不能用），再给你导入码。</p>
+      <textarea id="convoText" rows="5" style="width:100%;margin-top:6px" placeholder="把转写贴到这里"></textarea>
+      <button class="btn primary block" style="margin-top:8px" data-act="convo-copy">复制给 Claude：挑说法、解释俚语、做成卡片</button></div>`;
   }
 };
 ACT["ww-del"] = el => { (S.wantWords || []).splice(+el.dataset.i, 1); save(); UI.render(); };
@@ -6351,13 +6388,36 @@ function dbaText(){
 1. 点评：回答到了没有、内容具体不具体、说得自然不自然；讲项目的有没有讲结果；coffee chat 有没有把话题抛回给对方。
 2. 指出语法和用词的错误，说清楚错在哪里。
 3. 按我自己的内容和意思，改一版更地道、更好的说法（不要换成参考回答，长短和我说的差不多）。
-最后给我导入码，第一行写“题库 | 对话首领战”，然后每条改好的说法一行：卡 | 这段话的中文意思 | 改好的英文说法 | 面试语块 | 谁问的什么
+最后给我导入码，第一行写“题库 | 对话”，然后每条改好的说法一行：卡 | 这段话的中文意思 | 改好的英文说法 | 面试语块 | 谁问的什么
 
 ` + L0.map((x, i) => `${i + 1}. 【${x.who}】问：${x.q}｜我说：${x.said}${x.ref ? `｜参考：${x.ref}` : ""}`).join("\n");
 }
 ACT["dba-del"] = el => { (S.dbAsk || []).splice(+el.dataset.i, 1); save(); UI.render(); };
 ACT["dba-copy"] = () => { const t = dbaText(); if (t) sendToClaude(t); };
 ACT["dba-clear"] = async () => { if (!await sheet("清空对话首领战里的回答？", "建议先把 Claude 给的导入码导进来再清空。", "清空", true)) return; S.dbAsk = []; save(); UI.render(); };
+
+/* 换了一天：app 回到前台、重新获得焦点时马上重画首页（以前要等一分钟，早上打开还显示着昨天的计划） */
+(function(){ let day = today(); const chk = () => { const d = today(); if (d === day) return; day = d; try { if (UI.top().name === "home") UI.render(); } catch (e) {} };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") chk(); }); window.addEventListener("focus", chk); window.addEventListener("pageshow", chk); })();
+
+/* 以前的导入码把对话首领战改好的说法放进了“对话首领战”题库：改名叫“对话”（只做一次，卡片的练习记录不变） */
+setTimeout(() => { try { if (L.deckRen1) return; let n = 0; for (const c of S.custom || []) if (c.deck === "对话首领战"){ c.deck = "对话"; n++; }
+  L.deckRen1 = true; saveLocal(); if (n){ save(); try { rebuildCatalog(); } catch (e) {} if (UI.top().name === "home") UI.render(); } } catch (e) {} }, 1500);
+
+/* 真实对话转写：配好说明，复制给 Claude */
+function convoText(t){ return `下面是我在当地记录的真实日常对话（语音转文字）。说话人的标注可能不准，个别词也可能识别错，请按意思理解，不用管谁说的。我的目的是说得更地道，也要听得懂当地人。
+请：
+1. 挑出值得学的说法，按用途分组（反应和接话、讲故事、留余地、想不起词时救场、说看法、常用固定说法），每个说明什么时候用。
+2. 解释里面的俚语和脏话：什么意思、是在开玩笑还是认真、有多冲（俚语 / 轻 / 中 / 重）、我自己能不能用（可以用 / 朋友之间可以 / 听懂就行）。
+3. 指出不要学的：语法错误、识别错的地方、太冲的说法。
+4. 最后给我导入码：
+   第一行写“题库 | 地道口语（真实对话）”；能用的说法每个一行：卡 | 中文意思 | 英文说法 | 聊天 | 什么时候用 | 语域（朋友之间 / 通用 / 正式）
+   俚语和脏话每句一行：俚语 | 原句（把俚语用“”标出来） | 中文意思 | 语气 | 多冲 | 能不能用 | 说明
+
+对话：
+${t}`; }
+ACT["convo-copy"] = async () => { const t = (($("#convoText") || {}).value || "").trim(); if (t.length < 20){ toast("先把转写贴进来"); return; }
+  try { await navigator.clipboard.writeText(convoText(t)); toast("复制好了，发到和 Claude 的对话里"); } catch (e) { toast("复制不了：长按输入框全选复制"); } };
 
 /* 脱口 Tuokou · 代码画的怪物（3 小怪 + 3 精英 + 8 首领），给 src/battle.js 用。
    全部是原创形象，可以进仓库。每只都有 light / heavy / skill 三招，外加 hit / win / lose。
@@ -9983,16 +10043,16 @@ const BT = (() => {
   const POSE_NAMES = {idle:"起手", light:"轻击", heavyWind:"重击·蓄力", heavy:"重击", skillWind:"技能·蓄力", skillMid:"技能·出手", skill:"技能", lightWind:"轻击·起手", hit:"被打中", win:"赢", lose:"输"};
   /* 三套招式。r = 起手式高度 ÷ 站直身高（在用户的姿势表上量的），cm = 默认身高。说明里的 shodai / seven / bemular 分别对应 brawler / blade / beam */
   const MOVESETS = {
-    brawler:{name:"格斗型", desc:"出拳、侧踢、十字手光线", light:"punch", heavy:"kick", skill:"wideBeam", r:0.802, cm:180},
+    brawler:{name:"格斗型", desc:"出拳、侧踢、斯派修姆光线", light:"punch", heavy:"kick", skill:"wideBeam", r:0.802, cm:180},
     blade:  {name:"剑士型", desc:"突刺、袈裟斩、剑气斩", light:"thrust", heavy:"kesa", skill:"crescent", r:0.834, cm:180},
-    beam:   {name:"光线型", desc:"单手掌心炮、双掌炮、十字手光线，悬浮", light:"laserThin", heavy:"laserThick", skill:"wideBeam", hover:true, r:1.105, cm:183}
+    beam:   {name:"光线型", desc:"单手掌心炮、双掌炮、斯派修姆光线，悬浮", light:"laserThin", heavy:"laserThick", skill:"wideBeam", hover:true, r:1.105, cm:183}
   };
   const MS_ALIAS = {shodai:"brawler", seven:"blade", bemular:"beam", fighter:"brawler", sword:"blade"};
   /* 每个位置能选的招。以后有新特效，就在对应的位置加一招，不再加整套招式 */
   const MOVE_LIST = {
-    light:[["punch", "出拳"], ["thrust", "突刺"], ["laserThin", "细光线"], ["jumpChop", "跳劈手刀"]],
-    heavy:[["kick", "侧踢"], ["fireKick", "火焰踢"], ["kesa", "斩击"], ["laserThick", "粗光线"], ["flyKick", "飞踢"]],
-    skill:[["wideBeam", "十字手光线"], ["stormBeam", "电光十字光线"], ["crescent", "剑气斩"], ["zepellion", "小臂光线"]]
+    light:[["punch", "出拳"], ["thrust", "突刺"], ["laserThin", "细光线"], ["jumpChop", "跳劈手刀"], ["bigPunch", "蓄力重拳"]],
+    heavy:[["kick", "侧踢"], ["fireKick", "火焰踢"], ["kesa", "斩击"], ["laserThick", "粗光线"], ["flyKick", "飞踢"], ["sideKick", "垫步侧踢"]],
+    skill:[["wideBeam", "斯派修姆光线"], ["stormBeam", "泽斯帝姆光线"], ["crescent", "剑气斩"], ["zepellion", "哉佩利敖光线"], ["overRay", "层叠风暴"]]
   };
   /* 模板：一次把三个位置都填好（原来的三套招式；电光型是泽塔那一套）。r = 起手式高度 ÷ 站直身高 */
   const TEMPLATES = {
@@ -10001,7 +10061,9 @@ const BT = (() => {
     beam:   {name:"光线型", light:"laserThin", heavy:"laserThick", skill:"wideBeam", hover:true, r:1.0, cm:183},
     storm:  {name:"电光型", light:"punch", heavy:"fireKick", skill:"stormBeam", hover:false, r:0.852, cm:185},
     /* 迪迦那一套（第十四节）：起手式几乎站直，r 0.97 */
-    tiga:   {name:"迪迦型", light:"jumpChop", heavy:"flyKick", skill:"zepellion", hover:false, r:0.97, cm:180}
+    tiga:   {name:"迪迦型", light:"jumpChop", heavy:"flyKick", skill:"zepellion", hover:false, r:0.97, cm:180},
+    /* 红奈（第二十五节）：起手式 ÷ 站直 0.86，身高 187，巨大化 49 米 */
+    nexus:  {name:"红奈型", light:"bigPunch", heavy:"sideKick", skill:"overRay", hover:false, r:0.86, cm:187, giantM:49}
   };
   const tplOf = id => TEMPLATES[MS_ALIAS[id] || id] ? (MS_ALIAS[id] || id) : null;
   /* 这套组合正好是哪个模板；对不上就是“自定义” */
@@ -10213,6 +10275,14 @@ const BT = (() => {
     g.globalCompositeOperation = "source-over"; g.drawImage(t, 0, 0);
     const eye = p.kind === "eye";
     g.globalCompositeOperation = "lighter"; g.globalAlpha = (eye ? 0.38 : 0.26) * gk; g.drawImage(t, 0, 0); g.globalAlpha = 1;
+    if (p.fill){
+      /* 只给红奈（GLOW_FILL）：部位用自己的颜色从里面填亮（眼睛 0.34、能量灯 0.3），再加一层轻微模糊——眼睛发暖白，能量灯发青蓝 */
+      const core = canvasOf(w, h), cx = core.getContext("2d");
+      put(cx); cx.globalCompositeOperation = "source-in"; cx.fillStyle = p.color || "#FFFFFF"; cx.fillRect(0, 0, w, h);
+      g.globalCompositeOperation = "lighter"; g.globalAlpha = (eye ? 0.34 : 0.3) * gk; g.drawImage(core, 0, 0);
+      const sz0 = Math.max(m.width, m.height); g.filter = `blur(${(sz0 * 0.08 + 0.6).toFixed(1)}px)`; g.globalAlpha = 0.2 * gk; g.drawImage(core, 0, 0);
+      g.filter = "none"; g.globalAlpha = 1;
+    }
     const halo = canvasOf(w, h), hg = halo.getContext("2d");
     put(hg); hg.globalCompositeOperation = "source-in"; hg.fillStyle = p.color; hg.fillRect(0, 0, w, h);
     const sz = Math.max(m.width, m.height); g.globalCompositeOperation = "lighter";
@@ -10269,7 +10339,8 @@ const BT = (() => {
     return bakeCache.get(id);
   }
   /* 发光部位.json（角色 → 姿势 → {w, h, parts}）：按姿势图的宽高对上是哪个角色；至少 3 个姿势对得上（相差不超过 2 像素） */
-  const GLOW_K = {tiga:0.55};
+  const GLOW_K = {tiga:0.55, nexus:0.7};
+  const GLOW_FILL = {nexus:true};   /* 只给红奈：眼睛、能量灯用部位自己的颜色从里面填亮（第二十八节） */
   function glowMatch(json, poses){
     let best = null;
     for (const k of Object.keys(json || {})){
@@ -10348,7 +10419,7 @@ const BT = (() => {
         f.active = "idle"; f.rig = null; f.classList.remove("rigged");
       });
       A.custom = !!poses;
-      [you, ghost].forEach(f => { f.glow = poses ? meta.glow || null : null; f.glowScale = meta.glowScale || 1; f.glowName = meta.glowName || ""; f.segName = meta.loadout && meta.loadout.skill === "zepellion" ? "tiga" : ""; f.glowId = poses && meta.glow ? (meta.glowId || "g") + "@" + (meta.glowScale || 1) : ""; });
+      [you, ghost].forEach(f => { f.glow = poses ? meta.glow || null : null; f.glowScale = meta.glowScale || 1; f.glowName = meta.glowName || ""; f.segName = meta.loadout && meta.loadout.skill === "zepellion" ? "tiga" : meta.loadout && meta.loadout.skill === "overRay" ? "nexus" : ""; f.glowId = poses && meta.glow ? (meta.glowId || "g") + "@" + (meta.glowScale || 1) : ""; });
       requestAnimationFrame(() => { layout(); relight(true); });
     };
     /* 游戏模式：对手换成怪物（原创的 SVG），不翻转、不调冷色 */
@@ -10395,7 +10466,7 @@ const BT = (() => {
       for (let i = 0; i < 6; i++){ const s = document.createElement("div"); s.className = "bt-spark"; s.style.left = d.x + d.w * (0.2 + Math.random() * 0.6) + "px"; s.style.top = d.y + d.h * (0.1 + Math.random() * 0.6) + "px"; fx.appendChild(s); removeAfter(s.animate([{transform:"scale(0)", opacity:0}, {transform:"scale(1.2) rotate(45deg)", opacity:1, offset:0.4}, {transform:"scale(.2) rotate(90deg)", opacity:0}], {duration:600, delay:i * 50, easing:"ease-out", fill:"both"}), s); }
       /* 跪倒、变灰，留在原地（以前是倒下淡出，看起来像直接消失了） */
       ghost.classList.add("still"); land(ghost);
-      faceOf(ghost).animate([{filter:fil(ghost, "grayscale(0)")}, {filter:fil(ghost, loseFilter(ghost))}], {duration:560, fill:"forwards"});
+      faceOf(ghost).animate([{filter:fil(ghost, "grayscale(0)")}, {filter:fil(ghost, loseFilter(ghost))}], {duration:1400, delay:650, easing:"ease-in-out", fill:"both"});
       if (ghost.rig) await pose(ghost, "kneel", 480, "ease-in");
       else if (hasPose(ghost, "lose")) await pose(ghost, "kneel");
       else await run(ghost, [{transform:"none"}, {transform:"translateY(6%) rotate(-16deg)"}], {duration:560, easing:"ease-in", fill:"forwards"});
@@ -10696,7 +10767,7 @@ const BT = (() => {
       pose(att, o.wind || "windup", windMs); if (o.onWind) o.onWind();
       await run(att, [{transform:"none"}, {transform:`translateX(${-dir * back}px)`}], {duration:windMs, easing:"ease-out"});
       if (token !== A.token) return;
-      pose(att, o.hit, 140, "cubic-bezier(.3, 0, .6, 1)"); if (o.onHit) o.onHit();
+      if (!o.lateHit){ pose(att, o.hit, 140, "cubic-bezier(.3, 0, .6, 1)"); if (o.onHit) o.onHit(); }
       /* 挥动的轨迹：跟着刀、腿一起出来，不等冲到位（以前要等碰到以后才出，看起来晚一拍） */
       if (o.swing){ const sx = d.x + d.w * (dir < 0 ? 0.6 : 0.4), sy = d.y + d.h * (o.hy || 0.32); setTimeout(() => { if (token === A.token) o.swing(sx, sy, d); }, o.swingAt || 50); }
       /* 冲多远：出招点要打进对方身体 62% 处（第十七节） */
@@ -10708,7 +10779,14 @@ const BT = (() => {
       /* 三段动画（冲刺、补一下、走回原位）都留着，走回原位以后一起取消：不然冲刺的终点会留下来，两个人贴在一起（第十八节） */
       const legs = []; const leg = (kf, opt) => { const an = att.animate(kf, Object.assign({fill:"forwards"}, opt)); legs.push(an); return an.finished.catch(() => {}); };
       const clearLegs = () => legs.forEach(an => an.cancel());
-      await leg([{transform:`translateX(${-dir * back}px)`}, {transform:`translateX(${dir * dist}px)`}], {duration:o.dashMs || 140, easing:"cubic-bezier(.55, 0, .9, .45)"});
+      if (o.lateHit){
+        /* 垫步侧踢（第二十七、二十八节）：前 lateHit 的路程保持提膝，靠近了才换成踢出（换姿势 45ms），剩下的一段快速收尾 */
+        const mid = dist * o.lateHit, ms = o.dashMs || 140;
+        await leg([{transform:`translateX(${-dir * back}px)`}, {transform:`translateX(${dir * mid}px)`}], {duration:ms * o.lateHit, easing:"cubic-bezier(.5, 0, .9, .5)"});
+        if (token !== A.token){ clearLegs(); return; }
+        pose(att, o.hit, 45, "cubic-bezier(.3, 0, .6, 1)"); if (o.onHit) o.onHit();
+        await leg([{transform:`translateX(${dir * mid}px)`}, {transform:`translateX(${dir * dist}px)`}], {duration:Math.max(45, ms * (1 - o.lateHit)), easing:"cubic-bezier(.2, .6, .4, 1)"});
+      } else await leg([{transform:`translateX(${-dir * back}px)`}, {transform:`translateX(${dir * dist}px)`}], {duration:o.dashMs || 140, easing:"cubic-bezier(.55, 0, .9, .45)"});
       if (token !== A.token){ clearLegs(); return; }
       /* 冲完再看一眼：出招点还没到对方身体里，就用 55 毫秒补一下，然后才出特效和伤害 */
       { const fx0 = frontPoint(att).x;   /* 拳头、脚、刀尖（原创小人是出拳的那只手） */
@@ -10870,8 +10948,8 @@ const BT = (() => {
       await pose(att, "idle", 300);
     }
     /* ---------- 发光画布：火焰、闪电、电光光束每帧画在一块盖住舞台的 canvas 上（叠加着画） ---------- */
-    const glow = (() => {
-      const cv = document.createElement("canvas"); cv.className = "bt-glowfx"; const ctx = cv.getContext("2d");
+    const makeGlow = cls => (() => {
+      const cv = document.createElement("canvas"); cv.className = cls; const ctx = cv.getContext("2d");
       let W = 0, H = 0, dpr = 1, running = false; const items = new Set();
       function fit(){ dpr = Math.min(2, window.devicePixelRatio || 1); W = stage.clientWidth; H = stage.clientHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + "px"; cv.style.height = H + "px"; }
       function frame(now){
@@ -10896,7 +10974,8 @@ const BT = (() => {
         get busy(){ return items.size > 0; }
       };
     })();
-    A.glowBusy = () => glow.busy;
+    const glow = makeGlow("bt-glowfx"), glowTop = makeGlow("bt-glowfx bt-glowtop");   /* glowTop：人物上层的特效画布（第二十五节），手臂能量画在它上面 */
+    A.glowBusy = () => glow.busy || glowTop.busy;
     /* 常用的光斑先画成小图，用的时候贴上去，不用每帧新建渐变 */
     const SPR = {};
     const SPR_STOPS = {
@@ -11332,7 +11411,7 @@ const BT = (() => {
       setTimeout(() => ln.animate([{opacity:1}, {opacity:0}], {duration:220}).finished.then(() => ln.remove()), ms + 80);
     }
     /* L 字那张图里竖起的那段小臂（按图片宽高的比例），换算成画面上的一段竖线；翻转的一方自动镜像 */
-    const BEAM_SEG = {tiga:{skill:{x:0.195, y0:0.17, y1:0.3}}};
+    const BEAM_SEG = {tiga:{skill:{x:0.195, y0:0.17, y1:0.3}}, nexus:{skill:{x:0.30, y0:0.19, y1:0.31}}};   /* 红奈：L 字那张图里竖起的右小臂（第二十五节） */
     function beamSeg(f, name){
       const sp = (BEAM_SEG[f.glowName] || BEAM_SEG[f.segName] || {})[name]; const q = f.poseImgs && f.poseImgs[name];
       if (!sp || !q) return null; const b = box(q.img); if (!b.w) return null;
@@ -11388,6 +11467,133 @@ const BT = (() => {
         if (token !== A.token) return;
         const bp = snapHit(def, {x:hx + (Math.random() - 0.5) * d.w * 0.3, y:hy + (Math.random() - 0.5) * d.h * 0.2}, dir, "near"), bxp = bp.x, byp = bp.y; burst(bxp, byp, Math.min(190, d.w * 1.2));
         if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, "skill", {x:bxp, y:byp});
+        if (def === ghost) A.lastSpecial += parts[k]; dealt(def, parts[k]); damageNumber(hx - 10 + (Math.random() - 0.5) * 30, hy - 34, parts[k]);
+        await wait(HOLD / parts.length);
+      }
+      push.cancel(); if (!def.classList.contains("still")) pose(def, "idle", 260);
+      fadeHeld(800); await pose(att, "idle", 300);
+    }
+    /* ---------- 红奈：层叠风暴（第二十五到三十节） ---------- */
+    /* 手臂能量的位置：每条手臂“手肘 x、y，拳头 x、y”，按姿势图宽高的比例（第二十九节在姿势图特写上逐点核对过） */
+    const ARM_SEGS = {nexus:{skillWind:[[0.295, 0.31, 0.333, 0.157], [0.612, 0.322, 0.53, 0.151]], skillMid:[[0.365, 0.163, 0.32, 0.062], [0.627, 0.16, 0.614, 0.027]], skill:[[0.284, 0.31, 0.312, 0.125]]}};
+    /* 小臂上的锥形光套（手肘端宽、拳头端稍窄、越过拳头再延伸一点，8 层由宽到窄、外淡内浓）+ 三层描边的电流（两端在手臂上随机取点，不在同一点堆出亮点）。
+       level：0 第一步、1 第二步（更亮）、-1 发光线时竖起的那条小臂（很淡，偶尔有电流）。画在 glowTop 上，“昨天的你”按 mirrored() 镜像 */
+    function armEnergy(f, name, ms, level){
+      const segF = (ARM_SEGS[f.glowName] || ARM_SEGS[f.segName] || {})[name], q = f.poseImgs && f.poseImgs[name];
+      if (!segF || !q) return;
+      const b = box(q.img); if (!b.w) return; const H = b.h, mir = mirrored(f), token = A.token;
+      const P = (x, y) => [b.x + (mir ? 1 - x : x) * b.w, b.y + y * H];
+      const arms = segF.map(([ex, ey, fx2, fy]) => ({e:P(ex, ey), f:P(fx2, fy)}));
+      const t0 = performance.now(), wd = Math.max(1.8, H * 0.0075), faint = level < 0, lv = Math.max(0, level);
+      const bolt = (ctx, pts, k) => {
+        ctx.lineCap = "round"; ctx.lineJoin = "round";
+        const path = () => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); };
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = 0.16 * k; ctx.strokeStyle = "rgb(80, 150, 255)"; ctx.lineWidth = wd * 5.5; path(); ctx.stroke();
+        ctx.globalAlpha = 0.42 * k; ctx.strokeStyle = "rgb(140, 205, 255)"; ctx.lineWidth = wd * 2.6; path(); ctx.stroke();
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 0.92 * k; ctx.strokeStyle = "rgb(245, 252, 255)"; ctx.lineWidth = wd * 1.25; path(); ctx.stroke();
+      };
+      glowTop.add((ctx, now) => {
+        if (token !== A.token) return false;
+        const t = now - t0; if (t > ms) return false;
+        const k = Math.min(1, t / 220) * (t > ms - 180 ? Math.max(0, (ms - t) / 180) : 1);
+        ctx.save();
+        const capsule = (a, sc) => {
+          const L0 = Math.hypot(a.f[0] - a.e[0], a.f[1] - a.e[1]) || 1, ux = (a.f[0] - a.e[0]) / L0, uy = (a.f[1] - a.e[1]) / L0;
+          const ex = a.e[0], ey = a.e[1], fx3 = a.f[0] + ux * H * 0.035, fy3 = a.f[1] + uy * H * 0.035;
+          const r0 = H * 0.05 * sc, r1 = H * 0.042 * sc, ang = Math.atan2(fy3 - ey, fx3 - ex);
+          ctx.beginPath(); ctx.arc(ex, ey, r0, ang + Math.PI / 2, ang + Math.PI * 1.5); ctx.arc(fx3, fy3, r1, ang - Math.PI / 2, ang + Math.PI / 2); ctx.closePath();
+        };
+        for (const a of arms){
+          ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgb(70, 140, 255)";
+          ctx.globalAlpha = (faint ? 0.02 : 0.045) * k; capsule(a, 1.9); ctx.fill();
+          ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = "rgb(150, 210, 255)";
+          const al = faint ? 0.04 : (lv ? 0.2 : 0.16);
+          for (let i = 0; i < 8; i++){ ctx.globalAlpha = al * (0.3 + 0.7 * i / 7) * k; capsule(a, 1.5 - i * 0.13); ctx.fill(); }
+        }
+        if (!faint || Math.random() < 0.18){
+          const pick = (a, u0, u1) => { const u = u0 + Math.random() * (u1 - u0), L0 = Math.hypot(a.f[0] - a.e[0], a.f[1] - a.e[1]) || 1;
+            const nx = -(a.f[1] - a.e[1]) / L0, ny = (a.f[0] - a.e[0]) / L0, o = (Math.random() * 2 - 1) * H * 0.026;
+            return [a.e[0] + (a.f[0] - a.e[0]) * u + nx * o, a.e[1] + (a.f[1] - a.e[1]) * u + ny * o]; };
+          const arc = (p, q2, amp) => bolt(ctx, jag(p[0], p[1], q2[0], q2[1], amp, 7), k);
+          const gap = (p, q2) => Math.hypot(q2[0] - p[0], q2[1] - p[1]) * 0.18 + 2;
+          for (const a of arms) if (Math.random() < 0.65 + 0.15 * lv) arc(pick(a, -0.05, 0.35), pick(a, 0.65, 1.1), H * 0.02);
+          if (!faint && arms.length > 1){ const [A1, A2] = arms;
+            if (Math.random() < 0.6){ const p = pick(A1, 0.7, 1.08), q2 = pick(A2, 0.7, 1.08); arc(p, q2, gap(p, q2)); }
+            if (Math.random() < 0.5){ const p = pick(A1, -0.05, 0.3), q2 = pick(A2, -0.05, 0.3); arc(p, q2, gap(p, q2)); }
+            if (Math.random() < 0.3){ const p = pick(A1, 0.1, 0.9), q2 = pick(A2, 0.1, 0.9); arc(p, q2, gap(p, q2)); } }
+        }
+        ctx.restore(); return true;
+      });
+    }
+    /* 渐隐光带：同一个光带形状一层比一层窄地叠画，越往中间越亮，边缘看不到边框 */
+    function softBand(ctx, ox, oy, x1, hw0, hw1, c0, c1, alpha, layers){
+      const g = ctx.createLinearGradient(ox, 0, x1, 0); g.addColorStop(0, c0); g.addColorStop(1, c1); ctx.fillStyle = g;
+      const L = layers || 8;
+      for (let i = 0; i < L; i++){ const kk = 1 - i / L; ctx.globalAlpha = (alpha * 1.9) / L;
+        ctx.beginPath(); ctx.moveTo(ox, oy - hw0 * kk); ctx.lineTo(x1, oy - hw1 * kk); ctx.lineTo(x1, oy + hw1 * kk); ctx.lineTo(ox, oy + hw0 * kk); ctx.closePath(); ctx.fill(); }
+    }
+    /* 层叠风暴：双拳在脸侧（小臂光套、电流）→ 双臂上举（更亮）→ L 字，从竖起的小臂射出密集的细白光条，外面包渐隐的蓝色雾带和雾团。对波时停在交点上 */
+    const HOLD_OR = 1700;
+    async function overRay(att, def, dir, total, cl){
+      const token = A.token, face = faceOf(att);
+      pose(att, "charge"); await wait(180); if (token !== A.token) return;
+      armEnergy(att, "skillWind", 950, 0);
+      await run(face, [{filter:fil(att, "drop-shadow(0 0 0 transparent)")}, {filter:fil(att, "drop-shadow(0 0 5px rgba(120, 190, 255, .4))")}], {duration:900, easing:"ease-in"});
+      if (token !== A.token) return;
+      pose(att, "mid"); await wait(180); if (token !== A.token) return;
+      armEnergy(att, "skillMid", 950, 1);
+      await run(face, [{filter:fil(att, "drop-shadow(0 0 5px rgba(120, 190, 255, .4))")}, {filter:fil(att, "drop-shadow(0 0 9px rgba(150, 210, 255, .55))")}], {duration:900, easing:"ease-in-out"});
+      if (token !== A.token) return;
+      if (cl){ cl.ready(); await cl.go; if (token !== A.token) return; }
+      pose(att, "fire"); await wait(40);
+      const o = handPoint(att), size = box(bodyOf(att)).h;
+      holdGlow(face, fil(att, "drop-shadow(0 0 8px rgba(160, 210, 255, .55))"));
+      let HOLD = cl ? 1e9 : HOLD_OR;
+      armEnergy(att, "skill", cl ? 60000 : HOLD_OR + 300, -1);
+      const seg = beamSeg(att, "skill"); if (seg){ o.x = seg.x; o.y = (seg.yTop + seg.yBot) / 2; }
+      const t0 = performance.now(), band0 = seg ? (seg.yBot - seg.yTop) / 2 : size * 0.07, band1 = band0 * 1.7;
+      const d0 = box(bodyOf(def)); let xEnd = dir < 0 ? d0.x - 30 : d0.x + d0.w + 30; const xEnd0 = xEnd;
+      const streaks = [], mist = [];
+      glow.add(clipCl(cl, dir, (ctx, now) => {
+        if (token !== A.token) return false;
+        if (cl) xEnd = cl.free ? xEnd0 : cl.end().x;
+        const t = now - t0, on = t < HOLD, fade = on ? Math.min(1, t / 120) : Math.max(0, 1 - (t - HOLD) / 260);
+        if (!on && fade <= 0 && !streaks.length && !mist.length) return false;
+        if (on){
+          for (let i = 0; i < 8; i++) streaks.push({off:Math.random() * 2 - 1, x:o.x + dir * Math.random() * 30, len:50 + Math.random() * 190, th:0.9 + Math.random() * 2.4, a:0.6 + Math.random() * 0.4, v:1.6 + Math.random() * 1.3, born:now, blue:Math.random() < 0.3});
+          for (let i = 0; i < 2; i++) mist.push({off:Math.random() * 2 - 1, r:0.8 + Math.random() * 0.9, v:1.0 + Math.random() * 0.8, born:now});
+        }
+        const span = Math.max(1, Math.abs(o.x - xEnd)), wAt = x => band0 + (band1 - band0) * Math.min(1, Math.max(0, Math.abs(o.x - x) / span));
+        const past = (x, m) => (dir < 0 ? x < xEnd - m : x > xEnd + m);
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        softBand(ctx, o.x, o.y, xEnd, band0 * 2.4, band1 * 2.6, `rgba(80,160,255,${0.42 * fade})`, `rgba(60,130,255,${0.22 * fade})`, 1, 10);
+        for (let k = mist.length - 1; k >= 0; k--){ const m = mist[k], x = o.x + dir * (now - m.born) * m.v; if (past(x, 60)){ mist.splice(k, 1); continue; }
+          blit(ctx, "blue", x, o.y + m.off * wAt(x) * 1.7, wAt(x) * 2 * m.r, 0.2 * Math.max(fade, 0.3)); }
+        ctx.lineCap = "round";
+        for (let k = streaks.length - 1; k >= 0; k--){
+          const q = streaks[k], x0 = q.x + dir * (now - q.born) * q.v; if (past(x0 - dir * q.len, 40)){ streaks.splice(k, 1); continue; }
+          const y = o.y + q.off * wAt(x0) * 1.05, x1 = dir < 0 ? Math.min(o.x, x0 + q.len) : Math.max(o.x, x0 - q.len), al = q.a * Math.max(fade, 0.4);
+          ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = al * 0.14; ctx.strokeStyle = "rgb(150,200,255)"; ctx.lineWidth = q.th * 2.4; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+          ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = al * 0.9; ctx.strokeStyle = q.blue ? "rgb(205,230,255)" : "#FFFFFF"; ctx.lineWidth = q.th; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+        }
+        ctx.globalCompositeOperation = "lighter";
+        if (seg){ ctx.save(); ctx.translate(o.x, o.y); ctx.scale(0.3, 1); blit(ctx, "white", 0, 0, band0 * 1.7, 0.5 * fade); ctx.restore(); }   /* 小臂处一个小的白色光点 */
+        else blit(ctx, "white", o.x, o.y, size * 0.2, 0.5 * fade);
+        ctx.restore(); return true;
+      }));
+      if (cl){ cl.done.then(() => { HOLD = performance.now() - t0; }); await cl.done; fadeHeld(800); return; }
+      await wait(220); if (token !== A.token) return; shakeFor(HOLD - 220, 3);
+      const d = box(bodyOf(def)); let hx = d.x + d.w * (dir < 0 ? 0.58 : 0.42), hy = Math.min(Math.max(o.y, d.y + d.h * 0.2), d.y + d.h * 0.7); ({x:hx, y:hy} = snapHit(def, {x:hx, y:hy}, dir, "line"));
+      pose(def, "recoil", 90); shake(10);
+      const push = def.animate([{transform:"none"}, {transform:`translateX(${30 * dir}px)`}], {duration:HOLD, easing:"ease-out", fill:"forwards"});
+      faceOf(def).animate([{filter:fil(def, "brightness(1.15)")}, {filter:fil(def, "brightness(2.6)")}, {filter:fil(def, "brightness(1.15)")}], {duration:240, iterations:Math.ceil(HOLD / 240)});
+      const parts = split(total || 40, 10);
+      for (let k = 0; k < parts.length; k++){
+        if (token !== A.token) return;
+        const bp = snapHit(def, {x:hx + (Math.random() - 0.5) * d.w * 0.3, y:hy + (Math.random() - 0.5) * d.h * 0.2}, dir, "near"); burst(bp.x, bp.y, Math.min(190, d.w * 1.2));
+        if (k % 3 === 0 && !(def === ghost && A.cm)) sparksOn(def, "skill", {x:bp.x, y:bp.y});
         if (def === ghost) A.lastSpecial += parts[k]; dealt(def, parts[k]); damageNumber(hx - 10 + (Math.random() - 0.5) * 30, hy - 34, parts[k]);
         await wait(HOLD / parts.length);
       }
@@ -11481,8 +11687,10 @@ const BT = (() => {
         if (!on && fade <= 0) return false;
         const reach = o.x + (xEnd - o.x) * grow, pulse = 0.95 + Math.random() * 0.08;
         const wAt = x => h0 + (h1 - h0) * Math.min(1, Math.max(0, Math.abs(o.x - x) / span));
-        const band = (k, c0, c1, a) => { const g = ctx.createLinearGradient(o.x, 0, reach, 0); g.addColorStop(0, c0); g.addColorStop(1, c1);
-          ctx.globalAlpha = a * fade; ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(o.x, o.y - wAt(o.x) * k); ctx.lineTo(reach, o.y - wAt(reach) * k * pulse); ctx.lineTo(reach, o.y + wAt(reach) * k * pulse); ctx.lineTo(o.x, o.y + wAt(o.x) * k); ctx.closePath(); ctx.fill(); };
+        const band = (k, c0, c1, a) => { const g = ctx.createLinearGradient(o.x, 0, reach, 0); g.addColorStop(0, c0); g.addColorStop(1, c1); ctx.fillStyle = g;
+          const L = k > 1.05 ? 8 : 1;   /* 外圈光晕：同一个形状一层比一层窄地叠画，边缘渐隐，看不到边框 */
+          for (let i = 0; i < L; i++){ const kk = k * (1 - i / L); ctx.globalAlpha = (L > 1 ? (a * 1.9) / L : a) * fade; ctx.beginPath();
+            ctx.moveTo(o.x, o.y - wAt(o.x) * kk); ctx.lineTo(reach, o.y - wAt(reach) * kk * pulse); ctx.lineTo(reach, o.y + wAt(reach) * kk * pulse); ctx.lineTo(o.x, o.y + wAt(o.x) * kk); ctx.closePath(); ctx.fill(); } };
         if (opt.cyan){ band(2.6, "rgba(90,240,255,.5)", "rgba(30,150,255,.36)", 1); band(1.7, "rgba(200,255,255,.92)", "rgba(110,235,255,.66)", 0.9); }
         else { band(2.6, "rgba(255,160,220,.55)", "rgba(60,140,255,.38)", 1); band(1.7, "rgba(210,245,255,.9)", "rgba(130,210,255,.65)", 0.9); }
         band(1.0, "rgba(255,255,255,1)", "rgba(240,252,255,.95)", 1);
@@ -11561,6 +11769,8 @@ const BT = (() => {
       const PST = {you:{flow:[], rings:[], cres:[], last:0}, foe:{flow:[], rings:[], cres:[], last:0}};
       const tq = (ctx, f, t, w0, w1, style) => { const dx = t.x - f.x, dy = t.y - f.y, Ln = Math.hypot(dx, dy) || 1, nx = -dy / Ln, ny = dx / Ln; ctx.fillStyle = style; ctx.beginPath(); ctx.moveTo(f.x + nx * w0, f.y + ny * w0); ctx.lineTo(t.x + nx * w1, t.y + ny * w1); ctx.lineTo(t.x - nx * w1, t.y - ny * w1); ctx.lineTo(f.x - nx * w0, f.y - ny * w0); ctx.closePath(); ctx.fill(); };
       const lgr = (ctx, f, t, stops) => { const g = ctx.createLinearGradient(f.x, f.y, t.x, t.y); stops.forEach(([o2, c]) => g.addColorStop(o2, c)); return g; };
+      /* 渐隐的光带（对波用）：同一个梯形一层比一层窄地叠画 */
+      const tqSoft = (ctx, f, t, w0, w1, style, a, layers) => { const L = layers || 8; for (let i = 0; i < L; i++){ const kk = 1 - i / L; ctx.globalAlpha = ((a || 1) * 1.9) / L; tq(ctx, f, t, w0 * kk, w1 * kk, style); } };
       const flowLines = (ctx, f, t, S, now, n, w, v, col0, len0) => {
         const dx = t.x - f.x, dy = t.y - f.y, Ln = Math.hypot(dx, dy) || 1, ux = dx / Ln, uy = dy / Ln, nx = -uy, ny = ux;
         for (let i = 0; i < n; i++) S.flow.push({born:now, off:Math.random() * 2 - 1, len:len0 * (0.5 + Math.random()), th:1.2 + Math.random() * 3, v:v * (0.8 + Math.random() * 0.5)});
@@ -11573,8 +11783,8 @@ const BT = (() => {
       const PAINT = {
         /* 大光线（初代、百慕拉）：粉紫外晕、青蓝的光、白芯一层套一层，白色光条往前流；原创小人（rig）：青色、宽 1.8 倍、能量环 */
         wideBeam(ctx, f, t, now, S, opt){ opt = opt || {}; const W1 = opt.wide || 1, h0 = sz * 0.03 * W1, h1 = sz * 0.07 * W1; ctx.globalCompositeOperation = "lighter";
-          tq(ctx, f, t, h0 * 2.6, h1 * 2.6, lgr(ctx, f, t, opt.cyan ? [[0, "rgba(90,240,255,.5)"], [1, "rgba(30,150,255,.36)"]] : [[0, "rgba(255,160,220,.55)"], [1, "rgba(60,140,255,.38)"]]));
-          tq(ctx, f, t, h0 * 1.7, h1 * 1.7, lgr(ctx, f, t, opt.cyan ? [[0, "rgba(200,255,255,.92)"], [1, "rgba(110,235,255,.66)"]] : [[0, "rgba(210,245,255,.9)"], [1, "rgba(130,210,255,.65)"]]));
+          tqSoft(ctx, f, t, h0 * 2.6, h1 * 2.6, lgr(ctx, f, t, opt.cyan ? [[0, "rgba(90,240,255,.5)"], [1, "rgba(30,150,255,.36)"]] : [[0, "rgba(255,160,220,.55)"], [1, "rgba(60,140,255,.38)"]]), 1);
+          tqSoft(ctx, f, t, h0 * 1.7, h1 * 1.7, lgr(ctx, f, t, opt.cyan ? [[0, "rgba(200,255,255,.92)"], [1, "rgba(110,235,255,.66)"]] : [[0, "rgba(210,245,255,.9)"], [1, "rgba(130,210,255,.65)"]]), 0.9); ctx.globalAlpha = 1;
           tq(ctx, f, t, h0, h1, lgr(ctx, f, t, [[0, "rgba(255,255,255,1)"], [1, "rgba(240,252,255,.95)"]]));
           flowLines(ctx, f, t, S, now, 5, h1, 2.6, "#FFFFFF", sz * 0.18);
           if (opt.rings){ if (now - S.last > 110){ S.last = now; S.rings.push(now); } const dx = t.x - f.x, dy = t.y - f.y, Ln = Math.hypot(dx, dy) || 1;
@@ -11582,6 +11792,10 @@ const BT = (() => {
               ctx.globalAlpha = 0.85; ctx.strokeStyle = "rgba(170,250,255,1)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(x, y, r * 0.32, r, 0, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; } }
           blit(ctx, "white", f.x, f.y, sz * 0.2, 1); blit(ctx, "blue", f.x, f.y, sz * 0.34, 0.55); },
         rig(ctx, f, t, now, S){ PAINT.wideBeam(ctx, f, t, now, S, {wide:1.8, cyan:true, rings:true}); },
+        /* 层叠风暴（红奈）：渐隐的蓝色雾带，里面密集的细白光条往前流，小臂处一个小白光点 */
+        overRay(ctx, f, t, now, S){ const b0 = sz * 0.032, b1 = b0 * 1.7; ctx.globalCompositeOperation = "lighter";
+          tqSoft(ctx, f, t, b0 * 2.4, b1 * 2.6, lgr(ctx, f, t, [[0, "rgba(80,160,255,.42)"], [1, "rgba(60,130,255,.22)"]]), 1, 10); ctx.globalAlpha = 1;
+          flowLines(ctx, f, t, S, now, 8, b1, 2.2, "#FFFFFF", sz * 0.2); blit(ctx, "white", f.x, f.y, sz * 0.1, 0.5); },
         /* 小臂光线（迪迦）：白色光雾越往前越宽，白色光条往前流，手臂一团白光 */
         zepellion(ctx, f, t, now, S){ const b0 = sz * 0.035, b1 = b0 * 1.7; ctx.globalCompositeOperation = "lighter";
           tq(ctx, f, t, b0, b1, lgr(ctx, f, t, [[0, "rgba(255,255,255,.6)"], [0.6, "rgba(235,240,255,.34)"], [1, "rgba(235,240,255,.16)"]]));
@@ -11611,6 +11825,7 @@ const BT = (() => {
         wideBeam: (a, d, dr, c) => specialWide(a, d, dr, 0, a.rig ? Object.assign({}, RIG_BEAM, {cl:c}) : {cl:c}),
         rig: (a, d, dr, c) => specialWide(a, d, dr, 0, Object.assign({}, RIG_BEAM, {cl:c})),
         zepellion: (a, d, dr, c) => (a.rig ? specialWide(a, d, dr, 0, Object.assign({}, RIG_BEAM, {cl:c})) : zepellion(a, d, dr, 0, c)),
+        overRay: (a, d, dr, c) => (a.rig ? specialWide(a, d, dr, 0, Object.assign({}, RIG_BEAM, {cl:c})) : overRay(a, d, dr, 0, c)),
         stormBeam: (a, d, dr, c) => stormBeam(a, d, dr, 0, c),
         crescent: (a, d, dr, c) => crescentGlow(a, d, dr, 0, c)
       };
@@ -11755,6 +11970,13 @@ const BT = (() => {
       flyKick: (att, def, dir, dmg, o) => (att.rig ? MOVES.kick(att, def, dir, dmg, o) : leapStrike(att, def, dir, dmg, Object.assign({crouchMs:240, air:"kick", hit:"kick", hitPose:"heavy", flyMs:320, arc:0.2, strikeAt:1, deep:0.36, at:0.2, slide:90, slideK:2, slideMin:120, skidMs:340, slideEase:"cubic-bezier(.5, 1, .89, 1)", ring:true, land:"kickWind", hold:110, big:true,
         effect:(x, y, d) => { punchFx(x, y, d, dir); burst(x, y, Math.min(210, d.w * 1.35)); }}, o || {}))),
       zepellion: (att, def, dir, total) => (att.rig ? specialWide(att, def, dir, total, RIG_BEAM) : zepellion(att, def, dir, total)),
+      /* 红奈：背身蓄力 300ms 再冲出去出拳，打在胸口高度 */
+      bigPunch: (att, def, dir, dmg, o) => (att.rig ? MOVES.punch(att, def, dir, dmg, o) : melee(att, def, dir, dmg, Object.assign({wind:"leap", windMs:300, hit:"punch", dashMs:140, hy:0.28, hold:200, big:true,
+        effect:(x, y, d) => { punchFx(x, y, d, dir); burst(x, y, Math.min(170, d.w * 1.1)); }}, o))),
+      /* 红奈：提膝冲过去、靠近了才踢出（lateHit 0.72），脚踢进胸口 */
+      sideKick: (att, def, dir, dmg, o) => (att.rig ? MOVES.kick(att, def, dir, dmg, o) : melee(att, def, dir, dmg, Object.assign({wind:"kickWind", windMs:160, hit:"kick", dashMs:180, lateHit:0.72, hy:0.3, hold:170, big:true,
+        effect:(x, y, d) => { punchFx(x, y, d, dir); burst(x, y, Math.min(190, d.w * 1.25)); shockRing(x, y, d.h * 0.18); }}, o))),
+      overRay: (att, def, dir, total) => (att.rig ? specialWide(att, def, dir, total, RIG_BEAM) : overRay(att, def, dir, total)),
       /* 大光线：初代、百慕拉的新画法；原创小人用 RIG_BEAM（第十五、十七节） */
       wideBeam: (att, def, dir, total) => specialWide(att, def, dir, total, att.rig ? RIG_BEAM : {}),
       crescent: (att, def, dir, total) => crescentGlow(att, def, dir, total),
@@ -11803,7 +12025,7 @@ const BT = (() => {
       if (loser.rig) pose(loser, "kneel", 480, "ease-in");
       else if (hasPose(loser, "lose")) pose(loser, "kneel");
       else loser.animate([{transform:"none"}, {transform:`translateY(6%) rotate(${fallDeg}deg)`}], {duration:560, easing:"ease-in", fill:"forwards"});
-      l.animate([{filter:fil(loser, "grayscale(0)")}, {filter:fil(loser, loseFilter(loser))}], {duration:560, fill:"forwards"});
+      l.animate([{filter:fil(loser, "grayscale(0)")}, {filter:fil(loser, loseFilter(loser))}], {duration:1400, delay:650, easing:"ease-in-out", fill:"both"});   /* 先摆出倒下的姿势、不变色，停一下再慢慢变灰 */
       if (youWon) A.setHP(0);
       if (A.cm){ if (youWon) A.cm.play("lose"); else A.cm.play("win"); }
       await wait(220);
@@ -11877,8 +12099,8 @@ const BT = (() => {
     function partsFor(f, name){
       const e = f.glow && f.glow[name], q = f.poseImgs && f.poseImgs[name], s = f.glowScale || 1;
       if (!(e && q && Math.abs(e.w * s - q.w) <= 2 && Math.abs(e.h * s - q.h) <= 2 && e.parts && e.parts.length)) return null;
-      const gk = GLOW_K[f.glowName] || 1;
-      return s === 1 && gk === 1 ? e.parts : e.parts.map(p => Object.assign({}, p, {s, gk}));
+      const gk = GLOW_K[f.glowName] || 1, gfill = !!GLOW_FILL[f.glowName];
+      return s === 1 && gk === 1 && !gfill ? e.parts : e.parts.map(p => Object.assign({}, p, {s, gk, fill:gfill}));
     }
     function rigLight(L){
       const m = root.querySelector(`#${rigFid} feColorMatrix`); if (!m) return "";
@@ -12685,7 +12907,7 @@ CHG["bt-slot"] = async el => { const rec = BAT_CHAR, lo = rec ? BT.loadoutOf(rec
 CHG["bt-hover"] = async el => { const rec = BAT_CHAR, lo = rec ? BT.loadoutOf(rec) : BT.rigLoadout(); lo.hover = !!el.checked; await batApply(rec, lo, true); };
 CHG["bt-cm"] = async el => { const v = document.getElementById("btCmVal"); if (v) v.textContent = el.value + " 厘米"; const rec = BAT_CHAR; if (!rec) return; rec.cm = Number(el.value); rec.cmSet = true; await batApply(rec, BT.loadoutOf(rec)); };
 CHG["bt-r"] = async el => { const v = document.getElementById("btRVal"); if (v) v.textContent = el.value + "%"; const rec = BAT_CHAR; if (!rec) return; rec.r = Number(el.value) / 100; rec.rSet = true; await batApply(rec, BT.loadoutOf(rec)); };
-CHG["bt-giant"] = async el => { const rec = BAT_CHAR; if (!rec) return; if (el.checked){ rec.giantM = rec.giantM || 50; rec.sizeMode = rec.sizeMode || "random"; } else { delete rec.giantM; } await batApply(rec, BT.loadoutOf(rec), true); };
+CHG["bt-giant"] = async el => { const rec = BAT_CHAR; if (!rec) return; if (el.checked){ rec.giantM = rec.giantM || ({overRay:49, zepellion:53}[BT.loadoutOf(rec).skill] || 50); rec.sizeMode = rec.sizeMode || "random"; } else { delete rec.giantM; } await batApply(rec, BT.loadoutOf(rec), true); };
 CHG["bt-size"] = async el => { const rec = BAT_CHAR; if (!rec) return; rec.sizeMode = el.value; await batApply(rec, BT.loadoutOf(rec)); };
 CHG["bt-gm"] = async el => { const v = document.getElementById("btGmVal"); if (v) v.textContent = el.value + " 米"; const rec = BAT_CHAR; if (!rec) return; rec.giantM = Number(el.value); await batApply(rec, BT.loadoutOf(rec)); };
 /* 发光部位.json：对每个导入过的角色和敌人，按姿势图的宽高自动对上；以后新导入的也会自动对 */
@@ -12890,13 +13112,14 @@ ACT["pl-gen"] = async () => {
     free: () => ["午休", "反射训练：挑你最弱的一类，看中文马上说英文", "free"],
     words: () => hasWords ? ["午休", "单词：学 2–3 个新词，复习到期的", "words"] : null,
     pron: () => ["午休", "发音：练一组听辨，再测一句第一印象", "pron"],
-    read: () => ["晚上", "阅读：读一篇（边听边读），把有用的词和短语加进想学的", "read"]
+    read: () => ["晚上", "阅读：读一篇（边听边读），把有用的词和短语加进想学的", "read"],
+    react: () => ["午休", "接话练习：听一句马上接，先给反应、再追问一句", "react"]
   };
   /* 一周轮换（周日 0 … 周六 6），每天按顺序取前几项 */
   const W = {
     iv:    [["err", "soloIv", "journal"], ["soloIv", "b432", "pron"], ["talkIv", "soloIv", "chunks"], ["listen", "soloIv", "hands"], ["call", "pron", "mail"], ["soloIv", "free", "bossIv"], ["mock", "listen", "journal"]],
-    cc:    [["err", "reply", "journal"], ["talkCc", "chunks", "journal"], ["soloCc", "listen", "reply"], ["reply", "dialogs", "hands"], ["talkCc", "soloCc", "free"], ["dialogs", "listen", "b432"], ["bossCc", "pron", "chunks"]],
-    daily: [["err", "reply", "journal"], ["dialogs", "pron", "words"], ["free", "listen", "journal"], ["reply", "hands", "words"], ["pron", "chunks", "listen"], ["talkCc", "free", "journal"], ["listen", "words", "hands"]],
+    cc:    [["err", "react", "journal"], ["talkCc", "chunks", "journal"], ["soloCc", "listen", "reply"], ["reply", "dialogs", "hands"], ["talkCc", "soloCc", "free"], ["dialogs", "listen", "b432"], ["bossCc", "pron", "chunks"]],
+    daily: [["err", "reply", "journal"], ["dialogs", "pron", "words"], ["free", "listen", "journal"], ["reply", "hands", "words"], ["pron", "chunks", "listen"], ["talkCc", "react", "journal"], ["listen", "words", "hands"]],
     write: [["err", "mail", "words"], ["reply", "chunks", "err"], ["mail", "chunks", "journal"], ["reply", "pron", "listen"], ["mail", "chunks", "journal"], ["reply", "talkCc", "pron"], ["reply", "dialogs", "journal"]]
   };
   const mixOrder = ["iv", "write", "cc", "iv", "daily", "cc", "write"];
@@ -12942,7 +13165,7 @@ const dbText = q => (q.v && q.v[0]) || q.q || q.en || "";
 const dbRef = q => { const a = S.answers && S.answers[q.id]; return (a && a.text) || ""; };
 const dbFollow = q => { const f = (q.follow || []).find(t => S.followAns && S.followAns[q.id + "|" + t]); return f ? {q:f, a:S.followAns[q.id + "|" + f]} : null; };
 /* 对波的颜色：每个技能登记两个主色；首领按怪物 */
-const SKILL_COL = {wideBeam:["#8EE6FF", "#C99BFF"], rig:["#5EF0FF", "#2E9BFF"], stormBeam:["#7FB8FF", "#E8F3FF"], crescent:["#FFC24A", "#FF7A1A"], zepellion:["#F4F0FF", "#B48CFF"], laserThick:["#FF4040", "#FFB070"]};
+const SKILL_COL = {overRay:["#FFFFFF", "rgb(90,170,255)"], wideBeam:["#8EE6FF", "#C99BFF"], rig:["#5EF0FF", "#2E9BFF"], stormBeam:["#7FB8FF", "#E8F3FF"], crescent:["#FFC24A", "#FF7A1A"], zepellion:["#F4F0FF", "#B48CFF"], laserThick:["#FF4040", "#FFB070"]};
 const MON_COL = {corefang:["#FF6A2A", "#FFD27A"], abyssmaw:["#B04CFF", "#FF4FA8"], prismward:["#6CF6FF", "#FFFFFF"], twinhood:["#7CFF6A", "#E9FF8A"], galecrest:["#6CE0FF", "#B8F3FF"], starhorn:["#FFD84A", "#FFF3B0"], nullwraith:["#9A6CFF", "#FF5FD2"]};
 const DB = {st:null, A:null};
 function dbQuestions(mode, persona){
@@ -13113,6 +13336,8 @@ async function dbResolve(said, secs){
     const kind = sc.cov >= 0.7 ? "skill" : sc.cov >= 0.4 ? "heavy" : "light";
     if (st.game){ st.anim = {kind, dmg, hp0:A.hp}; try { await A.move(kind, dmg); } catch (e) {} }
   }
+  if (st.mode === "iv" && said){ const sl = String(said).match(/\b(bro|dude|goated|hella|lowkey|no cap|fuck\w*|shit\w*|damn|crap|sucks?|badass|wtf)\b/gi);
+    if (sl) note = (note ? note + " " : "") + `面试里别用“${[...new Set(sl.map(x => x.toLowerCase()))].join("、")}”：这是朋友之间的说法。`; }
   st.rounds.push({qi: st.i, follow: !!st.follow, q: st.follow ? st.follow.q : dbText(q), said, cov:sc.cov, pts:sc.pts, dmg, note, wpm, secs: Math.round(secs || 0), questions: ask ? sc.questions : null});
   if (st.log){ st.log.rounds.push({q: st.follow ? st.follow.q : dbText(q), who: dbWho(st), said, score: Math.round(sc.cov * 100)}); }
   try { dayRec().sec += Math.min(240, Math.max(10, Math.round((performance.now() - (st.t0 || performance.now())) / 1000))); } catch (e) {}   /* 对话练习的时间也算进每天的练习时间 */
@@ -14007,6 +14232,217 @@ setTimeout(() => { try { const VER = "1.59.5"; if (!S || L.rwVer === VER) return
   for (const x of reps){ const iss = rwCheck(x.first || x.final || "", x.letter || "", x.mode === "mail"); x.issues = iss.map(z => ({c:z.c, s:z.s})); x.codes = [...new Set(iss.map(z => z.c))];
     for (const c of x.codes){ st[c] = st[c] || {seed:0, hits:[]}; st[c].hits.push(x.ts); } }
   L.rwVer = VER; saveLocal(); save(); } catch (e) {} }, 2000);
+
+/* ===================== 接话练习 + 想不起词怎么办（v1.61.0，首页“开口说”） =====================
+   依据：母语者的话里一半以上是固定说法；学习者普遍少用表示“我在听”的小词和反应，而这些会影响别人感受到的流利度。
+   接话：听一句，先给对的反应（好消息、坏消息、吃惊、好笑、邀请、分享看法），再追问一句。
+   想不起词：给一样东西，不说它的名字，用 It's the thing you use to… / It's like… 描述出来（卡住时最常用的救场办法）。 */
+const REACT_CAT = {
+  good:{n:"好消息", re:/\b(congrats|congratulations|that'?s (awesome|great|amazing|huge|so good|so cool)|nice|let'?s go|good for you|i'?m (so )?jealous|so happy for you|well deserved|amazing|awesome|so cool)\b/i, ex:"That's awesome! / Congrats! / Let's go!"},
+  bad:{n:"坏消息", re:/\b(oh no|that'?s (brutal|rough|terrible|awful|annoying|the worst|tough)|that sucks|i'?m (so )?sorry|ugh|oh man|bummer)\b/i, ex:"Oh no, that's brutal. / That sucks. / I'm sorry."},
+  surprise:{n:"让人吃惊", re:/\b(no way|really|seriously|are you serious|for real|that'?s (wild|crazy|insane|nuts)|wow)\b/i, ex:"No way! / Seriously? / That's wild."},
+  funny:{n:"好笑的事", re:/\b(haha+|lol|that'?s (hilarious|so funny|amazing|great)|i love that|i'?m dead|no way)\b/i, ex:"That's hilarious! / Haha, no way."},
+  invite:{n:"邀请、提议", re:/\b(i'?m in|count me in|i'?m down|sounds (good|fun|great)|i'?d love (to|that)|for sure|definitely|let'?s do it|sure)\b/i, ex:"I'm in! / Sounds good. / For sure!"},
+  share:{n:"分享看法", re:/\b(same|exactly|totally|true|fair|me too|i feel you|i know,? right|oh nice|that'?s (cool|interesting|fair)|i agree|good point)\b/i, ex:"Same. / Oh nice. / Fair."}
+};
+const REACT_ITEMS = [
+  ["good", "I just got a job offer!", "我刚拿到工作 offer 了！", "Congrats! That's huge. What's the company?"],
+  ["good", "We won the game last night.", "我们昨晚赢了比赛。", "Nice! What was the score?"],
+  ["good", "I finally finished my thesis.", "我终于写完论文了。", "That's awesome! How does it feel?"],
+  ["good", "I got an A on the midterm.", "我期中考试拿了 A。", "Let's go! Was it a tough one?"],
+  ["good", "My girlfriend got me a Lego set for my birthday.", "我女朋友送了我一套乐高当生日礼物。", "That's so cool. Did you build it already?"],
+  ["bad", "My flight got canceled.", "我的航班被取消了。", "Oh no, that's brutal. Are they rebooking you?"],
+  ["bad", "I have three assignments due tonight.", "我今晚有三个作业要交。", "That's rough. Which one are you doing first?"],
+  ["bad", "I lost my AirPods on the train.", "我把耳机丢在地铁上了。", "Oh man, that sucks. Did you check lost and found?"],
+  ["bad", "I didn't get the internship.", "我没拿到那个实习。", "I'm sorry, that's tough. Did they give you any feedback?"],
+  ["bad", "It's been raining all week.", "下了一整周的雨。", "Ugh, I know. Are you doing anything this weekend anyway?"],
+  ["surprise", "My roommate has been to forty countries.", "我室友去过四十个国家。", "No way! Which one did he like the most?"],
+  ["surprise", "It snowed here in October last year.", "去年十月这里就下雪了。", "Seriously? Was it a lot?"],
+  ["surprise", "This place is only open on Tuesdays.", "这家店只在周二开门。", "That's wild. How did you find out about it?"],
+  ["surprise", "That old toy is two hundred seventy dollars now.", "那个旧玩具现在要两百七十美元。", "Are you serious? Are you gonna buy it?"],
+  ["funny", "I wore a construction vest as my Halloween costume.", "我万圣节穿了件施工反光背心当装扮。", "That's hilarious. Did anyone get it?"],
+  ["funny", "I fell asleep in the Uber and missed my stop.", "我在 Uber 上睡着了，坐过了站。", "Haha, no way. How far did you go?"],
+  ["funny", "My professor just said 'it's chill' and didn't take any points off.", "教授就说了句“没事”，一分都没扣。", "I love that. Who's your professor?"],
+  ["invite", "We're getting dinner after this. Want to come?", "我们待会儿去吃晚饭，一起来吗？", "I'm in! Where are you guys going?"],
+  ["invite", "We should start a Celtics group chat.", "我们应该建个凯尔特人的群。", "I'd love that. Who else should we add?"],
+  ["invite", "A few of us are going hiking on Saturday.", "我们几个周六去爬山。", "Sounds fun. Where are you going?"],
+  ["invite", "Do you want to grab a coffee sometime this week?", "这周找个时间一起喝杯咖啡？", "For sure! What day works for you?"],
+  ["share", "I've been listening to this song on a loop.", "这首歌我最近一直单曲循环。", "Oh nice, what song is it?"],
+  ["share", "I feel like LinkedIn is kind of a serious place.", "我觉得领英算是个挺正式的地方。", "Totally. Did something happen?"],
+  ["share", "Honestly, I think the old Superman movies are better.", "说实话，我觉得老版超人电影更好看。", "Fair. Which one's your favorite?"],
+  ["share", "I'm a huge gamer.", "我是个超级游戏迷。", "Same! What are you playing right now?"]
+];
+/* 想不起词：东西的中文、英文名、描述里该说到的关键词、示范描述 */
+const CIRCUM_ITEMS = [
+  ["开瓶器", "bottle opener", ["open", "bottle", "cap", "beer"], "It's the thing you use to open a bottle."],
+  ["订书机", "stapler", ["paper", "together", "staple", "attach"], "It's a tool you use to hold pieces of paper together."],
+  ["充电宝", "power bank", ["charge", "phone", "battery", "portable"], "It's like a portable battery you use to charge your phone."],
+  ["插线板", "power strip", ["plug", "outlet", "socket", "electricity"], "It's the thing with a bunch of outlets that you plug stuff into."],
+  ["保鲜膜", "plastic wrap", ["plastic", "food", "cover", "wrap", "fresh"], "It's that thin plastic you use to cover leftover food."],
+  ["指甲刀", "nail clippers", ["nail", "cut", "finger"], "It's a little tool you use to cut your nails."],
+  ["衣架", "hanger", ["clothes", "hang", "closet", "shirt"], "It's the thing you hang your clothes on in the closet."],
+  ["晾衣架", "drying rack", ["dry", "clothes", "laundry", "wet"], "It's a rack you put your wet laundry on to dry."],
+  ["吸管", "straw", ["drink", "cup", "tube", "sip"], "It's the thin tube you drink through."],
+  ["拖把", "mop", ["floor", "clean", "wet", "water"], "It's what you use to clean the floor with water."],
+  ["漏斗", "funnel", ["pour", "liquid", "bottle", "narrow", "cone"], "It's like a cone you use to pour liquid into something with a small opening."],
+  ["遥控器", "remote", ["tv", "channel", "button", "control"], "It's the thing you use to change the channel on the TV."],
+  ["保温杯", "insulated bottle", ["hot", "warm", "drink", "bottle", "cup", "keep"], "It's a bottle that keeps your drink hot for a long time."],
+  ["牙线", "floss", ["teeth", "tooth", "clean", "between", "string"], "It's the string you use to clean between your teeth."],
+  ["暖气片", "radiator", ["heat", "warm", "room", "wall", "metal"], "It's the metal thing by the wall that heats up the room."],
+  ["购物车", "shopping cart", ["push", "groceries", "store", "supermarket"], "It's the thing you push around the grocery store."],
+  ["扳手", "wrench", ["bolt", "nut", "turn", "tighten", "loosen"], "It's a tool you use to tighten or loosen bolts."],
+  ["游标卡尺", "calipers", ["measure", "thickness", "small", "precise", "diameter"], "It's a tool you use to measure small dimensions really precisely."],
+  ["万用表", "multimeter", ["voltage", "current", "measure", "resistance", "electrical"], "It's a device you use to measure voltage, current, and resistance."],
+  ["烙铁", "soldering iron", ["solder", "hot", "wire", "circuit", "board"], "It's a hot tool you use to join wires on a circuit board."],
+  ["示波器", "oscilloscope", ["signal", "wave", "screen", "voltage", "time"], "It shows you how a signal changes over time, like a waveform on a screen."],
+  ["热熔胶枪", "hot glue gun", ["glue", "hot", "stick", "melt"], "It's a tool that melts glue so you can stick things together."],
+  ["砂纸", "sandpaper", ["rough", "smooth", "surface", "sand"], "It's rough paper you use to make a surface smooth."],
+  ["垫圈", "washer", ["bolt", "ring", "flat", "metal", "screw"], "It's a small flat metal ring you put under a bolt."]
+];
+const CIRCUM_STRAT = /\b(it'?s (a|an|the|like|kind of|sort of|this|that)|(a|the) (thing|tool|device|machine|stuff)|you use (it )?(to|for)|it'?s used (to|for)|what'?s it called|kind of like|something (you|that)|the thing (that|you)|for (making|doing|cutting|opening|holding))\b/i;
+const RT = {tab:"react", run:null};
+const rtState = () => { S.react = S.react || {n:0, ok:0, cats:{}, circ:{n:0, ok:0}}; return S.react; };
+const rtSay = t => (typeof pronSay === "function" ? pronSay(t, {rate:0.95}) : TTS.speak(t, {rate:0.95, raw:true}));
+const rtHasQ = s => /\?|(^|[.!,;]\s*|\b(and|so)\s+)(what|where|when|how|why|who|which|did|do|does|are|is|was|were|have|has|can|could|will|would)\b|\bhow about you\b|\bwhat about you\b/i.test(String(s || ""));
+VIEWS.react = {
+  tab:"home",
+  render(){
+    const tabs = [["react", "接话"], ["circ", "想不起词"]], R = RT.run;
+    const head = `<div class="wrap">${backBtn()}<h2>接话练习</h2><div class="seg" role="group" style="margin:6px 0 10px">${tabs.map(([k, t]) => `<button data-act="rt-tab" data-v="${k}" aria-pressed="${RT.tab === k}">${t}</button>`).join("")}</div>`;
+    if (R) return head + rtRunHTML(R) + `</div>`;
+    const st = rtState();
+    if (RT.tab === "circ") return head + `<p class="muted small">想不起一个词时，别停下来：用 It's the thing you use to… / It's like… 把它描述出来，或者直接问 What's it called?</p>
+      <div class="card"><p class="small muted">${st.circ.n ? `练过 ${st.circ.n} 次，描述清楚 ${st.circ.ok} 次` : "还没练"}</p><button class="btn primary block" data-act="rt-go" data-v="circ" style="margin-top:8px">练 6 个</button></div></div>`;
+    return head + `<p class="muted small">听一句，马上接：先给反应（好消息、坏消息、吃惊……），再追问一句。母语者聊天时句子很短，接得很快。</p>
+      <div class="card"><p class="small muted">${st.n ? `练过 ${st.n} 句，接得好 ${st.ok} 句` : "还没练"}</p><button class="btn primary block" data-act="rt-go" data-v="react" style="margin-top:8px">练 8 句</button></div>
+      <details class="card" style="margin-top:10px"><summary><b>常用的反应</b></summary>${Object.values(REACT_CAT).map(c => `<p class="small" style="margin-top:6px"><b>${c.n}</b>　<span class="en">${esc(c.ex)}</span></p>`).join("")}<p class="small muted" style="margin-top:6px">反应之后加一句追问：What happened? / How was it? / Where are you guys going?</p></details></div>`;
+  },
+  leave(){ RT.run = null; try { TTS.cancel(); } catch (e) {} }
+};
+function rtRunHTML(R){
+  const done = R.i >= R.items.length;
+  if (done){ const ok = R.res.filter(x => x.ok).length;
+    return `<div class="card"><h3>${R.kind === "circ" ? "描述清楚" : "接得好"}：${ok}/${R.items.length}</h3><div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="rt-go" data-v="${R.kind}">再练一轮</button><button class="btn" data-act="rt-tab" data-v="${R.kind}">返回</button></div></div>`; }
+  const it = R.items[R.i], last = R.fb;
+  if (R.kind === "circ"){ const [zh, word, , model] = it;
+    return `<div class="card"><button class="linkbtn small" data-act="rt-tab" data-v="circ">← 返回</button><p class="small muted">第 ${R.i + 1}/${R.items.length} 个：不说出它的名字，用英语描述它</p><div class="zh" style="font-size:26px;margin:8px 0">${esc(zh)}</div>
+      ${last ? `<p class="small">你说的：<span class="en">${esc(last.said || "（没听到）")}</span></p><p class="small">${last.strat ? "✓ 用上了描述的说法" : "✗ 试试 It's the thing you use to… / It's like…"}　${last.key ? "✓ 说到了关键特征" : "✗ 再说说它是干什么用的"}</p>
+        <p class="small" style="margin-top:6px">它叫 <b class="en">${esc(word)}</b>　<button class="linkbtn small" data-act="rt-say" data-t="${esc(word)}">▶</button></p><p class="small muted">可以这么说：<span class="en">${esc(model)}</span>　<button class="linkbtn small" data-act="rt-say" data-t="${esc(model)}">▶</button></p>
+        <button class="btn primary block" data-act="rt-next" style="margin-top:10px">下一个</button>`
+      : `<div class="db-mic"><button class="mic" id="rtMic" data-act="rt-mic">${ICON.mic}</button><div class="heard" id="rtHeard">点一下开始说</div></div><div class="row-gap" style="margin-top:6px"><input id="rtText" placeholder="不方便说就打字" style="flex:1;min-width:0"><button class="btn sm" data-act="rt-typed">交</button></div>`}</div>`; }
+  const [cat, line, zh, model] = it, c = REACT_CAT[cat];
+  return `<div class="card"><button class="linkbtn small" data-act="rt-tab" data-v="react">← 返回</button><p class="small muted">第 ${R.i + 1}/${R.items.length} 句：听完马上接</p>
+    <div class="row-gap" style="margin:8px 0"><button class="btn sm" data-act="rt-play">▶ 再听一遍</button>${R.show || last ? "" : `<button class="btn sm ghost" data-act="rt-show">看文字</button>`}</div>
+    ${R.show || last ? `<p class="en" style="font-size:18px">${esc(line)}</p><p class="small muted">${esc(zh)}</p>` : ""}
+    ${last ? `<p class="small" style="margin-top:8px">你说的：<span class="en">${esc(last.said || "（没听到）")}</span></p>
+      <p class="small">${last.react ? "✓ 反应对了" : last.wrong ? `✗ 这是“${esc(REACT_CAT[last.wrong].n)}”的反应，这里是${esc(c.n)}` : `✗ 先给一个反应：${esc(c.ex)}`}　${last.q ? "✓ 追问了" : "✗ 再追问一句"}</p>
+      <p class="small muted" style="margin-top:4px">可以这么接：<span class="en">${esc(model)}</span>　<button class="linkbtn small" data-act="rt-say" data-t="${esc(model)}">▶</button></p>
+      <button class="btn primary block" data-act="rt-next" style="margin-top:10px">下一句</button>`
+    : `<div class="db-mic"><button class="mic" id="rtMic" data-act="rt-mic">${ICON.mic}</button><div class="heard" id="rtHeard">点一下开始说</div></div><div class="row-gap" style="margin-top:6px"><input id="rtText" placeholder="不方便说就打字" style="flex:1;min-width:0"><button class="btn sm" data-act="rt-typed">交</button></div>`}</div>`;
+}
+function rtPick(kind){
+  if (kind === "circ") return CIRCUM_ITEMS.slice().sort(() => Math.random() - 0.5).slice(0, 6);
+  const by = {}; for (const it of REACT_ITEMS) (by[it[0]] = by[it[0]] || []).push(it);
+  const cats = Object.keys(by).sort(() => Math.random() - 0.5), out = [];
+  while (out.length < 8){ for (const c of cats){ if (out.length >= 8) break; const L = by[c].filter(x => !out.includes(x)); if (L.length) out.push(L[Math.floor(Math.random() * L.length)]); } }
+  return out.sort(() => Math.random() - 0.5);
+}
+ACT["rt-tab"] = el => { RT.tab = el.dataset.v; RT.run = null; try { TTS.cancel(); } catch (e) {} UI.render(); };
+ACT["rt-go"] = el => { const kind = el.dataset.v; RT.tab = kind; RT.run = {kind, items:rtPick(kind), i:0, res:[], fb:null, show:false}; UI.render(); if (kind === "react") setTimeout(() => ACT["rt-play"](), 300); };
+ACT["rt-play"] = () => { const R = RT.run; if (!R || R.kind !== "react") return; try { TTS.cancel(); } catch (e) {} rtSay(R.items[R.i][1]); };
+ACT["rt-show"] = () => { if (RT.run){ RT.run.show = true; UI.render(); } };
+ACT["rt-say"] = el => { try { TTS.cancel(); } catch (e) {} rtSay(el.dataset.t); };
+function rtJudge(said){
+  const R = RT.run; if (!R) return; const it = R.items[R.i], s = String(said || "").trim(), st = rtState();
+  if (R.kind === "circ"){ const [, word, keys] = it, low = s.toLowerCase();
+    const strat = CIRCUM_STRAT.test(s), key = keys.some(k => new RegExp("\\b" + k + "s?\\b", "i").test(low)), ok = !!s && strat && key;
+    R.fb = {said:s, strat, key}; R.res.push({ok}); st.circ.n++; if (ok) st.circ.ok++; save(); UI.render(); return; }
+  const cat = it[0], react = REACT_CAT[cat].re.test(s);
+  /* 用错了类：比如坏消息回了 That's awesome（surprise、funny 共用的 no way 不算错） */
+  const wrong = !react ? Object.keys(REACT_CAT).find(k => k !== cat && REACT_CAT[k].re.test(s) && !(["surprise", "funny", "bad"].includes(k) && /\bno way\b/i.test(s))) : null;
+  const q = rtHasQ(s), ok = react && q;
+  R.fb = {said:s, react, wrong, q}; R.res.push({ok}); st.n++; if (ok) st.ok++; st.cats[cat] = (st.cats[cat] || []).concat(ok).slice(-20); save(); UI.render();
+}
+ACT["rt-mic"] = async () => { const R = RT.run; if (!R || R.fb) return; const btn = $("#rtMic"), h = $("#rtHeard");
+  if (R.rec){ try { stopAny(); } catch (e) {} return; }
+  R.rec = true; try { TTS.cancel(); } catch (e) {} micState(btn, "live"); if (h) h.textContent = "在听……";
+  const r = await listenAny({short:true, maxMs:15000, quietMs:1400, btn, heard:h}); R.rec = false; micState(btn, null); rtJudge((r && r.text) || ""); };
+ACT["rt-typed"] = () => { const v = (($("#rtText") || {}).value || "").trim(); if (!v){ toast("写一句"); return; } rtJudge(v); };
+ACT["rt-next"] = () => { const R = RT.run; if (!R) return; R.i++; R.fb = null; R.show = false;
+  if (R.i >= R.items.length){ if (typeof planAutoDone === "function") planAutoDone("react"); UI.render(); return; }
+  UI.render(); if (R.kind === "react") setTimeout(() => ACT["rt-play"](), 250); };
+
+/* ===================== 听懂俚语和脏话（v1.61.0，首页“听和写”）：不是为了说，是为了听懂、分清是不是开玩笑 =====================
+   每一条：原句、意思、语气、有多冲（俚语 / 轻 / 中 / 重）、能不能用、说明。三选一，选完看解释。可以导入“俚语|原句|意思|语气|多冲|能不能用|说明”。 */
+const SLANG_ITEMS = [
+  ["That song is sick.", "sick", "那首歌太棒了", "夸奖", "俚语", "朋友之间可以", "sick 在这里是“很棒”，不是生病"],
+  ["That's the most goated toy of all time.", "goated", "那是史上最强的玩具", "夸奖", "俚语", "听懂就行", "来自 GOAT（Greatest Of All Time），年轻人用"],
+  ["It was hella interactive.", "hella", "它超级有互动感", "夸奖", "俚语", "听懂就行", "hella = very，加州一带的说法，年轻人用"],
+  ["She got me that Lego set, which was really clutch.", "clutch", "她送我那套乐高，真是太及时了", "夸奖", "俚语", "朋友之间可以", "clutch：关键时刻帮了大忙"],
+  ["That party was lit.", "lit", "那个派对太嗨了", "夸奖", "俚语", "朋友之间可以", "lit：很热闹、很嗨"],
+  ["No cap, that was the best burger I've ever had.", "no cap", "不骗你，那是我吃过最好吃的汉堡", "认真", "俚语", "听懂就行", "no cap = no lie，强调自己说的是真的"],
+  ["I'm lowkey nervous about the interview.", "lowkey", "我其实有点紧张这个面试", "认真", "俚语", "朋友之间可以", "lowkey：有点、暗暗地；highkey 是“非常明显地”"],
+  ["Bet, see you at seven.", "bet", "行，七点见", "同意", "俚语", "朋友之间可以", "bet：好的、没问题"],
+  ["You want to come? — I'm down.", "I'm down", "你来吗？——我去", "同意", "俚语", "朋友之间可以", "I'm down：我愿意、算我一个"],
+  ["It's chill, I won't take any points off.", "chill", "没事，我不扣你分", "安慰", "俚语", "可以用", "chill：没关系、放松；教授这样说是在安慰你"],
+  ["My bad, I forgot to text you back.", "my bad", "我的错，忘了回你消息", "道歉", "俚语", "可以用", "my bad：随意的道歉，正式场合说 I'm sorry"],
+  ["She's wicked smart.", "wicked", "她超级聪明", "夸奖", "俚语", "朋友之间可以", "wicked = very，波士顿和新英格兰的特色说法"],
+  ["He ghosted me after the second date.", "ghost", "第二次约会后他就再也不回我消息了", "抱怨", "俚语", "可以用", "ghost：突然断联、不回消息"],
+  ["He's still salty about losing.", "salty", "他还在为输了的事不爽", "调侃", "俚语", "朋友之间可以", "salty：不爽、有点记仇"],
+  ["That's kind of sus.", "sus", "这有点可疑", "调侃", "俚语", "听懂就行", "sus = suspicious"],
+  ["They're really throwing him under the bus.", "throw under the bus", "他们这是在甩锅给他", "认真", "俚语", "可以用", "为了自己脱身，把别人推出去背锅"],
+  ["I texted the group chat. Absolutely radio silence.", "radio silence", "我在群里发了消息，一点回音都没有", "抱怨", "俚语", "可以用", "radio silence：完全没人回应"],
+  ["Shut up, no way!", "shut up", "不会吧！", "惊讶", "俚语", "朋友之间可以", "笑着说的 shut up 是“不会吧、太夸张了”，不是让你闭嘴"],
+  ["I'm dead. That's so funny.", "I'm dead", "笑死我了", "开玩笑", "俚语", "朋友之间可以", "I'm dead / I'm crying：笑得不行"],
+  ["Stop flexing.", "flex", "别炫耀了", "调侃", "俚语", "朋友之间可以", "flex：炫耀"],
+  ["He's such a fucking asshole.（说的时候在笑，说的是朋友的恶作剧）", "asshole", "他真是个混蛋（笑着骂朋友，其实是觉得好笑）", "开玩笑", "重", "听懂就行", "很冲的脏话，但好朋友之间笑着说，常常是开玩笑；对陌生人说就是真骂人。看语气和关系"],
+  ["Fuck yeah! Let's go!", "fuck yeah", "太好了！走起！", "兴奋", "重", "听懂就行", "fuck 放在 yeah 前面是加强语气，表示非常兴奋地同意，不是骂人"],
+  ["Holy shit, that's huge.", "holy shit", "我靠，这也太厉害了", "惊讶", "中", "听懂就行", "表示非常吃惊；比 oh my God 冲"],
+  ["That's the biggest piece of bullshit.", "bullshit", "这纯属胡扯", "生气", "中", "听懂就行", "bullshit：胡说八道，这里是认真地不满"],
+  ["Things always suck at the end of the semester.", "suck", "学期末总是很糟糕", "抱怨", "轻", "可以用", "suck：很糟糕；日常常用，朋友、同事之间都行，正式场合别用"],
+  ["It pisses off all my roommates.", "piss off", "这会把我室友都惹毛", "抱怨", "中", "朋友之间可以", "piss off：惹恼。美国说 pissed 是“很生气”，英国是“喝醉了”"],
+  ["That costume was so half-assed.", "half-assed", "那个装扮太敷衍了", "调侃", "中", "听懂就行", "half-assed：敷衍了事"],
+  ["Damn, that's a lot of assignments.", "damn", "天哪，作业也太多了", "惊讶", "轻", "朋友之间可以", "damn：轻的感叹，惊讶、可惜都能用"],
+  ["Hell yeah, I'm in.", "hell yeah", "当然，算我一个", "兴奋", "中", "朋友之间可以", "hell yeah：兴奋地同意"],
+  ["Screw it, let's just order pizza.", "screw it", "算了，不管了，点披萨吧", "认真", "轻", "朋友之间可以", "screw it：算了、豁出去了"],
+  ["That's badass.", "badass", "这太酷了", "夸奖", "中", "朋友之间可以", "badass 用来夸人或事很酷"],
+  ["Don't be a dick about it.", "dick", "别那么混蛋", "认真", "重", "听懂就行", "dick：很冲，说人很讨厌、不讲理；朋友之间也可能半开玩笑，看语气"],
+  ["What the hell are you talking about?", "what the hell", "你到底在说什么啊？", "惊讶", "中", "听懂就行", "可能是惊讶，也可能是不满，看语气；比 what the fuck 轻"],
+  ["Jesus, he's the most active guy in the group chat.", "Jesus", "天哪，他是群里最活跃的人", "惊讶", "轻", "听懂就行", "感叹；有些人会介意宗教用词，自己说 oh my gosh 更安全"],
+  ["Some fucking door dash order.", "fucking", "某个外卖单而已", "随口", "重", "听懂就行", "fucking 放在名词前常常只是加强语气、随口带的，不一定在生气"],
+  ["Bro, that's insane.", "bro", "兄弟，这也太夸张了", "惊讶", "俚语", "朋友之间可以", "bro / dude / man：朋友之间的称呼；面试、和长辈说话别用"]
+];
+const SL = {run:null};
+function slItems(){ return SLANG_ITEMS.map(x => ({en:x[0], term:x[1], zh:x[2], tone:x[3], lvl:x[4], use:x[5], note:x[6]})).concat((S.slangCustom || []).map(x => Object.assign({custom:true}, x))); }
+VIEWS.slang = {
+  tab:"home",
+  render(){
+    const R = SL.run, st = S.slangStat || {n:0, ok:0};
+    if (R){
+      if (R.i >= R.items.length){ const ok = R.res.filter(Boolean).length; return `<div class="wrap">${backBtn()}<h2>听懂俚语</h2><div class="card"><h3>听懂了 ${ok}/${R.items.length}</h3><div class="row-gap" style="margin-top:10px"><button class="btn primary" data-act="sl-go">再练一轮</button><button class="btn" data-act="sl-back">返回</button></div></div></div>`; }
+      const it = R.items[R.i], p = R.picked;
+      return `<div class="wrap">${backBtn()}<h2>听懂俚语</h2><div class="card"><button class="linkbtn small" data-act="sl-back">← 返回</button><p class="small muted">第 ${R.i + 1}/${R.items.length} 句：这句是什么意思？</p>
+        <div class="row-gap" style="margin:8px 0"><button class="btn sm" data-act="sl-play">▶ 听</button></div>
+        <p class="en" style="font-size:18px">${esc(it.en)}</p>
+        <div style="margin-top:10px">${R.opts.map(o => `<button class="btn block${p != null ? (o === it.zh ? " pr-right" : o === p ? " pr-wrong" : "") : ""}" data-act="sl-pick" data-v="${esc(o)}" style="margin-top:6px;text-align:left" ${p != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}</div>
+        ${p != null ? `<div class="card" style="margin-top:10px"><p><b class="en">${esc(it.term)}</b>　<span class="chip">${esc(it.lvl === "俚语" ? "俚语" : "脏话 · " + it.lvl)}</span><span class="chip">语气：${esc(it.tone)}</span><span class="chip">${esc(it.use)}</span></p><p class="small" style="margin-top:6px">${esc(it.note)}</p></div>
+          <button class="btn primary block" data-act="sl-next" style="margin-top:10px">下一句</button>` : ""}</div></div>`;
+    }
+    return `<div class="wrap">${backBtn()}<h2>听懂俚语</h2><p class="muted small">当地人聊天里的俚语和脏话：不是为了说，是为了听懂，分清是在开玩笑、夸奖还是真的生气。每句会告诉你有多冲、自己能不能用。</p>
+      <div class="card"><p class="small muted">${st.n ? `练过 ${st.n} 句，听懂 ${st.ok} 句` : "还没练"}　一共 ${slItems().length} 句${(S.slangCustom || []).length ? `（导入的 ${(S.slangCustom || []).length} 句）` : ""}</p><button class="btn primary block" data-act="sl-go" style="margin-top:8px">练 8 句</button></div>
+      <details class="card" style="margin-top:10px"><summary><b>怎么分清是不是开玩笑</b></summary>
+        <p class="small" style="margin-top:6px">看三样：说的时候在不在笑；是不是好朋友之间（越熟越常互相开骂）；是对着人说，还是只是加强语气（fucking、hell 放在句子中间多半只是语气）。</p>
+        <p class="small" style="margin-top:6px">自己用：俚语里标“可以用”的随便用；“朋友之间可以”的只跟熟人说；“听懂就行”的别说，尤其是面试和 coffee chat。</p></details></div>`;
+  },
+  leave(){ SL.run = null; try { TTS.cancel(); } catch (e) {} }
+};
+function slMakeOpts(it, all){ const others = all.filter(x => x.zh !== it.zh).sort(() => Math.random() - 0.5).slice(0, 2).map(x => x.zh); return [it.zh].concat(others).sort(() => Math.random() - 0.5); }
+ACT["sl-go"] = () => { const all = slItems(), items = all.slice().sort(() => Math.random() - 0.5).slice(0, 8); SL.run = {items, all, i:0, res:[], picked:null, opts:slMakeOpts(items[0], all)}; UI.render(); setTimeout(() => ACT["sl-play"](), 250); };
+ACT["sl-back"] = () => { SL.run = null; try { TTS.cancel(); } catch (e) {} UI.render(); };
+ACT["sl-play"] = () => { const R = SL.run; if (!R) return; try { TTS.cancel(); } catch (e) {} const t = String(R.items[R.i].en).replace(/（[^）]*）/g, "").replace(/—/g, ","); rtSay(t); };
+ACT["sl-pick"] = el => { const R = SL.run; if (!R || R.picked != null) return; const it = R.items[R.i], ok = el.dataset.v === it.zh; R.picked = el.dataset.v; R.res.push(ok);
+  const st = S.slangStat = S.slangStat || {n:0, ok:0}; st.n++; if (ok) st.ok++; save(); UI.render(); };
+ACT["sl-next"] = () => { const R = SL.run; if (!R) return; R.i++; R.picked = null; if (R.i >= R.items.length){ if (typeof planAutoDone === "function") planAutoDone("slang"); UI.render(); return; } R.opts = slMakeOpts(R.items[R.i], R.all); UI.render(); setTimeout(() => ACT["sl-play"](), 200); };
 
 </script>
 </body>
